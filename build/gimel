@@ -1,0 +1,5 @@
+#!/bin/sh
+mvn install:install-file -DgroupId=qubole-hive-JDBC -DartifactId=qubole-hive-JDBC -Dversion=0.0.7 -Dpackaging=jar -Dfile=lib/qubole-hive-JDBC.jar
+mvn install:install-file -DgroupId=com.hortonworks -DartifactId=shc-core -Dversion=1.1.2-2.2-s_2.11 -Dpackaging=jar -Dfile=lib/shc-core.jar
+mvn install:install-file -DgroupId=com.osscube -DartifactId=aerospike-spark -Dversion=0.3-SNAPSHOT -Dpackaging=jar -Dfile=lib/aerospike-spark.jar
+mvn clean install
