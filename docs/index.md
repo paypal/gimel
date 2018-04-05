@@ -45,8 +45,6 @@ ________________________________________________________________________________
 
 # Questions
 
-| Where | Contact |
-| -------- | -------- |
-| Slack | https://gimel-dev.slack.com |
-| User Forum | https://groups.google.com/d/forum/gimel-dev |
-| Developer Forum | https://groups.google.com/d/forum/gimel-user |
+  * [Slack](https://gimel-dev.slack.com)
+  * [User Forum](https://groups.google.com/d/forum/gimel-user)
+  * [Developer Forum](https://groups.google.com/d/forum/gimel-dev)
