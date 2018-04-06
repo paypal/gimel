@@ -79,14 +79,28 @@ class GimelProperties(userProps: Map[String, String] = Map[String, String]()) {
 
     logger.info(" @Begin --> " + MethodName)
 
+    val propertiesFile = userProps.getOrElse(GimelConstants.GIMEL_PROPERTIES_FILE, "/pcatalog.properties")
     val props: Properties = new Properties()
-    val configStream = this.getClass.getResourceAsStream("/pcatalog.properties")
-    props.load(configStream)
-    configStream.close()
-    val finalProps: mutable.Map[String, String] = mutable.Map(props.asScala.toSeq: _*)
-    logger.debug("PCatalog Properties -->")
-    finalProps.foreach(property => logger.debug(property))
-    finalProps
+    logger.info(s"Properties File -> ${propertiesFile}")
+    if (propertiesFile == "/pcatalog.properties") {
+      val configStream = this.getClass.getResourceAsStream(propertiesFile)
+      props.load(configStream)
+      configStream.close()
+      val finalProps: mutable.Map[String, String] = mutable.Map(props.asScala.toSeq: _*)
+      finalProps
+    } else {
+      val fileContent = scala.io.Source.fromFile(propertiesFile).getLines().mkString("\n")
+      val lines: Array[String] = fileContent.split("\n").filter(line => line.contains("="))
+      val finalProps: Map[String, String] = lines.map(line => {
+        val keyValue = line.split("=")
+        if (keyValue.size == 1) {
+          (keyValue(0), "")
+        } else {
+          (keyValue(0), keyValue(1))
+        }
+      }).toMap
+      mutable.Map(finalProps.toSeq: _*)
+    }
   }
 
   logger.info(s"Completed Building --> ${this.getClass.getName}")
