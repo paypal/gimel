@@ -50,10 +50,24 @@ class DataSet(val sparkSession: SparkSession) {
 
   val user = sys.env("USER")
   val sparkAppName = sparkSession.conf.get(GimelConstants.SPARK_APP_NAME)
+  val gimelPropertiesFile = sparkSession.conf.get(GimelConstants.GIMEL_PROPERTIES_FILE)
   val clusterName = getYarnClusterName()
   val appTag = getAppTag(sparkSession.sparkContext)
+  val propertiesMap = {
+    if (gimelPropertiesFile != null && gimelPropertiesFile.length > 0) {
+      Map(GimelConstants.GIMEL_PROPERTIES_FILE -> gimelPropertiesFile)
+    } else {
+      Map("" -> "")
+    }
+  }
   val logger = Logger(this.getClass.getName)
-  val pcatProps = GimelProperties()
+  val pcatProps = {
+    if (!propertiesMap.keySet.contains("")) {
+      GimelProperties(propertiesMap)
+    } else {
+      GimelProperties()
+    }
+  }
   val sparkContext: SparkContext = sparkSession.sparkContext
   val sqlContext: SQLContext = sparkSession.sqlContext
   var latestDataSetReader: Option[GimelDataSet] = None
