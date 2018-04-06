@@ -75,8 +75,17 @@ class Logger(config: Any) extends Serializable {
   private val logModes = Map(4 -> "INFO", 3 -> "DEBUG", 2 -> "WARN", 1 -> "ERROR")
   @volatile private var logMode = 4
   val logger: JSONSystemLogger = JSONSystemLogger.getInstance(getClass)
-
+  private var logAudit = false
   var consolePrintEnabled = false
+
+  /**
+    * Set Log Level Push to Kafka
+    *
+    * @param customLogAudit Boolean property to push logs to kafka
+    */
+  def setLogAudit(customLogAudit: Boolean = true): Unit = {
+    logAudit = customLogAudit
+  }
 
   /**
     * Set Log Level
@@ -234,9 +243,12 @@ class Logger(config: Any) extends Serializable {
       "additionalProps" -> additionalProps
     )
 
-    this.info("Auditing Information being posted to Gimel Audit Log...")
-    this.info(accessAuditInfo)
-    logger.info(accessAuditInfo.asJava)
+
+    if (logAudit) {
+      this.info("Auditing Information being posted to Gimel Audit Log...")
+      this.info(accessAuditInfo)
+      logger.info(accessAuditInfo.asJava)
+    }
     accessAuditInfo
   }
 
@@ -294,9 +306,11 @@ class Logger(config: Any) extends Serializable {
       "additionalProps" -> additionalProps
     )
 
-    this.info("Auditing Information being posted to Gimel Audit Log...")
-    this.info(accessAuditInfo)
-    logger.info(accessAuditInfo.asJava)
+    if (logAudit) {
+      this.info("Auditing Information being posted to Gimel Audit Log...")
+      this.info(accessAuditInfo)
+      logger.info(accessAuditInfo.asJava)
+    }
 
     this.logMethodAccess(yarnAppId
       , yarnAppName
