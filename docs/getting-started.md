@@ -6,6 +6,8 @@
 * [Data API Usage](#data-api-usage)
 
 
+--------------------------------------------------------------------------------------------------------------------
+
 
 # Build Gimel
 
@@ -24,9 +26,11 @@ Run below command to build
 
 | Profile | Command | Notes |
 | -------- | -------- | -------- |
-| General | ```mvn clean install -T 8 -B -Pgeneral``` | Builds with all dependencies pulled from maven central |
-| HWX releases | ```mvn clean install -T 8 -B -Phwx-2.6.3.11-1``` | Builds with all dependencies pulled from horton works repo if available |
-| Stand Alone | ```mvn clean install -T 8 -B -Pstandalone``` | Builds gimel with scala packages bundled in jar, used for standalone execution of gimel jar / polling services |
+| Default | ```build/gimel install -T 8 -B``` | Recommended. Builds with all dependencies pulled from maven central |
+| General | ```build/gimel install -T 8 -B -Pgeneral``` | Builds with all dependencies pulled from maven central |
+| HWX releases | ```build/gimel clean install -T 8 -B -Phwx-2.6.3.11-1``` | Builds with all dependencies pulled from horton works repo if available |
+| Stand Alone | ```build/gimel clean install -T 8 -B -Pstandalone``` | Builds gimel with scala packages bundled in jar, used for standalone execution of gimel jar / polling services |
+
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -49,7 +53,7 @@ Run below command to build
       <groupId>com.paypal.gimel</groupId>
       <artifactId>gimel-tools</artifactId> <!--Refer one of the below listed 3 versions, depending on the required spark version -->
       <version>1.2.0</version> <!--provides spark 2.2.0 compiled code-->
-      <scope>provided</scope> <!--Ensure scope is provided as the gimel libraries will be added at runtime-->
+      <scope>provided</scope> <!--Ensure scope is provided as the gimel libraries can be added at runtime-->
     </dependency>
 ```
 ### SQL
@@ -58,7 +62,7 @@ Run below command to build
       <groupId>com.paypal.gimel</groupId>
       <artifactId>gimel-sql</artifactId> <!--Refer one of the below listed 3 versions, depending on the required spark version -->
       <version>1.2.0</version> <!--provides spark 2.2.0 compiled code-->
-      <scope>provided</scope> <!--Ensure scope is provided as the gimel libraries will be added at runtime-->
+      <scope>provided</scope> <!--Ensure scope is provided as the gimel libraries can be added at runtime-->
     </dependency>
 ```
 ### Core
@@ -67,7 +71,7 @@ Run below command to build
       <groupId>com.paypal.gimel</groupId>
       <artifactId>gimel-core</artifactId> <!--Refer one of the below listed 3 versions, depending on the required spark version -->
       <version>1.2.0</version> <!--provides spark 2.2.0 compiled code-->
-      <scope>provided</scope> <!--Ensure scope is provided as the gimel libraries will be added at runtime-->
+      <scope>provided</scope> <!--Ensure scope is provided as the gimel libraries can be added at runtime-->
     </dependency>
 ```
 
