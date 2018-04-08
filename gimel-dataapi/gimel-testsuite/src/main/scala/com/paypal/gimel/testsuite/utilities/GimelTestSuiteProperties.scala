@@ -150,7 +150,7 @@ class GimelTestSuiteProperties(userProps: Map[String, String] = Map[String, Stri
     logger.info(" @Begin --> " + MethodName)
 
     val props: Properties = new Properties()
-    val configStream = this.getClass.getResourceAsStream("/pcatalog.properties")
+    val configStream = this.getClass.getResourceAsStream(GimelConstants.GIMEL_PROPERTIES_FILE_NAME)
     props.load(configStream)
     configStream.close()
     val finalProps: mutable.Map[String, String] = mutable.Map(props.asScala.toSeq: _*)

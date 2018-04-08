@@ -19,6 +19,7 @@
 
 package com.paypal.gimel.common.conf
 
+import java.io.{File, FileInputStream}
 import java.util.{Calendar, Properties}
 
 import scala.collection.JavaConverters._
@@ -80,13 +81,19 @@ class GimelProperties(userProps: Map[String, String] = Map[String, String]()) {
     logger.info(" @Begin --> " + MethodName)
 
     val props: Properties = new Properties()
-    val configStream = this.getClass.getResourceAsStream("/pcatalog.properties")
-    props.load(configStream)
-    configStream.close()
-    val finalProps: mutable.Map[String, String] = mutable.Map(props.asScala.toSeq: _*)
-    logger.debug("PCatalog Properties -->")
-    finalProps.foreach(property => logger.debug(property))
-    finalProps
+    userProps.contains(GimelConstants.GIMEL_PROPERTIES_FILE_KEY) match {
+      case true =>
+        val propsFile = new File(userProps.get(GimelConstants.GIMEL_PROPERTIES_FILE_KEY).get)
+        if (propsFile.exists()) props.load(new FileInputStream(propsFile))
+        props.asScala
+      case false =>
+        val propsFile = GimelConstants.GIMEL_PROPERTIES_FILE_NAME
+        val configStream = this.getClass.getResourceAsStream(propsFile)
+        props.load(configStream)
+        configStream.close()
+        val finalProps: mutable.Map[String, String] = mutable.Map(props.asScala.toSeq: _*)
+        finalProps
+    }
   }
 
   logger.info(s"Completed Building --> ${this.getClass.getName}")

@@ -53,7 +53,6 @@ class DataSet(val sparkSession: SparkSession) {
   val clusterName = getYarnClusterName()
   val appTag = getAppTag(sparkSession.sparkContext)
   val logger = Logger(this.getClass.getName)
-  val pcatProps = GimelProperties()
   val sparkContext: SparkContext = sparkSession.sparkContext
   val sqlContext: SQLContext = sparkSession.sqlContext
   var latestDataSetReader: Option[GimelDataSet] = None
