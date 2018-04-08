@@ -26,6 +26,8 @@ object GimelConstants {
   val USER_NAME = "username"
   val RESOLVED_HIVE_TABLE: String = "resolvedHiveTable"
   val SPARK_APP_NAME: String = "spark.app.name"
+  val GIMEL_PROPERTIES_FILE_KEY: String = "gimel.property.file"
+  val GIMEL_PROPERTIES_FILE_NAME = "./pcatalog.properties"
   val DATASET_PROPS: String = "dataSetProperties"
   val APP_TAG: String = "appTag"
   val DATASET: String = "dataSet"
