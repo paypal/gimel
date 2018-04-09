@@ -1,0 +1,49 @@
+#!/bin/sh
+
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements. See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+# This is a re-usable functions file
+# Other scripts may use the functions in this file by sourcing them
+
+#----------------------------function will check for error code & exit if failure, else proceed further----------------------------#
+
+#usage : check_error <$?> <custom_error_code>
+#Example: Check_error < pass $? from the shell command > < Custom Message for errorcode -gt 0 >
+
+check_error()
+{
+	cmd_error_code=$1
+	custom_message=$2
+	if  [ ${cmd_error_code} -gt 0 ]; then
+	  write_log "Error    | Stage |  ${custom_message}"
+	  exit ${cmd_error_code}
+	else
+	  write_log "Success  | Stage | ${custom_message}"
+	fi
+}
+
+
+#----------------------------function will write the message to Console / Log File----------------------------#
+
+#Usage : write_log < Whatever message you need to log >
+
+write_log()
+{
+        msg=$1
+        to_be_logged="$(date '+%Y%m%d %H:%M:%S') | $msg"
+        echo ${to_be_logged}
+}
+

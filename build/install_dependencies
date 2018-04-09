@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
 this_dir=`dirname build/install_dependencies`
 # Source reusable functions
 source ${this_dir}/gimel_functions
@@ -22,22 +23,14 @@ source ${this_dir}/gimel_functions
 #--------------------------------Begin execution of Steps------------------------------------------------#
 
 write_log "Begin    | Script | $0"
-user_args=$@
-user_args_count=$#
-default_args="install T10"
-write_log "User Arguments : ${user_args}"
 
-if [ $user_args_count -gt 0 ]; then
-  resolved_args=${user_args_count}
-else 
-  write_log "User supplied arguments : None. Defaulting to argument : ${default_args}"
-fi
+mvn install:install-file -DgroupId=qubole-hive-JDBC -DartifactId=qubole-hive-JDBC -Dversion=0.0.7 -Dpackaging=jar -Dfile=lib/qubole-hive-JDBC.jar 1>>/dev/null 2>&1
+check_error $? "install qubole-hive-JDBC"
 
+mvn install:install-file -DgroupId=com.hortonworks -DartifactId=shc-core -Dversion=1.1.2-2.2-s_2.11 -Dpackaging=jar -Dfile=lib/shc-core.jar 1>>/dev/null 2>&1
+check_error $? "install shc-core"
 
-build/install_dependencies
-check_error $? "build/install_dependencies"
-
-mvn install "$@"
-check_error $? "mvn install $@"
+mvn install:install-file -DgroupId=com.osscube -DartifactId=aerospike-spark -Dversion=0.3-SNAPSHOT -Dpackaging=jar -Dfile=lib/aerospike-spark.jar 1>>/dev/null 2>&1
+check_error $? "install aerospike-spark"
 
 write_log "Complete | Script | $0"
