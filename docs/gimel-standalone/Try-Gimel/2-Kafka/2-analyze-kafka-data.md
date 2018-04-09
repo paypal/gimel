@@ -59,7 +59,8 @@ scala> val options = Map("pcatalog.flights_hdfs.dataSetProperties"->datasetProps
 ```
 scala> import com.paypal.gimel._
 scala> val dataSet = DataSet(spark)
-scala> val df = dataSet.read("pcatalog.flights_hdfs",options)
+scala> val hivedf = dataSet.read("pcatalog.flights_hdfs",options)
+scala> val df = dataSet.write("pcatalog.flights_kafka_json",hivedf,options)
 scala> df.count
 ```
 
