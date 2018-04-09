@@ -1,12 +1,14 @@
 Make sure you have checked all steps below.
 
+### GitHub Issue
+Fixes #<issue>
+
 
 ### Checklist:
 <!--- Go over all the following points. Check boxes that apply to this pull request -->
 - [ ] This pull request updates the documentation
 - [ ] This pull request changes library dependencies
 - [ ] Title of the PR is of format (example) : [#25][Github] Add Pull Request Template
-- [ ] This PR includes the URL to the GitHub Issue 
 
 <!-- NOTE: lines that start with < - - ! and end with - - > are comments and will be ignored. -->
 <!-- Please include the GitHub issue number in the PR title above. If an issue does not exist, please create one.-->
