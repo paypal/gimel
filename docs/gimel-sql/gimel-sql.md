@@ -40,13 +40,15 @@ sparkSession.sql("set gimel.kafka.throttle.batch.maxRecordsPerPartition=50");
 sparkSession.sql("set gimel.logging.level=INFO");
 sparkSession.sql("set gimel.query.results.show.rows.only=true");
 
-val df = gimel.sql.GimelQueryProcessor.executeBatch("SELECT count(*) FROM pcatalog.flights_kafka",sparkSession);
+val gsql=com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(_:String,sparkSession);
+val df = gsql("SELECT count(*) FROM pcatalog.flights_kafka");
 ```
 
 ### Execute Stream SQL - Spark Shell / Program
 
 ```scala
-gimel.sql.GimelQueryProcessor.executeStream("INSERT into pcatalog.flights_elastic SELECT count(*) FROM pcatalog.flights_kafka",sparkSession);
+val gsqlStream=com.paypal.gimel.sql.GimelQueryProcessor.executeStream(_:String,sparkSession);
+gsqlStream("INSERT into pcatalog.flights_elastic SELECT count(*) FROM pcatalog.flights_kafka");
 ```
 
 
