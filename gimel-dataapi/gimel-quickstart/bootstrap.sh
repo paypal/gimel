@@ -123,9 +123,9 @@ sleep 10s
 write_log "Starting spark shell..."
 
 docker cp $final_jar spark-master:/root/
-docker cp hive-server:/opt/hive/conf/hive-site.xml $GIMEL_HOME/tmp
+docker cp hive-server:/opt/hive/conf/hive-site.xml $GIMEL_HOME/tmp/hive-site.xml
 docker cp $GIMEL_HOME/tmp/hive-site.xml spark-master:/spark/conf/
-docker cp hbase-master:/opt/hbase-1.2.6/conf/hbase-site.xml $GIMEL_HOME/tmp
+docker cp hbase-master:/opt/hbase-1.2.6/conf/hbase-site.xml $GIMEL_HOME/tmp/hbase-site.xml
 docker cp $GIMEL_HOME/tmp/hbase-site.xml spark-master:/spark/conf/
 docker exec -it spark-master bash -c "export USER=$USER; export SPARK_HOME=/spark/; /spark/bin/spark-shell --jars /root/$gimel_jar_name"
 
