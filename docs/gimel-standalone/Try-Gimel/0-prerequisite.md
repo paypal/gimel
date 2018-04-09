@@ -29,7 +29,7 @@ ________________________________________________________________________________
 
 ## Download the Gimel Jar
 
-* Download the gimel jar from {PLACEHOLDER}
+* Download the gimel jar from [Here](https://drive.google.com/uc?id=1mVia6-dTyX9ZU2-r91TFJu4_hEhapVRA&export=download)
 * Move it to gimel/gimel-dataapi/gimel-standalone/lib folder
 
 ___________________________________________________________________________________________________________________
@@ -37,9 +37,13 @@ ________________________________________________________________________________
 ## Run Gimel Quickstart Script
 
 ```
-$ quickstart/gimel
+$ quickstart/gimel {STORAGE_SYSTEM}
 ```
 
+* STORAGE_SYSTEM can be either ```all``` or comma seperated list like as follows
+```
+$ quickstart/gimel kafka,elasticsearch,hbase
+```
 * This script will do the following:
   * Start docker containers for each storage
   * Bootstrap the physical storages (Create Kafka Topic and HBase tables)
@@ -50,7 +54,7 @@ Note: If you want to start your own spark-shell, Run the following command
 ```
 docker exec -it spark-master bash -c \
 "export USER=an;export SPARK_HOME=/spark/;export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin; \
-/spark/bin/spark-shell --jars /root/gimel-tools-1.2.0-SNAPSHOT-uber.jar"
+/spark/bin/spark-shell --jars /root/gimel-sql-1.2.0-SNAPSHOT-uber.jar"
 ```
   
 ___________________________________________________________________________________________________________________
@@ -62,7 +66,7 @@ import org.apache.spark.sql.{DataFrame, SQLContext};
 import org.apache.spark.sql.hive.HiveContext;
 import com.paypal.gimel.sql.GimelQueryProcessor
 
-val gimelSql = GimelQueryProcessor.executeBatch(_:String,spark)
+val gsql = GimelQueryProcessor.executeBatch(_:String,spark)
 ```
 
 ___________________________________________________________________________________________________________________
