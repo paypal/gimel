@@ -16,6 +16,7 @@
 # limitations under the License.
 
 this_dir=`dirname build/install_dependencies`
+# Source reusable functions
 source ${this_dir}/gimel_functions
 
 #--------------------------------Begin execution of Steps------------------------------------------------#
