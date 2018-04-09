@@ -4,13 +4,13 @@
 Gimel provides unified Data API to access data from any storage like HDFS, GS, Alluxio, Hbase, Aerospike, BigQuery, Druid, Elastic,  Teradata, Oracle, MySQL, etc.
 
 
-
 --------------------------------------------------------------------------------------------------------------------
 
 
 Contents
 =================
 
+  * [Edit on GitHub](https://github.com/paypal/gimel)
   * [APIs & Version Compatibility](#stack-&-version-compatibility)
   * [Getting Started](getting-started.md)
   * [Gimel Catalog Providers](gimel-catalog/catalog-provider.md)
