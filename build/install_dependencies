@@ -15,34 +15,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-#----------------------------function will check for error code & exit if failure, else proceed further----------------------------#
 
-#usage : Run immediately after executing any shell command - with 2 arguments.
-#Example: Check_error < pass $? from the shell command > < Custom Message for errorcode -gt 0 >
-
-check_error()
-{
-	cmd_error_code=$1
-	custom_message=$2
-	if  [ ${cmd_error_code} -gt 0 ]; then
-	  write_log "Error    | Stage |  ${custom_message}"
-	  exit ${cmd_error_code}
-	else
-	  write_log "Success  | Stage | ${custom_message}"
-	fi
-}
-
-
-#----------------------------function will write the message to Console / Log File----------------------------#
-
-#Usage : write_log < Whatever message you need to log >
-
-write_log()
-{
-        msg=$1
-        to_be_logged="$(date '+%Y%m%d %H:%M:%S') | $msg"
-        echo ${to_be_logged}
-}
+this_dir=`dirname build/install_dependencies`
+source ${this_dir}/gimel_functions
 
 #--------------------------------Begin execution of Steps------------------------------------------------#
 
