@@ -97,7 +97,7 @@ _________________________________________________
 
 ```gsql("set gimel.catalog.provider=HIVE")```
 
-## Load Flights Data into HBase Dataset
+## Load Flights Data into Elastic Dataset
 ```
 import com.paypal.gimel._
 val dataSet = DataSet(spark)
@@ -106,7 +106,7 @@ val df = dataSet.write("pcatalog.gimel_flights_elastic",hivedf)
 df.count
 ```
 
-## Read Data from HBase
+## Read Data from Elastic
 ```
 import com.paypal.gimel._
 val dataSet = DataSet(spark)
