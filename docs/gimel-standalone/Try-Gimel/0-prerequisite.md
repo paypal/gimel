@@ -22,7 +22,7 @@ ________________________________________________________________________________
 ## Install Docker
 
 * Install docker on your machine 
-  * MAC - <a href=https://docs.docker.com/docker-for-mac/install/>Docker Installation</a>
+  * MAC - <a href="https://docs.docker.com/docker-for-mac/install/" target="_blank">Docker Installation</a>
   * Start Docker Service
   * Increase the memory by navigating to Preferences > Advanced > Memory
   * (Optional) Clear existing containers and images
@@ -68,7 +68,7 @@ docker exec -it spark-master bash -c \
 /spark/bin/spark-shell --jars /root/gimel-sql-1.2.0-SNAPSHOT-uber.jar"
 ```
 
-**Note:** *You can view the Spark UI  <a href=http://localhost:4040>here</a>*
+**Note:** *You can view the Spark UI  <a href="http://localhost:4040" target="_blank">here</a>*
 ___________________________________________________________________________________________________________________
 
 ## Common Imports and Initializations
