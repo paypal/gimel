@@ -1,45 +1,45 @@
 #!/usr/bin/env bash
 
-export FLIGHTS_LOAD_DATA_SCRIPT=$GIMEL_HOME/gimel-dataapi/gimel-standalone/sql/flights_load_data.sql
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements. See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License. You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
-#----------------------------function will write the message to Log File----------------------------#
+this_script=`basename $0`
+this_dir=`dirname $0`
+full_file="${this_dir}/${this_script}"
 
-#Usage : write_log < Whatever message you need to log >
+source ${GIMEL_HOME}/build/gimel_functions
 
-write_log()
+write_log "Started Script --> ${full_file}"
+
+export BOOTSTRAP_SQL_DIR=$GIMEL_HOME/gimel-dataapi/gimel-standalone/sql
+
+bootstrap_storage()
 {
-
-        msg=$1
-        echo "$(date '+%Y%m%d %H:%M:%S') : $msg"
-#        echo $1
-#        echo "" >> ${log_file}
-#        echo "$(date '+%Y%m%d %H:%M:%S') : $msg" >> ${log_file}
+storage=$1
+write_log "-----------------------------------------------------------------"
+write_log " Executing $BOOTSTRAP_SQL_DIR/bootstrap_${storage}.sql ..."
+write_log "-----------------------------------------------------------------"
+write_log "copying $BOOTSTRAP_SQL_DIR/bootstrap_${storage}.sql to HiveServer Docker Container..."
+run_cmd "docker cp $BOOTSTRAP_SQL_DIR/bootstrap_${storage}.sql hive-server:/root"
+export to_run="hive -f /root/bootstrap_${storage}.sql"
+run_cmd "docker exec -it hive-server ${to_run}"
 }
 
-#----------------------------function will check for error code & exit if failure, else proceed further----------------------------#
+bootstrap_storage kafka
+bootstrap_storage hbase
+bootstrap_storage hive
+bootstrap_storage elasticsearch
 
-#usage : Run immediately after executing any shell command - with 3 arguments.
-#Example: check_error < pass $? from the shell command > < Error Code that you want the code to fail with > < Custom Message for errorcode -gt 0 >
-
-check_error()
-{
-
-        cmd_error_code=$1
-        pgm_exit_code=$2
-        pgm_exit_msg=$3
-        if  [ ${cmd_error_code} -gt 0 ]; then
-                write_log "Error ! Exiting Program ... ${cmd_error_code} ${pgm_exit_code} ${pgm_exit_msg}"
-#                cd ${standalone_dir}/docker
-#                docker-compose down
-                exit ${pgm_exit_code}
-        else
-                echo ""
-        fi
-}
-
-write_log "Creating Hive external tables for CSV data"
-
-docker cp $FLIGHTS_LOAD_DATA_SCRIPT hive-server:/root
-docker exec -it hive-server bash -c "hive -f /root/bootstrap_hive.sql"
-
-check_error $? 999 "Creating Hive external tables - failed"
+write_log "Completed Script --> ${full_file}"
