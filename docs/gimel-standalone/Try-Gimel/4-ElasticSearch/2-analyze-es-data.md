@@ -31,6 +31,9 @@ ______________________________________________________
 
 # Scala API for Catalog Provider-USER
 
+*Please execute the steps in this section if you have choosen CatalogProvider as USER or if you executed the following command*
+
+```gsql("set gimel.catalog.provider=USER")```
 ## Set options
 ```
 val datasetPropsJson = {

@@ -17,10 +17,13 @@
 ### Load Flights Lookup Data into HBase Datasets
 
 ```
+gsql("set gimel.hbase.rowkey=Code")
 gsql("insert into pcatalog.flights_lookup_cancellation_code_hbase select * from pcatalog.flights_lookup_cancellation_code_hdfs")
 
+gsql("set gimel.hbase.rowkey=Code")
 gsql("insert into pcatalog.flights_lookup_airline_id_hbase select * from pcatalog.flights_lookup_airline_id_hdfs")
 
+gsql("set gimel.hbase.rowkey=Code")
 gsql("insert into pcatalog.flights_lookup_carrier_code_hbase select * from pcatalog.flights_lookup_carrier_code_hdfs")
 ```
 
@@ -44,6 +47,10 @@ gsql("select * from lkp_cancellation").show(10)
 ______________________________________________________
 
 # Scala API for Catalog Provider-USER
+
+*Please execute the steps in this section if you have choosen CatalogProvider as USER or if you executed the following command*
+
+```gsql("set gimel.catalog.provider=USER")```
 
 ## Set options
 ```
@@ -118,6 +125,7 @@ import com.paypal.gimel._
 val dataSet = DataSet(spark)
 val hiveDf = dataSet.read("pcatalog.flights_lookup_cancellation_code_hdfs")
 hiveDf.count
+val options = Map("gimel.hbase.rowkey"->"Code")
 val df =  dataSet.write("pcatalog.flights_lookup_cancellation_code_hbase",hivedf)
 ```
 

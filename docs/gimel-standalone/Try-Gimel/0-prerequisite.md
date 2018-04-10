@@ -22,7 +22,7 @@ ________________________________________________________________________________
 ## Install Docker
 
 * Install docker on your machine 
-  * MAC - https://docs.docker.com/docker-for-mac/install/
+  * MAC - <a href=https://docs.docker.com/docker-for-mac/install/>Docker Installation</a>
   * Start Docker Service
   * Increase the memory by navigating to Preferences > Advanced > Memory
   * (Optional) Clear existing containers and images
@@ -45,27 +45,30 @@ ________________________________________________________________________________
 
 ## Run Gimel Quickstart Script
 
+* To install all the dockers and bootstrap storages, please execute the following command
 ```
-$ quickstart/gimel {STORAGE_SYSTEM}
+$ quickstart/start-gimel {STORAGE_SYSTEM}
 ```
 
 * STORAGE_SYSTEM can be either ```all``` or comma seperated list like as follows
 ```
-$ quickstart/gimel kafka,elasticsearch,hbase
+$ quickstart/start-gimel kafka,elasticsearch,hbase
 ```
-* This script will do the following:
-  * Start docker containers for each storage
-  * Bootstrap the physical storages (Create Kafka Topic and HBase tables)
-  * Start a spark-shell with gimel jar added
+
+**Note:** *This script will do the following*
+  * *Start docker containers for each storage*
+  * *Bootstrap the physical storages (Create Kafka Topic and HBase tables)*
   
-Note: If you want to start your own spark-shell, Run the following command
+  
+* To start the spark shell run the following command
 
 ```
 docker exec -it spark-master bash -c \
 "export USER=an;export SPARK_HOME=/spark/;export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin; \
 /spark/bin/spark-shell --jars /root/gimel-sql-1.2.0-SNAPSHOT-uber.jar"
 ```
-  
+
+**Note:** *You can view the Spark UI  <a href=http://localhost:4040>here</a>
 ___________________________________________________________________________________________________________________
 
 ## Common Imports and Initializations

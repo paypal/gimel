@@ -15,9 +15,9 @@
 
 CREATE DATABASE IF NOT EXISTS pcatalog;
 
-drop table if exists pcatalog.flights_kafka;
+drop table if exists pcatalog.flights_kafka_json;
 
-CREATE EXTERNAL TABLE `pcatalog.flights_kafka`(
+CREATE EXTERNAL TABLE `pcatalog.flights_kafka_json`(
   `payload` string)
 ROW FORMAT SERDE
   'org.apache.hadoop.hive.serde2.lazy.LazySimpleSerDe'
