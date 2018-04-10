@@ -3,10 +3,13 @@
     * [Load Flights Data into Kafka Dataset](#load-flights-data-into-kafka-dataset)
     * [Cache Flights](#cache-flights)
     * [Read Data from Kafka](#read-data-from-kafka)
-* [Scala API](#scala-api)
+* [Scala API for Catalog Provider-USER](#scala-api-for-catalog-provider--user)
     * [Set Options](#set-options)
-    * [Load Flights Data into Kafka Dataset](#load-flights-data-into-kafka-dataset)
-    * [Read Data from Kafka](#read-data-from-kafka)
+    * [Load Flights Data into HBase Dataset](#load-flights-data-into-hbase-dataset)
+    * [Read Data from HBase](#read-data-from-hbase)
+* [Scala API for Catalog Provider-HIVE](#scala-api-for-catalog-provider--hive)
+    * [Load Flights Data into HBase Dataset](#load-flights-data-into-hbase-dataset)
+    * [Read Data from HBase](#read-data-from-hbase)
    
 # G-SQL
 
@@ -14,27 +17,21 @@
 ### Load Flights Lookup Data into HBase Datasets
 
 ```
-gsql(
-"insert into pcatalog.flights_lookup_cancellation_code_hbase select * from pcatalog.flights_lookup_cancellation_code_hdfs")
+gsql("insert into pcatalog.flights_lookup_cancellation_code_hbase select * from pcatalog.flights_lookup_cancellation_code_hdfs")
 
-gsql(
-"insert into pcatalog.flights_lookup_airline_id_hbase select * from pcatalog.flights_lookup_airline_id_hdfs")
+gsql("insert into pcatalog.flights_lookup_airline_id_hbase select * from pcatalog.flights_lookup_airline_id_hdfs")
 
-gsql(
-"insert into pcatalog.flights_lookup_carrier_code_hbase select * from pcatalog.flights_lookup_carrier_code_hdfs")
+gsql("insert into pcatalog.flights_lookup_carrier_code_hbase select * from pcatalog.flights_lookup_carrier_code_hdfs")
 ```
 
 ## Cache lookup Tables from HBase
 
 ```
-gsql(
-"cache table lkp_carrier select * from pcatalog.flights_lookup_carrier_code_hbase")
+gsql("cache table lkp_carrier select * from pcatalog.flights_lookup_carrier_code_hbase")
 
-gsql(
-"cache table lkp_airline select * from pcatalog.flights_lookup_airline_id_hbase")
+gsql("cache table lkp_airline select * from pcatalog.flights_lookup_airline_id_hbase")
 
-gsql(
-"cache table lkp_cancellation select * from pcatalog.flights_lookup_cancellation_code_hbase")
+gsql("cache table lkp_cancellation select * from pcatalog.flights_lookup_cancellation_code_hbase")
 
 ```
 
@@ -46,11 +43,11 @@ gsql("select * from lkp_cancellation").show(10)
 ```
 ______________________________________________________
 
-# Scala API
+# Scala API for Catalog Provider-USER
 
 ## Set options
 ```
-scala> val datasetPropsJson = {
+val datasetPropsJson = {
                                   "datasetType": "HBASE",
                                   "fields": [
                                       {
@@ -74,7 +71,7 @@ scala> val datasetPropsJson = {
                                   }
                               }
                               
-scala> val datasetHivePropsJson = """{ 
+val datasetHivePropsJson = """{ 
                                          "datasetType": "HDFS",
                                          "fields": [],
                                          "partitionFields": [],
@@ -85,25 +82,51 @@ scala> val datasetHivePropsJson = """{
                                          }
                                      }"""
                                      
-scala> val hbaseoptions = Map("pcatalog.flights_lookup_cancellation_code_hbase.dataSetProperties"->datasetPropsJson)
+val hbaseoptions = Map("pcatalog.flights_lookup_cancellation_code_hbase.dataSetProperties"->datasetPropsJson)
 
-scala> val hiveOptions = Map("pcatalog.flights_lookup_cancellation_code_hdfs.dataSetProperties"->datasetHivePropsJson)
+val hiveOptions = Map("pcatalog.flights_lookup_cancellation_code_hdfs.dataSetProperties"->datasetHivePropsJson)
 ```
 
 ## Load Flights Data into HBase Dataset
 ```
-scala> import com.paypal.gimel._
-scala> val dataSet = DataSet(spark)
-scala> val hiveDf = dataSet.read("pcatalog.flights_lookup_cancellation_code_hdfs",hiveOptions)
-scala> hiveDf.count
-scala> val df =  dataSet.write("pcatalog.flights_lookup_cancellation_code_hbase",hivedf,hbaseoptions)
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val hiveDf = dataSet.read("pcatalog.flights_lookup_cancellation_code_hdfs",hiveOptions)
+hiveDf.count
+val df =  dataSet.write("pcatalog.flights_lookup_cancellation_code_hbase",hivedf,hbaseoptions)
 ```
 
 ## Read Data from HBase
 ```
-scala> import com.paypal.gimel._
-scala> val dataSet = DataSet(spark)
-scala> val df = dataSet.read("pcatalog.flights_lookup_cancellation_code_hbase",hbaseoptions)
-scala> df.show(10)
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val df = dataSet.read("pcatalog.flights_lookup_cancellation_code_hbase",hbaseoptions)
+df.show(10)
 ```
+_________________________________________________
+
+
+# Scala API for Catalog Provider-HIVE
+
+*Please execute the steps in this section if you have choosen CatalogProvider as HIVE or if you executed the following command*
+
+```gsql("set gimel.catalog.provider=HIVE")```
+
+## Load Flights Data into HBase Dataset
+```
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val hiveDf = dataSet.read("pcatalog.flights_lookup_cancellation_code_hdfs")
+hiveDf.count
+val df =  dataSet.write("pcatalog.flights_lookup_cancellation_code_hbase",hivedf)
+```
+
+## Read Data from HBase
+```
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val df = dataSet.read("pcatalog.flights_lookup_cancellation_code_hbase")
+df.show(10)
+```
+
 _________________________________________________

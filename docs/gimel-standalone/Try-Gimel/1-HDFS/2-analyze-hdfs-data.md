@@ -1,5 +1,6 @@
 
 * [G-SQL](#g--sql)
+    * [Cache Airports Data from HDFS](#cache-airports-data-from-hdfs)
     * [Read Data from HDFS](#read-data-from-hdfs)
     * [Count Records from HDFS](#count-records-from-hdfs)
 * [Scala API](#scala-api)
@@ -8,6 +9,26 @@
    
 # G-SQL
 
+## Cache Airports Data from HDFS
+
+```
+val sql="""cache table lkp_airport
+select 
+struct(lat,lon) as location
+,concat(lat,",",lon) as location1
+, * 
+from 
+(
+select iata, lat, lon, country, city, name
+, row_number() over (partition by iata order by 1 desc ) as rnk
+from pcatalog.flights_lookup_airports_hdfs
+) tbl
+where rnk  = 1
+"""
+```
+```
+gsql(sql)
+```
 ## Read Data from HDFS
 ```
 gsql("select * from pcatalog.flights_hdfs").show()

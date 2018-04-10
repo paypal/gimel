@@ -46,7 +46,7 @@ left join lkp_airport lkp_airport_dest
 on flights_kafka.dest = lkp_airport_dest.iata
 """
 
-com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(sql,spark)
+com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(sql)
 ```
 
 ___________________________________________________________________________________________________________________
@@ -56,7 +56,7 @@ ________________________________________________________________________________
 ### Create Elastic Search Dataset
 
 ```
-gimelSql("""set pcatalog.gimel_flights_elastic.dataSetProperties=
+gsql("""set pcatalog.gimel_flights_elastic.dataSetProperties=
 {
     "datasetType": "ELASTIC_SEARCH",
     "fields": [],
@@ -87,7 +87,7 @@ val sql = """insert into pcatalog.gimel_flights_elastic
 select * from flights_log_enriched
 where cancelled = 1"""
 
-gimelSql(sql,spark)
+gsql(sql)
 ```
 
 ___________________________________________________________________________________________________________________
