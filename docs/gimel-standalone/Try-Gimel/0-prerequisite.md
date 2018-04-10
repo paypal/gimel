@@ -35,8 +35,8 @@ ________________________________________________________________________________
 
 ## Download the Gimel Jar
 
-* Clone the repo [Gimel](https://github.com/paypal/gimel)
-* Download the gimel jar from [Here](https://drive.google.com/uc?id=1mVia6-dTyX9ZU2-r91TFJu4_hEhapVRA&export=download)
+* Clone the repo <a href="https://github.com/paypal/gimel" target="_blank">Gimel</a>
+* Download the gimel jar from <a href="https://drive.google.com/uc?id=1mVia6-dTyX9ZU2-r91TFJu4_hEhapVRA&export=download" target="_blank">Here</a>
 * Navigate to the folder gimel/gimel-dataapi/gimel-standalone/ - ```cd gimel/gimel-dataapi/gimel-standalone/```
 * Create lib folder in gimel-standalone - ```mkdir lib```
 * Copy the downloaded jar in lib
@@ -52,7 +52,7 @@ $ quickstart/start-gimel {STORAGE_SYSTEM}
 
 * STORAGE_SYSTEM can be either ```all``` or comma seperated list like as follows
 ```
-$ quickstart/start-gimel kafka,elasticsearch,hbase
+$ quickstart/start-gimel kafka,elasticsearch,hbase-master,hbase-regionserver
 ```
 
 **Note:** *This script will do the following*
