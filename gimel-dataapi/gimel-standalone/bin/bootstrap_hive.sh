@@ -40,6 +40,6 @@ check_error()
 write_log "Creating Hive external tables for CSV data"
 
 docker cp $FLIGHTS_LOAD_DATA_SCRIPT hive-server:/root
-docker exec -it hive-server bash -c "hive -f /root/flights_load_data.sql"
+docker exec -it hive-server bash -c "hive -f /root/bootstrap_hive.sql"
 
 check_error $? 999 "Creating Hive external tables - failed"

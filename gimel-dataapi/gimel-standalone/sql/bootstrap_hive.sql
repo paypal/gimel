@@ -1,6 +1,6 @@
 CREATE DATABASE IF NOT EXISTS pcatalog;
 
-drop table pcatalog.flights_lookup_carrier_code_hdfs;
+drop table if exists pcatalog.flights_lookup_carrier_code_hdfs;
 
 CREATE external TABLE if not exists pcatalog.flights_lookup_carrier_code_hdfs(
   payload string)
@@ -10,7 +10,7 @@ TBLPROPERTIES (
   'gimel.hdfs.data.format'='csv'
 );
 
-drop table pcatalog.flights_lookup_airline_id_hdfs;
+drop table if exists pcatalog.flights_lookup_airline_id_hdfs;
 
 CREATE external TABLE if not exists pcatalog.flights_lookup_airline_id_hdfs(
   payload string)
@@ -20,7 +20,7 @@ TBLPROPERTIES (
   'gimel.hdfs.data.format'='csv'
 );
 
-drop table pcatalog.flights_lookup_cancellation_code_hdfs;
+drop table if exists pcatalog.flights_lookup_cancellation_code_hdfs;
 
 CREATE external TABLE if not exists pcatalog.flights_lookup_cancellation_code_hdfs(
   payload string)
@@ -30,7 +30,7 @@ TBLPROPERTIES (
   'gimel.hdfs.data.format'='csv'
 );
 
-drop table pcatalog.flights_lookup_airports_hdfs;
+drop table if exists pcatalog.flights_lookup_airports_hdfs;
 
 CREATE external TABLE if not exists pcatalog.flights_lookup_airports_hdfs(
   payload string)
@@ -40,7 +40,7 @@ TBLPROPERTIES (
   'gimel.hdfs.data.format'='csv'
 );
 
-drop table pcatalog.flights_hdfs;
+drop table if exists pcatalog.flights_hdfs;
 CREATE external TABLE if not exists pcatalog.flights_hdfs(
   payload string)
 PARTITIONED BY (
@@ -52,6 +52,8 @@ TBLPROPERTIES (
   'gimel.storage.type'='HDFS',
   'gimel.hdfs.data.format'='csv'
 );
+
+drop table if exists pcatalog.flights_hdfs_2017_10;
 
 CREATE external TABLE if not exists pcatalog.flights_hdfs_2017_10(
   payload string)
