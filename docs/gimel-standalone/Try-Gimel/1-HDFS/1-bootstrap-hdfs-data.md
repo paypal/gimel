@@ -131,7 +131,7 @@ ________________________________________________________________________________
     <tr>
       <td align="center">USER</td>
       <td align="left">
-      
+     
       gsql("""set pcatalog.flights_lookup_airline_id_hdfs.dataSetProperties={
           "datasetType": "HDFS",
           "fields": [],
