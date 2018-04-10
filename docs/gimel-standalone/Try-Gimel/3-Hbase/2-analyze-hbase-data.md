@@ -126,7 +126,7 @@ val dataSet = DataSet(spark)
 val hiveDf = dataSet.read("pcatalog.flights_lookup_cancellation_code_hdfs")
 hiveDf.count
 val options = Map("gimel.hbase.rowkey"->"Code")
-val df =  dataSet.write("pcatalog.flights_lookup_cancellation_code_hbase",hivedf)
+val df =  dataSet.write("pcatalog.flights_lookup_cancellation_code_hbase",hivedf,options)
 ```
 
 ## Read Data from HBase
