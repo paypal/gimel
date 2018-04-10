@@ -36,7 +36,7 @@ ______________________________________________________
 ```gsql("set gimel.catalog.provider=USER")```
 ## Set options
 ```
-val datasetPropsJson = {
+val datasetPropsJson = """{
                                   "datasetType": "ELASTIC_SEARCH",
                                   "fields": [],
                                   "partitionFields": [],
@@ -55,8 +55,8 @@ val datasetPropsJson = {
                               		  "gimel.storage.type":"ELASTIC_SEARCH",
                               		  "datasetName":"pcatalog.gimel_flights_elastic"
                                   }
-                              }
-val options = Map("pcatalog.flights_hdfs.dataSetProperties"->datasetPropsJson)
+                              }"""
+val options = Map("pcatalog.gimel_flights_elastic.dataSetProperties"->datasetPropsJson)
 
 val datasetHivePropsJson = """{ 
                                       "datasetType": "HDFS",
@@ -110,7 +110,7 @@ df.count
 ```
 import com.paypal.gimel._
 val dataSet = DataSet(spark)
-val df = dataSet.read("pcatalog.flights_lookup_cancellation_code_hbase")
+val df = dataSet.read("pcatalog.gimel_flights_elastic")
 df.show(10)
 ```
 
