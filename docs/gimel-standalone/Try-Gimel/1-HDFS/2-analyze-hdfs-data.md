@@ -46,7 +46,18 @@ ______________________________________________________
 ```
 import com.paypal.gimel._
 val dataSet = DataSet(spark)
-val df = dataSet.read("pcatalog.flights_hdfs")
+val datasetHivePropsJson = """{ 
+                                      "datasetType": "HDFS",
+                                      "fields": [],
+                                      "partitionFields": [],
+                                      "props": {
+                                           "gimel.hdfs.data.format":"csv",
+                                           "location":"hdfs://namenode:8020/flights/data",
+                                           "datasetName":"pcatalog.flights_hdfs"
+                                      }
+                                  }"""
+val options=  Map("pcatalog.flights_hdfs.dataSetProperties"->datasetHivePropsJson)
+val df = dataSet.read("pcatalog.flights_hdfs",options)
 df.count
 ```
 

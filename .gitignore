@@ -30,3 +30,5 @@ project/
 *.gimel_logs
 tmp
 __MACOSX
+gimel-dataapi/gimel-quickstart/flights/
+gimel-dataapi/gimel-standalone/lib/

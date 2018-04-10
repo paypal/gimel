@@ -54,7 +54,7 @@ ______________________________________________________
 
 ## Set options
 ```
-val datasetPropsJson = {
+val datasetPropsJson = """{
                                   "datasetType": "HBASE",
                                   "fields": [
                                       {
@@ -76,7 +76,7 @@ val datasetPropsJson = {
                                       "gimel.hbase.columns.mapping":":key,flights:Description",
                                        "datasetName":"pcatalog.flights_lookup_cancellation_code_hbase"
                                   }
-                              }
+                              }"""
                               
 val datasetHivePropsJson = """{ 
                                          "datasetType": "HDFS",
