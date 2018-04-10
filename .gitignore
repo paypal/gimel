@@ -27,3 +27,6 @@ project/
 .sw*
 **/*.eml
 *.log
+*.gimel_logs
+tmp
+__MACOSX
