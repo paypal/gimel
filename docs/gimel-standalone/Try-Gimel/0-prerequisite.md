@@ -45,6 +45,11 @@ ________________________________________________________________________________
 
 ## Run Gimel Quickstart Script
 
+* Navigate back to the GIMEL-HOME folder
+```
+$ cd ../../
+```
+
 * To install all the dockers and bootstrap storages, please execute the following command
 ```
 $ quickstart/start-gimel {STORAGE_SYSTEM}
