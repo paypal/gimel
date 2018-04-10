@@ -33,7 +33,7 @@ import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+  info(s"Initiated ${this.getClass.getName}")
 
   val dataSetName = s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestESHiveTable}"
 
@@ -65,7 +65,7 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, gime
   private def cleanUpESHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropDDL = s"drop table if exists $dataSetName"
@@ -87,9 +87,9 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, gime
   private def cleanUpES(url: String) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
-    logger.info("delete index")
-    logger.info(url)
+    info(" @Begin --> " + MethodName)
+    info("delete index")
+    info(url)
     try {
       val output = storageadmin.ESAdminClient.deleteIndex(url)
       stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -109,7 +109,7 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, gime
   private def bootStrapES() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val typeName = gimelProps.tagToAdd.replace("_", "")

@@ -32,7 +32,6 @@ import com.paypal.gimel.kafka.reader.KafkaBatchConsumer
 import com.paypal.gimel.kafka.utilities.ImplicitZKCheckPointers._
 import com.paypal.gimel.kafka.utilities.ZooKeeperHostAndNode
 import com.paypal.gimel.kafka.writer.KafkaBatchProducer
-import com.paypal.gimel.logger.Logger
 
 /**
   * Concrete Implementation for Kafka DataSet
@@ -42,9 +41,7 @@ import com.paypal.gimel.logger.Logger
 
 class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
 
-  // GET LOGGER
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+  info(s"Initiated --> ${this.getClass.getName}")
 
   var readTillOffsetRange: Option[Array[OffsetRange]] = None
   var alreadyCheckPointed = false
@@ -56,14 +53,14 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     */
   def saveCheckPoint(): Unit = {
     if (alreadyCheckPointed) {
-      logger.warning("Already Check-Pointed, Consume Again to Checkpoint !")
+      warning("Already Check-Pointed, Consume Again to Checkpoint !")
     } else {
       val zkNode = conf.zkCheckPoint
       val zkHost = conf.zkHostAndPort
       val zk = ZooKeeperHostAndNode(zkHost, zkNode)
       (zk, readTillOffsetRange.get).saveZkCheckPoint
       alreadyCheckPointed = true
-      logger.info(s"Check-Point --> ${readTillOffsetRange.get.mkString("|")} | Success @ -> ${zk} ")
+      info(s"Check-Point --> ${readTillOffsetRange.get.mkString("|")} | Success @ -> ${zk} ")
     }
   }
 

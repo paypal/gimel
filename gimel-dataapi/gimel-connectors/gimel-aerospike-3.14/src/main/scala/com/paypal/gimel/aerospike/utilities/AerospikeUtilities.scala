@@ -30,8 +30,7 @@ import com.paypal.gimel.logger.Logger
   * Utilities for Aerospike Dataset
   */
 
-object AerospikeUtilities {
-  val logger = Logger()
+object AerospikeUtilities extends Logger {
 
   /**
     * This function performs write into aerospike table
@@ -48,7 +47,7 @@ object AerospikeUtilities {
     try {
       val columns = dataFrame.columns.toSeq
       if (conf.aerospikeRowKey.isEmpty) {
-        logger.error("Row key not found.")
+        error("Row key not found.")
         throw AerospikeDataSetException("Row key not found.")
       }
       val aerospikeHosts = conf.aerospikeSeedHosts

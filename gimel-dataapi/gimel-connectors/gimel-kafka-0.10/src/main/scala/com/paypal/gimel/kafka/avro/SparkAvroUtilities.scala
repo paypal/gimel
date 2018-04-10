@@ -40,9 +40,7 @@ import com.paypal.gimel.logger.Logger
   * Avro - Spark Conversion operations are implemented here
   */
 
-object SparkAvroUtilities {
-
-  val logger = Logger()
+object SparkAvroUtilities extends Logger {
 
   /**
     * Converts a DataFrame into RDD[Avro Generic Record]
@@ -55,7 +53,7 @@ object SparkAvroUtilities {
   def dataFrametoGenericRecord(dataFrame: DataFrame, avroSchemaString: String): RDD[GenericRecord] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       if (!isDFFieldsEqualAvroFields(dataFrame, avroSchemaString)) {
@@ -101,7 +99,7 @@ object SparkAvroUtilities {
   def genericRecordToDFViaAvroSQLConvertor(sqlContext: SQLContext, genericRecRDD: RDD[GenericRecord], schemaString: String): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     import com.databricks.spark.avro.SchemaConverters._
     try {
       val rowRDD: RDD[Row] = genericRecRDD.map { x =>
@@ -131,7 +129,7 @@ object SparkAvroUtilities {
   def isDFFieldsEqualAvroFields(dataFrame: DataFrame, avroSchemaString: String): Boolean = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dfFields = dataFrame.schema.fieldNames
@@ -148,7 +146,7 @@ object SparkAvroUtilities {
              |Missing Fields in Avro --> ${inDFMissingInAvro.mkString(",")}
              |Missing Fields in DataFrame --> ${inAvroMissingInDF.mkString(",")}
           """.stripMargin
-        logger.warning(warningMessage)
+        warning(warningMessage)
       }
       isMatching
     } catch {
@@ -293,7 +291,7 @@ object SparkAvroUtilities {
   def genericRecordToDataFrameViaJSON(sqlContext: SQLContext, genericRecRDD: RDD[GenericRecord], schemaString: String): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val avroSchema: Schema = (new Schema.Parser).parse(schemaString)

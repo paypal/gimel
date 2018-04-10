@@ -26,6 +26,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.security.UserGroupInformation
 
 import com.paypal.gimel.common.conf.{GimelConstants, GimelProperties}
+import com.paypal.gimel.logger.Logger
 
 object HiveJDBCUtils {
 
@@ -34,10 +35,8 @@ object HiveJDBCUtils {
   }
 }
 
-class HiveJDBCUtils(val props: GimelProperties, cluster: String = "unknown_cluster") {
-  val logger = com.paypal.gimel.logger.Logger()
-
-  logger.info("Using Supplied KeyTab to authenticate KDC...")
+class HiveJDBCUtils(val props: GimelProperties, cluster: String = "unknown_cluster") extends Logger {
+  info("Using Supplied KeyTab to authenticate KDC...")
   val conf = new Configuration
   conf.set(GimelConstants.SECURITY_AUTH, "kerberos")
   UserGroupInformation.setConfiguration(conf)
@@ -55,8 +54,8 @@ class HiveJDBCUtils(val props: GimelProperties, cluster: String = "unknown_clust
   def withConnection(fn: Connection => Any): Any = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
-    logger.info("Trying to create hive connection")
+    info(" @Begin --> " + MethodName)
+    info("Trying to create hive connection")
     val connection = ugi.doAs(new PrivilegedAction[Connection] {
       override def run(): Connection = DriverManager.getConnection(props.hiveURL(cluster))
     }
@@ -86,7 +85,7 @@ class HiveJDBCUtils(val props: GimelProperties, cluster: String = "unknown_clust
   def withStatement(fn: Statement => Any): Any = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     withConnection {
       connection =>
         val statement = connection.createStatement

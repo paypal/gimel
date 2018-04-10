@@ -32,10 +32,9 @@ import com.paypal.gimel.logger.Logger
   *
   * @param props Cassandra Client properties.
   */
-class CassandraClientConfiguration(val props: Map[String, Any]) {
-  private val logger = Logger()
-  logger.info(s"Begin Building --> ${this.getClass.getName}")
-  logger.debug(s"Incoming Properties --> ${props.map(x => s"${x._1} -> ${x._2}").mkString("\n")}")
+class CassandraClientConfiguration(val props: Map[String, Any]) extends Logger {
+  info(s"Begin Building --> ${this.getClass.getName}")
+  debug(s"Incoming Properties --> ${props.map(x => s"${x._1} -> ${x._2}").mkString("\n")}")
 
   // Load Default Prop from Resource File
   val pcatProps = GimelProperties()
@@ -47,7 +46,7 @@ class CassandraClientConfiguration(val props: Map[String, Any]) {
   val datasetProps: DataSetProperties = props(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
   val tableProps: Map[String, String] = datasetProps.props
 
-  logger.info(s"Hive Table Props --> ${tableProps.map(x => s"${x._1} --> ${x._2}").mkString("\n")}")
+  info(s"Hive Table Props --> ${tableProps.map(x => s"${x._1} --> ${x._2}").mkString("\n")}")
 
   private def errorIfMissing(key: String): Unit = {
     if (tableProps.get(key).isEmpty) {

@@ -26,6 +26,8 @@ import org.apache.spark.streaming.StreamingContext
 import org.apache.spark.streaming.dstream._
 import org.apache.spark.streaming.kafka010.OffsetRange
 
+import com.paypal.gimel.logger.Logger
+
 /**
   * A Wrapper for Data Returning to Client
   *
@@ -79,7 +81,7 @@ case class StreamingResult(val dStream: DStream[WrappedData],
   }
 }
 
-abstract class GimelDataStream(streamingContext: StreamingContext) {
+abstract class GimelDataStream(streamingContext: StreamingContext) extends Logger{
 
   /**
     * Provides DStream for a given configuration

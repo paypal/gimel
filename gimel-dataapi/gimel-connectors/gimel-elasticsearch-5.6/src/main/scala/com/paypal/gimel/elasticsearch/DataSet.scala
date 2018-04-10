@@ -44,8 +44,7 @@ import com.paypal.gimel.logger.Logger
 class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
 
   // GET LOGGER
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+  info(s"Initiated --> ${this.getClass.getName}")
   val sqlContext: SQLContext = sparkSession.sqlContext
 
   /** Read Implementation for Elastic Search
@@ -69,17 +68,17 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     val dataSets: Seq[String] = ElasticSearchUtilities.validateAndDeduceDatasets(esOptions, ElasticSearchConstants.esReadFlag)
     esOptions.get("JSON") match {
       case Some("TRUE") =>
-        logger.info(s"JSON read API...")
+        info(s"JSON read API...")
         dataSets.foreach(dataSet => {
-          logger.info("Dataset -> " + dataSet)
+          info("Dataset -> " + dataSet)
           val jsonData: RDD[(String, String)] = EsSpark.esJsonRDD(sqlContext.sparkContext, dataSet, esOptions)
           val dataFrame: DataFrame = sqlContext.read.json(jsonData.map { x => x._2 })
           dataFrames :+= dataFrame
         })
       case _ =>
-        logger.info(s"Read API...")
+        info(s"Read API...")
         dataSets.foreach(dataSet => {
-          logger.info("Dataset -> " + dataSet)
+          info("Dataset -> " + dataSet)
           val dataFrame: DataFrame = sqlContext.esDF(dataSet, esOptions)
           dataFrames :+= dataFrame
         })
@@ -145,7 +144,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
         val statusCode: Int = serviceUtility.getStatusCode(esUrl)
         statusCode match {
           case GimelConstants.HTTP_SUCCESS_STATUS_CODE =>
-            logger.info("dataSet already indexed ->" + dataSet + ". Proceed to Write.")
+            info("dataSet already indexed ->" + dataSet + ". Proceed to Write.")
           case _ =>
             val esMapping: String = esOptions.getOrElse(ElasticSearchConfigs.esMapping, "")
             val esPayload: String = ElasticSearchUtilities.generateESPayload(dataFrame, dataSet, esMapping)
@@ -211,7 +210,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
         val statusCode: Int = serviceUtility.getStatusCode(esUrl)
         statusCode match {
           case GimelConstants.HTTP_SUCCESS_STATUS_CODE =>
-            logger.info("dataSet already indexed ->" + dataSet + ". Proceed to Write.")
+            info("dataSet already indexed ->" + dataSet + ". Proceed to Write.")
           case _ =>
             val esMapping: String = esOptions.getOrElse(ElasticSearchConfigs.esMapping, "")
             if (esMapping.length == 0) {

@@ -35,7 +35,7 @@ import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+  info(s"Initiated ${this.getClass.getName}")
 
   val dataSetName = s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestHBASEHiveTable}"
 
@@ -47,7 +47,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   override def cleanUp(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     cleanUpHBase()
     cleanUpHBaseHive()
@@ -72,7 +72,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   private def bootStrapHBase() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       // cleanUpHBase()
@@ -99,7 +99,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   override def prepareSmokeTestData(numberOfRows: Int = 1000): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       def stringed(n: Int) = s"""{"id": $n,"name": "MAC-$n", "address": "MAC-${n + 1}", "age": "${n + 1}", "company": "MAC-$n", "designation": "MAC-$n", "salary": "${n * 10000}" }"""
@@ -124,7 +124,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   private def bootStrapHBaseHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val hbaseNameSpace: String = gimelProps.hbaseNameSpace
@@ -135,7 +135,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
       val rowkeyColumn: String = gimelProps.smokeTestHBASETableRowKey
       val cfColsMap: Map[String, Array[String]] = gimelProps.smokeTestHBASETableColumns.split('|').map(x => (x.split(':')(0), x.split(':')(1).split(','))).toMap
       val hbaseDDL = HiveSchemaUtils.generateTableDDL(hiveDB, hbaseHiveTableName, hbaseNameSpace, hbaseTableName, columnSet, rowkeyColumn, cfColsMap).replaceAllLiterally(";", "")
-      logger.info("Hbase Hive DDL: " + hbaseDDL)
+      info("Hbase Hive DDL: " + hbaseDDL)
       // we are adding these jars because Hive Session needs these jar for executing the above DDL(It needs hbase-hadoop jar for Hbase Handler)
       // we are not using hiveContext.sql because spark 2.1 version doesnt support Stored by Hbase Storage Handler.so we are replacing with Hive JDBC as it supports both versions(1.6 and 2.1)
 
@@ -159,53 +159,53 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"$MethodName-$storage"
     try {
       val testData = prepareSmokeTestData(gimelProps.smokeTestSampleRowsCount.toInt)
       val dataSet = dataSetName
-      logger.info(s"$tag | Begin Write to $dataSet...")
+      info(s"$tag | Begin Write to $dataSet...")
       dataset.write(dataSet, testData)
-      logger.info(s"$tag | Write Success.")
+      info(s"$tag | Write Success.")
 
       val rowKeyColumn: String = gimelProps.smokeTestHBASETableRowKey
 
       // Validating LookUp on rowKey
-      logger.info(s"$tag | Read from $dataSet... - Lookup on rowKey = 1")
+      info(s"$tag | Read from $dataSet... - Lookup on rowKey = 1")
       val testDataRowKey = testData.filter(col(rowKeyColumn) === "1").drop(rowKeyColumn)
       val optionsRowKey: Map[String, Any] = Map(HbaseConfigs.hbaseOperation -> "get", HbaseConfigs.hbaseFilter -> "rowKey=1")
       val readDFRowKey = dataset.read(dataSet, optionsRowKey)
       val countRowKey = readDFRowKey.cache.count()
-      logger.info(s"$tag | Read Count $countRowKey...")
-      logger.info(s"$tag | Sample 10 Rows -->")
+      info(s"$tag | Read Count $countRowKey...")
+      info(s"$tag | Sample 10 Rows -->")
       readDFRowKey.show(10)
       compareDataFrames(testDataRowKey, readDFRowKey)
 
       // Validating LookUp on rowKey+ColumnFamily
       val cfColsMap: Map[String, Array[String]] = gimelProps.smokeTestHBASETableColumns.split('|').map(x => (x.split(':')(0), x.split(':')(1).split(','))).toMap
       val cfToGet = gimelProps.smokeTestHBASETableColumnFamily.split(",")(0)
-      logger.info(s"$tag | Read from $dataSet... - Lookup on rowKey = 1 and column family = " + cfToGet)
+      info(s"$tag | Read from $dataSet... - Lookup on rowKey = 1 and column family = " + cfToGet)
       val columnsToInclude: Array[String] = cfColsMap.getOrElse(cfToGet, Array.empty[String])
       val testDataRowKeyCf = testData.filter(col(rowKeyColumn) === "1").select(columnsToInclude.map(c => col(c)): _*)
       val optionsRowKeyCf = Map(HbaseConfigs.hbaseOperation -> "get", HbaseConfigs.hbaseFilter -> s"rowKey=1:toGet=$cfToGet")
       val readDFRowKeyCf = dataset.read(dataSet, optionsRowKeyCf)
       val countRowKeyCf = readDFRowKeyCf.cache.count()
-      logger.info(s"$tag | Read Count $countRowKeyCf...")
-      logger.info(s"$tag | Sample 10 Rows -->")
+      info(s"$tag | Read Count $countRowKeyCf...")
+      info(s"$tag | Sample 10 Rows -->")
       readDFRowKeyCf.show(10)
       compareDataFrames(testDataRowKeyCf, readDFRowKeyCf)
 
       // Validating LookUp on rowKey+ColumnFamily+Column
       val columnToGet = columnsToInclude(0)
-      logger.info(s"$tag | Read from $dataSet... - Lookup on rowKey = 1, column family = " + cfToGet + " and column = " + columnToGet)
+      info(s"$tag | Read from $dataSet... - Lookup on rowKey = 1, column family = " + cfToGet + " and column = " + columnToGet)
       val testDataRowKeyCfCol = testData.filter(col(rowKeyColumn) === "1").select(col(columnToGet))
       val optionsRowKeyCfCol = Map(HbaseConfigs.hbaseOperation -> "get", HbaseConfigs.hbaseFilter -> s"rowKey=1:toGet=$cfToGet-$columnToGet")
       val readDFRowKeyCfCol = dataset.read(dataSet, optionsRowKeyCfCol)
       val countRowKeyCfCol = readDFRowKeyCfCol.cache.count()
-      logger.info(s"$tag | Read Count $countRowKeyCfCol...")
-      logger.info(s"$tag | Sample 10 Rows -->")
+      info(s"$tag | Read Count $countRowKeyCfCol...")
+      info(s"$tag | Sample 10 Rows -->")
       readDFRowKeyCfCol.show(10)
       compareDataFrames(testDataRowKeyCfCol, readDFRowKeyCfCol)
 
@@ -226,10 +226,10 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   private def cleanUpHBase() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
-      logger.info("Dropping HBASE table --> ")
+      info("Dropping HBASE table --> ")
       storageadmin.HBaseAdminClient.deleteHbaseTable(
         gimelProps.hbaseNameSpace
         , gimelProps.smokeTestHBASETable
@@ -249,7 +249,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   private def cleanUpHBaseHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropTableStatement = s"drop table if exists $dataSetName"

@@ -30,9 +30,7 @@ import com.paypal.gimel.common.conf._
 import com.paypal.gimel.kafka.conf.KafkaConfigs
 import com.paypal.gimel.logger.Logger
 
-class GimelBenchmarkProperties(userProps: Map[String, String] = Map[String, String]()) {
-  // Get Logger
-  val logger = Logger()
+class GimelBenchmarkProperties(userProps: Map[String, String] = Map[String, String]()) extends Logger {
   // Get Properties
   val props: mutable.Map[String, String] = getProps
   val runTagUUID: String = java.util.UUID.randomUUID.toString
@@ -153,8 +151,8 @@ class GimelBenchmarkProperties(userProps: Map[String, String] = Map[String, Stri
     props.load(configStream)
     configStream.close()
     val finalProps: mutable.Map[String, String] = mutable.Map(props.asScala.toSeq: _*)
-    logger.info("PCatalog BenchMark Properties -->")
-    finalProps.foreach(prop => logger.info(prop))
+    info("PCatalog BenchMark Properties -->")
+    finalProps.foreach(prop => info(prop))
     finalProps
   }
 }

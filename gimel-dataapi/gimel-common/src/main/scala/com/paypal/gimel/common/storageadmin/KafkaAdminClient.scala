@@ -30,9 +30,7 @@ import org.apache.kafka.common.security.JaasUtils
 
 import com.paypal.gimel.logger.Logger
 
-object KafkaAdminClient {
-
-  val logger = Logger()
+object KafkaAdminClient extends Logger {
 
   val isSecurityEnabled = JaasUtils.isZkSecurityEnabled()
   val sessionTimeOutInMs: Int = 10 * 1000
@@ -50,7 +48,7 @@ object KafkaAdminClient {
     */
   def createTopicIfNotExists(zookKeeperHostAndPort: String, kafkaTopicName: String, numberOfPartitions: Int, numberOfReplica: Int): Unit = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val topicName = kafkaTopicName
     val noOfPartitions = numberOfPartitions
@@ -61,7 +59,7 @@ object KafkaAdminClient {
     val zkUtil: ZkUtils = new ZkUtils(client, connect, isSecurityEnabled)
     if (!AdminUtils.topicExists(zkUtil, topicName)) {
       AdminUtils.createTopic(zkUtil, topicName, noOfPartitions, noOfReplication, topicConfiguration)
-      logger.info(AdminUtils.fetchTopicMetadataFromZk(kafkaTopicName, zkUtil))
+      info(AdminUtils.fetchTopicMetadataFromZk(kafkaTopicName, zkUtil))
     }
     connect.close()
   }
@@ -74,7 +72,7 @@ object KafkaAdminClient {
     */
   def deleteTopicIfExists(zookKeeperHostAndPort: String, kafkaTopicName: String): Unit = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val topicName = kafkaTopicName
     val client = zkClient(zookKeeperHostAndPort)
@@ -95,7 +93,7 @@ object KafkaAdminClient {
     */
   def isTopicExists(zookKeeperHostAndPort: String, kafkaTopicName: String): Boolean = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val client = zkClient(zookKeeperHostAndPort)
     val connect = zkConnection(zookKeeperHostAndPort)

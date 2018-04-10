@@ -41,10 +41,9 @@ import com.paypal.gimel.logger.Logger
 /**
   * Elastic Search Functionalities internal to PCatalog
   */
-object ElasticSearchUtilities {
+object ElasticSearchUtilities extends Logger {
 
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+  info(s"Initiated --> ${this.getClass.getName}")
 
   /**
     * addClusterConfig - function to pull the cluster configuration either from the hive table or from the user's options
@@ -55,7 +54,7 @@ object ElasticSearchUtilities {
     */
 
   def addClusterConfig(propsMap: Map[String, Any], dataset: String, operationFlag: Int): Map[String, String] = {
-    logger.info("Pulling hive table properties")
+    info("Pulling hive table properties")
 
     val dataSetProperties = propsMap(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
     val tableProperties = dataSetProperties.props
@@ -89,7 +88,7 @@ object ElasticSearchUtilities {
       ElasticSearchConfigs.esDelimiter -> tableProperties.getOrElse(ElasticSearchConfigs.esDelimiter, "_")
     ) ++ propsMap.map { x => (x._1, x._2.toString) }
 
-    logger.info(s"Resolved ES configuration --> ${finalProps.mkString(",")}")
+    info(s"Resolved ES configuration --> ${finalProps.mkString(",")}")
 
     finalProps
   }
@@ -116,16 +115,16 @@ object ElasticSearchUtilities {
   def generateESPayload(dataFrame: DataFrame, dataSet: String, schemaPayload: String): String = {
 
     if (schemaPayload == null || schemaPayload.length == 0) {
-      logger.info("Mapping not supplied by the User. Proceed with default Schema.")
+      info("Mapping not supplied by the User. Proceed with default Schema.")
       val columnsFromDF: Array[StructField] = dataFrame.schema.fields
       val columnsArray: String = columnsFromDF.map(column => {
         s""""${column.name}":{"type":"${ElasticSearchConstants.dataFrameESMapping(column.dataType.toString)}"}"""
       }).mkString("{", ",", "}")
       val esPayload: String = s"""{"mappings":{"${dataSet.split(ElasticSearchConstants.slashSeparator)(1)}":{"properties":$columnsArray}}}"""
-      logger.info("Payload to ES -> " + esPayload)
+      info("Payload to ES -> " + esPayload)
       esPayload
     } else {
-      logger.info("Mapping supplied by the User. Creating index with user specified Mapping.")
+      info("Mapping supplied by the User. Creating index with user specified Mapping.")
       val esPayload: String = s"""{"mappings":{"${dataSet.split(ElasticSearchConstants.slashSeparator)(1)}":{"properties":$schemaPayload}}}"""
       esPayload
     }
@@ -150,7 +149,7 @@ object ElasticSearchUtilities {
 
         // check for the partition list. If its empty throw an error
         if (esOptions.get(ElasticSearchConfigs.esPartition) == null) {
-          logger.error("Incorrect Usage of API. Parititon value cannot be empty ")
+          error("Incorrect Usage of API. Parititon value cannot be empty ")
           throw DataSetException("Incorrect usage of the API. Partition Value can not be empty.")
         }
 
@@ -159,7 +158,7 @@ object ElasticSearchUtilities {
         val indexTypeArray: Array[String] = actualResource.split(ElasticSearchConstants.slashSeparator)
         // if the resource doesnt have a '/', throw an error
         if (indexTypeArray.length != 2) {
-          logger.error("Invalid Resource Type")
+          error("Invalid Resource Type")
           throw DataSetException("Invalid resource type.")
         }
 
@@ -177,14 +176,14 @@ object ElasticSearchUtilities {
               val port: String = esOptions(GimelConstants.ES_PORT)
               val separator: String = ElasticSearchConstants.slashSeparator
               val esUrl: String = esHost + ElasticSearchConstants.colon + port + separator + indexName.concat(esOptions(ElasticSearchConfigs.esDelimiter)).concat(partitions) + separator + ElasticSearchConstants.aliases
-              logger.info("ES URL -> " + esUrl)
+              info("ES URL -> " + esUrl)
               val serviceUtility: GimelServiceUtilities = GimelServiceUtilities()
               val response: JsObject = serviceUtility.getAsObject(esUrl)
               response.fields.foreach(x => {
                 dataSets :+= x._1.toString
               })
             case ElasticSearchConstants.esWriteFlag =>
-              logger.info("Continue Writing data")
+              info("Continue Writing data")
           }
         } else {
           // for multiple partitions without wild card
@@ -194,11 +193,11 @@ object ElasticSearchUtilities {
           operationFlag match {
             case ElasticSearchConstants.esWriteFlag =>
               if (partitionsArray.length > 1) {
-                logger.error("Incorrect Usage of API. Cannot Write to Multiple Partitions")
+                error("Incorrect Usage of API. Cannot Write to Multiple Partitions")
                 throw DataSetException("Incorrect usage of the API. Cannot write to multiple partitions.")
               }
             case ElasticSearchConstants.esReadFlag =>
-              logger.info("Continue Reading for data")
+              info("Continue Reading for data")
           }
 
           // iteration the partitionsArray to get the actual resource names
@@ -212,7 +211,7 @@ object ElasticSearchUtilities {
       case Some("false") =>
         // If the partition info is supplied, throw an error.
         if (esOptions.contains(ElasticSearchConfigs.esPartition) && esOptions(ElasticSearchConfigs.esPartition) != "*") {
-          logger.error("Incorrect Usage of API. Partitions should not be given.")
+          error("Incorrect Usage of API. Partitions should not be given.")
           throw DataSetException("Incorrect usage of the API. Partitions should not be given. The table is a non-partitioned table.")
         }
         dataSets +:= esOptions(ElasticSearchConfigs.esResource)
@@ -237,17 +236,17 @@ object ElasticSearchUtilities {
     esOptions.get("JSON") match {
       case Some("TRUE") =>
         dataSets.foreach(dataSet => {
-          logger.info(s"Begin Writing to ES as JSON String....")
+          info(s"Begin Writing to ES as JSON String....")
           val strRDD: RDD[String] = dataFrame.toJSON.rdd
           EsSpark.saveJsonToEs(strRDD, dataSet, esOptions)
-          logger.info(s"Write to ES as JSON String - Success.")
+          info(s"Write to ES as JSON String - Success.")
           dataFrames :+= dataFrame
         })
       case _ =>
         dataSets.foreach(dataSet => {
-          logger.info(s"Begin Writing DataFrame to ES.... ")
+          info(s"Begin Writing DataFrame to ES.... ")
           dataFrame.saveToEs(dataSet, esOptions)
-          logger.info(s"Write to ES - Success.")
+          info(s"Write to ES - Success.")
           dataFrames :+= dataFrame
         })
     }
@@ -266,13 +265,13 @@ object ElasticSearchUtilities {
     val dataSet = esOptions("es.resource")
     esOptions.get("JSON") match {
       case Some("TRUE") =>
-        logger.info(s"Begin Writing JSON to ES...")
+        info(s"Begin Writing JSON to ES...")
         EsSpark.saveJsonToEs(rdd, dataSet, esOptions)
-        logger.info(s"Write to ES - Success.")
+        info(s"Write to ES - Success.")
       case _ =>
-        logger.info(s"Begin Writing RDD to ES...")
+        info(s"Begin Writing RDD to ES...")
         EsSpark.saveToEs(rdd, dataSet, esOptions)
-        logger.info(s"Write to ES - Success.")
+        info(s"Write to ES - Success.")
     }
     rdd
   }

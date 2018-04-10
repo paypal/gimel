@@ -31,9 +31,7 @@ import com.paypal.gimel.logger.Logger
   * Provides HDFS Read And Write operations
   */
 
-object HDFSAdminClient {
-
-  val logger = Logger()
+object HDFSAdminClient extends Logger {
 
   /**
     * Deletes HDFS Path
@@ -43,17 +41,17 @@ object HDFSAdminClient {
     */
   def deletePath(path: String, recursive: Boolean): AnyVal = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val conf = new org.apache.hadoop.conf.Configuration()
       val fs = FileSystem.get(conf)
       val hdfsPath = new Path(path)
       if (fs.exists(hdfsPath)) {
-        logger.info(s"Path exists, deleting < ${path} > with recursive? < ${recursive.toString} >")
+        info(s"Path exists, deleting < ${path} > with recursive? < ${recursive.toString} >")
         fs.delete(hdfsPath, recursive)
       }
-      else logger.warning(s"Path does NOT exists. Nothing to Delete.")
+      else warning(s"Path does NOT exists. Nothing to Delete.")
     }
     catch {
       case ex: Throwable => {
@@ -72,7 +70,7 @@ object HDFSAdminClient {
   def writeHDFSFile(path: String, toWrite: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(s" @Begin -->  + $MethodName")
+    info(s" @Begin -->  + $MethodName")
 
     try {
       if (toWrite.isEmpty) {
@@ -85,7 +83,7 @@ object HDFSAdminClient {
         val writer = fs.create(hdfsPath)
         writer.writeBytes(toWrite)
         writer.close()
-        logger.info(s"Written to File $path  |  Content $toWrite")
+        info(s"Written to File $path  |  Content $toWrite")
       }
     } catch {
       case ex: Throwable =>
@@ -102,7 +100,7 @@ object HDFSAdminClient {
   def readHDFSFile(path: String): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(s" @Begin -->  + $MethodName")
+    info(s" @Begin -->  + $MethodName")
     try {
       val conf = new org.apache.hadoop.conf.Configuration()
       val fs = FileSystem.get(conf)
@@ -112,7 +110,7 @@ object HDFSAdminClient {
         val br = new BufferedReader(new InputStreamReader(input))
         var fileContent: String = ""
         var line: String = br.readLine()
-        logger.info(s"Reading HDFS file content from $path")
+        info(s"Reading HDFS file content from $path")
         while (line != null) {
           fileContent = fileContent + line + "\n"
           line = br.readLine()
@@ -137,7 +135,7 @@ object HDFSAdminClient {
   def standaloneHDFSRead(path: String, principal: String, keyTabPath: String): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(s" @Begin -->  + $MethodName")
+    info(s" @Begin -->  + $MethodName")
     try {
       val conf = new org.apache.hadoop.conf.Configuration()
       val hdfsPath = new Path(path)
@@ -153,7 +151,7 @@ object HDFSAdminClient {
       val br = new BufferedReader(new InputStreamReader(input))
       var fileContent: String = ""
       var line: String = br.readLine()
-      logger.info(s"Reading HDFS file content from $path")
+      info(s"Reading HDFS file content from $path")
       while (line != null) {
         fileContent = fileContent + line + "\n"
         line = br.readLine()

@@ -29,7 +29,6 @@ import com.paypal.gimel.cassandra.conf.CassandraClientConfiguration
 import com.paypal.gimel.cassandra.reader.CassandraReader
 import com.paypal.gimel.cassandra.writer.CassandraWriter
 import com.paypal.gimel.datasetfactory.GimelDataSet
-import com.paypal.gimel.logger.Logger
 
 /**
   * Concrete Implementation for Cassandra DataSet.
@@ -39,9 +38,7 @@ import com.paypal.gimel.logger.Logger
 
 class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
 
-  // GET LOGGER
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+  info(s"Initiated --> ${this.getClass.getName}")
 
   /**
     * Read Implementation for Casandra DataSet.

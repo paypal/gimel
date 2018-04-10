@@ -24,11 +24,12 @@ import scala.reflect.runtime.universe._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
+import com.paypal.gimel.logger.Logger
 
 /**
   * Interface for the DataSet
   */
-abstract class GimelDataSet(sparkSession: SparkSession) {
+abstract class GimelDataSet(sparkSession: SparkSession) extends Logger {
 
   /**
     * This will hold all the Catalog Properties of a given dataset

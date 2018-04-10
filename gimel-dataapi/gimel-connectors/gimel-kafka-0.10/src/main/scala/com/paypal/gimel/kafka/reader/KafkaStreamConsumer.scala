@@ -37,13 +37,12 @@ import com.paypal.gimel.kafka.conf.KafkaClientConfiguration
 import com.paypal.gimel.kafka.utilities.BrokersAndTopic
 import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.kafka.utilities.KafkaUtilities._
+import com.paypal.gimel.logger.Logger
 
 /**
   * Implements Kafka Stream Consumer Logic here
   */
-object KafkaStreamConsumer {
-
-  val logger = com.paypal.gimel.logger.Logger()
+object KafkaStreamConsumer extends Logger {
 
   /**
     *
@@ -55,14 +54,14 @@ object KafkaStreamConsumer {
     */
   def createDStream(streamingContext: StreamingContext, conf: KafkaClientConfiguration): StreamingResult = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val sparkConf = streamingContext.sparkContext.getConf
       val streamRate = sparkConf.get("throttle.streaming.maxRatePerPartition", conf.maxRatePerPartition)
       val isStreamParallel = sparkConf.get("throttle.streaming.isParallel", conf.isStreamParallel.toString).toBoolean
       val streamParallels = sparkConf.get("throttle.streaming.parallelism.factor", conf.streamParallelismFactor.toString).toInt
-      logger.debug(
+      debug(
         s"""
            |isStreamParallel --> ${isStreamParallel}
            |streamParallels --> ${streamParallels}
@@ -72,13 +71,13 @@ object KafkaStreamConsumer {
         .set("spark.streaming.kafka.maxRatePerPartition", streamRate)
       // Resolve all the Properties & Determine Kafka CheckPoint before reading from Kafka
       val (schemaString, kafkaTopic, brokers) = (conf.avroSchemaString, conf.kafkaTopic, conf.kafkaHostsAndPort)
-      logger.info(s"Zookeeper Server : ${conf.zkHostAndPort}")
-      logger.info(s"Zookeeper Checkpoint : ${conf.zkCheckPoint}")
+      info(s"Zookeeper Server : ${conf.zkHostAndPort}")
+      info(s"Zookeeper Checkpoint : ${conf.zkCheckPoint}")
       val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoint)
       if (lastCheckPoint == None) {
-        logger.info("No CheckPoint Found !")
+        info("No CheckPoint Found !")
       } else {
-        logger.info(s"Found Checkpoint Value --> ${lastCheckPoint.get.mkString("|")}")
+        info(s"Found Checkpoint Value --> ${lastCheckPoint.get.mkString("|")}")
       }
       val availableOffsetRange: Array[OffsetRange] = BrokersAndTopic(brokers, kafkaTopic).toKafkaOffsetsPerPartition
       val startOffsetsForStream: Map[TopicPartition, Long] = lastCheckPoint.getOrElse(availableOffsetRange).map {
@@ -90,7 +89,7 @@ object KafkaStreamConsumer {
       kafkaParams +=("key.deserializer" -> keyDeSer, "value.deserializer" -> valDeSer)
       val consumerStrategy = ConsumerStrategies.Subscribe[Any, Any](Seq(kafkaTopic), kafkaParams, startOffsetsForStream)
       val locationStrategy = LocationStrategies.PreferConsistent
-      logger.info(
+      info(
         s"""
            |consumerStrategy --> ${consumerStrategy}
            |locationStrategy --> ${locationStrategy.toString}

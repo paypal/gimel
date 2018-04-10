@@ -35,7 +35,7 @@ import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+  info(s"Initiated ${this.getClass.getName}")
 
   val dataSetName = s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestKafkaHiveTable}_1"
   val topicName = s"${gimelProps.smokeTestKafkaTopic}_1"
@@ -46,7 +46,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   private def bootStrapKafkaHive(): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       cleanUpKafkaHive()
@@ -73,7 +73,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
            |)
          """.stripMargin
 
-      logger.info(s"DDLS -> $hiveTableDDL")
+      info(s"DDLS -> $hiveTableDDL")
       deployDDL(hiveTableDDL)
 
       stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -92,7 +92,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   private def bootStrapKafka() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       KafkaAdminClient.deleteTopicIfExists(
@@ -121,7 +121,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   override def bootStrap(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     bootStrapKafka()
     bootStrapKafkaHive()
@@ -136,7 +136,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   override def cleanUp(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     cleanUpKafka()
     cleanUpKafkaHive()
@@ -149,7 +149,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   private def cleanUpKafka() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       storageadmin.KafkaAdminClient.deleteTopicIfExists(
@@ -170,7 +170,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   private def cleanUpKafkaHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropTableStatement = s"drop table if exists $dataSetName"
@@ -192,7 +192,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"$MethodName-$storage"
@@ -203,14 +203,14 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
       val field = StructType(Seq(StructField("value", StringType)))
       val testDF = sparkSession.createDataFrame(testRow, field)
       val dataSet = dataSetName
-      logger.info(s"$tag | Begin Write to $dataSet...")
+      info(s"$tag | Begin Write to $dataSet...")
       dataset.write(dataSet, testData, Map[String, Any]())
-      logger.info(s"$tag | Write Success.")
-      logger.info(s"$tag | Read from $dataSet...")
+      info(s"$tag | Write Success.")
+      info(s"$tag | Read from $dataSet...")
       val readDF = dataset.read(dataSet)
       val count = readDF.count()
-      logger.info(s"$tag | Read Count $count...")
-      logger.info(s"$tag | Sample 10 Rows -->")
+      info(s"$tag | Read Count $count...")
+      info(s"$tag | Sample 10 Rows -->")
       readDF.show(10)
       compareDataFrames(testDF, readDF)
       stats += (s"$tag" -> s"Success @ ${Calendar.getInstance.getTime}")

@@ -27,8 +27,6 @@ import org.apache.spark._
 import org.apache.spark.streaming.scheduler._
 import org.json4s.DefaultFormats
 
-import com.paypal.gimel.logging.Logging
-
 /**
   * A {{SparkListener}} that captures and logs all metrics
   *

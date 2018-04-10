@@ -32,9 +32,7 @@ case class ZooKeeperHostAndNode(host: String, node: String)
 /**
   * Provides Implicit, Convenience Functions for Developers to Do CheckPointing Operations
   */
-object ImplicitZKCheckPointers {
-
-  val logger = Logger()
+object ImplicitZKCheckPointers extends Logger {
 
   /**
     * @param checkPointingInfo Tuple of (ZooKeeperHostAndNode, Array[Kafka OffsetRange])
@@ -49,8 +47,6 @@ object ImplicitZKCheckPointers {
       */
     def saveZkCheckPoint: Boolean = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      logger.info(" @Begin --> " + MethodName)
 
       val zkServers = checkPointingInfo._1.host
       val zkNode = checkPointingInfo._1.node
@@ -81,7 +77,7 @@ object ImplicitZKCheckPointers {
     def fetchZkCheckPoint: Option[Array[OffsetRange]] = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-      logger.info(" @Begin --> " + MethodName)
+      info(" @Begin --> " + MethodName)
 
       val zkServers = zooKeeperDetails.host
       val zkNode = zooKeeperDetails.node
@@ -99,7 +95,7 @@ object ImplicitZKCheckPointers {
       * Deletes a ZooKeeper CheckPoint
       */
     def deleteZkCheckPoint(): Unit = {
-      logger.warning(s"WARNING !!!!! Deleting --> host : ${zooKeeperDetails.host} | node : ${zooKeeperDetails.node}")
+      warning(s"WARNING !!!!! Deleting --> host : ${zooKeeperDetails.host} | node : ${zooKeeperDetails.node}")
       try {
         deleteNodeOnZK(zooKeeperDetails.host, zooKeeperDetails.node)
       } catch {

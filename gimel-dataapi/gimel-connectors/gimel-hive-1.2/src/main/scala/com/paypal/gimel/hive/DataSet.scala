@@ -27,13 +27,9 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.hive.utilities.HiveUtils
-import com.paypal.gimel.logger.Logger
 
 class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
-
-  // GET LOGGER
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+  info(s"Initiated --> ${this.getClass.getName}")
 
   /**
     *

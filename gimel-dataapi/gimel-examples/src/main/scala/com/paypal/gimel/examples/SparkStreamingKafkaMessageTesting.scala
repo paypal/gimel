@@ -28,10 +28,7 @@ import com.paypal.gimel._
 import com.paypal.gimel.datastreamfactory._
 import com.paypal.gimel.logger.Logger
 
-object SparkStreamingKafkaMessageTesting extends App {
-
-  // Initiate Logger
-  val logger = Logger(this.getClass.getName)
+object SparkStreamingKafkaMessageTesting extends App with Logger {
 
   import SparkStreamingKafkaStringMessageUtils._
 
@@ -64,8 +61,8 @@ object SparkStreamingKafkaMessageTesting extends App {
     val k: RDD[WrappedData] = rdd
     val count = rdd.count()
 
-    logger.info(s"Count is --> ${count}")
-    logger.info(s"Message Type Specified is ${messageFormat}...")
+    info(s"Count is --> ${count}")
+    info(s"Message Type Specified is ${messageFormat}...")
     if (count > 0) {
 
       val df1 = streamingResult.getAsDF(sqlContext, rdd)
@@ -84,7 +81,7 @@ object SparkStreamingKafkaMessageTesting extends App {
         val schemaMapping: String = s"""{"appStartTime": {"format": "strict_date_optional_time||epoch_millis", "type": "date" }, "appEndTime": {"format": "strict_date_optional_time||epoch_millis", "type": "date"},"jobStartTime": {"format": "strict_date_optional_time||epoch_millis", "type": "date"}, "jobEndTime": {"format": "strict_date_optional_time||epoch_millis", "type": "date"}, "logtime": { "format": "strict_date_optional_time||epoch_millis", "type": "date"}}"""
         val options: Map[String, String] = Map("gimel.es.index.partition.suffix" -> s"$key", "gimel.es.schema.mapping" -> schemaMapping)
         if (targetName != "NA") {
-          logger.info(s"Begin Writing To : ${targetName}")
+          info(s"Begin Writing To : ${targetName}")
           val res = dataSet.write(targetName, dfes, options)
         }
       }
@@ -97,15 +94,13 @@ object SparkStreamingKafkaMessageTesting extends App {
   dataStream.streamingContext.stop(false, true)
 }
 
-object SparkStreamingKafkaStringMessageUtils {
-
-  val logger = Logger(this.getClass.getName)
+object SparkStreamingKafkaStringMessageUtils extends Logger {
 
   def resolveRunTimeParameters(allParams: Array[String]): Map[String, String] = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     var paramsMapBuilder: Map[String, String] = Map()
-    logger.info(s"All Params From User --> \n${allParams.mkString("\n")}")
+    info(s"All Params From User --> \n${allParams.mkString("\n")}")
     if (allParams.length == 0) {
       throw new Exception("Args Cannot be Empty")
     }
@@ -115,7 +110,7 @@ object SparkStreamingKafkaStringMessageUtils {
         paramsMapBuilder += (eachParam.split("=")(0) -> eachParam.split("=", 2)(1))
       }
     }
-    logger.info(s"Resolved Params From Code --> ${paramsMapBuilder}")
+    info(s"Resolved Params From Code --> ${paramsMapBuilder}")
     paramsMapBuilder
   }
 }

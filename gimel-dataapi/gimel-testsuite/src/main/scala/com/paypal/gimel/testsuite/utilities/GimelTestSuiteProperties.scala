@@ -28,10 +28,9 @@ import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.testsuite.conf.TestSuiteConfigs
 
-class GimelTestSuiteProperties(userProps: Map[String, String] = Map[String, String]()) {
-  // Get Logger
-  val logger = Logger()
-  logger.info(s"Initiating --> ${this.getClass.getName}")
+class GimelTestSuiteProperties(userProps: Map[String, String] = Map[String, String]()) extends Logger {
+  // Get
+   info(s"Initiating --> ${this.getClass.getName}")
   // Get Properties
   val props: mutable.Map[String, String] = getProps
   val runTagUUID: String = java.util.UUID.randomUUID.toString
@@ -147,19 +146,19 @@ class GimelTestSuiteProperties(userProps: Map[String, String] = Map[String, Stri
   private def getProps: mutable.Map[String, String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+     info(" @Begin --> " + MethodName)
 
     val props: Properties = new Properties()
     val configStream = this.getClass.getResourceAsStream(GimelConstants.GIMEL_PROPERTIES_FILE_NAME)
     props.load(configStream)
     configStream.close()
     val finalProps: mutable.Map[String, String] = mutable.Map(props.asScala.toSeq: _*)
-    logger.debug("PCatalog Properties -->")
-    finalProps.foreach(property => logger.debug(property))
+     debug("PCatalog Properties -->")
+    finalProps.foreach(property =>  debug(property))
     finalProps
   }
 
-  logger.info(s"Completed Building --> ${this.getClass.getName}")
+   info(s"Completed Building --> ${this.getClass.getName}")
 }
 
 /**

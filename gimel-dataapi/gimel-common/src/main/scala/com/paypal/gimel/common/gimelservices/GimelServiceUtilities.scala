@@ -48,10 +48,9 @@ object GimelServiceUtilities {
 
 }
 
-class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]()) {
+class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]()) extends Logger {
 
   // Initiate Logger
-  private val logger = Logger(this.getClass.getName)
   // Initiate Sevices Properties
   private val serviceProperties: GimelServicesProperties = GimelServicesProperties(userProps)
   // Import the custom implementation of JSON Protocols
@@ -64,7 +63,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     * @return (ResponseBody, Https Status Code)
     */
   def httpsGet(url: String): String = {
-    logger.info(s"Get Request -> $url")
+    info(s"Get Request -> $url")
     try {
       val urlObject: URL = new URL(url)
       val conn: HttpsURLConnection = urlObject.openConnection().asInstanceOf[HttpsURLConnection]
@@ -73,7 +72,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       response
     } catch {
       case e: Throwable =>
-        logger.error(e.getStackTraceString)
+        error(e.getStackTraceString)
         e.printStackTrace()
         throw e
     }
@@ -86,7 +85,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     * @return Response as String
     */
   def get(url: String): String = {
-    // logger.info(s"url is --> $url")
+    // info(s"url is --> $url")
     var response = ""
     try {
       val client = new DefaultHttpClient()
@@ -94,7 +93,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       val httpResponse: CloseableHttpResponse = client.execute(requesting)
       val resStream: InputStream = httpResponse.getEntity.getContent
       response = fromInputStream(resStream).getLines().mkString("\n")
-      // logger.debug(s"Response is --> $response")
+      // debug(s"Response is --> $response")
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
@@ -475,7 +474,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     * @return (ResponseBody, Https Status Code)
     */
   def httpsPost(url: String, data: String = ""): (Int, String) = {
-    logger.info(s"Post request -> $url and data -> ${data}")
+    info(s"Post request -> $url and data -> ${data}")
     try {
       val urlObject: URL = new URL(url)
       val conn: HttpsURLConnection = urlObject.openConnection().asInstanceOf[HttpsURLConnection]
@@ -491,11 +490,11 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       val response = in.lines.collect(Collectors.toList[String]).toArray().mkString("")
       in.close()
 
-      logger.info(s"Post response is: $response")
+      info(s"Post response is: $response")
       (conn.getResponseCode, response)
     } catch {
       case e: Throwable =>
-        logger.error(e.getStackTraceString)
+        error(e.getStackTraceString)
         e.printStackTrace()
         throw e
     }
@@ -520,12 +519,12 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       val httpResponse = client.execute(post)
       val resStream = httpResponse.getEntity.getContent
       val response = fromInputStream(resStream).getLines().mkString("")
-      logger.debug(s"Post Response --> $response")
+      debug(s"Post Response --> $response")
       val status: Int = httpResponse.getStatusLine.getStatusCode
       if (status != GimelConstants.HTTP_SUCCESS_STATUS_CODE) {
-        logger.error(s"Unable to post to web service $url. Response code is $status")
+        error(s"Unable to post to web service $url. Response code is $status")
       } else {
-        logger.info(s"Success. Response --> $status")
+        info(s"Success. Response --> $status")
       }
       (status, response)
     } catch {
@@ -551,12 +550,12 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       val httpResponse = client.execute(put)
       val resStream = httpResponse.getEntity.getContent
       val response = fromInputStream(resStream).getLines().mkString("")
-      logger.debug(s"put Response --> $response")
+      debug(s"put Response --> $response")
       val status: Int = httpResponse.getStatusLine.getStatusCode
       if (status != 200) {
-        logger.error(s"Unable to put to web service $url. Response code is $status")
+        error(s"Unable to put to web service $url. Response code is $status")
       } else {
-        logger.info(s"Success. Response --> $status")
+        info(s"Success. Response --> $status")
       }
       (status, response)
     } catch {

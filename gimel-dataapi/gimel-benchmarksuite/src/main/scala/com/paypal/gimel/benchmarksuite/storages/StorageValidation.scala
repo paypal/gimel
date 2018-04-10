@@ -33,7 +33,7 @@ import com.paypal.gimel.common.utilities.Timer
 import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
 import com.paypal.gimel.logger.Logger
 
-abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSession, val pcatProps: GimelBenchmarkProperties, val testData: DataFrame) {
+abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSession, val pcatProps: GimelBenchmarkProperties, val testData: DataFrame) extends Logger {
 
   /**
     * Holder for All Stats Collected in the Validation
@@ -51,10 +51,6 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
     */
   val dataSetName: String
   val nativeName: String
-
-
-  // Get Logger
-  val logger = Logger()
 
   /**
     * Extend & Implement all the bootStrap Functionalities
@@ -88,7 +84,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def benchmarkDatasetAPI(testDataOption: Option[DataFrame] = None, storageType: String): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"$MethodName-$storage"
@@ -101,17 +97,17 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
       // val testData = prepareBenchMarkTestData(pcatProps.benchMarkTestSampleRowsCount.toInt)
       val testData = testDataOption.get
       val testDataCount = testData.count()
-      logger.info(s"$tag | TestDataCount_Dataset $testDataCount")
+      info(s"$tag | TestDataCount_Dataset $testDataCount")
       val dataSet = dataSetName
-      logger.info(s"$tag | Begin Write to $dataSet...")
+      info(s"$tag | Begin Write to $dataSet...")
       val datasetWriteTimer = Timer()
       datasetWriteTimer.start
       dataset.write(dataSet, testData)
       val datasetWriteTimeValue = datasetWriteTimer.endWithMillSecRunTime / 1000
       stats += (s"$datasetWriteApiKey" -> s"$datasetWriteTimeValue")
       resultsAPIData += (s"writeTime" -> s"$datasetWriteTimeValue")
-      logger.info(s"$tag | Write Success.")
-      logger.info(s"$tag | Read from $dataSet...")
+      info(s"$tag | Write Success.")
+      info(s"$tag | Read from $dataSet...")
       val datasetReadTimer = Timer()
       datasetReadTimer.start
       val readDF = dataset.read(dataSet)
@@ -119,8 +115,8 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
       val datasetReadTimeValue = datasetReadTimer.endWithMillSecRunTime / 1000
       stats += (s"$datasetReadApiKey" -> s"$datasetReadTimeValue")
       resultsAPIData += (s"readTime" -> s"$datasetReadTimeValue")
-      logger.info(s"$tag | Read Count $count...")
-      logger.info(s"$tag | Sample 10 Rows -->")
+      info(s"$tag | Read Count $count...")
+      info(s"$tag | Sample 10 Rows -->")
       readDF.cache()
       readDF.show(10)
       compareDataFrames(testData, readDF)
@@ -145,7 +141,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def execute(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     // cleanUp()
     bootStrap()
     benchmark()
@@ -163,7 +159,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def handleException(ex: Throwable, message: String = ""): Nothing = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     if ((message contains "cleanUpES") || (message contains "cleanUpESHive") || (message contains "cleanUpHBase") || (message contains "cleanUpHive")) {
       // Do nothing
     } else {
@@ -183,7 +179,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def compareDataFrames(left: DataFrame, right: DataFrame, tag: String = "Not Passed"): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val testDataColumns = left.columns
     val writeMinusRead = left.selectExpr(testDataColumns: _*).except(right.selectExpr(testDataColumns: _*))
@@ -196,12 +192,12 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
          |writeMinusReadCount --> $writeMinusReadCount
          |readMinusWriteCount --> $readMinusWriteCount
          |""".stripMargin
-    logger.info(s"Differences --> $diffMsg")
+    info(s"Differences --> $diffMsg")
     if (diffCount != 0) {
       val ex = new Exception(diffMsg)
-      logger.info("writeMinusRead --> \n")
+      info("writeMinusRead --> \n")
       writeMinusRead.show
-      logger.info("readMinusWrite --> \n")
+      info("readMinusWrite --> \n")
       readMinusWrite.show
       handleException(ex, s"Some Error While Executing Method $MethodName")
     }
@@ -217,7 +213,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def bootStrapESIndexForStats(): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val esDDL =
@@ -295,7 +291,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def postResults(stats: Map[String, String]): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     val cluster = s"${pcatProps.cluster}".toString
     val sessionName = sparkSession.sparkContext.appName
     val sessionUser = sparkSession.sparkContext.sparkUser
@@ -334,8 +330,8 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
     val postableStats: RDD[String] = sparkSession.sparkContext.parallelize(Seq(jsonStats))
     val statsDF: DataFrame = sparkSession.read.json(postableStats)
     dataset.write(s"${pcatProps.benchMarkTestHiveDB}.${pcatProps.benchMarkTestResultEsIndex}", statsDF, esOptionsMapping)
-    logger.info(s"Stats --> $jsonStats")
-    logger.info(s"Posted Stats to --> ${pcatProps.benchMarkTestHiveDB}.${pcatProps.benchMarkTestResultEsIndex}")
+    info(s"Stats --> $jsonStats")
+    info(s"Posted Stats to --> ${pcatProps.benchMarkTestHiveDB}.${pcatProps.benchMarkTestResultEsIndex}")
   }
 
 

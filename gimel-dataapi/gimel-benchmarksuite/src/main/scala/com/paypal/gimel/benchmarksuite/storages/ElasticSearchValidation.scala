@@ -34,7 +34,7 @@ import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
 class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: SQLContext, pcatProps: GimelBenchmarkProperties, testData: DataFrame)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, pcatProps: GimelBenchmarkProperties, testData: DataFrame) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+  info(s"Initiated ${this.getClass.getName}")
 
   val nativeName = s"${pcatProps.benchMarkTestESNativeIndex}/data"
   val dataSetName = s"${pcatProps.benchMarkTestHiveDB}.${pcatProps.benchMarkTestESDatasetIndex}"
@@ -82,7 +82,7 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
   private def benchmarkES() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"${MethodName}-${storage}"
@@ -92,14 +92,14 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
       val testDataOption = Some(testData)
       val dataSet = dataSetName
       val nativeAPISet = nativeName
-      logger.info(s"${tag} | TestDataCount ${testDataCount}")
-      logger.info(s"${tag} | Begin Bench Mark Test..")
-      logger.info(s"${tag} | Begin Bench Mark Native API to ${nativeAPISet}...")
+      info(s"${tag} | TestDataCount ${testDataCount}")
+      info(s"${tag} | Begin Bench Mark Test..")
+      info(s"${tag} | Begin Bench Mark Native API to ${nativeAPISet}...")
       benchmarkNativeESAPI(testDataOption)
-      logger.info(s"${tag} | End Bench Mark Native API to ${nativeAPISet}...")
-      logger.info(s"${tag} | Begin Bench Mark Dataset API to ${dataSet}...")
+      info(s"${tag} | End Bench Mark Native API to ${nativeAPISet}...")
+      info(s"${tag} | Begin Bench Mark Dataset API to ${dataSet}...")
       benchmarkDatasetAPI(testDataOption, "ES")
-      logger.info(s"${tag} | End Bench Mark Dataset API to ${dataSet}...")
+      info(s"${tag} | End Bench Mark Dataset API to ${dataSet}...")
     } catch {
       case ex: Throwable =>
         stats += (s"${tag}" -> s"Failure @ ${Calendar.getInstance.getTime}")
@@ -117,7 +117,7 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
   private def cleanUpESHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropDDL = s"drop table if exists ${dataSetName}"
@@ -139,9 +139,9 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
   private def cleanUpES(url: String) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
-    logger.info("delete index")
-    logger.info(url)
+    info(" @Begin --> " + MethodName)
+    info("delete index")
+    info(url)
     try {
       val output = storageadmin.ESAdminClient.deleteIndex(url)
       stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -162,7 +162,7 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
   private def bootStrapESHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val esDDL =
@@ -203,7 +203,7 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
   def benchmarkNativeESAPI(testDataOption: Option[DataFrame] = None): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"${MethodName}-${storage}"
@@ -216,17 +216,17 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
       val options: Map[String, String] = Map("es.resource" -> nativeName, "es.nodes" -> s"${pcatProps.benchMarkTestResultEsHost}", "es.port" -> s"${pcatProps.benchMarkTestResultEsPort}", "es.index.auto.create" -> "true")
       val testData = testDataOption.get
       val testDataCount = testData.count()
-      logger.info(s"${tag} | TestDataCount_Native ${testDataCount}")
+      info(s"${tag} | TestDataCount_Native ${testDataCount}")
       val dataSet = nativeName
-      logger.info(s"${tag} | Begin Write to ${dataSet}...")
+      info(s"${tag} | Begin Write to ${dataSet}...")
       val nativewriteTimer = Timer()
       nativewriteTimer.start
       testData.saveToEs(nativeName, options)
       val nativeWriteTimeValue = nativewriteTimer.endWithMillSecRunTime / 1000
       stats += (s"${NativeWriteApiKey}" -> s"${nativeWriteTimeValue}")
       resultsAPIData += (s"writeTime" -> s"${nativeWriteTimeValue}")
-      logger.info(s"${tag} | Write Native API Success.")
-      logger.info(s"${tag} | Read from Native API ${dataSet}...")
+      info(s"${tag} | Write Native API Success.")
+      info(s"${tag} | Read from Native API ${dataSet}...")
       val nativereadTimer = Timer()
       nativereadTimer.start
       val nativeDF = sqlContext.esDF(nativeName, options)
@@ -234,8 +234,8 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
       val nativeReadTimeValue = nativereadTimer.endWithMillSecRunTime / 1000
       stats += (s"${NativeReadApiKey}" -> s"${nativeReadTimeValue}")
       resultsAPIData += (s"readTime" -> s"${nativeReadTimeValue}")
-      logger.info(s"${tag} | Read Count ${count}...")
-      logger.info(s"${tag} | Sample 10 Rows -->")
+      info(s"${tag} | Read Count ${count}...")
+      info(s"${tag} | Sample 10 Rows -->")
       nativeDF.cache()
       nativeDF.show(10)
       compareDataFrames(testData, nativeDF)

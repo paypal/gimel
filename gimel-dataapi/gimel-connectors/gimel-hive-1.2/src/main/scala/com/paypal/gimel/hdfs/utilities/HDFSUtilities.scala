@@ -27,12 +27,11 @@ import com.paypal.gimel.common.conf.{CatalogProviderConstants, GimelConstants}
 import com.paypal.gimel.hdfs.conf.{HdfsConfigs, HdfsConstants}
 import com.paypal.gimel.logger.Logger
 
-class HDFSUtilities {
+class HDFSUtilities extends Logger {
 
   val hadoopConf = new org.apache.hadoop.conf.Configuration()
   val fs: FileSystem = FileSystem.get(hadoopConf)
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+  info(s"Initiated --> ${this.getClass.getName}")
 
   /**
     *
@@ -62,8 +61,8 @@ class HDFSUtilities {
 
     try {
       if (saveMode.toUpperCase == "APPEND" & (inDataFormat.toUpperCase == "TEXT" | inDataFormat.toUpperCase == "SEQUENCEFILE")) {
-        logger.info(s"Unsupported saveMode $saveMode for input file format $inDataFormat")
-        logger.info(s"Supports saveMode-Append/Overwrite for input file format PARQUET/ORC and saveMode-Overwrite for TEXT/SEQUENCEFILE")
+        info(s"Unsupported saveMode $saveMode for input file format $inDataFormat")
+        info(s"Supports saveMode-Append/Overwrite for input file format PARQUET/ORC and saveMode-Overwrite for TEXT/SEQUENCEFILE")
         throw new Exception(s"Unsupported saveMode $saveMode for input file format $inDataFormat")
       }
 

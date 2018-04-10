@@ -34,10 +34,7 @@ import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.kafka.utilities.KafkaUtilities
 import com.paypal.gimel.logger.Logger
 
-object BenchmarkSuite extends App {
-
-  // Logger Initiation
-  val logger = Logger(this.getClass.getName)
+object BenchmarkSuite extends App with Logger {
 
   val sparkSession = SparkSession
     .builder()
@@ -56,14 +53,14 @@ object BenchmarkSuite extends App {
     * --- Creates Hive DataBase if it does not exists already ----
     */
   utils.bootStrapHiveDB()
-  logger.info("DataBase BootStrapped.")
+  info("DataBase BootStrapped.")
 
   /**
     * ---- This is the section where every storage will be validated
     */
   utils.storagesToValidate.foreach { storage =>
     val testData = utils.prepareBenchMarkTestData(utils.noOfRows.toInt).cache()
-    logger.info(s"Invoking Storage Validation From Factory for --> $storage")
+    info(s"Invoking Storage Validation From Factory for --> $storage")
     val (ddlResult, statsResult) = utils.getFromValidationFactory(storage, testData).execute()
     ddlResult.foreach(x => utils.ddls += x)
     statsResult.foreach(x => utils.stats += x)
@@ -74,22 +71,20 @@ object BenchmarkSuite extends App {
     */
   val allStats = utils.stats ++ utils.ddls
   val statsJSON = allStats.toJson
-  utils.ddls.foreach(x => logger.info(s"BootStrap Object Definitions --> \n ${x._1} --> ${x._2}"))
-  logger.info("BenchmarkTest Summary -->")
-  logger.info(statsJSON.compactPrint)
+  utils.ddls.foreach(x => info(s"BootStrap Object Definitions --> \n ${x._1} --> ${x._2}"))
+  info("BenchmarkTest Summary -->")
+  info(statsJSON.compactPrint)
 
   /**
     * --- Drop Hive DB ----
     */
   utils.cleanUpHiveDB()
 
-  logger.info("BENCHMARK  SUITE  - COMPLETED")
+  info("BENCHMARK  SUITE  - COMPLETED")
 }
 
-class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSession, val sqlContext: SQLContext) {
+class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSession, val sqlContext: SQLContext) extends Logger {
 
-  // Get logger
-  val logger = Logger()
   // DDLs will be filled in later based on runtime options
   var ddls: Map[String, String] = Map()
   // Stats will be filled in later based on runtime options
@@ -125,10 +120,10 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
   def resolveRunTimeParameters(allParams: Array[String]): Map[String, String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     var paramsMapBuilder: Map[String, String] = Map()
-    logger.info(s"All Params From User --> ${allParams.mkString("\n")}")
+    info(s"All Params From User --> ${allParams.mkString("\n")}")
 
     for (jobParams <- allParams) {
       for (eachParam <- jobParams.split(" ")) {
@@ -157,7 +152,7 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
       paramsMapBuilder += (BenchmarkSuiteConfigs.sampleRowCount -> "1000000")
     }
 
-    logger.info(s"Resolved Params From Code --> $paramsMapBuilder")
+    info(s"Resolved Params From Code --> $paramsMapBuilder")
     stats += ("Params" -> paramsMapBuilder.mkString("\n"))
     paramsMapBuilder
   }
@@ -191,7 +186,7 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
   def bootStrapHiveDB(): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val hiveDDL =
@@ -217,7 +212,7 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
   def cleanUpHiveDB(): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       sparkSession.sql(s"DROP DATABASE IF EXISTS ${pcatProps.benchMarkTestHiveDB} CASCADE")
@@ -238,7 +233,7 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
   def prepareBenchMarkTestData(numberOfRows: Int = 10): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       def stringed(n: Int) = s"""{"id":$n,"time_created":"1500934200","time_processed":"1500934200","flags":"4325376","account_number":$n,"transaction_id":"NULL","counterparty":$n,"payee_email":"NULL","amount":"-545","status":"S","type":"U","reason":"NULL","time_received_payee":"NULL","time_created_payer":"NULL","memo":"NULL","payment_id":$n,"ach_id":"0","sync_group":"NULL","address_id":"0","payee_email_upper":"NULL","parent_id":"NULL","shared_id":$n,"cctrans_id":$n,"counterparty_alias":"NULL","counterparty_alias_type":"E","counterparty_alias_upper":"NULL","message":"NULL","time_user":"1500934200","message_id":$n,"subtype":"G","flags2":"268435712","time_inactive":"0","target_alias_id":$n,"counterparty_last_login_ip":"NULL","balance_at_time_created":"0","accept_deny_method":"NULL","currency_code":"USD","usd_amount":"-545","base_id":$n,"flags3":"163840","time_updated":"1500934200","transition":"A","flags4":"0","time_row_updated":"2017-07-24:15:10:04","flags5":$n,"db_ts_updated":"2017-07-24:22:10:04.000000000","db_ts_created":"2017-07-24:22:10:04.000000000","flags6":"128","flags7":"0"}"""
@@ -265,7 +260,7 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
   def handleException(ex: Throwable, message: String = ""): Nothing = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     cleanUpHiveDB()
     ex.printStackTrace()
     throw new Exception(s"An Error Occurred <$message>")

@@ -44,9 +44,8 @@ case class DataSetProperties(datasetType: String,
                              props: Map[String, String]
                             )
 
-object CatalogProvider {
+object CatalogProvider extends Logger {
 
-  val logger = Logger(this.getClass.getName)
   val servUtils = com.paypal.gimel.common.gimelservices.GimelServiceUtilities()
 
   /**
@@ -61,7 +60,7 @@ object CatalogProvider {
   def getDataSetProperties(datasetName: String,
                            options: Map[String, Any] = Map[String, Any]()): DataSetProperties = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val resolvedSourceTable = resolveDataSetName(datasetName)
     val catalogProvider = options.getOrElse(CatalogProviderConfigs.CATALOG_PROVIDER, CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER)
@@ -163,7 +162,7 @@ object CatalogProvider {
 
   def getDataSetPropertiesFromHive(hiveTableName: String): DataSetProperties = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val hiveTable = getHiveTable(hiveTableName)
     val Array(nameSpace, datasetName) = hiveTableName.split('.')
@@ -204,7 +203,7 @@ object CatalogProvider {
 
   def getHiveTable(tableName: String): Table = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val hiveClient = new HiveMetaStoreClient(new HiveConf())
     val Array(hiveDataBase, hiveTable) = tableName.split('.')
@@ -222,7 +221,7 @@ object CatalogProvider {
 
   def resolveDataSetName(sourceName: String): String = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     if (sourceName.contains('.')) {
       sourceName

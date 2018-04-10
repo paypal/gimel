@@ -28,7 +28,7 @@ import com.paypal.gimel.DataSet
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.testsuite.utilities.{GimelTestSuiteProperties, HiveJDBCUtilsForTestSuite}
 
-abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSession, val gimelProps: GimelTestSuiteProperties) {
+abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSession, val gimelProps: GimelTestSuiteProperties) extends Logger {
 
   /**
     * Holder for All Stats Collected in the Validation
@@ -54,9 +54,6 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
     */
   val dataSetName: String
 
-  // Get Logger
-  val logger = Logger()
-
   /**
     * Extend & Implement all the bootStrap Functionalities
     *
@@ -80,21 +77,21 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"$MethodName-$storage"
     try {
       val testData = prepareSmokeTestData(gimelProps.smokeTestSampleRowsCount.toInt)
       val dataSet = dataSetName
-      logger.info(s"$tag | Begin Write to $dataSet...")
+      info(s"$tag | Begin Write to $dataSet...")
       dataset.write(dataSet, testData)
-      logger.info(s"$tag | Write Success.")
-      logger.info(s"$tag | Read from $dataSet...")
+      info(s"$tag | Write Success.")
+      info(s"$tag | Read from $dataSet...")
       val readDF = dataset.read(dataSet)
       val count = readDF.count()
-      logger.info(s"$tag | Read Count $count...")
-      logger.info(s"$tag | Sample 10 Rows -->")
+      info(s"$tag | Read Count $count...")
+      info(s"$tag | Sample 10 Rows -->")
       readDF.show(10)
       compareDataFrames(testData, readDF)
       stats += (s"$tag" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -114,7 +111,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def execute(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     bootStrap()
     validateAPI(None)
@@ -131,7 +128,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def prepareSmokeTestData(numberOfRows: Int = 1000): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       def stringed(n: Int) = s"""{"id": $n, "name": "MAC-$n", "rev": ${n * 10000}}"""
@@ -157,9 +154,9 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def handleException(ex: Throwable, message: String = ""): Nothing = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.error(s"Exception Handler Called with error --> ")
+    error(s"Exception Handler Called with error --> ")
     ex.printStackTrace()
     if ((message contains "cleanUpES")
       || (message contains "cleanUpESHive")
@@ -187,7 +184,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def compareDataFrames(left: DataFrame, right: DataFrame, tag: String = "Not Passed"): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val testDataColumns = left.columns
     val writeMinusRead = left.selectExpr(testDataColumns: _*).except(right.selectExpr(testDataColumns: _*))
@@ -200,12 +197,12 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
          |writeMinusReadCount --> $writeMinusReadCount
          |readMinusWriteCount --> $readMinusWriteCount
          |""".stripMargin
-    logger.info(s"Differences --> $diffMsg")
+    info(s"Differences --> $diffMsg")
     if (diffCount != 0) {
       val ex = new Exception(diffMsg)
-      logger.info("writeMinusRead --> \n")
+      info("writeMinusRead --> \n")
       writeMinusRead.show
-      logger.info("readMinusWrite --> \n")
+      info("readMinusWrite --> \n")
       readMinusWrite.show
       handleException(ex, s"Some Error While Executing Method $MethodName")
     }
@@ -222,7 +219,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
   def deployDDL(executeDDL: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     hiveJDBCUtils.withStatement { statement =>
       hiveJarsForDDL.split(",").foreach { jarsToAdd =>

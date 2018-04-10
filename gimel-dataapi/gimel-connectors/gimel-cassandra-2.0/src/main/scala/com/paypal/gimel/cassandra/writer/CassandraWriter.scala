@@ -26,9 +26,7 @@ import org.apache.spark.sql.cassandra._
 import com.paypal.gimel.cassandra.conf.{CassandraClientConfiguration, CassandraConfigs}
 import com.paypal.gimel.logger.Logger
 
-object CassandraWriter {
-
-  private val logger = Logger()
+object CassandraWriter extends Logger {
 
   /**
     * Writes DataFrame to Cassandra Table
@@ -41,7 +39,7 @@ object CassandraWriter {
   def writeToTable(sparkSession: SparkSession, conf: CassandraClientConfiguration, dataFrame: DataFrame): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     sparkSession.setCassandraConf(conf.cassandraCluster, CassandraConnectorConf.ConnectionHostParam.option(conf.cassandraHosts))
     sparkSession.setCassandraConf(CassandraConnectorConf.KeepAliveMillisParam.option(conf.cassandraSparkTtl))

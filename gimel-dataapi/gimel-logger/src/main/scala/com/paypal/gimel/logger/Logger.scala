@@ -23,42 +23,9 @@ import java.util.Calendar
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.Map
+import scala.util.Try
 
 import com.paypal.gimel.logging.impl.JSONSystemLogger
-
-/**
-  * com.paypal.gimel.logger.Logger SingleTon
-  * Initiate New com.paypal.gimel.logger.Logger with a com.paypal.gimel.logger.Logger(Conf),
-  * and from there on - get com.paypal.gimel.logger.Logger via com.paypal.gimel.logger.Logger() call
-  */
-
-object Logger {
-
-  @transient private var instance: Logger = null
-
-  /**
-    *
-    * @param conf Any Configuration Object Or just a String to uniquely identify the logging
-    * @return com.paypal.gimel.logger.Logger Instance (got or Created Newly)
-    */
-  def apply(conf: Any): Logger = {
-    if (instance == null) {
-      instance = new Logger(conf)
-      instance
-    } else {
-      instance
-    }
-  }
-
-  def apply(): Logger = {
-    if (instance == null) {
-      val user = sys.env.getOrElse("USER", "UnknownUser")
-      val tag = s"$user-Initiated-${Calendar.getInstance.getTime}"
-      instance = new Logger(tag)
-    }
-    instance
-  }
-}
 
 /**
   * Logging Implementation
@@ -69,12 +36,15 @@ object Logger {
   */
 
 @SerialVersionUID(666L)
-class Logger(config: Any) extends Serializable {
+trait Logger extends Serializable {
 
-  private val _APP_reference = config.toString
+  private val _APP_reference = ""
   private val logModes = Map(4 -> "INFO", 3 -> "DEBUG", 2 -> "WARN", 1 -> "ERROR")
   @volatile private var logMode = 4
-  val logger: JSONSystemLogger = JSONSystemLogger.getInstance(getClass)
+  private val _logger: Option[JSONSystemLogger] = None /* Try {
+    JSONSystemLogger.getInstance(getClass)
+  }.toOption
+  */
   private var logAudit = false
   var consolePrintEnabled = false
 
@@ -124,7 +94,7 @@ class Logger(config: Any) extends Serializable {
         case _ =>
           if (!sendToKafka) s"[${_APP_reference}] : ${message.toString}" else message
       }
-      if (logMode >= 2) logger.debug(finalMessage.asInstanceOf[Object])
+      if (logMode >= 2) _logger.foreach(_.debug(finalMessage.asInstanceOf[Object]))
       if (consolePrintEnabled) println(s"GIMEL-LOGGER | ${Calendar.getInstance().getTime} | ${message}")
     } catch {
       case ex: Throwable =>
@@ -146,7 +116,7 @@ class Logger(config: Any) extends Serializable {
         case _ =>
           if (!sendToKafka) s"[${_APP_reference}] : ${message.toString}" else message
       }
-      if (logMode >= 4) logger.info(finalMessage.asInstanceOf[Object])
+      if (logMode >= 4) _logger.foreach(_.info(finalMessage.asInstanceOf[Object]))
       if (consolePrintEnabled) println(s"GIMEL-LOGGER | ${Calendar.getInstance().getTime} | ${message}")
     } catch {
       case ex: Throwable =>
@@ -168,7 +138,7 @@ class Logger(config: Any) extends Serializable {
         case _ =>
           if (!sendToKafka) s"[${_APP_reference}] : ${message.toString}" else message
       }
-      if (logMode >= 3) logger.warn(finalMessage.asInstanceOf[Object])
+      if (logMode >= 3) _logger.foreach(_.warn(finalMessage.asInstanceOf[Object]))
       if (consolePrintEnabled) println(s"GIMEL-LOGGER | ${Calendar.getInstance().getTime} | ${message}")
     } catch {
       case ex: Throwable =>
@@ -189,7 +159,7 @@ class Logger(config: Any) extends Serializable {
         case _ =>
           s"[${_APP_reference}] : ${message.toString}"
       }
-      if (logMode >= 1) logger.error(finalMessage)
+      if (logMode >= 1) _logger.foreach(_.error(finalMessage))
       if (consolePrintEnabled) println(s"GIMEL-LOGGER | ${Calendar.getInstance().getTime} | ${message}")
     } catch {
       case ex: Throwable =>
@@ -247,7 +217,7 @@ class Logger(config: Any) extends Serializable {
     if (logAudit) {
       this.info("Auditing Information being posted to Gimel Audit Log...")
       this.info(accessAuditInfo)
-      logger.info(accessAuditInfo.asJava)
+      _logger.foreach(_.info(accessAuditInfo.asJava))
     }
     accessAuditInfo
   }
@@ -309,7 +279,7 @@ class Logger(config: Any) extends Serializable {
     if (logAudit) {
       this.info("Auditing Information being posted to Gimel Audit Log...")
       this.info(accessAuditInfo)
-      logger.info(accessAuditInfo.asJava)
+      _logger.foreach(_.info(accessAuditInfo.asJava))
     }
 
     this.logMethodAccess(yarnAppId

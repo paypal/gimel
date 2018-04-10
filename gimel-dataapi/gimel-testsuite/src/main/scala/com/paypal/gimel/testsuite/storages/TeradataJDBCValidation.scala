@@ -33,7 +33,7 @@ import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+  info(s"Initiated ${this.getClass.getName}")
   val dataSetName = s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestTeradataHiveTable}"
   val teradataTable = s"${gimelProps.smokeTestTeradataDB}.${gimelProps.smokeTestTeradataTable}"
   val url = s"jdbc:teradata://${gimelProps.smokeTestTeradataURL}"
@@ -65,7 +65,7 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
   private def bootStrapTeradata() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     JDBCAdminClient.createTeradataTableIfNotExists(teradataURL, username, password, teradataTable)
   }
 
@@ -77,7 +77,7 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
   private def bootStrapTeradataHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     try {
       cleanUpTeradataHive()
       val hiveTableDDL =
@@ -98,7 +98,7 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
            |'${JdbcConfigs.jdbcUrl}'='jdbc:teradata://${gimelProps.smokeTestTeradataURL}'
            | )
       """.stripMargin
-      logger.info(s"DDLS -> $hiveTableDDL")
+      info(s"DDLS -> $hiveTableDDL")
       deployDDL(hiveTableDDL)
       ddls += ("teradata_hive_ddl" -> hiveTableDDL)
       stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -117,7 +117,7 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
     */
   override def cleanUp(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     cleanUpTeradata
     cleanUpTeradataHive()
@@ -127,7 +127,7 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
   private def cleanUpTeradata = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     JDBCAdminClient.dropTeradataTableIfExists(teradataURL, username, password, teradataTable)
 
   }
@@ -140,7 +140,7 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
   private def cleanUpTeradataHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     try {
       val dropTableStatement = s"DROP TABLE IF EXISTS $dataSetName"
       sparkSession.sql(dropTableStatement)
@@ -162,7 +162,7 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
   override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"$MethodName-$storage"
     try {
@@ -171,18 +171,18 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
       val datasetWriteTimer = Timer()
       datasetWriteTimer.start
       dataset.write(dataSet, testData, writeOptionsMap)
-      logger.info(s"$tag | Write Success.")
+      info(s"$tag | Write Success.")
       val datasetWriteTimeValue = datasetWriteTimer.endWithMillSecRunTime / 1000
-      logger.info(s"writeTime" -> s"$datasetWriteTimeValue")
-      logger.info(s"$tag | Read from $dataSet...")
+      info(s"writeTime" -> s"$datasetWriteTimeValue")
+      info(s"$tag | Read from $dataSet...")
       val datasetReadTimer = Timer()
       datasetReadTimer.start
       val readDF = dataset.read(dataSet, readOptionsMap)
       val count = readDF.count()
       val datasetReadTimeValue = datasetReadTimer.endWithMillSecRunTime / 1000
-      logger.info(s"readTime" -> s"$datasetReadTimeValue")
-      logger.info(s"$tag | Read Count $count...")
-      logger.info(s"$tag | Sample 10 Rows -->")
+      info(s"readTime" -> s"$datasetReadTimeValue")
+      info(s"$tag | Read Count $count...")
+      info(s"$tag | Sample 10 Rows -->")
       readDF.show(10)
       compareDataFrames(testData, readDF)
       stats += (s"$tag" -> s"Success @ ${Calendar.getInstance.getTime}")

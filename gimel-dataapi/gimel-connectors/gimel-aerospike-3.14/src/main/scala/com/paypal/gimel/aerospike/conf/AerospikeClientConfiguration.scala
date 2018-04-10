@@ -33,10 +33,9 @@ import com.paypal.gimel.logger.Logger
   * @param props Aerospike Client properties.
   */
 
-class AerospikeClientConfiguration(val props: Map[String, Any]) {
+class AerospikeClientConfiguration(val props: Map[String, Any]) extends Logger {
 
-  private val logger = Logger()
-  logger.info(s"Begin Building --> ${this.getClass.getName}")
+  info(s"Begin Building --> ${this.getClass.getName}")
 
   // Load Default Prop from Resource File
   val pcatProps = GimelProperties()
@@ -56,8 +55,8 @@ class AerospikeClientConfiguration(val props: Map[String, Any]) {
   val aerospikeRowKey: String = props.getOrElse(AerospikeConfigs.aerospikeRowkeyKey, tableProps.getOrElse(AerospikeConfigs.aerospikeRowkeyKey, "")).toString
 
   validateAerospikeProperties()
-  logger.info(s"Fields Initiated --> ${this.getClass.getFields.map(f => s"${f.getName} --> ${f.get().toString}").mkString("\n")}")
-  logger.info(s"Completed Building --> ${this.getClass.getName}")
+  info(s"Fields Initiated --> ${this.getClass.getFields.map(f => s"${f.getName} --> ${f.get().toString}").mkString("\n")}")
+  info(s"Completed Building --> ${this.getClass.getName}")
 
 
   /**
@@ -66,15 +65,15 @@ class AerospikeClientConfiguration(val props: Map[String, Any]) {
     */
   def validateAerospikeProperties(): Unit = {
     if (aerospikeSeedHosts.isEmpty) {
-      logger.error("Aerospike Seed Hosts not found.")
+      error("Aerospike Seed Hosts not found.")
       throw AerospikeDataSetException("Aerospike Seed Hosts not found.")
     }
     if (aerospikeNamespace.isEmpty) {
-      logger.error("Aerospike namespace not found.")
+      error("Aerospike namespace not found.")
       throw AerospikeDataSetException("Aerospike namespace not found.")
     }
     if (aerospikeSet.isEmpty) {
-      logger.error("Aerospike Set Name not found.")
+      error("Aerospike Set Name not found.")
       throw AerospikeDataSetException("Aerospike Set Name not found.")
     }
   }

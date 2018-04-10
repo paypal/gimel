@@ -33,8 +33,6 @@ import com.paypal.gimel.kafka.conf.KafkaConfigs
 class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: SQLContext, pcatProps: GimelBenchmarkProperties, testData: DataFrame)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, pcatProps: GimelBenchmarkProperties, testData: DataFrame) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
-
   val dataSetName = s"${pcatProps.benchMarkTestHiveDB}.${pcatProps.benchMarkTestKafkaTopic_Dataset}_2"
   val nativeName = ""
   val topicName_dataset = s"${pcatProps.benchMarkTestKafkaTopic_Dataset}_2"
@@ -45,7 +43,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
   private def bootStrapKafkaHive(): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       cleanUpKafkaHive()
@@ -172,7 +170,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
            | )
       """.stripMargin
 
-      logger.info(s"DDLS -> $hiveTableDDL")
+      info(s"DDLS -> $hiveTableDDL")
       sparkSession.sql(hiveTableDDL)
 
       stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -191,7 +189,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
   private def bootStrapKafka() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       KafkaAdminClient.deleteTopicIfExists(
@@ -220,7 +218,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
   override def bootStrap(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     bootStrapKafka()
     bootStrapKafkaHive()
@@ -235,7 +233,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
   override def cleanUp(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     cleanUpKafka()
     cleanUpKafkaHive()
@@ -263,7 +261,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
   private def benchmarkKafkaAvro() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"$MethodName-$storage"
@@ -272,11 +270,11 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
       val testDataCount = testData.count()
       val testDataOption = Some(testData)
       val dataSet = dataSetName
-      logger.info(s"$tag | TestDataCount $testDataCount")
-      logger.info(s"$tag | Begin Bench Mark Test..")
-      logger.info(s"$tag | Begin Bench Mark Dataset API to $dataSet...")
+      info(s"$tag | TestDataCount $testDataCount")
+      info(s"$tag | Begin Bench Mark Test..")
+      info(s"$tag | Begin Bench Mark Dataset API to $dataSet...")
       benchmarkDatasetAPI(testDataOption, "Kafka_Avro")
-      logger.info(s"$tag | End Bench Mark Dataset API to $dataSet...")
+      info(s"$tag | End Bench Mark Dataset API to $dataSet...")
     } catch {
       case ex: Throwable =>
         stats += (s"$tag" -> s"Failure @ ${Calendar.getInstance.getTime}")
@@ -292,7 +290,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
   private def cleanUpKafka() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       storageadmin.KafkaAdminClient.deleteTopicIfExists(
@@ -313,7 +311,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
   private def cleanUpKafkaHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropTableStatement = s"drop table if exists $dataSetName"

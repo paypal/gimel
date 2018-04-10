@@ -39,9 +39,7 @@ import com.paypal.gimel.logger.Logger
 
 class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
 
-  // GET LOGGER
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+  info(s"Initiated --> ${this.getClass.getName}")
 
   /**
     * Read Implementation for Casandra DataSet.
@@ -64,8 +62,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
 
   override def write(dataset: String, dataFrame: DataFrame,
                      datasetProps: Map[String, Any]): DataFrame = {
-    logger.info(s"Druid Dataset Write Initialized for ---> $dataset.")
-    logger.info(s"Scala Version Used ---> ${scala.util.Properties.versionString}")
+    info(s"Druid Dataset Write Initialized for ---> $dataset.")
+    info(s"Scala Version Used ---> ${scala.util.Properties.versionString}")
 
     if (datasetProps.isEmpty) {
       throw new DataSetException("Props Map Cannot be emtpy for DruidDataSet Write.")
@@ -74,16 +72,16 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     val allProps = datasetProps ++
       Map(DruidConfigs.FIELDS -> DruidUtility.getFieldNames(dataFrame))
 
-    logger.info(s"Begin Building DruidClientConfiguration")
-    logger.debug(s"Incoming Properties --> ${
+    info(s"Begin Building DruidClientConfiguration")
+    debug(s"Incoming Properties --> ${
       allProps.map(x => s"${x._1} -> ${x._2}")
         .mkString("\n")
     }")
 
     val conf = new DruidClientConfiguration(allProps)
 
-    logger.debug(s"DruidClientConfiguration --> $conf")
-    logger.info(s"DruidClientConfiguration Building done --> " +
+    debug(s"DruidClientConfiguration --> $conf")
+    info(s"DruidClientConfiguration Building done --> " +
       s"${conf.getClass.getName}")
 
     // Get load type from DruidClientConfiguration.
@@ -135,8 +133,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @return RDD[T]
     */
   def write[T: TypeTag](dataset: String, rdd: RDD[T], datasetProps: Map[String, Any]): RDD[T] = {
-    logger.info(s"Druid Dataset Write Initialized for ---> $dataset.")
-    logger.info(s"Scala Version Used ---> ${scala.util.Properties.versionString}")
+    info(s"Druid Dataset Write Initialized for ---> $dataset.")
+    info(s"Scala Version Used ---> ${scala.util.Properties.versionString}")
 
     if (!supportedTypesOfRDD.contains(typeOf[T].toString)) {
       throw new UnsupportedOperationException(
@@ -151,16 +149,16 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     val allProps = datasetProps ++
       Map(DruidConfigs.FIELDS -> DruidUtility.getFieldNames(dataset, sparkSession))
 
-    logger.info(s"Begin Building DruidClientConfiguration")
-    logger.debug(s"Incoming Properties --> ${
+    info(s"Begin Building DruidClientConfiguration")
+    debug(s"Incoming Properties --> ${
       allProps.map(x => s"${x._1} -> ${x._2}")
         .mkString("\n")
     }")
 
     val conf = new DruidClientConfiguration(allProps)
 
-    logger.debug(s"DruidClientConfiguration --> $conf")
-    logger.info(s"DruidClientConfiguration Building done --> " +
+    debug(s"DruidClientConfiguration --> $conf")
+    info(s"DruidClientConfiguration Building done --> " +
       s"${conf.getClass.getName}")
 
     // Get load type from DruidClientConfiguration.

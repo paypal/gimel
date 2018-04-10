@@ -26,13 +26,10 @@ import org.apache.spark.streaming.StreamingContext
 import com.paypal.gimel.datastreamfactory.{GimelDataStream, StreamingResult}
 import com.paypal.gimel.kafka.conf.KafkaClientConfiguration
 import com.paypal.gimel.kafka.reader.KafkaStreamConsumer
-import com.paypal.gimel.logger.Logger
 
 class DataStream(streamingContext: StreamingContext) extends GimelDataStream(streamingContext: StreamingContext) {
 
-  // GET LOGGER
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+  info(s"Initiated --> ${this.getClass.getName}")
 
   /**
     * Provides DStream for a given configuration

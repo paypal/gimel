@@ -37,10 +37,7 @@ import com.paypal.gimel.hdfs.utilities.HDFSUtilities
 import com.paypal.gimel.logger.Logger
 
 class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
-
-  // GET LOGGER
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+  info(s"Initiated --> ${this.getClass.getName}")
 
   /** Read Implementation for HDFS DataSet
     *
@@ -81,7 +78,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     }
     else {
 
-      logger.info("Cross Cluster Read Detected !")
+      info("Cross Cluster Read Detected !")
 
       val crossClusterName = datasetProps.props.getOrElse(HdfsConfigs.hdfsStorageNameKey, "")
       val crossClusterNameNode = datasetProps.props.getOrElse(HdfsConfigs.hdfsNameNodeKey, "")
@@ -94,8 +91,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
       if (!crossClusterpathToRead.toLowerCase.startsWith(HdfsConstants.alluxioString)) {
         val (isThresholdMet, dataSizeGB) = validateThreshold(crossClusterpathToRead, crossClusterThresholdGB, crossClusterNameNode)
         // if (isThresholdMet) {
-        logger.info("CrossCluster Path --> " + crossClusterpathToRead)
-        logger.info(s"Size of the Data in the above path -->${dataSizeGB} GB")
+        info("CrossCluster Path --> " + crossClusterpathToRead)
+        info(s"Size of the Data in the above path -->${dataSizeGB} GB")
         // This will be removed once logger issue is fixed
         println("CrossCluster Path --> " + crossClusterpathToRead)
         println(s"WARNING : Size of the data in the root path before applying where clause(if any)  -->${dataSizeGB} GB")

@@ -36,12 +36,11 @@ import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.sql.GimelQueryProcessor
 import com.paypal.gimel.tools.conf.CopyDatasetConstants
 
-object CopyDataSet extends App {
+object CopyDataSet extends App with Logger {
 
   import CopyHelperUtils._
   import com.paypal.gimel.kafka.utilities.KafkaUtilities._
 
-  val logger = Logger(this.getClass.getName)
   val props = resolveRunTimeParameters(args)
   val user = sys.env("USER")
   val sparkConf = new SparkConf()
@@ -60,7 +59,7 @@ object CopyDataSet extends App {
     case "intelligent" => KafkaConstants.gimelAuditRunTypeIntelligent
     case _ => "unknown"
   }
-  logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+  logMethodAccess(sparkSession.sparkContext.getConf.getAppId
     , sparkSession.conf.get("spark.app.name")
     , this.getClass.getName
     , runMode
@@ -80,7 +79,7 @@ object CopyDataSet extends App {
         val isBatchInfinite = props.getOrElse("isBatchRecursionInfinite", "false").toBoolean
         val batchRecursionRequested = props.getOrElse("batchRecursionRequested", "100").toInt
         val batchRecursinMins = props.getOrElse("batchRecursionMinutes", 30).toString.toInt
-        logger.info(
+        info(
           s"""
              |--------------------------------------------------------------------
              || isBatchRecursionInfinite | ${isBatchInfinite}
@@ -92,7 +91,7 @@ object CopyDataSet extends App {
         var currentIteration = 1
         while (isBatchInfinite || (currentIteration <= batchRecursionRequested)) {
           val startTime = Calendar.getInstance().getTime
-          logger.info(
+          info(
             s"""
                |--------------------------------------------------------------------
                || Mode        | ${props("mode")}
@@ -106,7 +105,7 @@ object CopyDataSet extends App {
           val totalTimeMilliSec: Double = timer.endWithMillSecRunTime
           val endTime = Calendar.getInstance().getTime
           val sleepMilliSec = scala.math.max(0, batchRecursionMilliSec - totalTimeMilliSec)
-          logger.info(
+          info(
             s"""
                |--------------------------------------------------------------------
                || (*)   | Iteration                     | ${currentIteration}
@@ -117,28 +116,28 @@ object CopyDataSet extends App {
                || (X-Y) | Time Remaining for Sleep (ms) | ${sleepMilliSec}
                |--------------------------------------------------------------------
             """.stripMargin)
-          if (currentIteration == batchRecursionRequested) logger.info("All Iterations Completed !")
+          if (currentIteration == batchRecursionRequested) info("All Iterations Completed !")
           if (sleepMilliSec > 0 && currentIteration < batchRecursionRequested) {
-            logger.info(s"Going to Sleep at --> ${Calendar.getInstance().getTime}")
+            info(s"Going to Sleep at --> ${Calendar.getInstance().getTime}")
             Thread.sleep(sleepMilliSec.toLong)
-            logger.info(s"Woke Up at --> ${Calendar.getInstance().getTime}")
+            info(s"Woke Up at --> ${Calendar.getInstance().getTime}")
           }
           currentIteration += 1
         }
       case CopyDatasetConstants.COPY_DATASET_INTELLIGENT_MODE =>
-        logger.info(s"Mode --> auto")
+        info(s"Mode --> auto")
         var batchRunCount = 0
         while (!isStreamable(sparkSession, props)) {
-          logger.info(s"====== BATCH Mode < Iteration --> ${batchRunCount} > ======")
+          info(s"====== BATCH Mode < Iteration --> ${batchRunCount} > ======")
           val timer = Timer()
           timer.start
           GimelQueryProcessor.executeBatch(queryToExecute, sparkSession)
           if (hiveStagingDir != "") sparkSession.sql(s"dfs -rm -r -f ${hiveStagingDir}")
           timer.endWithMillSecRunTime
-          logger.info(s"====== BATCH Mode < Iteration --> ${batchRunCount} > Total Time Seconds --> ${timer.endWithMillSecRunTime / 1000} ====== ")
+          info(s"====== BATCH Mode < Iteration --> ${batchRunCount} > Total Time Seconds --> ${timer.endWithMillSecRunTime / 1000} ====== ")
           batchRunCount = batchRunCount + 1
         }
-        logger.info("====== STREAM Mode ======")
+        info("====== STREAM Mode ======")
         GimelQueryProcessor.executeStream(queryToExecute, sparkSession)
       case _ => throw new Exception("Invalid Mode of Execution Must be one of these <batch|stream>")
     }
@@ -152,9 +151,7 @@ object CopyDataSet extends App {
 
 }
 
-object CopyHelperUtils {
-
-  val logger = Logger(this.getClass.getName)
+object CopyHelperUtils extends Logger {
 
   /**
     * Resolves RunTime Params
@@ -165,7 +162,7 @@ object CopyHelperUtils {
   def resolveRunTimeParameters(allParams: Array[String]): Map[String, String] = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     var paramsMapBuilder: Map[String, String] = Map()
     for (jobParams <- allParams) {
@@ -173,7 +170,7 @@ object CopyHelperUtils {
         paramsMapBuilder += (eachParam.split("=")(0) -> eachParam.split("=", 2)(1))
       }
     }
-    logger.info(s"All Params From User --> ${paramsMapBuilder.mkString("\n")}")
+    info(s"All Params From User --> ${paramsMapBuilder.mkString("\n")}")
 
     val usage =
       """
@@ -181,14 +178,14 @@ object CopyHelperUtils {
       """.stripMargin
 
     if (allParams.length == 0) {
-      logger.error(usage)
+      error(usage)
       throw new Exception(s"Args Cannot be Empty. Usage --> \n${usage}")
     }
 
     if (!paramsMapBuilder.contains("mode")) throw new Exception(s"mode must be supplied as either < batch|stream > Usage --> \n${usage}")
     if (!paramsMapBuilder.contains("querySourceFile")) throw new Exception(s"querySourceFile must be supplied ! Usage --> \n${usage}")
 
-    logger.info(s"Resolved Params From Code --> ${paramsMapBuilder}")
+    info(s"Resolved Params From Code --> ${paramsMapBuilder}")
     paramsMapBuilder
   }
 
@@ -202,7 +199,7 @@ object CopyHelperUtils {
   def getOptions(sparkSession: SparkSession): (String, Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val hiveConf: Map[String, String] = sparkSession.conf.getAll
     val optionsToCheck: Map[String, String] = Map(
@@ -232,19 +229,19 @@ object CopyHelperUtils {
   def getQuery(props: Map[String, String]): String = {
 
     val sql: String = {
-      logger.info(s"User Requested Execution of SQL from External File.")
+      info(s"User Requested Execution of SQL from External File.")
       val querySourceFile = props("querySourceFile")
       val unresolvedQuery = HDFSAdminClient.readHDFSFile(querySourceFile)
-      logger.info(s"SQL From External File --> \n${unresolvedQuery}")
+      info(s"SQL From External File --> \n${unresolvedQuery}")
       val replacementProps = props.filter(x => x._1.toUpperCase.startsWith("GIMEL.SQL.PARAM"))
-      logger.info(
+      info(
         s"""
            |Following Props will be resolved in External File's SQL String -->
            |${replacementProps.mkString("\n", "\n", "")}
           """.stripMargin)
       replacementProps.foldLeft(unresolvedQuery)((s, prop) => s.replaceAll(prop._1.toUpperCase, prop._2))
     }
-    logger.info(s"Resolved Query to Execute --> ${sql}")
+    info(s"Resolved Query to Execute --> ${sql}")
     sql
   }
 

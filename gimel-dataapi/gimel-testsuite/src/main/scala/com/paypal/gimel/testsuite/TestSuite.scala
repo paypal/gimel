@@ -36,11 +36,8 @@ import com.paypal.gimel.testsuite.conf.TestSuiteConstants
 import com.paypal.gimel.testsuite.storages._
 import com.paypal.gimel.testsuite.utilities.{GimelTestSuiteProperties, HiveJDBCUtilsForTestSuite}
 
-object TestSuite extends App {
+object TestSuite extends App with Logger {
 
-  // Logger Initiation
-  val logger = Logger(this.getClass.getName)
-  logger.consolePrintEnabled = true
   val sparkSession = SparkSession
     .builder()
     .enableHiveSupport()
@@ -58,13 +55,13 @@ object TestSuite extends App {
     * --- Creates Hive DataBase if it does not exists already ----
     */
   utils.bootStrapHiveDB()
-  logger.info("DataBase BootStrapped.")
+  info("DataBase BootStrapped.")
 
   /**
     * ---- This is the section where every storage will be validated
     */
   utils.storagesToValidate.foreach { storage =>
-    logger.info(s"Invoking Storage Validation From Factory for --> $storage")
+    info(s"Invoking Storage Validation From Factory for --> $storage")
     val (ddlResult, statsResult) = utils.getFromValidationFactory(storage).execute()
     ddlResult.foreach(x => utils.ddls += x)
     statsResult.foreach(x => utils.stats += x)
@@ -75,9 +72,9 @@ object TestSuite extends App {
     */
   val allStats: Map[String, String] = utils.stats ++ utils.ddls
   val statsJSON = allStats.toJson
-  utils.ddls.foreach(x => logger.info(s"BootStrap Object Definitions --> \n ${x._1} --> ${x._2}"))
-  Logger(this.getClass.getName).info("SmokeTest Summary -->")
-  Logger(this.getClass.getName).info(statsJSON.compactPrint)
+  utils.ddls.foreach(x => info(s"BootStrap Object Definitions --> \n ${x._1} --> ${x._2}"))
+  info("SmokeTest Summary -->")
+  info(statsJSON.compactPrint)
 
   /**
     * --- ES Index Creation & Post Summary ----
@@ -90,17 +87,15 @@ object TestSuite extends App {
     */
   //  utils.cleanUpHiveDB()
 
-  Logger(this.getClass.getName).info("TEST SUITE - COMPLETED")
+ info("TEST SUITE - COMPLETED")
   // to do println statement should be removed
   // Once the kafka_stream validation completes and when we kill the streaming context,
   // the logger object is getting killed.Need to investogate moe on why this logger object is killed
   println("TEST SUITE - COMPLETED")
 }
 
-class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) {
+class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) extends Logger {
 
-  // Get logger
-  val logger = Logger()
   // DDLs will be filled in later based on runtime options
   var ddls: Map[String, String] = Map()
   // Stats will be filled in later based on runtime options
@@ -130,10 +125,10 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) {
   def resolveRunTimeParameters(allParams: Array[String]): Map[String, String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     var paramsMapBuilder: Map[String, String] = Map()
-    logger.info(s"All Params From User --> ${allParams.mkString("\n")}")
+    info(s"All Params From User --> ${allParams.mkString("\n")}")
 
     for (jobParams <- allParams) {
       for (eachParam <- jobParams.split(" ")) {
@@ -145,7 +140,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) {
     if (!paramsMapBuilder.contains(TestSuiteConstants.fetchRowsKey)) paramsMapBuilder += (TestSuiteConstants.fetchRowsKey -> "100")
     if (!paramsMapBuilder.contains(TestSuiteConstants.maxRecordsPerPartitionKey)) paramsMapBuilder += (TestSuiteConstants.maxRecordsPerPartitionKey -> "1000000")
     if (!paramsMapBuilder.contains(TestSuiteConstants.minRowsPerPartitionKey)) paramsMapBuilder += (TestSuiteConstants.minRowsPerPartitionKey -> "100000")
-    logger.info(s"Resolved Params From Code --> $paramsMapBuilder")
+    info(s"Resolved Params From Code --> $paramsMapBuilder")
     stats += ("Params" -> paramsMapBuilder.mkString("\n"))
     paramsMapBuilder
   }
@@ -193,7 +188,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) {
   def bootStrapHiveDB(): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val hiveDDL =
@@ -218,7 +213,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) {
   def bootStrapESIndexForStats(): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val esDDL =
@@ -259,7 +254,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) {
   def postResults(stats: Map[String, String]): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     val cluster = params.getOrElse("cluster", "unknown_cluster")
     val sessionName = sparkSession.sparkContext.appName
     val sessionUser = sparkSession.sparkContext.sparkUser
@@ -275,8 +270,8 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) {
     val postableStats: RDD[String] = sparkSession.sparkContext.parallelize(Seq(jsonStats))
     val statsDF: DataFrame = sparkSession.read.json(postableStats)
     dataset.write(s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestResultEsIndex}", statsDF)
-    logger.info(s"Stats --> $jsonStats")
-    logger.info(s"Posted Stats to --> ${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestResultEsIndex}")
+    info(s"Stats --> $jsonStats")
+    info(s"Posted Stats to --> ${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestResultEsIndex}")
   }
 
   /**
@@ -285,7 +280,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) {
   def cleanUpHiveDB(): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       sparkSession.sql(s"DROP DATABASE IF EXISTS ${gimelProps.smokeTestHiveDB} CASCADE")
@@ -306,7 +301,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) {
   def handleException(ex: Throwable, message: String = ""): Nothing = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     //    cleanUpHiveDB()
     ex.printStackTrace()
     throw new Exception(s"An Error Occurred <$message> \n ${ex.getMessage}")
@@ -321,7 +316,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) {
   def deployDDL(executeDDL: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     hiveJDBCUtils.withStatement { statement =>
       hiveJarsForDDL.split(",").foreach { jarsToAdd =>

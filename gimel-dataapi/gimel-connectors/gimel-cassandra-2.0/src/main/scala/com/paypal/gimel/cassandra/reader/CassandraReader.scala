@@ -26,9 +26,7 @@ import org.apache.spark.sql.cassandra._
 import com.paypal.gimel.cassandra.conf.{CassandraClientConfiguration, CassandraConfigs}
 import com.paypal.gimel.logger.Logger
 
-object CassandraReader {
-
-  private val logger = Logger()
+object CassandraReader extends Logger {
 
   /**
     * Reads Cassandra and returns dataframe
@@ -40,7 +38,7 @@ object CassandraReader {
   def readTable(sparkSession: SparkSession, conf: CassandraClientConfiguration): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     sparkSession.setCassandraConf(conf.cassandraCluster, CassandraConnectorConf.ConnectionHostParam.option(conf.cassandraHosts))
     sparkSession.setCassandraConf(CassandraConnectorConf.KeepAliveMillisParam.option(conf.cassandraSparkTtl))
@@ -50,7 +48,7 @@ object CassandraReader {
       .options(conf.cassandraDfOptions)
       .load()
 
-    logger.info("DataFrame Schema -->")
+    info("DataFrame Schema -->")
     df.printSchema()
     df
   }

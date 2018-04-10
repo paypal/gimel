@@ -41,9 +41,7 @@ import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
 
 
-object GimelQueryUtils {
-
-  val logger: Logger = Logger(this.getClass.getName)
+object GimelQueryUtils extends Logger {
 
   /**
     * Returns the individual works from the SQL as tokens
@@ -114,8 +112,8 @@ object GimelQueryUtils {
     val batchDate = new Date(batchTimeMS.toLong)
     val df = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss")
     val batchTime = df.format(batchDate)
-    logger.info(s"Current Batch ID --> $time | $batchTime | $batchDate")
-    logger.info(
+    info(s"Current Batch ID --> $time | $batchTime | $batchDate")
+    info(
       s"""|-----------------------------------------------------------------------
           |Batch ID -->
           |-----------------------------------------------------------------------
@@ -163,7 +161,7 @@ object GimelQueryUtils {
 
   def executePushdownQuery(selectSQL: String, sparkSession: SparkSession): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val authUtilities: JDBCAuthUtilities = JDBCAuthUtilities(sparkSession)
     val usernameConf: Map[String, String] = sparkSession.conf.getAll.contains(JdbcConstants.jdbcUserName) match {
@@ -175,14 +173,14 @@ object GimelQueryUtils {
       case _ => Map()
     }
     val dataSetProps = usernameConf ++ pConf
-    logger.info(s"datasetProps:${dataSetProps}")
+    info(s"datasetProps:${dataSetProps}")
     val (username, password) = authUtilities.getJDBCCredentials(sparkSession.conf.get(JdbcConfigs.jdbcUrl), dataSetProps)
     val pushdownSQL = "( " + selectSQL + " )" + " AS tempPushDownTable"
     val jdbcOptions: Map[String, String] = Map("url" -> sparkSession.conf.get(JdbcConfigs.jdbcUrl),
       "driver" -> sparkSession.conf.get(JdbcConfigs.jdbcDriverClassKey),
       "dbtable" -> pushdownSQL, "user" -> username, "password" -> password)
 
-    logger.info(s"Final SQL for Query Push Down --> ${pushdownSQL}")
+    info(s"Final SQL for Query Push Down --> ${pushdownSQL}")
 
     sparkSession
       .read
@@ -208,7 +206,7 @@ object GimelQueryUtils {
   def resolveSQLWithTmpTables(originalSQL: String, selectSQL: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, String, List[com.paypal.gimel.kafka.DataSet]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     var kafkaDataSets: List[com.paypal.gimel.kafka.DataSet] = List()
     var sqlTmpString = selectSQL
@@ -219,7 +217,7 @@ object GimelQueryUtils {
         val df = dataSet.read(eachSource, options)
         cacheIfRequested(df, eachSource, options)
         if (dataSet.latestKafkaDataSetReader.isDefined) {
-          logger.info(s"@$MethodName | Added Kafka Reader for Source --> $eachSource")
+          info(s"@$MethodName | Added Kafka Reader for Source --> $eachSource")
           kafkaDataSets = kafkaDataSets ++ List(dataSet.latestKafkaDataSetReader.get)
         }
         val tabNames = eachSource.split("\\.")
@@ -230,7 +228,7 @@ object GimelQueryUtils {
     val queryPushDownFlag: String = sparkSession.conf.get(JdbcConfigs.jdbcPushDownEnabled, "false")
     queryPushDownFlag match {
       case "true" =>
-        logger.info("PATH IS -> QUERY PUSH DOWN")
+        info("PATH IS -> QUERY PUSH DOWN")
         pCatalogTablesToReplaceAsTmpTable.foreach { kv =>
           val resolvedSourceTable = resolveDataSetName(kv._1)
           val formattedProps: scala.collection.immutable.Map[String, String] = Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
@@ -246,15 +244,15 @@ object GimelQueryUtils {
           sqlOriginalString = sqlOriginalString.replaceAll(s"(?i)${kv._1}", jdbcTableName)
         }
       case _ =>
-        logger.info("PATH IS --> DEFAULT")
+        info("PATH IS --> DEFAULT")
         pCatalogTablesToReplaceAsTmpTable.foreach { kv =>
           sqlTmpString = sqlTmpString.replaceAll(s"(?i)${kv._1}", kv._2)
           sqlOriginalString = sqlOriginalString.replaceAll(s"(?i)${kv._1}", kv._2)
         }
     }
 
-    logger.info(s"incoming SQL --> $selectSQL")
-    logger.info(s"resolved SQL with Temp Table(s) --> $sqlTmpString")
+    info(s"incoming SQL --> $selectSQL")
+    info(s"resolved SQL with Temp Table(s) --> $sqlTmpString")
     (sqlOriginalString, sqlTmpString, kafkaDataSets)
   }
 
@@ -267,7 +265,7 @@ object GimelQueryUtils {
   def isHavingInsert(sql: String): Boolean = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val uniformSQL = sql.replace("\n", " ")
     uniformSQL.toUpperCase().contains("INSERT")
@@ -282,7 +280,7 @@ object GimelQueryUtils {
   def getSelectClause(sql: String): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val uniformSQL = sql.replace("\n", " ")
     val sqlParts: Array[String] = uniformSQL.split(" ")
@@ -304,7 +302,7 @@ object GimelQueryUtils {
   def getTargetTables(sql: String): Option[String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     SQLParser.getTargetTables(sql)
   }
@@ -319,7 +317,7 @@ object GimelQueryUtils {
   def getOptions(sparkSession: SparkSession): (String, Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val hiveConf: Map[String, String] = sparkSession.conf.getAll
     val optionsToCheck: Map[String, String] = Map(
@@ -385,13 +383,13 @@ object GimelQueryUtils {
   def executeResolvedQuery(clientSQL: String, dest: Option[String], selectSQL: String, sparkSession: SparkSession, dataset: com.paypal.gimel.DataSet): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info(s"Client SQL is --> $clientSQL")
-    logger.info(s"Select SQL is --> $selectSQL")
+    info(s"Client SQL is --> $clientSQL")
+    info(s"Select SQL is --> $selectSQL")
     var resultString = ""
     if (dest.isDefined) {
-      logger.info(s"EXECUTION PATH ====== DATASET WRITE ======")
+      info(s"EXECUTION PATH ====== DATASET WRITE ======")
       if (clientSQL.toLowerCase.contains("partition")) {
         sparkSession.sql("set hive.exec.dynamic.partition.mode=nonstrict")
       }
@@ -402,18 +400,18 @@ object GimelQueryUtils {
       } match {
         case Success(_) =>
           resultString = "Query Completed."
-          logger.info(resultString)
+          info(resultString)
         case Failure(e) =>
           e.printStackTrace()
           resultString =
             s"""Query Failed in function : $MethodName via path dataset.write. Error -->
                 |
                |${e.getStackTraceString}""".stripMargin
-          logger.error(resultString)
+          error(resultString)
           throw e
       }
     } else {
-      logger.info(s"EXECUTION PATH ====== DATASET SELECT ======")
+      info(s"EXECUTION PATH ====== DATASET SELECT ======")
       val queryPushDownFlag: String = sparkSession.conf.get(JdbcConfigs.jdbcPushDownEnabled, "false")
       val selectDF: DataFrame = queryPushDownFlag match {
         case "true" =>
@@ -458,11 +456,11 @@ object GimelQueryUtils {
   //  def executeResolvedQuerySparkMagic(clientSQL: String, dest: Option[String], selectSQL: String, hiveContext: HiveContext, dataset: DataSet): RDD[String] = {
   //    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
   //
-  //    logger.info(" @Begin --> " + MethodName)
+  //    info(" @Begin --> " + MethodName)
   //
-  //    logger.info(s"Client SQL is --> $clientSQL")
-  //    logger.info(s"Select SQL is --> $selectSQL")
-  //    logger.silence
+  //    info(s"Client SQL is --> $clientSQL")
+  //    info(s"Select SQL is --> $selectSQL")
+  //    silence
   //    val selectDF = hiveContext.sql(selectSQL)
   //    selectDF.toJSON
   //  }
@@ -470,13 +468,13 @@ object GimelQueryUtils {
   def executeResolvedQuerySparkMagic(clientSQL: String, dest: Option[String], selectSQL: String, sparkSession: SparkSession, dataset: com.paypal.gimel.DataSet): RDD[String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info(s"Client SQL is --> $clientSQL")
-    logger.info(s"Select SQL is --> $selectSQL")
+    info(s"Client SQL is --> $clientSQL")
+    info(s"Select SQL is --> $selectSQL")
     var resultString = ""
     if (dest.isDefined) {
-      logger.info(s"EXECUTION PATH ====== DATASET WRITE ======")
+      info(s"EXECUTION PATH ====== DATASET WRITE ======")
       if (clientSQL.toLowerCase.contains("partition")) {
         sparkSession.sql("set hive.exec.dynamic.partition.mode=nonstrict")
       }
@@ -495,18 +493,18 @@ object GimelQueryUtils {
       } match {
         case Success(_) =>
           resultString = """{"Query Execution":"Success"}"""
-          logger.info(resultString)
+          info(resultString)
           sparkSession.read.json(sparkSession.sparkContext.parallelize(Seq(resultString))).toJSON.rdd
         case Failure(e) =>
           e.printStackTrace()
           resultString =
             s"""{"Query Execution Failed":${e.getStackTraceString}}"""
-          logger.error(resultString)
+          error(resultString)
           sparkSession.read.json(sparkSession.sparkContext.parallelize(Seq(resultString))).toJSON.rdd
         //          throw e
       }
     } else {
-      logger.info(s"EXECUTION PATH ====== DATASET SELECT ======")
+      info(s"EXECUTION PATH ====== DATASET SELECT ======")
       val queryPushDownFlag: String = sparkSession.conf.get(JdbcConfigs.jdbcPushDownEnabled, "false")
       val selectDF: DataFrame = queryPushDownFlag match {
         case "true" =>
@@ -539,15 +537,15 @@ object GimelQueryUtils {
   def resolveSQL(sql: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, Option[String], String, List[com.paypal.gimel.kafka.DataSet]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info("@Begin --> " + MethodName)
+    info("@Begin --> " + MethodName)
 
-    logger.info(s"incoming SQL --> $sql")
+    info(s"incoming SQL --> $sql")
     val uniformSQL = sql.replace("\n", " ")
     val selectClauseOnly = getSelectClause(uniformSQL)
     val (originalSQL, selectClause, kafkaDataSets) = resolveSQLWithTmpTables(sql, selectClauseOnly, sparkSession, dataSet)
     val targetTable = getTargetTables(sql)
-    logger.info(s"selectClause --> $selectClause")
-    logger.info(s"destination --> $targetTable")
+    info(s"selectClause --> $selectClause")
+    info(s"destination --> $targetTable")
     (originalSQL, targetTable, selectClause, kafkaDataSets)
   }
 

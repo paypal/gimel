@@ -27,10 +27,9 @@ import scala.collection.mutable
 
 import com.paypal.gimel.logger.Logger
 
-class GimelProperties(userProps: Map[String, String] = Map[String, String]()) {
+class GimelProperties(userProps: Map[String, String] = Map[String, String]()) extends Logger {
   // Get Logger
-  val logger = Logger()
-  logger.info(s"Initiating --> ${this.getClass.getName}")
+  info(s"Initiating --> ${this.getClass.getName}")
   // Get Properties
   val props: mutable.Map[String, String] = getProps
   val runTagUUID: String = java.util.UUID.randomUUID.toString
@@ -78,7 +77,7 @@ class GimelProperties(userProps: Map[String, String] = Map[String, String]()) {
   private def getProps: mutable.Map[String, String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val props: Properties = new Properties()
     userProps.contains(GimelConstants.GIMEL_PROPERTIES_FILE_KEY) match {
@@ -96,7 +95,7 @@ class GimelProperties(userProps: Map[String, String] = Map[String, String]()) {
     }
   }
 
-  logger.info(s"Completed Building --> ${this.getClass.getName}")
+  info(s"Completed Building --> ${this.getClass.getName}")
 }
 
 /**

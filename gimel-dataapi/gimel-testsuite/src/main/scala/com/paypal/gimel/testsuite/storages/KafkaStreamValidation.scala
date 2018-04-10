@@ -37,7 +37,7 @@ import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+  info(s"Initiated ${this.getClass.getName}")
 
   val dataSetName = s"${gimelProps.smokeTestHiveDB}.kafka_cdh_${gimelProps.smokeTestCDHKafkaStreamHiveTable}"
   val dataSetNameES = s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestKafkaStreamESHiveTable}"
@@ -63,7 +63,7 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     */
   private def bootStrapKafka() = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       KafkaAdminClient.deleteTopicIfExists(
@@ -92,7 +92,7 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   private def bootStrapStreamKafkaHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     cleanUpKafkaHive()
     try {
@@ -135,7 +135,7 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     */
   private def cleanUpKafkaHive() = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropTableStatement = s"drop table if exists ${dataSetName}"
@@ -156,7 +156,7 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   private def bootstrapStreamESHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val typeName = gimelProps.tagToAdd.replace("_", "")
@@ -200,7 +200,7 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   override def validateAPI(inDF: Option[DataFrame]): (Map[String, String], Map[String, String], Option[DataFrame]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"$MethodName-$storage"
     try {
@@ -210,12 +210,12 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
       sparkSession.sql("set gimel.kafka.reader.checkpoint.save=false")
       sparkSession.sql(s"set ${ElasticSearchConfigs.esDefaultReadForAllPartitions}=true")
       sparkSession.sql(s"set gimel.kafka.streaming.awaitTerminationOrTimeout=${gimelProps.smokeTestStreamingAwaitTermination}")
-      Logger(this.getClass.getName).info(s"Insert into $dataSetNameES select * from $dataSetName")
+      info(s"Insert into $dataSetNameES select * from $dataSetName")
       val res = com.paypal.gimel.sql.GimelQueryProcessor.executeStream(
         s"Insert into $dataSetNameES select * from $dataSetName"
         , sparkSession
       )
-      Logger(this.getClass.getName).info(res)
+      info(res)
       stats += (s"$tag" -> s"Success @ ${Calendar.getInstance.getTime}")
       (ddls, stats, inDF)
     } catch {
@@ -246,7 +246,7 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   private def kafkaStreamCleanUp() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropDDL = s"drop table if exists $dataSetName"
@@ -268,7 +268,7 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   private def kafkaStreamESHiveCleanUp() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropDDL = s"drop table if exists $dataSetNameES"
@@ -290,9 +290,9 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
   private def kafkaStreamESCleanUp(url: String) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
-    logger.info("delete index")
-    logger.info(url)
+    info(" @Begin --> " + MethodName)
+    info("delete index")
+    info(url)
     try {
       val output = storageadmin.ESAdminClient.deleteIndex(url)
       stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")

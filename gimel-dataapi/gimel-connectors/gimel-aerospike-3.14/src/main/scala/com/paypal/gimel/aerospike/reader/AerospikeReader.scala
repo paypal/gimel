@@ -32,7 +32,6 @@ import com.paypal.gimel.logger.Logger
   */
 
 object AerospikeReader {
-  val logger = Logger()
 
   /**
     *

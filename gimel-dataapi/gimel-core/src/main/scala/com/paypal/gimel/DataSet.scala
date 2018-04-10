@@ -44,7 +44,7 @@ object DataSetType extends Enumeration {
   val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID = Value
 }
 
-class DataSet(val sparkSession: SparkSession) {
+class DataSet(val sparkSession: SparkSession) extends Logger {
 
   import com.paypal.gimel.common.utilities.DataSetUtils._
 
@@ -52,7 +52,6 @@ class DataSet(val sparkSession: SparkSession) {
   val sparkAppName = sparkSession.conf.get(GimelConstants.SPARK_APP_NAME)
   val clusterName = getYarnClusterName()
   val appTag = getAppTag(sparkSession.sparkContext)
-  val logger = Logger(this.getClass.getName)
   val sparkContext: SparkContext = sparkSession.sparkContext
   val sqlContext: SQLContext = sparkSession.sqlContext
   var latestDataSetReader: Option[GimelDataSet] = None
@@ -104,7 +103,7 @@ class DataSet(val sparkSession: SparkSession) {
     val propsToLog = scala.collection.mutable.Map[String, String]()
     dataSetProps.foreach(x => propsToLog.put(x._1, x._2))
 
-    logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
+    logApiAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkAppName
       , this.getClass.getName
       , KafkaConstants.gimelAuditRunTypeBatch
@@ -159,7 +158,7 @@ class DataSet(val sparkSession: SparkSession) {
     val propsToLog = scala.collection.mutable.Map[String, String]()
     dataSetProps.foreach(x => propsToLog.put(x._1, x._2))
 
-    logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
+    logApiAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkAppName
       , this.getClass.getName
       , KafkaConstants.gimelAuditRunTypeBatch
@@ -214,7 +213,7 @@ class DataSet(val sparkSession: SparkSession) {
     val propsToLog = scala.collection.mutable.Map[String, String]()
     dataSetProps.foreach(x => propsToLog.put(x._1, x._2))
 
-    logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
+    logApiAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkAppName
       , this.getClass.getName
       , KafkaConstants.gimelAuditRunTypeBatch
@@ -330,20 +329,6 @@ private class DataSetInitializationException(message: String, cause: Throwable)
 object DataSetUtils {
 
   import com.paypal.gimel.common.utilities.DataSetUtils._
-
-  /**
-    * Convenience Method to Get or Create Logger
-    *
-    * @param sparkSession SparkSession
-    * @return Logger
-    */
-  def getOrCreateLogger(sparkSession: SparkSession): Logger = {
-    val user = sys.env("USER")
-    val sparkAppName = sparkSession.conf.get(GimelConstants.SPARK_APP_NAME)
-    val appTag = s"$user-$sparkAppName"
-    val logger = Logger(appTag)
-    logger
-  }
 
   /**
     * Fetch the Type of DataSetType based on the DataSetProperties that is Supplied

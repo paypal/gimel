@@ -43,7 +43,7 @@ object DruidRealtimeWriter extends DruidWriter {
                    conf: DruidClientConfiguration, dataFrame: DataFrame): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     // Convert to RDD of Map[String, String]
     val eventsRDD: RDD[Map[String, Any]] = dataFrame.rdd
@@ -83,7 +83,7 @@ object DruidRealtimeWriter extends DruidWriter {
                    rdd: RDD[Map[String, Any]]): RDD[Map[String, Any]] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     // Convert to RDD of Map[String, String]
     val eventsRDD: RDD[Map[String, Any]] = rdd

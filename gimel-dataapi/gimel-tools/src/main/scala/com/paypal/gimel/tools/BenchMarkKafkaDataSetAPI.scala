@@ -31,10 +31,7 @@ import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.tools.conf.BenchmarkKafkaConstants
 
 @deprecated
-object BenchMarkKafkaDataSetAPI extends App {
-
-  // Logger Initiation
-  val logger = Logger(this.getClass.getName)
+object BenchMarkKafkaDataSetAPI extends App with Logger {
 
   val sparkSession = SparkSession
     .builder()
@@ -90,7 +87,7 @@ object BenchMarkKafkaDataSetAPI extends App {
     * Write Stats
     */
 
-  logger.info(s"Writing to Path --> $path")
+  info(s"Writing to Path --> $path")
   HDFSAdminClient.writeHDFSFile(path, toWrite)
 
   sc.stop()
@@ -98,8 +95,7 @@ object BenchMarkKafkaDataSetAPI extends App {
 }
 
 @deprecated
-class CDHTimer(funcName: String) {
-  val logger = Logger()
+class CDHTimer(funcName: String) extends Logger {
 
   def timed[T](f: => T): T = {
     val startTime = System.currentTimeMillis()
@@ -115,15 +111,13 @@ class CDHTimer(funcName: String) {
   def end(): Long = {
     val endTime: Long = System.currentTimeMillis()
     val elapsedTime = endTime - startTime
-    logger.info("TOTAL TIME " + funcName + " elapse time = " + elapsedTime)
+    info("TOTAL TIME " + funcName + " elapse time = " + elapsedTime)
     elapsedTime
   }
 }
 
 @deprecated
-object BenchMarkHelperUtils {
-
-  val logger = Logger()
+object BenchMarkHelperUtils extends Logger {
 
   /**
     * Resolves RunTime Params
@@ -134,7 +128,7 @@ object BenchMarkHelperUtils {
   def resolveRunTimeParameters(allParams: Array[String]): Map[String, String] = {
 
     var paramsMapBuilder: Map[String, String] = Map()
-    logger.info(s"All Params From User --> ${allParams.mkString("\n")}")
+    info(s"All Params From User --> ${allParams.mkString("\n")}")
     val usage =
       """
         |dataset=pcatalog.kafka_flights_log fetchRowsOnFirstRun=1000000 maxRecordsPerPartition=1000000 targetFile=/tmp/stats/log"
@@ -152,7 +146,7 @@ object BenchMarkHelperUtils {
     if (!paramsMapBuilder.contains(BenchmarkKafkaConstants.fetchRowsKey)) paramsMapBuilder += (BenchmarkKafkaConstants.fetchRowsKey -> "1000000")
     if (!paramsMapBuilder.contains(BenchmarkKafkaConstants.maxRecordsPerPartitionKey)) paramsMapBuilder += (BenchmarkKafkaConstants.maxRecordsPerPartitionKey -> "1000000")
     if (!paramsMapBuilder.contains(BenchmarkKafkaConstants.minRowsPerPartitionKey)) paramsMapBuilder += (BenchmarkKafkaConstants.minRowsPerPartitionKey -> "100000")
-    logger.info(s"Resolved Params From Code --> $paramsMapBuilder")
+    info(s"Resolved Params From Code --> $paramsMapBuilder")
     paramsMapBuilder
   }
 }

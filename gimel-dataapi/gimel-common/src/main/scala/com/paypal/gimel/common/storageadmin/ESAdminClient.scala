@@ -25,9 +25,7 @@ import org.apache.http.impl.client.DefaultHttpClient
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.logger.Logger
 
-object ESAdminClient {
-
-  val logger = Logger()
+object ESAdminClient extends Logger {
 
   /**
     * Deletes ES Index
@@ -37,26 +35,26 @@ object ESAdminClient {
   def deleteIndex(url: String): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
-    logger.info("delete index")
-    logger.info(url)
+    info(" @Begin --> " + MethodName)
+    info("delete index")
+    info(url)
     try {
       val client = new DefaultHttpClient()
       val delete = new HttpDelete(url)
       delete.setHeader("Accept", "application/json")
       val httpResponse = client.execute(delete)
-      logger.info(s"Response is --> ${httpResponse.getStatusLine}")
+      info(s"Response is --> ${httpResponse.getStatusLine}")
       val response = httpResponse.getStatusLine.getStatusCode
       if (response != GimelConstants.HTTP_SUCCESS_STATUS_CODE) {
-        logger.error(s"Unable to delete the data: API did not return 200 Status Message ")
+        error(s"Unable to delete the data: API did not return 200 Status Message ")
       }
-      logger.info(response.toString)
+      info(response.toString)
       client.close()
       "Success"
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to delete ES Index")
+        error(s"Unable to delete ES Index")
         throw ex
     }
   }

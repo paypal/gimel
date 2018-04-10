@@ -27,12 +27,7 @@ import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.hdfs.conf.HdfsConfigs
 import com.paypal.gimel.logger.Logger
 
-class HiveUtils {
-
-
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
-
+class HiveUtils extends Logger {
   /**
     * write to hive table
     *
@@ -55,9 +50,9 @@ class HiveUtils {
 
     try {
 
-      logger.info("Registering temp table")
+      info("Registering temp table")
       dataFrame.registerTempTable("tempTable")
-      logger.info("Register temp table completed")
+      info("Register temp table completed")
 
       val insertPrefix = saveMode.toUpperCase match {
         case "APPEND" =>
@@ -68,8 +63,8 @@ class HiveUtils {
           "insert into"
       }
 
-      logger.info(s"insertPrefix:$insertPrefix")
-      logger.info(s"saveMode:$saveMode, apiType:$apiType,location:$location, partKeys:$partKeys, partitionColumns:$partitionColumns, fieldNames:$fieldNames")
+      info(s"insertPrefix:$insertPrefix")
+      info(s"saveMode:$saveMode, apiType:$apiType,location:$location, partKeys:$partKeys, partitionColumns:$partitionColumns, fieldNames:$fieldNames")
 
       val fnlInsert = {
         if (partKeys.isEmpty) {
@@ -90,8 +85,8 @@ class HiveUtils {
         }
       }
 
-      logger.info(s"final insert: $fnlInsert")
-      logger.info("Executing final insert statement")
+      info(s"final insert: $fnlInsert")
+      info("Executing final insert statement")
 
       sparkSession.conf.set(HdfsConfigs.dynamicPartitionKey, "true")
       sparkSession.conf.set(HdfsConfigs.dynamicPartitionModeKey, "nonstrict")

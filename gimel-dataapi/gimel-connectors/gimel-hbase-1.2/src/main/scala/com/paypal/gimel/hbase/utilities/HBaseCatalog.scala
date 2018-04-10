@@ -34,8 +34,7 @@ import com.paypal.gimel.logger.Logger
   */
 
 
-object HBaseCatalog {
-  val logger = Logger()
+object HBaseCatalog extends Logger {
 
   val holderNameSpace = "<NAMESPACE>"
   val holderTableName = "<TABLENAME>"
@@ -115,7 +114,7 @@ object HBaseCatalog {
       .replaceAllLiterally(holderKey, key)
       .replaceAllLiterally(holderColumns, colsAsCols)
       .replaceAllLiterally(holderKeysAsCols, keysAsCols)
-    logger.info(catalogString)
+    info(catalogString)
     println("catalog is --> " + catalogString)
     catalogString
   }
@@ -143,7 +142,7 @@ object HBaseCatalog {
       .replaceAllLiterally(holderKey, key)
       .replaceAllLiterally(holderColumns, colsAsCols)
       .replaceAllLiterally(holderKeysAsCols, keysAsCols)
-    logger.info(catalogString)
+    info(catalogString)
     println("catalog is --> " + catalogString)
     catalogString
   }

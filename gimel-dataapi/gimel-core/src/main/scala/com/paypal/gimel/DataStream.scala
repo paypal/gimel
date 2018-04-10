@@ -39,7 +39,7 @@ object DataStreamType extends Enumeration {
   val KAFKA = Value
 }
 
-class DataStream(val streamingContext: StreamingContext) {
+class DataStream(val streamingContext: StreamingContext) extends Logger {
 
   import com.paypal.gimel.common.utilities.DataSetUtils._
 
@@ -47,7 +47,6 @@ class DataStream(val streamingContext: StreamingContext) {
   val sparkAppName: String = streamingContext.sparkContext.getConf.get(GimelConstants.SPARK_APP_NAME)
   val appTag: String = getAppTag(streamingContext.sparkContext)
   val sparkContext: SparkContext = streamingContext.sparkContext
-  val logger = Logger()
   val latestDataStreamReader: Option[GimelDataStream] = None
 
   import DataStreamUtils._
@@ -106,7 +105,7 @@ class DataStream(val streamingContext: StreamingContext) {
     val propsToLog = scala.collection.mutable.Map[String, String]()
     dataSetProps.foreach(x => propsToLog.put(x._1, x._2))
 
-    logger.logApiAccess(streamingContext.sparkContext.getConf.getAppId
+    logApiAccess(streamingContext.sparkContext.getConf.getAppId
       , streamingContext.sparkContext.getConf.get("spark.app.name")
       , this.getClass.getName
       , KafkaConstants.gimelAuditRunTypeStream
@@ -238,7 +237,9 @@ private object DataStreamUtils {
     val user = sys.env(GimelConstants.USER)
     val sparkAppName = sparkContext.getConf.get(GimelConstants.SPARK_APP_NAME)
     val appTag = s"${user}-${sparkAppName}"
-    val logger = Logger(appTag)
+    val logger = new Logger() { /* FIXME Logger(appTag) */
+
+    }
     logger
   }
 

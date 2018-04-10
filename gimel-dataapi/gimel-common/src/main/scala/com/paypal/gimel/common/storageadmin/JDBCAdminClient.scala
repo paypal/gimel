@@ -24,8 +24,7 @@ import java.sql._
 
 import com.paypal.gimel.logger.Logger
 
-object JDBCAdminClient {
-  val logger = Logger()
+object JDBCAdminClient extends Logger {
 
   /**
     * Create Teradata Table if it does not exists
@@ -36,7 +35,7 @@ object JDBCAdminClient {
   def createTeradataTableIfNotExists(url: String, username: String, password: String, teradataTable: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     val createTable =
       s"""
          |CREATE  TABLE $teradataTable
@@ -51,7 +50,7 @@ object JDBCAdminClient {
       val con: Connection = DriverManager.getConnection(teradataURL)
       val stmt: Statement = con.createStatement()
       stmt.executeUpdate(createTable)
-      logger.info("Table Created in Teradata:" + teradataTable)
+      info("Table Created in Teradata:" + teradataTable)
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
@@ -68,7 +67,7 @@ object JDBCAdminClient {
   def dropTeradataTableIfExists(url: String, username: String, password: String, teradataTable: String) {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     val dropTable =
       s"""
          |DROP  TABLE $teradataTable

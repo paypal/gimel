@@ -36,8 +36,7 @@ object HBaseUtilities {
 
 }
 
-class HBaseUtilities(sparkSession: SparkSession) {
-  val logger = Logger()
+class HBaseUtilities(sparkSession: SparkSession) extends Logger {
   val thisUser: String = sys.env(GimelConstants.USER)
 
   val hiveDataSet = new com.paypal.gimel.hive.DataSet(sparkSession)
@@ -66,10 +65,10 @@ class HBaseUtilities(sparkSession: SparkSession) {
         hbaseLookUp.get(dataset, dataSetProps)
       } else {
         if (dataSetProps.getOrElse("useHive", false).asInstanceOf[Boolean]) {
-          logger.info("useHive is true, using Hive API")
+          info("useHive is true, using Hive API")
           hiveDataSet.read(dataset, dataSetProps)
         } else {
-          logger.info("useHive is false or not set, using Native API")
+          info("useHive is false or not set, using Native API")
           hbaseSparkConnector.read(dataset, dataSetProps)
         }
       }
@@ -103,17 +102,17 @@ class HBaseUtilities(sparkSession: SparkSession) {
       // if (dataSetProps.get.getOrElse("useHive", false).asInstanceOf[Boolean]) {
       // Overriding write API to use only SHC.
       // https://issues.apache.org/jira/browse/SPARK-6628
-      // logger.warning("'useHive' switch is overridden due to https://issues.apache.org/jira/browse/SPARK-6628. We are forcing write to use SHC API.")
+      // warning("'useHive' switch is overridden due to https://issues.apache.org/jira/browse/SPARK-6628. We are forcing write to use SHC API.")
 
       val castedDataFrame = castAllColsToString(dataFrame)
       if (dataSetProps.getOrElse(HbaseConfigs.hbaseOperation, "scan").asInstanceOf[String].equals("put")) {
         hbasePut.put(dataset, castedDataFrame, dataSetProps)
       } else {
         if (false) {
-          logger.info("useHive is true, using Hive API")
+          info("useHive is true, using Hive API")
           hiveDataSet.write(dataset, castedDataFrame, dataSetProps)
         } else {
-          logger.info("useHive is false or not set, using Native API")
+          info("useHive is false or not set, using Native API")
           hbaseSparkConnector.write(dataset, castedDataFrame, dataSetProps)
         }
       }
@@ -134,17 +133,17 @@ class HBaseUtilities(sparkSession: SparkSession) {
   private def castAllColsToString(dataDrame: DataFrame): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info("Casting All Columns as String")
+    info("Casting All Columns as String")
     val k = dataDrame.schema.fieldNames.foldRight(dataDrame) {
       (column: String, df: DataFrame) => df.withColumn(column, df(column).cast(StringType))
     }
-    logger.info("Coalescing All Columns with Null Values to Empty String")
+    info("Coalescing All Columns with Null Values to Empty String")
     val returningDF = k.schema.fieldNames.foldRight(k) {
       (fieldName: String, df: DataFrame) => df.withColumn(fieldName, coalesce(df(fieldName), lit("")))
     }
-    logger.info("Done with Column Coalese operation")
+    info("Done with Column Coalese operation")
     returningDF
   }
 }

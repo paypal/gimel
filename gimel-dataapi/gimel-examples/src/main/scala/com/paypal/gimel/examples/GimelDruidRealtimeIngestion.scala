@@ -28,8 +28,7 @@ import com.paypal.gimel.{DataSet, DataStream}
 import com.paypal.gimel.datastreamfactory.StreamingResult
 import com.paypal.gimel.logger.Logger
 
-object GimelDruidRealtimeIngestion {
-  val logger = Logger(this.getClass.getName)
+object GimelDruidRealtimeIngestion extends Logger {
 
 
   def main(args: Array[String]): Unit = {
@@ -63,8 +62,8 @@ object GimelDruidRealtimeIngestion {
           */
         streamingResult.getCurrentCheckPoint(rdd)
 
-        logger.info(s"Count for current Checkpoint: $count")
-        logger.info(s"Scala Version Used ---> ${scala.util.Properties.versionString}")
+        info(s"Count for current Checkpoint: $count")
+        info(s"Scala Version Used ---> ${scala.util.Properties.versionString}")
 
         val rddAvro: RDD[GenericRecord] = streamingResult.convertBytesToAvro(rdd)
         rddAvro.map(_.toString)

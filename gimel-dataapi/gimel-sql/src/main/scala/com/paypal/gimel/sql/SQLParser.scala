@@ -24,7 +24,9 @@ import scala.util._
 
 import org.apache.hadoop.hive.ql.parse.{ASTNode, HiveParser, ParseDriver}
 
-object SQLParser {
+import com.paypal.gimel.logger.Logger
+
+object SQLParser extends Logger {
 
   /**
     * getSourceTables - Helper function to call a function which is recursive to get the source table names from the AST

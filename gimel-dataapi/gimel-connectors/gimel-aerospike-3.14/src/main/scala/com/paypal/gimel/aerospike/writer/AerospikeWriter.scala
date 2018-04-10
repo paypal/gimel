@@ -24,7 +24,6 @@ import org.apache.spark.sql.DataFrame
 import com.paypal.gimel.aerospike.conf.AerospikeClientConfiguration
 import com.paypal.gimel.aerospike.utilities.{AeroSparkConnector, AerospikeUtilities}
 import com.paypal.gimel.aerospike.utilities.AerospikeUtilities.AerospikeDataSetException
-import com.paypal.gimel.logger.Logger
 
 /**
   * Writer for Aerospike
@@ -32,7 +31,6 @@ import com.paypal.gimel.logger.Logger
   */
 
 object AerospikeWriter {
-  val logger = Logger()
 
   /**
     * @param dataset   Dataset name

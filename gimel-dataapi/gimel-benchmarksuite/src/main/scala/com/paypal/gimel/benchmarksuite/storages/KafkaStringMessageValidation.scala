@@ -45,7 +45,7 @@ import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
 class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: SQLContext, pcatProps: GimelBenchmarkProperties, testData: DataFrame)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, pcatProps: GimelBenchmarkProperties, testData: DataFrame) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+  info(s"Initiated ${this.getClass.getName}")
 
   val dataSetName = s"${pcatProps.benchMarkTestHiveDB}.${pcatProps.benchMarkTestKafkaTopic_Dataset}_1"
   val nativeName = s"${pcatProps.benchMarkTestKafkaTopic_Native}_1"
@@ -58,7 +58,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   private def bootStrapKafkaHive(): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       cleanUpKafkaHive()
@@ -82,7 +82,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
            |)
          """.stripMargin
 
-      logger.info(s"DDLS -> $hiveTableDDL")
+      info(s"DDLS -> $hiveTableDDL")
       sparkSession.sql(hiveTableDDL)
 
       stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -101,7 +101,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   private def bootStrapKafka() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       KafkaAdminClient.deleteTopicIfExists(
@@ -140,7 +140,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   override def bootStrap(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     bootStrapKafka()
     bootStrapKafkaHive()
@@ -155,7 +155,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   override def cleanUp(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     cleanUpKafka()
     cleanUpKafkaHive()
@@ -180,7 +180,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   private def benchmarkKafkaStringMessage() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"${MethodName}-${storage}"
@@ -190,14 +190,14 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
       val testDataOption = Some(testData)
       val dataSet = dataSetName
       val nativeAPISet = nativeName
-      logger.info(s"${tag} | TestDataCount ${testDataCount}")
-      logger.info(s"${tag} | Begin Bench Mark Test..")
-      logger.info(s"${tag} | Begin Bench Mark Native API to ${nativeAPISet}...")
+      info(s"${tag} | TestDataCount ${testDataCount}")
+      info(s"${tag} | Begin Bench Mark Test..")
+      info(s"${tag} | Begin Bench Mark Native API to ${nativeAPISet}...")
       benchmarkNativeKafkaStringMessageAPI(testDataOption)
-      logger.info(s"${tag} | End Bench Mark Native API to ${nativeAPISet}...")
-      logger.info(s"${tag} | Begin Bench Mark Dataset API to ${dataSet}...")
+      info(s"${tag} | End Bench Mark Native API to ${nativeAPISet}...")
+      info(s"${tag} | Begin Bench Mark Dataset API to ${dataSet}...")
       benchmarkDatasetKafkaStringMessageAPI(testDataOption)
-      logger.info(s"${tag} | End Bench Mark Dataset API to ${dataSet}...")
+      info(s"${tag} | End Bench Mark Dataset API to ${dataSet}...")
     } catch {
       case ex: Throwable =>
         stats += (s"${tag}" -> s"Failure @ ${Calendar.getInstance.getTime}")
@@ -213,7 +213,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   private def cleanUpKafka() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       storageadmin.KafkaAdminClient.deleteTopicIfExists(
@@ -238,7 +238,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   private def cleanUpKafkaHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropTableStatement = s"drop table if exists ${dataSetName}"
@@ -260,7 +260,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   def benchmarkNativeKafkaStringMessageAPI(testDataDF: Option[DataFrame] = None): (Map[String, String], Map[String, String], DataFrame) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     var resultsAPIData: Map[String, String] = Map()
     resultsAPIData += (s"type" -> s"Native")
@@ -279,7 +279,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
       val datasetReadTimer = Timer()
       val datasetWriteTimer = Timer()
       val dataSet = nativeName
-      logger.info(s"${tag} | Begin Write to ${dataSet}...")
+      info(s"${tag} | Begin Write to ${dataSet}...")
       datasetWriteTimer.start
       testData.foreachPartition { eachPartition =>
         val producer: KafkaProducer[Nothing, String] = new KafkaProducer(kafkaProps)
@@ -290,13 +290,13 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
         resp.length
         producer.close()
       }
-      logger.info("Publish to Kafka - Completed !")
+      info("Publish to Kafka - Completed !")
       val datasetWriteTimeValue = datasetWriteTimer.endWithMillSecRunTime / 1000
       resultsAPIData += (s"writeTime" -> s"${datasetWriteTimeValue}")
-      logger.info(s"${tag} | Write Success.")
+      info(s"${tag} | Write Success.")
 
 
-      logger.info(s"${tag} | Read from ${dataSet}...")
+      info(s"${tag} | Read from ${dataSet}...")
       val kafkaConsumerProps: Map[String, String] = scala.collection.immutable.Map(KafkaConfigs.kafkaServerKey -> pcatProps.kafkaBroker
         , KafkaConfigs.kafkaGroupIdKey -> pcatProps.KafkaConsumerGroupID
         , KafkaConfigs.zookeeperConnectionTimeoutKey -> pcatProps.kafkaZKTimeOutMilliSec
@@ -315,8 +315,8 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
       val count = readDF.count()
       val datasetReadTimeValue = datasetReadTimer.endWithMillSecRunTime / 1000
       resultsAPIData += (s"readTime" -> s"${datasetReadTimeValue}")
-      logger.info(s"${tag} | Read Count ${count}...")
-      logger.info(s"${tag} | Sample 10 Rows -->")
+      info(s"${tag} | Read Count ${count}...")
+      info(s"${tag} | Sample 10 Rows -->")
       readDF.show(10)
       compareDataFrames(testDF, readDF)
       stats += (s"${tag}" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -341,7 +341,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   def benchmarkDatasetKafkaStringMessageAPI(testDataDF: Option[DataFrame] = None): (Map[String, String], Map[String, String], DataFrame) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     var resultsAPIData: Map[String, String] = Map()
     resultsAPIData += (s"type" -> s"Dataset")
@@ -358,20 +358,20 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
       val datasetReadTimer = Timer()
       val datasetWriteTimer = Timer()
       val dataSet = dataSetName
-      logger.info(s"${tag} | Begin Write to ${dataSet}...")
+      info(s"${tag} | Begin Write to ${dataSet}...")
       datasetWriteTimer.start
       dataset.write(dataSet, testData, Map[String, Any]())
       val datasetWriteTimeValue = datasetWriteTimer.endWithMillSecRunTime / 1000
       resultsAPIData += (s"writeTime" -> s"${datasetWriteTimeValue}")
-      logger.info(s"${tag} | Write Success.")
-      logger.info(s"${tag} | Read from ${dataSet}...")
+      info(s"${tag} | Write Success.")
+      info(s"${tag} | Read from ${dataSet}...")
       datasetReadTimer.start
       val readDF = dataset.read(dataSet).cache()
       val count = readDF.count()
       val datasetReadTimeValue = datasetReadTimer.endWithMillSecRunTime / 1000
       resultsAPIData += (s"readTime" -> s"${datasetReadTimeValue}")
-      logger.info(s"${tag} | Read Count ${count}...")
-      logger.info(s"${tag} | Sample 10 Rows -->")
+      info(s"${tag} | Read Count ${count}...")
+      info(s"${tag} | Sample 10 Rows -->")
       readDF.show(10)
       compareDataFrames(testDF, readDF)
       stats += (s"${tag}" -> s"Success @ ${Calendar.getInstance.getTime}")

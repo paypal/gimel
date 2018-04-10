@@ -38,12 +38,10 @@ import com.paypal.gimel.logger.Logger
 
 class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
 
-  // GET LOGGER
-  val logger = Logger()
   /**
     * Change this parameter with cluster config
     */
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+  info(s"Initiated --> ${this.getClass.getName}")
   private var conf: AerospikeClientConfiguration = _
 
   /**

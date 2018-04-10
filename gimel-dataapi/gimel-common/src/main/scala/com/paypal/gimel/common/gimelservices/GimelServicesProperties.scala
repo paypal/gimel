@@ -27,10 +27,9 @@ import scala.collection.mutable
 import com.paypal.gimel.common.conf.PCatalogUrlConfigs
 import com.paypal.gimel.logger.Logger
 
-class GimelServicesProperties(userProps: Map[String, String] = Map[String, String]()) {
+class GimelServicesProperties(userProps: Map[String, String] = Map[String, String]()) extends Logger {
 
   // Get Logger
-  val logger = Logger()
   // Get Properties
   val props: mutable.Map[String, String] = getProps()
   // Rest Services Method, Host & Port
@@ -93,8 +92,8 @@ class GimelServicesProperties(userProps: Map[String, String] = Map[String, Strin
     props.load(configStream)
     configStream.close
     val finalProps: mutable.Map[String, String] = mutable.Map(props.asScala.toSeq: _*)
-    logger.info("PCatalog Properties -->")
-    finalProps.foreach(prop => logger.info(prop))
+    info("PCatalog Properties -->")
+    finalProps.foreach(prop => info(prop))
     finalProps
   }
 }

@@ -33,7 +33,7 @@ import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+  info(s"Initiated ${this.getClass.getName}")
 
   val dataSetName = s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestKafkaHiveTable}"
 
@@ -43,7 +43,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
   private def bootStrapKafkaHive(): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       cleanUpKafkaHive()
@@ -80,7 +80,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
            | )
       """.stripMargin
 
-      logger.info(s"DDLS -> $hiveTableDDL")
+      info(s"DDLS -> $hiveTableDDL")
       deployDDL(hiveTableDDL)
 
       stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -99,7 +99,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
   private def bootStrapKafka() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       KafkaAdminClient.deleteTopicIfExists(
@@ -129,7 +129,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
   override def bootStrap(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     bootStrapKafka()
     bootStrapKafkaHive()
@@ -144,7 +144,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
   override def cleanUp(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     cleanUpKafka()
     cleanUpKafkaHive()
@@ -157,7 +157,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
   private def cleanUpKafka() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       storageadmin.KafkaAdminClient.deleteTopicIfExists(
@@ -179,7 +179,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
   private def cleanUpKafkaHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropTableStatement = s"drop table if exists $dataSetName"

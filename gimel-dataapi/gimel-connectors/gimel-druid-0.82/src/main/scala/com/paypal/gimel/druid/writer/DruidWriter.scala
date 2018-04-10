@@ -25,6 +25,5 @@ import com.paypal.gimel.logger.Logger
   * DruidWriter trait.
   * Generic trait to be extended by all the DruidWriters - DruidRealtimeWriter, DruidBatchWriter
   */
-trait DruidWriter {
-  protected val logger = Logger()
+trait DruidWriter extends Logger{
 }

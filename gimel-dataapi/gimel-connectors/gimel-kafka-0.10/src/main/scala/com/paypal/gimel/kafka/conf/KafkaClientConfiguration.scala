@@ -36,11 +36,10 @@ import com.paypal.gimel.logger.Logger
   *
   * @param props Kafka Client properties.
   */
-class KafkaClientConfiguration(val props: Map[String, Any]) {
+class KafkaClientConfiguration(val props: Map[String, Any]) extends Logger {
 
-  private val logger = Logger()
-  logger.info(s"Begin Building --> ${this.getClass.getName}")
-  //  logger.info(s"Incoming Properties --> ${props.map(x => s"${x._1} -> ${x._2}").mkString("\n")}")
+  info(s"Begin Building --> ${this.getClass.getName}")
+  //  info(s"Incoming Properties --> ${props.map(x => s"${x._1} -> ${x._2}").mkString("\n")}")
 
   // Load Default Prop from Resource File
   val pcatProps = GimelProperties()
@@ -55,7 +54,7 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
   val hiveTableName = tableProps(CatalogProviderConstants.DATASET_PROPS_DATASET)
   val clusterName = props.getOrElse(KafkaConstants.cluster, "unknown")
 
-  logger.info(s"Hive Table Props --> ${tableProps.map(x => s"${x._1} --> ${x._2}").mkString("\n")}")
+  info(s"Hive Table Props --> ${tableProps.map(x => s"${x._1} --> ${x._2}").mkString("\n")}")
 
   // Schema Source either comes from Table "INLINE" (as a property) or from confluent Schema Registry if its = "CDH" or "CSR"
   val avroSchemaSource: String = tableProps.getOrElse(KafkaConfigs.avroSchemaSource, KafkaConstants.gimelKafkaAvroSchemaInline)
@@ -145,7 +144,7 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
     , KafkaConfigs.deSerializerValue -> kafkaValueDeSerializer
   ) ++ clientProps
 
-  logger.info(s"KafkaConsumerProps --> ${kafkaConsumerProps.mkString("\n")}")
+  info(s"KafkaConsumerProps --> ${kafkaConsumerProps.mkString("\n")}")
 
   // Explicitly Making a Map of Properties that are necessary to Connect to Kafka for Publishes (Writes)
   val kafkaProducerProps: Properties = new java.util.Properties()
@@ -155,7 +154,7 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
     , KafkaConfigs.kafkaTopicKey -> kafkaTopic)
   producerProps.foreach { kvPair => kafkaProducerProps.put(kvPair._1.toString, kvPair._2.toString) }
 
-  logger.info(s"kafkaProducerProps --> ${kafkaProducerProps.asScala.mkString("\n")}")
+  info(s"kafkaProducerProps --> ${kafkaProducerProps.asScala.mkString("\n")}")
 
   // These are key throttling factors for Improved Performance in Batch Mode
   val maxRecsPerPartition: Long = props.getOrElse(KafkaConfigs.maxRecordsPerPartition, 2500000).toString.toLong
@@ -172,8 +171,8 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
   // Additional CDH Metadata Fields @todo this is not used in the code yet, KafkaUtilities implements this inside - this must superceed everywhere.
   val additionalCDHFields = scala.collection.Map("gg_commit_timestamp" -> "opTs", "opt_type" -> "opType", "trail_seq_no" -> "trailSeqno", "trail_rba" -> "trailRba")
 
-  logger.info(s"Fields Initiated --> ${this.getClass.getFields.map(f => s"${f.getName} --> ${f.get().toString}").mkString("\n")}")
-  logger.info(s"Completed Building --> ${this.getClass.getName}")
+  info(s"Fields Initiated --> ${this.getClass.getFields.map(f => s"${f.getName} --> ${f.get().toString}").mkString("\n")}")
+  info(s"Completed Building --> ${this.getClass.getName}")
 
 }
 

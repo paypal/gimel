@@ -31,7 +31,7 @@ import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+   info(s"Initiated ${this.getClass.getName}")
 
   val dataSetName = s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestAerospikeHiveTable}"
 
@@ -43,7 +43,7 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
   override def cleanUp(): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+     info(" @Begin --> " + MethodName)
 
     cleanUpAerospike()
     cleanUpAerospikeHive()
@@ -67,7 +67,7 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
   private def bootStrapAerospikeHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+     info(" @Begin --> " + MethodName)
 
     try {
       val aerospikeNameSpace: String = gimelProps.smokeTestAerospikeNamespace
@@ -90,7 +90,7 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
            |  '${AerospikeConfigs.aerospikeSetKey}'='${aerospikeSetName}',
            |  '${GimelConstants.STORAGE_TYPE}'='AEROSPIKE')
            |""".stripMargin
-      logger.info("Aerospike Hive DDL: " + aerospikeDDL)
+       info("Aerospike Hive DDL: " + aerospikeDDL)
 
       deployDDL(aerospikeDDL)
 
@@ -112,22 +112,22 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
   override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+     info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"$MethodName-$storage"
     try {
       val testData = prepareSmokeTestData(gimelProps.smokeTestSampleRowsCount.toInt)
       val dataSet = dataSetName
-      logger.info(s"$tag | Begin Write to $dataSet...")
+       info(s"$tag | Begin Write to $dataSet...")
       val options: Map[String, Any] = Map(AerospikeConfigs.aerospikeRowkeyKey -> gimelProps.smokeTestAerospikeRowKey)
       dataset.write(dataSet, testData, options)
-      logger.info(s"$tag | Write Success.")
-      logger.info(s"$tag | Read from $dataSet...")
+       info(s"$tag | Write Success.")
+       info(s"$tag | Read from $dataSet...")
       val readDF = dataset.read(dataSet)
       val count = readDF.count()
-      logger.info(s"$tag | Read Count $count...")
-      logger.info(s"$tag | Sample 10 Rows -->")
+       info(s"$tag | Read Count $count...")
+       info(s"$tag | Sample 10 Rows -->")
       readDF.show(10)
       compareDataFrames(testData, readDF)
       stats += (s"$tag" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -147,7 +147,7 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
   private def cleanUpAerospike() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+     info(" @Begin --> " + MethodName)
 
     try {
       stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
@@ -164,7 +164,7 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
   private def cleanUpAerospikeHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+     info(" @Begin --> " + MethodName)
 
     try {
       val dropTableStatement = s"drop table if exists $dataSetName"

@@ -30,9 +30,7 @@ import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.logger.Logger
 
 
-object HBaseAdminClient {
-
-  val logger = Logger()
+object HBaseAdminClient extends Logger {
 
   /**
     * Creates HBASE Connection
@@ -40,7 +38,7 @@ object HBaseAdminClient {
     * @param hbaseSiteXml HBASE Site XML provided
     */
   def createConnection(hbaseSiteXml: String): Connection = {
-    logger.info("Hbase site xml :" + hbaseSiteXml)
+    info("Hbase site xml :" + hbaseSiteXml)
     // HBASE Conf
     val conf: Configuration = HBaseConfiguration.create()
     conf.addResource(new Path(hbaseSiteXml))
@@ -59,7 +57,7 @@ object HBaseAdminClient {
   def createHbaseTableIfNotExists(hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: Array[String], hbaseSiteXmlHdfs: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val connection = createConnection(hbaseSiteXmlHdfs)
     try {
@@ -67,7 +65,7 @@ object HBaseAdminClient {
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to create HBase table.")
+        error(s"Unable to create HBase table.")
         throw ex
     } finally {
       connection.close()
@@ -85,7 +83,7 @@ object HBaseAdminClient {
   def createHbaseTableIfNotExists(connection: Connection, hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: Array[String]): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     // HBASE Admin
     val admin: Admin = connection.getAdmin
@@ -101,16 +99,16 @@ object HBaseAdminClient {
       }
       // DeployTable
       if (!admin.isTableAvailable(tableName)) {
-        logger.warning(s"Schema:Table Does Not Exists --> $hbaseNameSpace:$hbaseTable. Creating it ...")
+        warning(s"Schema:Table Does Not Exists --> $hbaseNameSpace:$hbaseTable. Creating it ...")
         admin.createTable(tableDesc)
-        logger.info(s"Created --> $hbaseNameSpace:$hbaseTable.")
+        info(s"Created --> $hbaseNameSpace:$hbaseTable.")
       } else {
-        logger.warning(s"Schema:Table Already Exists --> $hbaseNameSpace:$hbaseTable")
+        warning(s"Schema:Table Already Exists --> $hbaseNameSpace:$hbaseTable")
       }
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to create HBase table.")
+        error(s"Unable to create HBase table.")
         throw ex
     } finally {
       admin.close()
@@ -128,13 +126,13 @@ object HBaseAdminClient {
   def createHbaseTableIfNotExists(hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: String, hbaseSiteXmlHdfs: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     try {
       createHbaseTableIfNotExists(hbaseNameSpace, hbaseTable, Array(hbaseColumnFamilyName), hbaseSiteXmlHdfs)
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to create HBase table.")
+        error(s"Unable to create HBase table.")
         throw ex
     }
   }
@@ -150,13 +148,13 @@ object HBaseAdminClient {
   def createHbaseTableIfNotExists(connection: Connection, hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     try {
       createHbaseTableIfNotExists(connection, hbaseNameSpace, hbaseTable, Array(hbaseColumnFamilyName))
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to create HBase table.")
+        error(s"Unable to create HBase table.")
         throw ex
     }
   }
@@ -171,8 +169,8 @@ object HBaseAdminClient {
   def deleteHbaseTable(connection: Connection, hbaseNameSpace: String, hbaseTable: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
-    logger.info("Dropping HBASE table --> ")
+    info(" @Begin --> " + MethodName)
+    info("Dropping HBASE table --> ")
     // HBASE Admin
     val admin: Admin = connection.getAdmin
     try {
@@ -180,17 +178,17 @@ object HBaseAdminClient {
       val tableName = TableName.valueOf(hbaseNameSpace, s"$hbaseTable")
       // DeleteTable
       if (admin.isTableAvailable(tableName)) {
-        logger.info(s"Schema:Table  Found : $hbaseNameSpace:$hbaseTable. Deleting it ...")
+        info(s"Schema:Table  Found : $hbaseNameSpace:$hbaseTable. Deleting it ...")
         admin.disableTable(tableName)
         admin.deleteTable(tableName)
-        logger.info(s"Deleted --> $hbaseNameSpace:$hbaseTable.")
+        info(s"Deleted --> $hbaseNameSpace:$hbaseTable.")
       } else {
-        logger.warning(s"Schema:Table Not Found --> $hbaseNameSpace:$hbaseTable")
+        warning(s"Schema:Table Not Found --> $hbaseNameSpace:$hbaseTable")
       }
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to delete HBase table.")
+        error(s"Unable to delete HBase table.")
         throw ex
     } finally {
       admin.close()
@@ -208,8 +206,8 @@ object HBaseAdminClient {
 
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
-    logger.info("Dropping HBASE table --> ")
+    info(" @Begin --> " + MethodName)
+    info("Dropping HBASE table --> ")
 
     val connection = createConnection(hbaseSiteXmlHdfs)
     try {
@@ -217,7 +215,7 @@ object HBaseAdminClient {
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to delete HBase table.")
+        error(s"Unable to delete HBase table.")
         throw ex
     } finally {
       connection.close()
@@ -233,7 +231,7 @@ object HBaseAdminClient {
   def createHbaseNameSpaceIfNotExists(hbaseNameSpace: String, clusterName: String, hbaseSiteXmlHdfs: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val connection = createConnection(hbaseSiteXmlHdfs)
     try {
@@ -241,7 +239,7 @@ object HBaseAdminClient {
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to create HBase namespace.")
+        error(s"Unable to create HBase namespace.")
         throw ex
     } finally {
       connection.close()
@@ -258,7 +256,7 @@ object HBaseAdminClient {
   def createHbaseNameSpaceIfNotExists(connection: Connection, hbaseNameSpace: String, clusterName: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     // HBASE Admin
     val admin: Admin = connection.getAdmin
@@ -269,16 +267,16 @@ object HBaseAdminClient {
 
       // DeployNameSpace
       if (!nameSpaces.contains(hbaseNameSpace)) {
-        logger.info(s"NameSpace Does Not Exists --> $hbaseNameSpace, creating...")
+        info(s"NameSpace Does Not Exists --> $hbaseNameSpace, creating...")
         admin.createNamespace(namespace)
-        logger.info(s"NameSpace Created --> $hbaseNameSpace.")
+        info(s"NameSpace Created --> $hbaseNameSpace.")
       } else {
-        logger.warning(s"NameSpace Already Exists --> $hbaseNameSpace")
+        warning(s"NameSpace Already Exists --> $hbaseNameSpace")
       }
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to create HBase namespace.")
+        error(s"Unable to create HBase namespace.")
         throw ex
     } finally {
       admin.close()
@@ -295,8 +293,8 @@ object HBaseAdminClient {
 
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
-    logger.info("Getting all namespaces --> ")
+    info(" @Begin --> " + MethodName)
+    info("Getting all namespaces --> ")
 
     // HBASE Admin
     val admin: Admin = connection.getAdmin
@@ -305,7 +303,7 @@ object HBaseAdminClient {
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to list namespaces")
+        error(s"Unable to list namespaces")
         throw ex
     } finally {
       admin.close()
@@ -321,10 +319,10 @@ object HBaseAdminClient {
 
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info("Hbase Site XML --> " + hbaseSiteXmlHdfs)
-    logger.info("Getting all namespaces --> ")
+    info("Hbase Site XML --> " + hbaseSiteXmlHdfs)
+    info("Getting all namespaces --> ")
     val connection = createConnection(hbaseSiteXmlHdfs)
     try {
       val namespaces = getAllNamespaces(connection)
@@ -332,7 +330,7 @@ object HBaseAdminClient {
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to list namespaces")
+        error(s"Unable to list namespaces")
         throw ex
     } finally {
       connection.close()
@@ -349,9 +347,9 @@ object HBaseAdminClient {
 
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info("Getting all tables from namespaces " + namespace + "--> ")
+    info("Getting all tables from namespaces " + namespace + "--> ")
     val connection = createConnection(hbaseSiteXmlHdfs)
     // HBASE Admin
     val admin: Admin = connection.getAdmin
@@ -361,7 +359,7 @@ object HBaseAdminClient {
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to list tables from the namespace")
+        error(s"Unable to list tables from the namespace")
         throw ex
     } finally {
       admin.close()
@@ -379,20 +377,20 @@ object HBaseAdminClient {
 
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info("Getting all tables from namespaces " + namespace + "--> ")
+    info("Getting all tables from namespaces " + namespace + "--> ")
     // HBASE Admin
     val admin: Admin = connection.getAdmin
     try {
       val namespacesTables = admin.listTableNamesByNamespace(namespace).map(tableDesc => tableDesc.getNameAsString)
-      logger.info(namespacesTables.toString)
+      info(namespacesTables.toString)
       val tables = if (namespace != "default") namespacesTables.map(nsTable => nsTable.split(":")(1)) else namespacesTables
       tables
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to list tables from the namespace")
+        error(s"Unable to list tables from the namespace")
         throw ex
     } finally {
       admin.close()
@@ -409,11 +407,11 @@ object HBaseAdminClient {
   def getHbaseSiteXml(hbaseSiteXMLHDFS: String): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val hbaseConfigFileLocation = hbaseSiteXMLHDFS match {
       case "NONE" =>
-        logger.warning("THERE IS NO HBASE SITE XML SPECIFIED, WILL TRY TO USE WHATEVER IS VISIBLE TO THE SESSION !")
+        warning("THERE IS NO HBASE SITE XML SPECIFIED, WILL TRY TO USE WHATEVER IS VISIBLE TO THE SESSION !")
         "/etc/hbase/conf/hive-site.xml"
       case _ =>
         val hdfsPath = new Path(hbaseSiteXMLHDFS)
@@ -430,7 +428,7 @@ object HBaseAdminClient {
         conf.set(GimelConstants.SECURITY_AUTH, "kerberos")
         UserGroupInformation.setConfiguration(conf)
         val fileSystem = FileSystem.get(conf)
-        logger.info(s"Picked Site HBASE XML from HDFS PATH --> $hbaseSiteXMLHDFS | Copied to Local Path --> $targetFileString")
+        info(s"Picked Site HBASE XML from HDFS PATH --> $hbaseSiteXMLHDFS | Copied to Local Path --> $targetFileString")
         fileSystem.copyToLocalFile(hdfsPath, targetFile)
         targetFileString
     }

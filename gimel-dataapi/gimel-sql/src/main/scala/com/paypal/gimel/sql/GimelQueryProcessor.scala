@@ -34,9 +34,8 @@ import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
 
-object GimelQueryProcessor {
+object GimelQueryProcessor extends Logger {
 
-  val logger: Logger = Logger(this.getClass.getName)
   lazy val pCatalogStreamingKafkaTmpTableName = "pcatalog_streaming_kafka_tmp_table"
   val queryUtils = GimelQueryUtils
 
@@ -55,10 +54,10 @@ object GimelQueryProcessor {
   def executeBatch(sql: String, sparkSession: SparkSession): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     sparkSession.sparkContext.setLogLevel("ERROR")
     val sparkAppName = sparkSession.conf.get("spark.app.name")
-    logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+    logMethodAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkSession.conf.get("spark.app.name")
       , this.getClass.getName
       , KafkaConstants.gimelAuditRunTypeBatch
@@ -72,22 +71,22 @@ object GimelQueryProcessor {
     val options = queryUtils.getOptions(sparkSession)._2
 
     if (options(GimelConstants.LOG_LEVEL).toString == "CONSOLE") {
-      logger.setLogLevel("INFO")
-      logger.consolePrintEnabled = true
+      setLogLevel("INFO")
+      consolePrintEnabled = true
     }
-    else logger.setLogLevel(options(GimelConstants.LOG_LEVEL).toString)
+    else setLogLevel(options(GimelConstants.LOG_LEVEL).toString)
 
     var resultingString = ""
     val queryTimer = Timer()
     val startTime = queryTimer.start
     val isCheckPointEnabled = options(KafkaConfigs.kafkaConsumerReadCheckpointKey).toBoolean
     val isClearCheckPointEnabled = options(KafkaConfigs.kafkaConsumerClearCheckpointKey).toBoolean
-    logger.debug(s"Is CheckPointing Requested By User --> $isCheckPointEnabled")
+    debug(s"Is CheckPointing Requested By User --> $isCheckPointEnabled")
     val dataSet: DataSet = DataSet(sparkSession)
     val (originalSQL, destination, selectSQL, kafkaDataSets) = resolveSQL(sql, sparkSession, dataSet)
     destination match {
       case Some(target) =>
-        logger.info(s"Target Exists --> ${target}")
+        info(s"Target Exists --> ${target}")
         Try(executeResolvedQuery(originalSQL, destination, selectSQL, sparkSession, dataSet)) match {
           case Success(result) =>
             resultingString = result
@@ -95,7 +94,7 @@ object GimelQueryProcessor {
             resultingString = s"Query Failed in function : $MethodName. Error --> \n\n ${
               e.getStackTraceString
             }"
-            logger.error(resultingString)
+            error(resultingString)
             throw new Exception(resultingString, e)
         }
         if (isCheckPointEnabled) kafkaDataSets.foreach(k => k.saveCheckPoint())
@@ -103,7 +102,7 @@ object GimelQueryProcessor {
         val json = Seq(s"""{"Query Execution":"${resultingString}"}""")
         sparkSession.read.json(sparkSession.sparkContext.parallelize(json))
       case _ =>
-        logger.info(s"No Target, returning DataFrame back to client.")
+        info(s"No Target, returning DataFrame back to client.")
         executeSelectClause(selectSQL, sparkSession)
     }
   }
@@ -120,9 +119,9 @@ object GimelQueryProcessor {
   def executeStream(sql: String, sparkSession: SparkSession): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     val sparkAppName = sparkSession.conf.get("spark.app.name")
-    logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+    logMethodAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkSession.conf.get("spark.app.name")
       , this.getClass.getName
       , KafkaConstants.gimelAuditRunTypeStream
@@ -137,10 +136,10 @@ object GimelQueryProcessor {
 
     val defaultGimelLogLevel = sparkSession.conf.get(GimelConstants.LOG_LEVEL, "ERROR").toString
     if (defaultGimelLogLevel == "CONSOLE") {
-      logger.setLogLevel("INFO")
-      logger.consolePrintEnabled = true
+      setLogLevel("INFO")
+      consolePrintEnabled = true
     }
-    else logger.setLogLevel(defaultGimelLogLevel)
+    else setLogLevel(defaultGimelLogLevel)
 
     val options = queryUtils.getOptions(sparkSession)._2
     val batchInterval = options(KafkaConfigs.defaultBatchInterval).toInt
@@ -160,7 +159,7 @@ object GimelQueryProcessor {
     val ssc = new StreamingContext(sc, Seconds(batchInterval))
     val listner: GimelStreamingListener = new GimelStreamingListener(conf)
     ssc.addStreamingListener(listner)
-    logger.debug(
+    debug(
       s"""
          |isStreamParallel --> $isStreamParallel
          |streamParallels --> $streamParallels
@@ -191,7 +190,7 @@ object GimelQueryProcessor {
           if (count > 0) {
             if (isStreamFailureBeyondThreshold) {
               if ((count / batchInterval) > streamFailureThresholdPerSecond) throw new Exception(s"Current Messages Per Second : ${count / batchInterval} exceeded Supplied Stream Capacity ${streamFailureThresholdPerSecond}")
-              else logger.info(s"Current Messages Per Second : ${count / batchInterval} within Supplied Stream Capacity ${streamFailureThresholdPerSecond}")
+              else info(s"Current Messages Per Second : ${count / batchInterval} within Supplied Stream Capacity ${streamFailureThresholdPerSecond}")
             }
             val failureThreshold = (batchInterval * streamFailureWindowFactor)
             val totalDelay = (listner.totalDelay / 1000)
@@ -201,16 +200,16 @@ object GimelQueryProcessor {
 If mode=intelligent, then Restarting will result in Batch Mode Execution first for catchup, and automatically migrate to stream mode !
                    """.stripMargin
               )
-            } else logger.info(s"Current Total_Delay:$totalDelay within $failureThreshold <MultiplicationFactor:$streamFailureWindowFactor X StreamingWindow:$batchInterval>")
+            } else info(s"Current Total_Delay:$totalDelay within $failureThreshold <MultiplicationFactor:$streamFailureWindowFactor X StreamingWindow:$batchInterval>")
             streamingResult.getCurrentCheckPoint(rdd)
             streamingResult.getAsDF(sqlContext, rdd).registerTempTable(tmpKafkaTable)
             try {
               executeBatch(newSQL, sparkSession)
             } catch {
               case ex: Throwable =>
-                logger.error(s"Stream Query Failed in function : $MethodName. Error --> \n\n${ex.getStackTraceString}")
+                error(s"Stream Query Failed in function : $MethodName. Error --> \n\n${ex.getStackTraceString}")
                 ex.printStackTrace()
-                logger.error("Force - Stopping Streaming Context")
+                error("Force - Stopping Streaming Context")
                 ssc.sparkContext.stop()
                 throw ex
             }
@@ -220,7 +219,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
             }
             catch {
               case ex: Throwable =>
-                logger.error("Error in CheckPoint Operations in Streaming.")
+                error("Error in CheckPoint Operations in Streaming.")
                 ex.printStackTrace()
                 ssc.sparkContext.stop()
             }
@@ -228,7 +227,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
         }
       } catch {
         case ex: Throwable =>
-          logger.error(s"ERROR In Streaming Window --> \n\n${ex.getStackTraceString}")
+          error(s"ERROR In Streaming Window --> \n\n${ex.getStackTraceString}")
           ex.printStackTrace()
           ssc.sparkContext.stop()
           throw ex
@@ -266,10 +265,10 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   def executeBatchSparkMagicRDD(sql: String, sparkSession: SparkSession): RDD[String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     sparkSession.sparkContext.setLogLevel("ERROR")
     val sparkAppName = sparkSession.conf.get("spark.app.name")
-    logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+    logMethodAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkSession.conf.get("spark.app.name")
       , this.getClass.getName
       , KafkaConstants.gimelAuditRunTypeBatch
@@ -283,17 +282,17 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     val options = queryUtils.getOptions(sparkSession)._2
 
     if (options(GimelConstants.LOG_LEVEL).toString == "CONSOLE") {
-      logger.setLogLevel("INFO")
-      logger.consolePrintEnabled = true
+      setLogLevel("INFO")
+      consolePrintEnabled = true
     }
-    else logger.setLogLevel(options(GimelConstants.LOG_LEVEL).toString)
+    else setLogLevel(options(GimelConstants.LOG_LEVEL).toString)
 
     var resultingRDD: RDD[String] = sparkSession.sparkContext.parallelize(Seq(""))
     val queryTimer = Timer()
     val startTime = queryTimer.start
     val isCheckPointEnabled = options(KafkaConfigs.kafkaConsumerReadCheckpointKey).toBoolean
     val isClearCheckPointEnabled = options(KafkaConfigs.kafkaConsumerClearCheckpointKey).toBoolean
-    logger.debug(s"Is CheckPointing Requested By User --> ${
+    debug(s"Is CheckPointing Requested By User --> ${
       isCheckPointEnabled
     }")
     val dataSet: DataSet = DataSet(sparkSession)
@@ -307,7 +306,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
             e.getStackTraceString
           }" """))
         val resultMsg = resultingRDD.collect().mkString("\n")
-        logger.error(resultMsg)
+        error(resultMsg)
         throw new Exception(resultMsg)
     }
     if (isCheckPointEnabled) kafkaDataSets.foreach(k => k.saveCheckPoint())
@@ -327,10 +326,10 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   def executeStreamSparkMagicRDD(sql: String, sparkSession: SparkSession): RDD[String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     sparkSession.sparkContext.setLogLevel("ERROR")
     val sparkAppName = sparkSession.conf.get("spark.app.name")
-    logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+    logMethodAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkSession.conf.get("spark.app.name")
       , this.getClass.getName
       , KafkaConstants.gimelAuditRunTypeStream
@@ -346,10 +345,10 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
 
     val defaultGimelLogLevel = sparkSession.conf.get(GimelConstants.LOG_LEVEL, "ERROR").toString
     if (defaultGimelLogLevel == "CONSOLE") {
-      logger.setLogLevel("INFO")
-      logger.consolePrintEnabled = true
+      setLogLevel("INFO")
+      consolePrintEnabled = true
     }
-    else logger.silence
+    else silence
 
     val batchInterval = options(KafkaConfigs.defaultBatchInterval).toInt
     val streamRate = options(KafkaConfigs.maxRatePerPartitionKey)
@@ -394,9 +393,9 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
               }
               catch {
                 case ex: Throwable =>
-                  logger.error(s"Stream Query Failed in function : $MethodName. Error --> \n\n${ex.getStackTraceString}")
+                  error(s"Stream Query Failed in function : $MethodName. Error --> \n\n${ex.getStackTraceString}")
                   ex.printStackTrace()
-                  logger.error("Force - Stopping Streaming Context")
+                  error("Force - Stopping Streaming Context")
                   ssc.sparkContext.stop()
               }
               try {
@@ -405,7 +404,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
               }
               catch {
                 case ex: Throwable =>
-                  logger.error("Error in CheckPoint Operations in Streaming.")
+                  error("Error in CheckPoint Operations in Streaming.")
                   ex.printStackTrace()
                   ssc.sparkContext.stop()
               }
@@ -440,9 +439,9 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   def executeBatchSparkMagicJSON(sql: String, sparkSession: SparkSession): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     val sparkAppName = sparkSession.conf.get("spark.app.name")
-    logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+    logMethodAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkSession.conf.get("spark.app.name")
       , this.getClass.getName
       , KafkaConstants.gimelAuditRunTypeBatch
@@ -454,13 +453,13 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
       , scala.collection.mutable.Map("sql" -> sql)
     )
     val options = queryUtils.getOptions(sparkSession)._2
-    logger.setLogLevel(options(GimelConstants.LOG_LEVEL).toString)
+    setLogLevel(options(GimelConstants.LOG_LEVEL).toString)
     var resultSet = ""
     val queryTimer = Timer()
     val startTime = queryTimer.start
     val isCheckPointEnabled = options(KafkaConfigs.kafkaConsumerReadCheckpointKey).toBoolean
     val isClearCheckPointEnabled = options(KafkaConfigs.kafkaConsumerClearCheckpointKey).toBoolean
-    logger.debug(s"Is CheckPointing Requested By User --> ${
+    debug(s"Is CheckPointing Requested By User --> ${
       isCheckPointEnabled
     }")
     val dataSet: DataSet = DataSet(sparkSession)
@@ -476,7 +475,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
           s"""{"Batch Query Error" : "${
             e.getStackTraceString
           }" """
-        logger.error(resultSet)
+        error(resultSet)
         throw new Exception(resultSet)
     }
     if (isCheckPointEnabled) kafkaDataSets.foreach(k => k.saveCheckPoint())
@@ -497,9 +496,9 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   def executeStreamSparkMagicJSON(sql: String, sparkSession: SparkSession): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     val sparkAppName = sparkSession.conf.get("spark.app.name")
-    logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+    logMethodAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkSession.conf.get("spark.app.name")
       , this.getClass.getName
       , KafkaConstants.gimelAuditRunTypeStream
@@ -512,7 +511,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     )
     var returnMsg = ""
     sparkSession.sparkContext.setLogLevel("ERROR")
-    logger.setLogLevel(sparkSession.conf.get(GimelConstants.LOG_LEVEL, "ERROR").toString)
+    setLogLevel(sparkSession.conf.get(GimelConstants.LOG_LEVEL, "ERROR").toString)
     val options = queryUtils.getOptions(sparkSession)._2
     val batchInterval = options(KafkaConfigs.defaultBatchInterval).toInt
     val streamRate = options(KafkaConfigs.maxRatePerPartitionKey)
@@ -524,7 +523,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     val sc = sparkSession.sparkContext
     val sqlContext = sparkSession.sqlContext
     val ssc = new StreamingContext(sc, Seconds(batchInterval))
-    logger.debug(
+    debug(
       s"""
          |isStreamParallel --> ${
         isStreamParallel
@@ -570,9 +569,9 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
                     s"""{ "Stream Query Error" : "${
                       ex.getStackTraceString
                     }" } """
-                  logger.error(returnMsg)
+                  error(returnMsg)
                   ex.printStackTrace()
-                  logger.warning("Force - Stopping Streaming Context")
+                  warning("Force - Stopping Streaming Context")
                   ssc.sparkContext.stop()
                   throw new Exception(returnMsg)
               }
@@ -584,9 +583,9 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
             s"""{ "Stream Query ERROR" : "${
               ex.getStackTraceString
             }" } """
-          logger.error(returnMsg)
+          error(returnMsg)
           ex.printStackTrace()
-          logger.warning("Force - Stopping Streaming Context")
+          warning("Force - Stopping Streaming Context")
           ssc.sparkContext.stop()
           throw new Exception(returnMsg)
       }

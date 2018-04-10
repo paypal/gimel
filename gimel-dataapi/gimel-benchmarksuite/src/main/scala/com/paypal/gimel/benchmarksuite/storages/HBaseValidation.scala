@@ -33,7 +33,7 @@ import com.paypal.gimel.hive.utilities.HiveSchemaUtils
 class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: SQLContext, pcatProps: GimelBenchmarkProperties, testData: DataFrame)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, pcatProps: GimelBenchmarkProperties, testData: DataFrame) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+  info(s"Initiated ${this.getClass.getName}")
 
   val dataSetName = s"${pcatProps.benchMarkTestHiveDB}.${pcatProps.benchMarkTestHBASEHiveTable_Dataset}"
   val nativeName = s"${pcatProps.benchMarkTestHiveDB}.${pcatProps.benchMarkTestHBASEHiveTable_Native}"
@@ -74,7 +74,7 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
   private def benchmarkHBase() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"$MethodName-$storage"
@@ -84,14 +84,14 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
       val testDataOption = Some(testData)
       val dataSet = dataSetName
       val nativeAPISet = nativeName
-      logger.info(s"$tag | TestDataCount $testDataCount")
-      logger.info(s"$tag | Begin Bench Mark Test..")
-      logger.info(s"$tag | Begin Bench Mark Native API to $nativeAPISet...")
+      info(s"$tag | TestDataCount $testDataCount")
+      info(s"$tag | Begin Bench Mark Test..")
+      info(s"$tag | Begin Bench Mark Native API to $nativeAPISet...")
       benchmarkNativeHbaseAPI(testDataOption)
-      logger.info(s"$tag | End Bench Mark Native API to $nativeAPISet...")
-      logger.info(s"$tag | Begin Bench Mark Dataset API to $dataSet...")
+      info(s"$tag | End Bench Mark Native API to $nativeAPISet...")
+      info(s"$tag | Begin Bench Mark Dataset API to $dataSet...")
       benchmarkDatasetAPI(testDataOption, "Hbase")
-      logger.info(s"$tag | End Bench Mark Dataset API to $dataSet...")
+      info(s"$tag | End Bench Mark Dataset API to $dataSet...")
     } catch {
       case ex: Throwable =>
         stats += (s"$tag" -> s"Failure @ ${Calendar.getInstance.getTime}")
@@ -109,7 +109,7 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
   private def bootStrapHBase() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       cleanUpHBase()
@@ -141,7 +141,7 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
   private def bootStrapHBaseHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val hbaseNameSpace: String = pcatProps.hbaseNameSpace
@@ -180,10 +180,10 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
   private def cleanUpHBase() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
-      logger.info("Dropping HBASE table --> ")
+      info("Dropping HBASE table --> ")
       storageadmin.HBaseAdminClient.deleteHbaseTable(
         pcatProps.hbaseNameSpace
         , pcatProps.benchMarkTestHBASETable_Dataset
@@ -211,7 +211,7 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
   def benchmarkNativeHbaseAPI(testDataOption: Option[DataFrame] = None): (Map[String, String], Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val storage = this.getClass.getName.replace(".", "_")
     val tag = s"$MethodName-$storage"
@@ -224,9 +224,9 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
       // val testData = prepareBenchMarkTestData(pcatProps.benchMarkTestSampleRowsCount.toInt)
       val testData = testDataOption.get
       val testDataCount = testData.count()
-      logger.info(s"$tag | TestDataCount_Dataset $testDataCount")
+      info(s"$tag | TestDataCount_Dataset $testDataCount")
       val dataSet = nativeName
-      logger.info(s"$tag | Begin Write to $dataSet...")
+      info(s"$tag | Begin Write to $dataSet...")
       val datasetWriteTimer = Timer()
       val options_write: Map[String, Any] = Map("operation" -> "put")
       datasetWriteTimer.start
@@ -234,9 +234,9 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
       val datasetWriteTimeValue = datasetWriteTimer.endWithMillSecRunTime / 1000
       stats += (s"$datasetWriteApiKey" -> s"$datasetWriteTimeValue")
       resultsAPIData += (s"writeTime" -> s"$datasetWriteTimeValue")
-      logger.info(s"$tag | Write Success.")
+      info(s"$tag | Write Success.")
 
-      logger.info(s"$tag | Read from $dataSet...")
+      info(s"$tag | Read from $dataSet...")
       val options_read: Map[String, Any] = Map("useHive" -> true, "hbase.namespace.name" -> "adp_bdpe")
       val datasetReadTimer = Timer()
       datasetReadTimer.start
@@ -245,8 +245,8 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
       val datasetReadTimeValue = datasetReadTimer.endWithMillSecRunTime / 1000
       stats += (s"$datasetReadApiKey" -> s"$datasetReadTimeValue")
       resultsAPIData += (s"readTime" -> s"$datasetReadTimeValue")
-      logger.info(s"$tag | Read Count $count...")
-      logger.info(s"$tag | Sample 10 Rows -->")
+      info(s"$tag | Read Count $count...")
+      info(s"$tag | Sample 10 Rows -->")
       readDF.show(10)
       compareDataFrames(testData, readDF)
       stats += (s"$tag" -> s"Success @ ${Calendar.getInstance.getTime}")

@@ -27,7 +27,7 @@ import org.apache.spark.streaming._
 import com.paypal.gimel.{DataSet, DataStream}
 import com.paypal.gimel.logger.Logger
 
-object SparkStreamingPCatalogUSDemo {
+object SparkStreamingPCatalogUSDemo extends Logger {
 
   // Define Geo Function
   case class Geo(lat: Double, lon: Double)
@@ -45,18 +45,17 @@ object SparkStreamingPCatalogUSDemo {
     sc.setLogLevel("ERROR")
     val sqlContext = sparkSession.sqlContext
     val ssc = new StreamingContext(sc, Seconds(10))
-    val logger = Logger(this.getClass.getName)
 
     // Initiating PCatalog DataSet and DataStream
     val dataSet = DataSet(sparkSession)
     val dataStream = DataStream(ssc)
 
     // Reading from HDFS Dataset
-    logger.info("Reading address_geo HDFS Dataset")
+    info("Reading address_geo HDFS Dataset")
     val geoLookUpDF = dataSet.read("pcatalog.address_geo")
     val geoLookUp = geoLookUpDF.withColumn("geo", myUDF(geoLookUpDF("lat"), geoLookUpDF("lon"))).drop("lat").drop("lon")
     geoLookUp.cache()
-    logger.info("Read" + geoLookUp.count() + " records")
+    info("Read" + geoLookUp.count() + " records")
 
     // Reading from Kafka DataStream and Loading into Elastic Search Dataset
     val streamingResult = dataStream.read("pcatalog.kafka_transactions")

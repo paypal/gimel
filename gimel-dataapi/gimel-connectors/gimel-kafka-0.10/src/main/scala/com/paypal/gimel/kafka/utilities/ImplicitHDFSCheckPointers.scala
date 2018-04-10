@@ -26,13 +26,12 @@ import org.apache.spark.streaming.kafka010.OffsetRange
 
 import com.paypal.gimel.common.storageadmin.HDFSAdminClient._
 import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
+import com.paypal.gimel.logger.Logger
 
 /**
   * Provides Implicit, Convenience Functions for Developers to Do CheckPointing Operations
   */
-object ImplicitHDFSCheckPointers {
-
-  val logger = com.paypal.gimel.logger.Logger()
+object ImplicitHDFSCheckPointers extends Logger {
 
   /**
     * @param offsetRangesAndCheckPointDirectory A Tuple of (Array[OffsetRange], checkPointDirectory)
@@ -48,7 +47,7 @@ object ImplicitHDFSCheckPointers {
     def saveCheckPoint: Boolean = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-      logger.info(" @Begin --> " + MethodName)
+      info(" @Begin --> " + MethodName)
 
       val latestFile = "/latest"
       val checkPointDir = offsetRangesAndCheckPointDirectory._2
@@ -90,7 +89,7 @@ object ImplicitHDFSCheckPointers {
     def fetchCheckPoint: Option[Array[OffsetRange]] = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-      logger.info(" @Begin --> " + MethodName)
+      info(" @Begin --> " + MethodName)
 
       if (checkPointDirectoryPath.isEmpty) throw new HDFSCheckPointerException("Expected CheckPoint Directory, but got Empty String !")
       val latestFile = "/latest"

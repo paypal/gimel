@@ -29,14 +29,13 @@ import com.paypal.gimel.kafka.conf.KafkaClientConfiguration
 import com.paypal.gimel.kafka.utilities.{BrokersAndTopic, KafkaUtilitiesException}
 import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.kafka.utilities.KafkaUtilities._
+import com.paypal.gimel.logger.Logger
 
 
 /**
   * Implements Kafka Consumer Batch Here
   */
-object KafkaBatchConsumer {
-
-  val logger = com.paypal.gimel.logger.Logger()
+object KafkaBatchConsumer extends Logger {
 
   /**
     * Connects to Kafka, Deserializes data from Kafka, Attempts to Convert Avro to a DataFrame
@@ -51,21 +50,21 @@ object KafkaBatchConsumer {
   def consumeFromKakfa(sparkSession: SparkSession, conf: KafkaClientConfiguration): (DataFrame, Array[OffsetRange]) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val kafkaParams: Map[String, String] = conf.kafkaConsumerProps
     try {
       val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoint)
       val availableOffsetRange: Array[OffsetRange] = BrokersAndTopic(conf.kafkaHostsAndPort, conf.kafkaTopic).toKafkaOffsetsPerPartition
       val newOffsetRangesForReader = getNewOffsetRangeForReader(lastCheckPoint, availableOffsetRange, conf.fetchRowsOnFirstRun)
-      logger.info("Offset Ranges From Difference -->")
-      newOffsetRangesForReader.foreach(x => logger.info(x.toString))
+      info("Offset Ranges From Difference -->")
+      newOffsetRangesForReader.foreach(x => info(x.toString))
       val toFetchFromKafkaWithThresholds: Array[OffsetRange] = newOffsetRangesForReader.applyThresholdPerPartition(conf.maxRecsPerPartition.toLong) // Restrict Offset Ranges By Applying Threshold Per Partition
-      logger.info("Offset Ranges After applying Threshold Per Partition -->")
-      toFetchFromKafkaWithThresholds.foreach(x => logger.info(x.toString))
+      info("Offset Ranges After applying Threshold Per Partition -->")
+      toFetchFromKafkaWithThresholds.foreach(x => info(x.toString))
       val parallelizedRanges: Array[OffsetRange] = toFetchFromKafkaWithThresholds.parallelizeOffsetRanges(conf.parallelsPerPartition, conf.minRowsPerParallel)
-      logger.info("Final Array of OffsetRanges to Fetch from Kafka --> ")
-      parallelizedRanges.foreach(range => logger.info(range))
+      info("Final Array of OffsetRanges to Fetch from Kafka --> ")
+      parallelizedRanges.foreach(range => info(range))
       if (parallelizedRanges.isEmpty) throw new KafkaUtilitiesException("There is an issue ! No Offset Range From Kafka ... Is the topic having any message at all ?")
       val sqlContext = sparkSession.sqlContext
       val data: DataFrame = getAsDFFromKafka(sqlContext, conf, parallelizedRanges)
@@ -77,7 +76,7 @@ object KafkaBatchConsumer {
           s"""
              |kafkaParams --> ${kafkaParams.mkString(" \n ")}
           """.stripMargin
-        logger.error(s"An Error While Attempting to Consume From Kafka with Parameters -->  $messageString")
+        error(s"An Error While Attempting to Consume From Kafka with Parameters -->  $messageString")
         throw ex
     }
   }

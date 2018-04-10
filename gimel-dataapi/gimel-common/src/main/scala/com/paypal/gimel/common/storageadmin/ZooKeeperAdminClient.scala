@@ -27,9 +27,7 @@ import com.paypal.gimel.logger.Logger
   * Provides HDFS Read And Write operations
   */
 
-object ZooKeeperAdminClient {
-
-  val logger = Logger()
+object ZooKeeperAdminClient extends Logger {
 
   /**
     * Writes a String Content to ZK Node
@@ -40,18 +38,18 @@ object ZooKeeperAdminClient {
   def writetoZK(zServers: String, zNode: String, someData: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info(s"Zookeeper WRITE Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
+    info(s"Zookeeper WRITE Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
     try {
       val zookeeperClient: ZooKeeperClient = new ZooKeeperClient(zServers)
       if (zookeeperClient.exists(zNode) == null) {
-        logger.warning(s"Creating Zookeeper Node --> $zNode in Host --> $zServers ")
+        warning(s"Creating Zookeeper Node --> $zNode in Host --> $zServers ")
         zookeeperClient.createPath(zNode)
       }
       val bytesToWrite = someData.getBytes
       zookeeperClient.set(zNode, bytesToWrite)
-      logger.info(s"Persisted in Node -> $zNode in Value --> $someData")
+      info(s"Persisted in Node -> $zNode in Value --> $someData")
       zookeeperClient.close()
     } catch {
       case ex: Throwable =>
@@ -68,17 +66,17 @@ object ZooKeeperAdminClient {
   def readFromZK(zServers: String, zNode: String): Option[String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info(s"Zookeeper READ Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
+    info(s"Zookeeper READ Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
     var read: Option[String] = None
     try {
       val zookeeperClient: ZooKeeperClient = new ZooKeeperClient(zServers)
       if (zookeeperClient.exists(zNode) == null) {
-        logger.warning(s"Path does not exists --> $zNode ! Will return None.")
+        warning(s"Path does not exists --> $zNode ! Will return None.")
       } else {
         read = Some(new String(zookeeperClient.get(zNode)))
-        logger.info(s"Found value --> $read")
+        info(s"Found value --> $read")
       }
       zookeeperClient.close()
       read
@@ -96,17 +94,17 @@ object ZooKeeperAdminClient {
   def deleteNodeOnZK(zServers: String, zNode: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info(s"Zookeeper DELETE Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
+    info(s"Zookeeper DELETE Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
     try {
       val zookeeperClient: ZooKeeperClient = new ZooKeeperClient(zServers)
       if (zookeeperClient.exists(zNode) == null) {
-        logger.warning(s"Path does not exists --> $zNode ! Will delete None.")
+        warning(s"Path does not exists --> $zNode ! Will delete None.")
         None
       } else {
         zookeeperClient.delete(zNode)
-        logger.warning(s"Deleted Node -> $zNode")
+        warning(s"Deleted Node -> $zNode")
       }
       zookeeperClient.close()
     } catch {

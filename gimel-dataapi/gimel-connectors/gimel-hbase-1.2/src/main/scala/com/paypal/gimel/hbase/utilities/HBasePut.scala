@@ -35,8 +35,7 @@ object HBasePut {
 
 }
 
-class HBasePut(sparkSession: SparkSession) {
-  val logger = Logger()
+class HBasePut(sparkSession: SparkSession) extends Logger {
   val thisUser: String = sys.env(GimelConstants.USER)
 
   /**
@@ -74,7 +73,7 @@ class HBasePut(sparkSession: SparkSession) {
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to put data into HBase table.")
+        error(s"Unable to put data into HBase table.")
         throw ex
     }
   }

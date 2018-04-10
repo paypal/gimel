@@ -31,7 +31,7 @@ import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 class HiveValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties)
   extends StorageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties) {
 
-  logger.info(s"Initiated ${this.getClass.getName}")
+  info(s"Initiated ${this.getClass.getName}")
 
   val dataSetName = s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestHiveTable}"
 
@@ -61,7 +61,7 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: G
   private def cleanUpHive() = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dropTableDDL = s"drop table if exists ${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestHiveTable}"
@@ -85,7 +85,7 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: G
   private def bootStrapHive = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val sampleDF = prepareSmokeTestData()

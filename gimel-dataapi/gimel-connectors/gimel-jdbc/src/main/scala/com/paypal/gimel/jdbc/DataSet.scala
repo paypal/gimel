@@ -29,11 +29,8 @@ import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.jdbc.utilities.JDBCUtilities
 import com.paypal.gimel.logger.Logger
 
-class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
-
-  // GET LOGGER
-  val logger = Logger()
-  logger.info(s"Initiated --> ${this.getClass.getName}")
+class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) with Logger {
+  info(s"Initiated --> ${this.getClass.getName}")
   val jdbcUtilities = JDBCUtilities(sparkSession)
 
   /**

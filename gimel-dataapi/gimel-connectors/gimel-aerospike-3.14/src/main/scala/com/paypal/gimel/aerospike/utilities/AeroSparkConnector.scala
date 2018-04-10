@@ -29,8 +29,7 @@ import com.paypal.gimel.logger.Logger
   *
   */
 
-object AeroSparkConnector {
-  val logger = Logger()
+object AeroSparkConnector extends Logger {
 
   /**
     *
@@ -47,7 +46,7 @@ object AeroSparkConnector {
       sparkSession.sqlContext.aeroRDD(s"""$host:$port""", query)
     } catch {
       case ex: Throwable =>
-        logger.error(s"Failed While Reading data with Aerospark. ${ex.getStackTraceString}")
+        error(s"Failed While Reading data with Aerospark. ${ex.getStackTraceString}")
         throw ex
     }
   }

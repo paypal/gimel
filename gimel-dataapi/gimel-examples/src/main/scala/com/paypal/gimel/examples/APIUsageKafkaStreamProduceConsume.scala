@@ -3,7 +3,7 @@
  *
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
- * this work for additional information regarding copyright ownership.
+ * this work for additional  rmation regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
@@ -32,10 +32,8 @@ import com.paypal.gimel.logger.Logger
 /**
   * Demo's Kafka Producer and Consumer for DataStream
   */
-object APIUsageKafkaStreamProduceConsume extends App {
+object APIUsageKafkaStreamProduceConsume extends App with Logger {
 
-  // Initiate Logger
-  val logger = Logger(this.getClass.getName)
   // Specify Batch Interval for Streaming
   val batchInterval = 10
   // Context
@@ -82,18 +80,18 @@ object APIUsageKafkaStreamProduceConsume extends App {
         */
 
       // Sample UseCase | Display Count
-      logger.debug("count is -->")
-      logger.debug(count)
+      debug("count is -->")
+      debug(count)
 
       // Sample UseCase | Get Avro Generic Record
       val rddAvro: RDD[GenericRecord] = streamingResult.convertBytesToAvro(rdd)
       rddAvro.map(x => x.toString)
-      logger.debug("sample records from Avro-->")
-      rddAvro.map(x => x.toString).take(10).foreach(record => logger.debug(record))
+      debug("sample records from Avro-->")
+      rddAvro.map(x => x.toString).take(10).foreach(record => debug(record))
 
       // Sample UseCase | Convert to DataFrame
       val df: DataFrame = streamingResult.convertAvroToDF(sqlContext, rddAvro)
-      logger.debug("sample records -->")
+      debug("sample records -->")
       df.show(5)
 
       // JSON / String / Bytes (Avro) / Bytes (CDH) --> All can be deserialized into Spark DataFrame via this function

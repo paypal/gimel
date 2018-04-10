@@ -34,9 +34,7 @@ object HBaseScanner {
 
 }
 
-class HBaseScanner() {
-
-  val logger = Logger(this.getClass)
+class HBaseScanner() extends Logger {
 
   /**
     * Returns schema of hbase table
@@ -61,7 +59,7 @@ class HBaseScanner() {
         val cells = result.listCells().iterator().asScala
         cells.map(cell => (Bytes.toString(CellUtil.cloneFamily(cell)), Bytes.toString(CellUtil.cloneQualifier(cell)))).toList
       }.toList.distinct.groupBy(_._1).map(x => (x._1, x._2.map(p => p._2).toArray))
-      logger.info("Records Count : " + count)
+      info("Records Count : " + count)
       val rowKeyMap = Map("rowKey" -> Array(rowKey))
       rowKeyMap ++ res
     } finally {

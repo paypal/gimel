@@ -32,13 +32,12 @@ import org.apache.spark.sql.DataFrame
 import com.paypal.gimel.kafka.avro.SparkAvroUtilities._
 import com.paypal.gimel.kafka.conf.KafkaClientConfiguration
 import com.paypal.gimel.kafka.utilities.KafkaUtilitiesException
+import com.paypal.gimel.logger.Logger
 
 /**
   * Implements Produce to Kafka Logic Here
   */
-object KafkaBatchProducer {
-
-  val logger = com.paypal.gimel.logger.Logger()
+object KafkaBatchProducer extends Logger {
 
   /**
     * InTakes a DataFrame
@@ -51,12 +50,12 @@ object KafkaBatchProducer {
     */
   def produceToKafka[T: TypeTag](conf: KafkaClientConfiguration, data: RDD[T]): Unit = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val kafkaProps: Properties = conf.kafkaProducerProps
     val kafkaTopic = conf.kafkaTopic
-    logger.info(s"Kafka Props for Producer -> ${kafkaProps.asScala.mkString("\n")}")
-    logger.info("Begin Publishing to Kafka....")
+    info(s"Kafka Props for Producer -> ${kafkaProps.asScala.mkString("\n")}")
+    info("Begin Publishing to Kafka....")
     try {
       data.foreachPartition { eachPartition =>
         val producer: KafkaProducer[Nothing, T] = new KafkaProducer(kafkaProps)
@@ -79,7 +78,7 @@ object KafkaBatchProducer {
         throw new KafkaUtilitiesException(s"Failed While Pushing Data Into Kafka \n ${msg}")
       }
     }
-    logger.info("Publish to Kafka - Completed !")
+    info("Publish to Kafka - Completed !")
   }
 
   /**
@@ -93,9 +92,9 @@ object KafkaBatchProducer {
     */
   def produceToKafka(conf: KafkaClientConfiguration, dataFrame: DataFrame): Unit = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info(s"kafka.message.value.type --> ${conf.kafkaMessageValueType} \nValue Serializer --> ${conf.kafkaValueSerializer}")
+    info(s"kafka.message.value.type --> ${conf.kafkaMessageValueType} \nValue Serializer --> ${conf.kafkaValueSerializer}")
     (conf.kafkaMessageValueType, conf.kafkaValueSerializer) match {
       case (Some("binary"), "org.apache.kafka.common.serialization.ByteArraySerializer") =>
         val rdd = dataFrame.rdd.map { x => x.getAs[Array[Byte]](0) }
@@ -110,16 +109,16 @@ object KafkaBatchProducer {
         val kafkaProps: Properties = conf.kafkaProducerProps
         val avroSchemaString = conf.avroSchemaString
         val kafkaTopic = conf.kafkaTopic
-        logger.debug(s"Kafka Props for Producer -> ${kafkaProps.asScala.mkString("\n")}")
-        logger.debug(s"avro Schema --> ${avroSchemaString}")
-        logger.debug(s"dataframe Schema --> ${dataFrame.schema}")
+        debug(s"Kafka Props for Producer -> ${kafkaProps.asScala.mkString("\n")}")
+        debug(s"avro Schema --> ${avroSchemaString}")
+        debug(s"dataframe Schema --> ${dataFrame.schema}")
         try {
           if (!isDFFieldsEqualAvroFields(dataFrame, avroSchemaString)) {
             throw new KafkaUtilitiesException(s"Incompatible DataFrame Schema Vs Provided Avro Schema.")
           }
           val genericRecordRDD = dataFrametoGenericRecord(dataFrame, avroSchemaString)
           val serializedRDD: RDD[Array[Byte]] = genericRecordRDD.map(genericRecord => genericRecordToBytes(genericRecord, avroSchemaString))
-          logger.info("Begin Publishing to Kafka....")
+          info("Begin Publishing to Kafka....")
           serializedRDD.foreachPartition {
             eachPartition =>
               val producer: KafkaProducer[Nothing, Array[Byte]] = new KafkaProducer(kafkaProps)
@@ -144,7 +143,7 @@ object KafkaBatchProducer {
             throw new KafkaUtilitiesException(s"Failed While Pushing Data Into Kafka \n ${msg}")
           }
         }
-        logger.info("Publish to Kafka - Completed !")
+        info("Publish to Kafka - Completed !")
       }
       case _ => throw new Exception(s"UnSupported Serialization --> ${conf.kafkaValueSerializer}")
     }

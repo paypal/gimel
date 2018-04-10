@@ -40,9 +40,7 @@ object HBaseLookUp {
 
 }
 
-class HBaseLookUp(sparkSession: SparkSession) {
-
-  val logger = Logger()
+class HBaseLookUp(sparkSession: SparkSession) extends Logger {
   val thisUser: String = sys.env(GimelConstants.USER)
 
   /**
@@ -83,7 +81,7 @@ class HBaseLookUp(sparkSession: SparkSession) {
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Unable to get data from HBase table.")
+        error(s"Unable to get data from HBase table.")
         throw ex
     }
   }

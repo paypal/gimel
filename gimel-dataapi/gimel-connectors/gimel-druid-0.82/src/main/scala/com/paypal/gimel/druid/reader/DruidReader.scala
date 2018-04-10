@@ -23,13 +23,11 @@ import org.apache.spark.sql.DataFrame
 import org.apache.spark.sql.hive.HiveContext
 
 import com.paypal.gimel.druid.conf.DruidClientConfiguration
-import com.paypal.gimel.logger.Logger
 
 /**
   * DruidReader Object. Main class to implement Reader for Druid.
   */
 object DruidReader {
-  private val logger = Logger()
 
   /**
     * Method for reading from Druid. This is not yet implemented.

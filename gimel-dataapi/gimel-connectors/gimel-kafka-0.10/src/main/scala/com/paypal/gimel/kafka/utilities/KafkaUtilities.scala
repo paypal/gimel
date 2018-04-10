@@ -50,13 +50,12 @@ import com.paypal.gimel.kafka.avro.SparkAvroUtilities._
 import com.paypal.gimel.kafka.conf._
 import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.kafka.utilities.ImplicitZKCheckPointers._
+import com.paypal.gimel.logger.Logger
 
 
 case class MessageInfo[T: TypeTag](key: String, message: T, topic: String, partition: Int, offset: Long)
 
-object KafkaUtilities {
-
-  val logger = com.paypal.gimel.logger.Logger()
+object KafkaUtilities extends Logger {
 
   /**
     * This is a Map of Properties that will be used to set the batch parameters
@@ -115,14 +114,14 @@ object KafkaUtilities {
                    , rowsInBatch: Map[Int, Map[String, String]] = defaultRowsPerBatch): Boolean = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     //    val dSet = com.paypal.gimel.DataSet(hiveContext)
     val dataSet = props(GimelConstants.DATASET)
     //    import com.paypal.gimel.DataSetUtils._
     // This is the DataSet Properties
     val datasetProps = CatalogProvider.getDataSetProperties(dataSet)
-    logger.info(
+    info(
       s"""DataSet Props -->
           |${datasetProps.props.map(x => s"${x._1} --> ${x._2}").mkString("\n")}""".stripMargin)
     val newProps: Map[String, Any] = getProps(props) ++ Map(
@@ -131,7 +130,7 @@ object KafkaUtilities {
       GimelConstants.RESOLVED_HIVE_TABLE -> resolveDataSetName(dataSet),
       GimelConstants.APP_TAG -> getAppTag(sparkSession.sparkContext))
     val conf = new KafkaClientConfiguration(newProps)
-    logger.info(s"Zookeeper Details --> ${conf.zkHostAndPort} | ${conf.zkCheckPoint}")
+    info(s"Zookeeper Details --> ${conf.zkHostAndPort} | ${conf.zkCheckPoint}")
     val thresholdRows = 1000000000
     val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort
       , conf.zkCheckPoint)
@@ -139,20 +138,20 @@ object KafkaUtilities {
       BrokersAndTopic(conf.kafkaHostsAndPort, conf.kafkaTopic).toKafkaOffsetsPerPartition
     }
     if (lastCheckPoint.isDefined) {
-      logger.info(s"Offsets in CheckPoint --> ${lastCheckPoint.get.mkString("\n")}")
+      info(s"Offsets in CheckPoint --> ${lastCheckPoint.get.mkString("\n")}")
     }
-    logger.info(s"Offsets in Kafka --> ${availableOffsetRange.mkString("\n")}")
+    info(s"Offsets in Kafka --> ${availableOffsetRange.mkString("\n")}")
     val newOffsetRangesForReader: Array[OffsetRange] = {
       getNewOffsetRangeForReader(lastCheckPoint, availableOffsetRange, thresholdRows)
     }
-    logger.info(s"New Offsets to Fetch --> ${newOffsetRangesForReader.mkString("\n")}")
+    info(s"New Offsets to Fetch --> ${newOffsetRangesForReader.mkString("\n")}")
     val totalMessages = newOffsetRangesForReader.map(oR => oR.untilOffset - oR.fromOffset).sum.toInt
-    logger.info(s"Total Messages from New Offsets to Fetch --> $totalMessages")
+    info(s"Total Messages from New Offsets to Fetch --> $totalMessages")
     val userSuppliedMaxRows = {
       sparkSession.conf.get(KafkaConfigs.rowCountOnFirstRunKey, totalMessages.toString)
     }
     val totalRows = if (lastCheckPoint.isEmpty) userSuppliedMaxRows.toInt else totalMessages
-    logger.info(s"Final Total Messages to Fetch --> $totalRows")
+    info(s"Final Total Messages to Fetch --> $totalRows")
     val streamCutOff = sparkSession.conf.get(KafkaConfigs.streamCutOffThresholdKey, "100000").toInt
     val (batchProps, isStreamable) = totalRows match {
       case n if 50000000 <= n =>
@@ -168,10 +167,10 @@ object KafkaUtilities {
       case _ =>
         (Map(), true)
     }
-    logger.info(s"Batch Props --> $batchProps")
+    info(s"Batch Props --> $batchProps")
     val resolvedProps = props ++ batchProps
-    logger.info(s"Resolved Props --> $resolvedProps")
-    logger.info(s"isStreamable --> $isStreamable")
+    info(s"Resolved Props --> $resolvedProps")
+    info(s"isStreamable --> $isStreamable")
     resolvedProps.foreach(p => sparkSession.conf.set(p._1, p._2.toString))
     isStreamable
   }
@@ -189,7 +188,7 @@ object KafkaUtilities {
                          , offsetRange: Array[OffsetRange]): Boolean = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val zk = ZooKeeperHostAndNode(zkHost, zkNode)
     (zk, offsetRange).saveZkCheckPoint
@@ -280,15 +279,15 @@ object KafkaUtilities {
                             , wrappedData: RDD[WrappedData]): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
-    logger.info("Attempting to Convert Value in Wrapped Data to String Type")
+    info("Attempting to Convert Value in Wrapped Data to String Type")
     try {
       val rdd: RDD[(String, String)] = wrappedData.map { x =>
         (x.key.asInstanceOf[String], x.value.asInstanceOf[String])
       }
       val df = rddAsDF(sqlContext, columnAlias, rdd)
-      logger.info("Completed --> Convert Value to String Type")
+      info("Completed --> Convert Value to String Type")
       df
     } catch {
       case ex: Throwable =>
@@ -308,7 +307,7 @@ object KafkaUtilities {
   def clearCheckPoint(zkHost: String, zkNode: String, msg: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val zk = ZooKeeperHostAndNode(zkHost, zkNode)
     zk.deleteZkCheckPoint()
@@ -326,7 +325,7 @@ object KafkaUtilities {
   def getLastCheckPointFromZK(zkHost: String, zkNode: String): Option[Array[OffsetRange]] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val zk = ZooKeeperHostAndNode(zkHost, zkNode)
@@ -357,26 +356,26 @@ object KafkaUtilities {
                                  , availableOffsetRange: Array[OffsetRange]
                                  , fetchRowsOnFirstRun: Long): Array[OffsetRange] = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val newOffsetRangesForReader = lastCheckPoint match {
         case None => {
-          logger.warning(
+          warning(
             s"""No CheckPoint Found.
                 |Reader will attempt to fetch "from beginning" From Kafka !""".stripMargin)
           availableOffsetRange.map {
             eachOffsetRange =>
               val fromOffset = scala.math.min(fetchRowsOnFirstRun
                 , eachOffsetRange.untilOffset - eachOffsetRange.fromOffset)
-              logger.info(s"Since this is first run," +
+              info(s"Since this is first run," +
                 s" will try to fetch only ${fromOffset} rows from Kafka")
               OffsetRange(eachOffsetRange.topic, eachOffsetRange.partition
                 , eachOffsetRange.untilOffset - fromOffset, eachOffsetRange.untilOffset)
           }
         }
         case Some(lastCheckPoint) => {
-          logger.info("""Found CheckPoint """)
+          info("""Found CheckPoint """)
           (lastCheckPoint, availableOffsetRange).toNewOffsetRanges
         }
       }
@@ -413,7 +412,7 @@ object KafkaUtilities {
                         cdhAllSchemaDetails: Option[Map[String,
                           (String, mutable.Map[Int, String])]]): RDD[GenericRecord] = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val parallelRDD = if (isStreamParallel) {
@@ -450,7 +449,7 @@ object KafkaUtilities {
   def getAllSchemasForSubject(schemaSubject: String, avroSchemaURL: String)
   : (String, mutable.Map[Int, String]) = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val schemaLookup: scala.collection.mutable.Map[Int, String] = scala.collection.mutable.Map()
     val schemaRegistryClient = new ConfluentSchemaRegistry(avroSchemaURL)
@@ -476,7 +475,7 @@ object KafkaUtilities {
                         , cdhAllSchemaDetails: Option[Map[String,
     (String, mutable.Map[Int, String])]]): RDD[GenericRecord] = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val additionalFields = getAdditionalFields()
     try {
@@ -571,7 +570,7 @@ object KafkaUtilities {
   def stringRddAsDF(sqlContext: SQLContext, messageColumnAlias: String
                     , rdd: RDD[(String, String)]): DataFrame = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dataIntermediate = sqlContext.createDataFrame(rdd)
@@ -583,7 +582,7 @@ object KafkaUtilities {
     catch {
       case ex: Throwable => {
         ex.printStackTrace()
-        logger.error(s"Failed While Attempting to Convert RDD to DF")
+        error(s"Failed While Attempting to Convert RDD to DF")
         throw ex
       }
     }
@@ -620,28 +619,28 @@ object KafkaUtilities {
       // Bytes Messages
       case (Some("binary"), "org.apache.kafka.common.serialization.ByteArraySerializer") =>
         val rDD = rdd.map { x => (x.key.asInstanceOf[String], x.value.asInstanceOf[Array[Byte]]) }
-        //        logger.info("Byte Messages -->");
-        //        rDD.cache.collect.take(10).foreach(x => logger.info(x))
+        //        info("Byte Messages -->");
+        //        rDD.cache.collect.take(10).foreach(x => info(x))
         val columnAlias = kafkaValueMessageColAlias
         byteRddAsDF(sqlContext, columnAlias, rDD)
       // String Messages
       case (Some("string"), "org.apache.kafka.common.serialization.StringSerializer") =>
         val rDD = rdd.map { x => (x.key.asInstanceOf[String], x.value.asInstanceOf[String]) }
-        //        logger.info("String Messages -->");
-        //        rDD.cache.collect.take(10).foreach(x => logger.info(x))
+        //        info("String Messages -->");
+        //        rDD.cache.collect.take(10).foreach(x => info(x))
         val columnAlias = kafkaValueMessageColAlias
         stringRddAsDF(sqlContext, columnAlias, rDD)
       // JSON Messages
       case (Some("json"), "org.apache.kafka.common.serialization.StringSerializer") =>
         val rDD: RDD[String] = rdd.map { x => x.value.asInstanceOf[String] }
-        //        logger.info("JSON Messages -->");
-        //        rDD.cache.collect.take(10).foreach(x => logger.info(x))
+        //        info("JSON Messages -->");
+        //        rDD.cache.collect.take(10).foreach(x => info(x))
         sqlContext.read.json(rDD)
       // Avro - CDH | Generic Avro
       case (None, "org.apache.kafka.common.serialization.ByteArraySerializer") =>
         val rDD = rdd.map { x => (x.key, x.value.asInstanceOf[Array[Byte]]) }
-        //        logger.info("Raw Messages -->");
-        //        rDD.cache.collect.take(10).foreach(x => logger.info(x))
+        //        info("Raw Messages -->");
+        //        rDD.cache.collect.take(10).foreach(x => info(x))
         val avroRecord: RDD[GenericRecord] = rDD.map { x =>
           bytesToGenericRecord(x._2, avroSchemaString)
         }
@@ -673,7 +672,7 @@ object KafkaUtilities {
                                 , parallelizedRanges: Array[OffsetRange]
                                ): RDD[WrappedData] = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val (avroSchemaString, avroSchemaKey, avroSchemaURL) = (conf.avroSchemaString
       , conf.avroSchemaKey
@@ -681,8 +680,8 @@ object KafkaUtilities {
       )
     val kafkaParams: java.util.Map[String, Object] = new java.util.HashMap()
     conf.kafkaConsumerProps.foreach { x => kafkaParams.put(x._1, x._2) }
-    logger.info(s"Final Kafka Params --> ${kafkaParams.asScala.mkString("\n", "\n", "\n")}")
-    logger.info(
+    info(s"Final Kafka Params --> ${kafkaParams.asScala.mkString("\n", "\n", "\n")}")
+    info(
       s"""kafka.message.value.type --> ${conf.kafkaMessageValueType}
           |\nValue Serializer --> ${conf.kafkaValueSerializer}""".stripMargin
     )
@@ -726,7 +725,7 @@ object KafkaUtilities {
         ex.printStackTrace()
         val messageString =
           s"""kafkaParams --> ${kafkaParams.asScala.mkString(" \n ")}""".stripMargin
-        logger.error(s"Unable to Fetch from Kafka for given parameters -->  ${messageString}")
+        error(s"Unable to Fetch from Kafka for given parameters -->  ${messageString}")
         throw ex
       }
     }
@@ -744,12 +743,12 @@ object KafkaUtilities {
   def getAsDFFromKafka(sqlContext: SQLContext, conf: KafkaClientConfiguration
                        , parallelizedRanges: Array[OffsetRange]): DataFrame = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val kafkaParams: java.util.Map[String, Object] = new java.util.HashMap()
     conf.kafkaConsumerProps.foreach { x => kafkaParams.put(x._1, x._2) }
-    logger.info(s"Final Kafka Params --> ${kafkaParams.asScala.mkString("\n", "\n", "\n")}")
-    logger.info(
+    info(s"Final Kafka Params --> ${kafkaParams.asScala.mkString("\n", "\n", "\n")}")
+    info(
       s"""kafka.message.value.type --> ${conf.kafkaMessageValueType}
           |\nValue Serializer --> ${conf.kafkaValueSerializer}""".stripMargin)
     val wrappedDataRdd = getFromKafkaAsWrappedData(sqlContext, conf, parallelizedRanges)
@@ -779,7 +778,7 @@ object KafkaUtilities {
                 , cdhAllSchemaDetails: Option[Map[String, (String, mutable.Map[Int, String])]])
   : DataFrame = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     val (finalAvroRecord, finalSchema) = avroSchemaSource match {
       case KafkaConstants.gimelKafkaAvroSchemaCDH => {
@@ -805,7 +804,7 @@ object KafkaUtilities {
               , rdd: RDD[(String, String)]): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dataIntermediate = sqlContext.createDataFrame(rdd)
@@ -814,7 +813,7 @@ object KafkaUtilities {
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        logger.error(s"Failed While Attempting to Convert RDD to DF")
+        error(s"Failed While Attempting to Convert RDD to DF")
         throw ex
     }
   }
@@ -830,7 +829,7 @@ object KafkaUtilities {
   def byteRddAsDF(sqlContext: SQLContext, messageColumnAlias: String
                   , rdd: RDD[(String, Array[Byte])]): DataFrame = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     try {
       val dataIntermediate = sqlContext.createDataFrame(rdd)
@@ -840,7 +839,7 @@ object KafkaUtilities {
     catch {
       case ex: Throwable => {
         ex.printStackTrace()
-        logger.error(s"Failed While Attempting to Convert RDD to DF")
+        error(s"Failed While Attempting to Convert RDD to DF")
         throw ex
       }
     }
@@ -858,7 +857,7 @@ object KafkaUtilities {
                              , numberOfPartitions: Int, numberOfReplica: Int): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     KafkaAdminClient.createTopicIfNotExists(
       zookKeeperHostAndPort
@@ -877,7 +876,7 @@ object KafkaUtilities {
   def deleteTopicIfExists(zookKeeperHostAndPort: String, kafkaTopicName: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     storageadmin.KafkaAdminClient.deleteTopicIfExists(
       zookKeeperHostAndPort

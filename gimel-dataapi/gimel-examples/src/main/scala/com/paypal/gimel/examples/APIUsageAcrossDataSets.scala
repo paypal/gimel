@@ -30,7 +30,6 @@ object APIUsageAcrossDataSets {
   // spark-shell --master yarn-client --driver-memory 4g \
   // --executor-memory 4g --executor-cores 1 --num-executors 2 --jars ~/pcatalog.jar
   // Initiate Logger
-  val logger = Logger(this.getClass.getName)
   // Specify Batch Interval for Streaming
   val batchInterval = 5
 

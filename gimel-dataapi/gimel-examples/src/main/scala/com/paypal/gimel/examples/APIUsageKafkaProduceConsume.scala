@@ -41,7 +41,6 @@ object APIUsageKafkaProduceConsume extends App {
     args(0)
   }
   // Initiate Logger
-  val logger = Logger(this.getClass.getName)
   // Specify Batch Interval for Streaming
   val batchInterval = 5
   // Context

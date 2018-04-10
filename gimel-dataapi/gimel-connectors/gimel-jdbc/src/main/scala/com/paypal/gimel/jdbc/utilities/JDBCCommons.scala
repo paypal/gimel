@@ -25,9 +25,7 @@ import com.paypal.gimel.common.storageadmin.HDFSAdminClient
 import com.paypal.gimel.logger.Logger
 
 
-object JDBCCommons {
-
-  val logger = Logger(this.getClass)
+object JDBCCommons extends Logger {
 
   /**
     * This method returns the JDBC password from the given password file
@@ -39,12 +37,12 @@ object JDBCCommons {
   def getJdbcP(passwordFile: String, principal: String, keyTabPath: String, jdbcURL: String, userName: String): String = {
 
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
 
     // val fileContent = HDFSAdminClient.standaloneHDFSRead(passwordFile, principal, keyTabPath).toString
     val fileContent = scala.io.Source.fromFile(passwordFile).getLines().mkString("\n")
     val lines: Array[String] = fileContent.split("\n")
-    logger.info("Lines => " + lines)
+    info("Lines => " + lines)
     var password = ""
     var validURI: Boolean = false
 
@@ -65,7 +63,7 @@ object JDBCCommons {
     }
     if (!validURI) {
       val errorMsg = "Username or Password NOT FOUND!!\nCheck the configuration parameter or password file"
-      logger.error(errorMsg)
+      error(errorMsg)
       throw new JDBCAuthException(errorMsg)
     }
     password
@@ -81,10 +79,10 @@ object JDBCCommons {
     */
   def getHivePassword(passwordFile: String, storageSystemName: String): String = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
+    info(" @Begin --> " + MethodName)
     val fileContent = scala.io.Source.fromFile(passwordFile).getLines().mkString("\n")
     val lines: Array[String] = fileContent.split("\n")
-    logger.info("Lines => " + lines)
+    info("Lines => " + lines)
     var password = ""
     var validURI: Boolean = false
 
@@ -100,7 +98,7 @@ object JDBCCommons {
     }
     if (!validURI) {
       val errorMsg = "Username or Password NOT FOUND!!\nCheck the configuration parameter or password file"
-      logger.error(errorMsg)
+      error(errorMsg)
       throw new JDBCAuthException(errorMsg)
     }
     password

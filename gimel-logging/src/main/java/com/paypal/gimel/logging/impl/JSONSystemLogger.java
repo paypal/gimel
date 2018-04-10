@@ -48,13 +48,11 @@ public class JSONSystemLogger extends BaseLogger implements SystemLogger {
      * @return {@code Context} instance.
      */
     public static JSONSystemLogger getInstance(Class<?> clazz) {
-        if (instance == null) {
             synchronized (Context.class) {
                 if (instance == null) {
                     instance = new JSONSystemLogger(clazz.getName());
                 }
             }
-        }
         return instance;
     }
 
