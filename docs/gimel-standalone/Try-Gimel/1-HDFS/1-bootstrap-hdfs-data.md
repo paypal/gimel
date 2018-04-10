@@ -1,11 +1,10 @@
 * [Disclaimer](#disclaimer)
 * [Setting Catalog Provider](#setting-catalog-provider)
 * [Bootstrap Data](#bootstrap-data)
-   * [Bootstrap Flights Data](#bootstrap-flights-data)
-      * [Create HDFS Datasets for loading Flights Data](#create-hdfs-datasets-for-loading-flights-data)
+   * [Bootstrap Flights Data](#bootstrap-flights-data) 
+      * [Create HDFS Datasets for loading Flights Data](#create-hdfs-dataset-for-loading-flights-data)
    * [Bootstrap Flights Lookup Data](#bootstrap-flights-lookup-data)
       * [Create HDFS Datasets for loading Flights Lookup Data](#create-hdfs-datasets-for-loading-flights-lookup-data)
-   * [Cache Airports Data from HDFS](#cache-airports-data-from-hdfs)
 
 # Disclaimer
 **Note:** 

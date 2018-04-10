@@ -1,11 +1,11 @@
 
-* [G-SQL](#g--sql)
+* [G-SQL](#g-sql)
     * [Cache Airports Data from HDFS](#cache-airports-data-from-hdfs)
     * [Read Data from HDFS](#read-data-from-hdfs)
     * [Count Records from HDFS](#count-records-from-hdfs)
 * [Scala API](#scala-api)
-    * [Read Data from HDFS](#read-data-from-hdfs)
-    * [Count Records from HDFS](#count-records-from-hdfs)
+    * [Read Data from HDFS](#read-data-from-hdfs-1)
+    * [Count Records from HDFS](#count-records-from-hdfs-1)
    
 # G-SQL
 

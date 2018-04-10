@@ -68,7 +68,7 @@ docker exec -it spark-master bash -c \
 /spark/bin/spark-shell --jars /root/gimel-sql-1.2.0-SNAPSHOT-uber.jar"
 ```
 
-**Note:** *You can view the Spark UI  <a href=http://localhost:4040>here</a>
+**Note:** *You can view the Spark UI  <a href=http://localhost:4040>here</a>*
 ___________________________________________________________________________________________________________________
 
 ## Common Imports and Initializations

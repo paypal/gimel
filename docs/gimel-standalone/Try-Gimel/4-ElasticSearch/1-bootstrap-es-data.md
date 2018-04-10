@@ -1,6 +1,6 @@
 
 * [Bootstrap Data](#bootstrap-data)
-      * [Create Elastic Dataset](#create-elastic-dataset)
+   * [Create Elastic Dataset](#create-elastic-dataset)
 
 # Bootstrap Data
 

@@ -1,15 +1,15 @@
 
-* [G-SQL](#g--sql)
+* [G-SQL](#g-sql)
     * [Load Flights Data into Kafka Dataset](#load-flights-data-into-kafka-dataset)
     * [Cache Flights](#cache-flights)
     * [Read Data from Kafka](#read-data-from-kafka)
-* [Scala API for Catalog Provider-USER](#scala-api-for-catalog-provider--user)
+* [Scala API for Catalog Provider-USER](#scala-api-for-catalog-provider-user)
     * [Set Options](#set-options)
-    * [Load Flights Data into HBase Dataset](#load-flights-data-into-hbase-dataset)
-    * [Read Data from HBase](#read-data-from-hbase)
-* [Scala API for Catalog Provider-HIVE](#scala-api-for-catalog-provider--hive)
-    * [Load Flights Data into HBase Dataset](#load-flights-data-into-hbase-dataset)
-    * [Read Data from HBase](#read-data-from-hbase)
+    * [Load Flights Data into HBase Dataset](#load-flights-data-into-hbase-dataset-1)
+    * [Read Data from HBase](#read-data-from-hbase-1)
+* [Scala API for Catalog Provider-HIVE](#scala-api-for-catalog-provider-hive)
+    * [Load Flights Data into HBase Dataset](#load-flights-data-into-hbase-dataset-2)
+    * [Read Data from HBase](#read-data-from-hbase-2)
    
 # G-SQL
 

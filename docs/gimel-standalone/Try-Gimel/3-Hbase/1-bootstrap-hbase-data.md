@@ -1,6 +1,6 @@
 
 * [Bootstrap Data](#bootstrap-data)
-      * [Create HBase Datasets](#create-hbase-datasets)
+    * [Create HBase Datasets](#create-hbase-datasets)
 
 # Bootstrap Data
 

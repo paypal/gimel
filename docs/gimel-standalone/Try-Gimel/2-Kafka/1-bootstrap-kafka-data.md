@@ -1,6 +1,6 @@
 
 * [Bootstrap Data](#bootstrap-data)
-      * [Create Kafka Dataset](#create-kafka-dataset)
+    * [Create Kafka Dataset](#create-kafka-dataset)
 
 # Bootstrap Data
 

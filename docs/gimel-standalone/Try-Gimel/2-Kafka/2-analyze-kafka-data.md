@@ -1,15 +1,15 @@
 
-* [G-SQL](#g--sql)
+* [G-SQL](#g-sql)
     * [Load Flights Data into Kafka Dataset](#load-flights-data-into-kafka-dataset)
     * [Cache Flights](#cache-flights)
     * [Read Data from Kafka](#read-data-from-kafka)
-* [Scala API for Catalog Provider-USER](#scala-api-for-catalog-provider--user)
+* [Scala API for Catalog Provider-USER](#scala-api-for-catalog-provider-user)
     * [Set Options](#set-options)
     * [Load Flights Data into Kafka Dataset](#load-flights-data-into-kafka-dataset)
-    * [Read Data from Kafka](#read-data-from-kafka)
-* [Scala API for Catalog Provider-HIVE](#scala-api-for-catalog-provider--hive)
+    * [Read Data from Kafka](#read-data-from-kafka-1)
+* [Scala API for Catalog Provider-HIVE](#scala-api-for-catalog-provider-hive)
     * [Load Flights Data into Kafka Dataset](#load-flights-data-into-kafka-dataset)
-    * [Read Data from Kafka](#read-data-from-kafka)
+    * [Read Data from Kafka](#read-data-from-kafka-2)
    
 # G-SQL
 

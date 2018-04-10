@@ -1,15 +1,15 @@
 
-* [G-SQL](#g--sql)
+* [G-SQL](#g-sql)
     * [Load Flights Data into Elastic Dataset](#load-flights-data-into-elastic-dataset)
     * [Cache Flights](#cache-flights)
     * [Read Data from Elastic](#read-data-from-elastic)
 * [Scala API for Catalog Provider-USER](#scala-api-for-catalog-provider--user)
     * [Set Options](#set-options)
-    * [Load Flights Data into Elastic Dataset](#load-flights-data-into-elastic-dataset)
-    * [Read Data from Elastic](#read-data-from-elastic)
+    * [Load Flights Data into Elastic Dataset](#load-flights-data-into-elastic-dataset-1)
+    * [Read Data from Elastic](#read-data-from-elastic-1)
 * [Scala API for Catalog Provider-HIVE](#scala-api-for-catalog-provider--hive)
-    * [Load Flights Data into Elastic Dataset](#load-flights-data-into-elastic-dataset)
-    * [Read Data from Elastic](#read-data-from-elastic)
+    * [Load Flights Data into Elastic Dataset](#load-flights-data-into-elastic-dataset-2)
+    * [Read Data from Elastic](#read-data-from-elastic-2)
    
 # G-SQL
 
