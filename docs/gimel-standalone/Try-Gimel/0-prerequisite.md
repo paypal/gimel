@@ -9,8 +9,7 @@
 # Gimel Standalone
 
 ## Overview
-
-* The Gimel Standalone feature will provide capability for developers / users alike to
+The Gimel Standalone feature will provide capability for developers / users alike to
 
   * Try Gimel in local/laptop without requiring all the ecosystems on a hadoop cluster.
   * Standalone would comprise of docker containers spawned for each storage type that the user would like to explore. Storage type examples : kafka , elasticsearch.
@@ -24,13 +23,23 @@ ________________________________________________________________________________
 
 * Install docker on your machine 
   * MAC - https://docs.docker.com/docker-for-mac/install/
+  * Start Docker Service
+  * Increase the memory by navigating to Preferences > Advanced > Memory
+  * (Optional) Clear existing containers and images
+      * Check for existing Docker containers running - ```docker ps -aq```
+      * Kill existing Docker containers (if any) - ```docker kill $(docker ps -aq)```
+      * Remove existing Docker containers(if any) - ```docker rm $(docker ps -aq)```
+  
 
 ___________________________________________________________________________________________________________________
 
 ## Download the Gimel Jar
 
+* Clone the repo [Gimel](https://github.com/paypal/gimel)
 * Download the gimel jar from [Here](https://drive.google.com/uc?id=1mVia6-dTyX9ZU2-r91TFJu4_hEhapVRA&export=download)
-* Move it to gimel/gimel-dataapi/gimel-standalone/lib folder
+* Navigate to the folder gimel/gimel-dataapi/gimel-standalone/ - ```cd gimel/gimel-dataapi/gimel-standalone/```
+* Create lib folder in gimel-standalone - ```mkdir lib```
+* Copy the downloaded jar in lib
 
 ___________________________________________________________________________________________________________________
 

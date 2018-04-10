@@ -30,7 +30,7 @@ ______________________________________________________
 
 ## Set options
 ```
-scala> val datasetPropsJson = { 
+val datasetKafkaPropsJson = """{ 
                                   "datasetType": "KAFKA",
                                   "fields": [],
                                   "partitionFields": [],
@@ -51,25 +51,36 @@ scala> val datasetPropsJson = {
                                 		"value.deserializer":"org.apache.kafka.common.serialization.StringDeserializer",
                                 		"datasetName":"pcatalog.flights_kafka_json"
                                   }
-                              }
-scala> val options = Map("pcatalog.flights_hdfs.dataSetProperties"->datasetPropsJson)
+                              }"""
+val datasetHivePropsJson = """{ 
+                                      "datasetType": "HDFS",
+                                      "fields": [],
+                                      "partitionFields": [],
+                                      "props": {
+                                           "gimel.hdfs.data.format":"csv",
+                                           "location":"hdfs://namenode:8020/flights/data",
+                                           "datasetName":"pcatalog.flights_hdfs"
+                                      }
+                                  }"""
+val hiveOptions = Map("pcatalog.flights_hdfs.dataSetProperties"->datasetHivePropsJson)
+val kafkaOptions = Map("pcatalog.flights_kafka_json.dataSetProperties"->datasetKafkaPropsJson)
 ```
 
 ## Load Flights Data into Kafka Dataset
 ```
-scala> import com.paypal.gimel._
-scala> val dataSet = DataSet(spark)
-scala> val hivedf = dataSet.read("pcatalog.flights_hdfs",options)
-scala> val df = dataSet.write("pcatalog.flights_kafka_json",hivedf,options)
-scala> df.count
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val hivedf = dataSet.read("pcatalog.flights_hdfs",hiveOptions)
+val df = dataSet.write("pcatalog.flights_kafka_json",hivedf,kafkaOptions)
+df.count
 ```
 
 ## Read Data from Kafka
 ```
-scala> import com.paypal.gimel._
-scala> val dataSet = DataSet(spark)
-scala> val df = dataSet.read("pcatalog.flights_kafka_json",options)
-scala> df.show(10)
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val df = dataSet.read("pcatalog.flights_kafka_json",kafkaOptions)
+df.show(10)
 ```
 _________________________________________________
 

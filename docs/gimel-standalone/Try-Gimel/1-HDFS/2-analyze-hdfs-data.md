@@ -23,18 +23,18 @@ ______________________________________________________
 
 ## Read Data from HDFS
 ```
-scala> import com.paypal.gimel._
-scala> val dataSet = DataSet(spark)
-scala> val df = dataSet.read("pcatalog.flights_hdfs")
-scala> df.count
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val df = dataSet.read("pcatalog.flights_hdfs")
+df.count
 ```
 
 ## Count Records From HDFS
 ```
-scala> import com.paypal.gimel._
-scala> val dataSet = DataSet(spark)
-scala> val df = dataSet.read("pcatalog.flights_hdfs")
-scala> df.count
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val df = dataSet.read("pcatalog.flights_hdfs")
+df.count
 ```
 _________________________________________________
 

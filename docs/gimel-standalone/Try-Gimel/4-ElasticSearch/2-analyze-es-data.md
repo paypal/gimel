@@ -30,7 +30,7 @@ ______________________________________________________
 
 ## Set options
 ```
-scala> val datasetPropsJson = {
+val datasetPropsJson = {
                                   "datasetType": "ELASTIC_SEARCH",
                                   "fields": [],
                                   "partitionFields": [],
@@ -50,24 +50,37 @@ scala> val datasetPropsJson = {
                               		  "datasetName":"pcatalog.gimel_flights_elastic"
                                   }
                               }
-scala> val options = Map("pcatalog.flights_hdfs.dataSetProperties"->datasetPropsJson)
+val options = Map("pcatalog.flights_hdfs.dataSetProperties"->datasetPropsJson)
+
+val datasetHivePropsJson = """{ 
+                                      "datasetType": "HDFS",
+                                      "fields": [],
+                                      "partitionFields": [],
+                                      "props": {
+                                           "gimel.hdfs.data.format":"csv",
+                                           "location":"hdfs://namenode:8020/flights/data",
+                                           "datasetName":"pcatalog.flights_hdfs"
+                                      }
+                                  }"""
+                                  
+val hiveOptions = Map("pcatalog.flights_hdfs.dataSetProperties"->datasetHivePropsJson)
 ```
 
 ## Load Flights Data into Elastic Dataset
 ```
-scala> import com.paypal.gimel._
-scala> val dataSet = DataSet(spark)
-scala> val hivedf = dataSet.read("pcatalog.flights_hdfs",options)
-scala> val df = dataSet.write("pcatalog.gimel_flights_elastic",hivedf,options)
-scala> df.count
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val hivedf = dataSet.read("pcatalog.flights_hdfs",hiveOptions)
+val df = dataSet.write("pcatalog.gimel_flights_elastic",hivedf,options)
+df.count
 ```
 
 ## Read Data from Elastic
 ```
-scala> import com.paypal.gimel._
-scala> val dataSet = DataSet(spark)
-scala> val df = dataSet.read("pcatalog.gimel_flights_elastic",options)
-scala> df.show(10)
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val df = dataSet.read("pcatalog.gimel_flights_elastic",options)
+df.show(10)
 ```
 _________________________________________________
 

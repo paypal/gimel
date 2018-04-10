@@ -73,23 +73,37 @@ scala> val datasetPropsJson = {
                                        "datasetName":"pcatalog.flights_lookup_cancellation_code_hbase"
                                   }
                               }
-scala> val options = Map("pcatalog.flights_lookup_cancellation_code_hbase.dataSetProperties"->datasetPropsJson)
+                              
+scala> val datasetHivePropsJson = """{ 
+                                         "datasetType": "HDFS",
+                                         "fields": [],
+                                         "partitionFields": [],
+                                         "props": {
+                                              "gimel.hdfs.data.format":"csv",
+                                              "location":"hdfs://namenode:8020/flights/lkp/cancellation_code",
+                                              "datasetName":"pcatalog.flights_lookup_cancellation_code_hdfs"
+                                         }
+                                     }"""
+                                     
+scala> val hbaseoptions = Map("pcatalog.flights_lookup_cancellation_code_hbase.dataSetProperties"->datasetPropsJson)
+
+scala> val hiveOptions = Map("pcatalog.flights_lookup_cancellation_code_hdfs.dataSetProperties"->datasetHivePropsJson)
 ```
 
 ## Load Flights Data into HBase Dataset
 ```
 scala> import com.paypal.gimel._
 scala> val dataSet = DataSet(spark)
-scala> val hiveDf = dataSet.read("pcatalog.flights_lookup_cancellation_code_hdfs",options)
+scala> val hiveDf = dataSet.read("pcatalog.flights_lookup_cancellation_code_hdfs",hiveOptions)
 scala> hiveDf.count
-scala> val df =  dataSet.write("pcatalog.flights_lookup_cancellation_code_hbase",hivedf,options)
+scala> val df =  dataSet.write("pcatalog.flights_lookup_cancellation_code_hbase",hivedf,hbaseoptions)
 ```
 
 ## Read Data from HBase
 ```
 scala> import com.paypal.gimel._
 scala> val dataSet = DataSet(spark)
-scala> val df = dataSet.read("pcatalog.flights_lookup_cancellation_code_hbase",options)
+scala> val df = dataSet.read("pcatalog.flights_lookup_cancellation_code_hbase",hbaseoptions)
 scala> df.show(10)
 ```
 _________________________________________________
