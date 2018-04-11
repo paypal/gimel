@@ -46,7 +46,7 @@ left join lkp_airport lkp_airport_dest
 on flights_kafka.dest = lkp_airport_dest.iata
 """
 
-com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(sql)
+gsql(sql)
 ```
 
 ___________________________________________________________________________________________________________________

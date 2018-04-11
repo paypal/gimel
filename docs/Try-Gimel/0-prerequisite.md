@@ -1,4 +1,5 @@
 
+* [Summary](#summary)
 * [Gimel Standalone](#gimel-standalone)
    * [Overview](#overview)
    * [Install Docker](#install-docker)
@@ -6,6 +7,16 @@
    * [Run Gimel Quickstart Script](#run-gimel-quickstart-script)
    * [Common Imports and Initializations](#common-imports-and-initializations)
    
+# Summary
+
+ * Install Docker
+ * Clone Gimel Repo 
+ * Download Gimel Jar
+ * Run the bootstrap module
+ * Once spark-session is ready : play with Gimel Data API / GSQL
+ 
+___________________________________________________________________________________________________________________
+
 # Gimel Standalone
 
 ## Overview
