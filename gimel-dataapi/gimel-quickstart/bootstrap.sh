@@ -114,7 +114,10 @@ write_log "---------- Bootstrap Complete | Ready to use Gimel | Use below comman
 write_log "----------------------------------------------------------------------------------------------------------------------"
 write_log ""
 write_log ""
-write_log 'docker exec -it spark-master bash -c "export USER=$USER; export SPARK_HOME=/spark/; /spark/bin/spark-shell --jars /root/$gimel_jar_name"'
-write_log ""
+export tmp_var="export USER=$USER; export SPARK_HOME=/spark/; /spark/bin/spark-shell --jars /root/$gimel_jar_name"
+export var="docker exec -it spark-master bash -c ${tmp_var}"
+write_log "----------------------------------------------------------------------------------------------------------------------"
+write_log "$var"
+write_log "----------------------------------------------------------------------------------------------------------------------"
 
 exit 0
