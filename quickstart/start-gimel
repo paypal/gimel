@@ -20,7 +20,7 @@ source $this_dir/set-env
 source ${GIMEL_HOME}/build/gimel_functions
 
 write_log "Stop if any container is running already..."
-run_cmd "sh $GIMEL_HOME/quickstart/stop-gimel"
+run_cmd "sh $GIMEL_HOME/quickstart/stop-gimel stop"
 
 mkdir ${GIMEL_HOME}/tmp ${GIMEL_HOME}/lib
 

@@ -18,7 +18,7 @@
 ## Catalog Provider as USER
 
 ```
-gimelSql("set gimel.catalog.provider=USER");
+gsql("set gimel.catalog.provider=USER");
 ```
 
 ## Bootstrap Flights Data
@@ -26,7 +26,7 @@ gimelSql("set gimel.catalog.provider=USER");
 ### Create HDFS Dataset for loading Flights Data
 
 ```
-gimelSql("""set pcatalog.flights_hdfs.dataSetProperties={ 
+gsql("""set pcatalog.flights_hdfs.dataSetProperties={ 
     "datasetType": "HDFS",
     "fields": [],
     "partitionFields": [],
@@ -41,7 +41,7 @@ gimelSql("""set pcatalog.flights_hdfs.dataSetProperties={
 ### Create Kafka Dataset
 
 ```
-gimelSql("""set pcatalog.flights_kafka_json.dataSetProperties={ 
+gsql("""set pcatalog.flights_kafka_json.dataSetProperties={ 
     "datasetType": "KAFKA",
     "fields": [],
     "partitionFields": [],
@@ -69,17 +69,15 @@ gimelSql("""set pcatalog.flights_kafka_json.dataSetProperties={
 ### Load Flights Data into Kafka Dataset
 
 ```
-gimelSql(
-"insert into pcatalog.flights_kafka_json select * from pcatalog.flights_hdfs",
-spark)
+gsql(
+"insert into pcatalog.flights_kafka_json select * from pcatalog.flights_hdfs")
 ```
 
 ### Cache Kafka Data
 
 ```
-gimelSql(
-"cache table flights select * from  pcatalog.flights_kafka_json",
-spark)
+gsql(
+"cache table flights select * from  pcatalog.flights_kafka_json")
 ```
 
 ___________________________________________________________________________________________________________________
@@ -89,7 +87,7 @@ ________________________________________________________________________________
 ### Create HDFS Datasets for loading Flights Lookup Data
 
 ```
-gimelSql("""set pcatalog.flights_lookup_carrier_code_hdfs.dataSetProperties={ 
+gsql("""set pcatalog.flights_lookup_carrier_code_hdfs.dataSetProperties={ 
     "datasetType": "HDFS",
     "fields": [],
     "partitionFields": [],
@@ -102,7 +100,7 @@ gimelSql("""set pcatalog.flights_lookup_carrier_code_hdfs.dataSetProperties={
 ```
 
 ```
-gimelSql("""set pcatalog.flights_lookup_airline_id_hdfs.dataSetProperties={ 
+gsql("""set pcatalog.flights_lookup_airline_id_hdfs.dataSetProperties={ 
     "datasetType": "HDFS",
     "fields": [],
     "partitionFields": [],
@@ -115,7 +113,7 @@ gimelSql("""set pcatalog.flights_lookup_airline_id_hdfs.dataSetProperties={
 ```
 
 ```
-gimelSql("""set pcatalog.flights_lookup_cancellation_code_hdfs.dataSetProperties={ 
+gsql("""set pcatalog.flights_lookup_cancellation_code_hdfs.dataSetProperties={ 
     "datasetType": "HDFS",
     "fields": [],
     "partitionFields": [],
@@ -130,7 +128,7 @@ gimelSql("""set pcatalog.flights_lookup_cancellation_code_hdfs.dataSetProperties
 ### Create HBase Datasets
 
 ```
-gimelSql("""set pcatalog.flights_lookup_cancellation_code_hbase.dataSetProperties=
+gsql("""set pcatalog.flights_lookup_cancellation_code_hbase.dataSetProperties=
 {
     "datasetType": "HBASE",
     "fields": [
@@ -158,7 +156,7 @@ gimelSql("""set pcatalog.flights_lookup_cancellation_code_hbase.dataSetPropertie
 ```
 
 ```
-gimelSql("""set pcatalog.flights_lookup_carrier_code_hbase.dataSetProperties=
+gsql("""set pcatalog.flights_lookup_carrier_code_hbase.dataSetProperties=
 {
     "datasetType": "HBASE",
     "fields": [
@@ -186,7 +184,7 @@ gimelSql("""set pcatalog.flights_lookup_carrier_code_hbase.dataSetProperties=
 ```
 
 ```
-gimelSql("""set pcatalog.flights_lookup_airline_id_hbase.dataSetProperties=
+gsql("""set pcatalog.flights_lookup_airline_id_hbase.dataSetProperties=
 {
     "datasetType": "HBASE",
     "fields": [
@@ -218,33 +216,24 @@ gimelSql("""set pcatalog.flights_lookup_airline_id_hbase.dataSetProperties=
 ### Load Flights Lookup Data into HBase Datasets
 
 ```
-gimelSql(
-"insert into pcatalog.flights_lookup_cancellation_code_hbase select * from pcatalog.flights_lookup_cancellation_code_hdfs", 
-spark)
+gsql(
+"insert into pcatalog.flights_lookup_cancellation_code_hbase select * from pcatalog.flights_lookup_cancellation_code_hdfs")
 
-gimelSql(
-"insert into pcatalog.flights_lookup_airline_id_hbase select * from pcatalog.flights_lookup_airline_id_hdfs",
-spark)
+gsql(
+"insert into pcatalog.flights_lookup_airline_id_hbase select * from pcatalog.flights_lookup_airline_id_hdfs")
 
-gimelSql(
-"insert into pcatalog.flights_lookup_carrier_code_hbase select * from pcatalog.flights_lookup_carrier_code_hdfs",
-spark)
+gsql(
+"insert into pcatalog.flights_lookup_carrier_code_hbase select * from pcatalog.flights_lookup_carrier_code_hdfs")
 ```
 
 ### Cache lookup Tables from HBase
 
 ```
-gimelSql(
-"cache table lkp_carrier select * from pcatalog.flights_lookup_carrier_code_hbase", 
-spark)
+gsql("cache table lkp_carrier select * from pcatalog.flights_lookup_carrier_code_hbase")
 
-gimelSql(
-"cache table lkp_airline select * from pcatalog.flights_lookup_airline_id_hbase",
-spark)
+gsql("cache table lkp_airline select * from pcatalog.flights_lookup_airline_id_hbase")
 
-gimelSql(
-"cache table lkp_cancellation select * from pcatalog.flights_lookup_cancellation_code_hbase", 
-spark)
+gsql("cache table lkp_cancellation select * from pcatalog.flights_lookup_cancellation_code_hbase")
 
 ```
 
@@ -267,7 +256,7 @@ from pcatalog.flights_lookup_airports_hdfs
 where rnk  = 1
 """
 
-gimelSql(sql, spark)
+gsql(sql)
 ```
 
 ___________________________________________________________________________________________________________________
