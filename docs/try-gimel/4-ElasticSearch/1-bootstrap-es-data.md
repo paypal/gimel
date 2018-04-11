@@ -31,7 +31,6 @@
                   "gimel.es.index.partition.isEnabled":"true",
                   "gimel.es.index.read.all.partitions.isEnabled":"true",
                   "gimel.es.index.partition.suffix":"20180205",
-                  "gimel.es.schema.mapping":"{\"executionStartTime\": {\"format\": \"strict_date_optional_time||epoch_millis\", \"type\": \"date\" }, \"createdTime\": {\"format\": \"strict_date_optional_time||epoch_millis\", \"type\": \"date\"},\"endTime\": {\"format\": \"strict_date_optional_time||epoch_millis\", \"type\": \"date\"}}",
                   "gimel.storage.type":"ELASTIC_SEARCH",
                   "datasetName":"pcatalog.gimel_flights_elastic"
           }
@@ -65,7 +64,6 @@
         "gimel.es.index.partition.isEnabled"="true",
         "gimel.es.index.read.all.partitions.isEnabled"="true",
         "gimel.es.index.partition.suffix"="20180205",
-        "gimel.es.schema.mapping"="{\"executionStartTime\": {\"format\": \"strict_date_optional_time||epoch_millis\", \"type\": \"date\" }, \"createdTime\": {\"format\": \"strict_date_optional_time||epoch_millis\", \"type\": \"date\"},\"endTime\": {\"format\": \"strict_date_optional_time||epoch_millis\", \"type\": \"date\"}}",
         "gimel.storage.type"="ELASTIC_SEARCH");
         
    </td>
