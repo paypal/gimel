@@ -10,10 +10,13 @@
 # Summary
 
  * Install Docker
+ * **Note:** *At any point if there is any failure , power down gimel  ```quickstart/stop-gimel down```*
  * Clone Gimel Repo 
  * Download Gimel Jar
  * Run the bootstrap module
  * Once spark-session is ready : play with Gimel Data API / GSQL
+ 
+ 
  
 ___________________________________________________________________________________________________________________
 
