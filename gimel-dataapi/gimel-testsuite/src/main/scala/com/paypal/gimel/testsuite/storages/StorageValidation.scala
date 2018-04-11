@@ -74,13 +74,9 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
     * @param testData DataFrame (Optional)
     * @return @return A Tuple of (DDL , STATS, Optional[DataFrame])
     */
-  def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"$MethodName-$storage"
+    val tag = s"${methodName}-$storage"
     try {
       val testData = prepareSmokeTestData(gimelProps.smokeTestSampleRowsCount.toInt)
       val dataSet = dataSetName
@@ -98,7 +94,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
     } catch {
       case ex: Throwable =>
         stats += (s"$tag" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats, testData)
   }
@@ -108,11 +104,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
     *
     * @return A Tuple of (DDL , STATS)
     */
-  def execute(): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def execute(): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     bootStrap()
     validateAPI(None)
     cleanUp()
@@ -125,11 +117,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
     * @param numberOfRows Total Number of Sample Rows to Prep
     * @return DataFrame
     */
-  def prepareSmokeTestData(numberOfRows: Int = 1000): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def prepareSmokeTestData(numberOfRows: Int = 1000): DataFrame = withMethdNameLogging { methodName =>
     try {
       def stringed(n: Int) = s"""{"id": $n, "name": "MAC-$n", "rev": ${n * 10000}}"""
 
@@ -137,11 +125,11 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
       val rdd: RDD[String] = sparkSession.sparkContext.parallelize(texts)
       val df: DataFrame = sparkSession.read.json(rdd)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       df
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -151,11 +139,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
     * @param ex      Throwable Exception
     * @param message A Custom Message
     */
-  def handleException(ex: Throwable, message: String = ""): Nothing = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def handleException(ex: Throwable, message: String = ""): Nothing = withMethdNameLogging { methodName =>
     error(s"Exception Handler Called with error --> ")
     ex.printStackTrace()
     if ((message contains "cleanUpES")
@@ -181,11 +165,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
     * @param right DataFrame
     * @param tag   Some Identifier from the Caller
     */
-  def compareDataFrames(left: DataFrame, right: DataFrame, tag: String = "Not Passed"): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def compareDataFrames(left: DataFrame, right: DataFrame, tag: String = "Not Passed"): Unit = withMethdNameLogging { methodName =>
     val testDataColumns = left.columns
     val writeMinusRead = left.selectExpr(testDataColumns: _*).except(right.selectExpr(testDataColumns: _*))
     val readMinusWrite = right.selectExpr(testDataColumns: _*).except(left.selectExpr(testDataColumns: _*))
@@ -204,7 +184,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
       writeMinusRead.show
       info("readMinusWrite --> \n")
       readMinusWrite.show
-      handleException(ex, s"Some Error While Executing Method $MethodName")
+      handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     stats += (s"$tag" -> s"Success @ ${Calendar.getInstance.getTime}")
   }
@@ -216,11 +196,7 @@ abstract class StorageValidation(val dataset: DataSet, val sparkSession: SparkSe
     * @param executeDDL ddl string
     *
     */
-  def deployDDL(executeDDL: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def deployDDL(executeDDL: String): Unit = withMethdNameLogging { methodName =>
     hiveJDBCUtils.withStatement { statement =>
       hiveJarsForDDL.split(",").foreach { jarsToAdd =>
         statement.execute(s"ADD JAR $jarsToAdd")

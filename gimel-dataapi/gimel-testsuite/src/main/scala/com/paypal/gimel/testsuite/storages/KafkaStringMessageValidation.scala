@@ -43,10 +43,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   /**
     * Creates Kafka Hive Table for Data API
     */
-  private def bootStrapKafkaHive(): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def bootStrapKafkaHive(): Unit = withMethdNameLogging { methodName =>
 
     try {
       cleanUpKafkaHive()
@@ -76,11 +73,11 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
       info(s"DDLS -> $hiveTableDDL")
       deployDDL(hiveTableDDL)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_CDH_kafka" -> hiveTableDDL)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -89,11 +86,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapKafka() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapKafka() = withMethdNameLogging { methodName =>
     try {
       KafkaAdminClient.deleteTopicIfExists(
         gimelProps.zkHostAndPort
@@ -105,10 +98,10 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
         , 1
         , 1
       )
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats)
   }
@@ -118,11 +111,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
     *
     * @return A Tuple of (DDL , STATS)
     */
-  override def bootStrap(): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  override def bootStrap(): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     bootStrapKafka()
     bootStrapKafkaHive()
     (ddls, stats)
@@ -133,11 +122,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
     *
     * @return (DDL, STATS) - both are Map[String, String]
     */
-  override def cleanUp(): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  override def cleanUp(): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     cleanUpKafka()
     cleanUpKafkaHive()
     (ddls, stats)
@@ -146,40 +131,32 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
   /**
     * Drops Kafka Topic Creates for Smoke Test Purpose
     */
-  private def cleanUpKafka() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpKafka() = withMethdNameLogging { methodName =>
     try {
       storageadmin.KafkaAdminClient.deleteTopicIfExists(
         gimelProps.zkHostAndPort
         , topicName
       )
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
   /**
     * Drops Kafka Hive Table Created to Test Data API - Read and Write
     */
-  private def cleanUpKafkaHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpKafkaHive() = withMethdNameLogging { methodName =>
     try {
       val dropTableStatement = s"drop table if exists $dataSetName"
       sparkSession.sql(dropTableStatement)
       ddls += ("kafka_hive_ddl_drop" -> dropTableStatement)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -189,13 +166,9 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
     * @param testData DataFrame (Optional)
     * @return @return A Tuple of (DDL , STATS, Optional[DataFrame])
     */
-  override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"$MethodName-$storage"
+    val tag = s"${methodName}-$storage"
     try {
       val testDataDF: DataFrame = prepareSmokeTestData(gimelProps.smokeTestSampleRowsCount.toInt)
       val testData: RDD[String] = testDataDF.toJSON.rdd
@@ -217,7 +190,7 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
     } catch {
       case ex: Throwable =>
         stats += (s"$tag" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats, testData)
   }

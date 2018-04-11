@@ -51,10 +51,7 @@ object GimelQueryProcessor extends Logger {
     * @param sparkSession : SparkSession
     * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
     */
-  def executeBatch(sql: String, sparkSession: SparkSession): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def executeBatch(sql: String, sparkSession: SparkSession): DataFrame = withMethdNameLogging { methodName =>
     sparkSession.sparkContext.setLogLevel("ERROR")
     val sparkAppName = sparkSession.conf.get("spark.app.name")
     logMethodAccess(sparkSession.sparkContext.getConf.getAppId
@@ -64,7 +61,7 @@ object GimelQueryProcessor extends Logger {
       , yarnCluster
       , user
       , toLogFriendlyString(s"${yarnCluster}/${user}/${sparkAppName}")
-      , MethodName
+      , methodName
       , sql
       , scala.collection.mutable.Map("sql" -> sql)
     )
@@ -91,7 +88,7 @@ object GimelQueryProcessor extends Logger {
           case Success(result) =>
             resultingString = result
           case Failure(e) =>
-            resultingString = s"Query Failed in function : $MethodName. Error --> \n\n ${
+            resultingString = s"Query Failed in function : ${methodName}. Error --> \n\n ${
               e.getStackTraceString
             }"
             error(resultingString)
@@ -116,10 +113,7 @@ object GimelQueryProcessor extends Logger {
     * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
     */
 
-  def executeStream(sql: String, sparkSession: SparkSession): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def executeStream(sql: String, sparkSession: SparkSession): String = withMethdNameLogging { methodName =>
     val sparkAppName = sparkSession.conf.get("spark.app.name")
     logMethodAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkSession.conf.get("spark.app.name")
@@ -128,7 +122,7 @@ object GimelQueryProcessor extends Logger {
       , yarnCluster
       , user
       , toLogFriendlyString(s"${yarnCluster}/${user}/${sparkAppName}")
-      , MethodName
+      , methodName
       , sql
       , scala.collection.mutable.Map("sql" -> sql)
     )
@@ -207,7 +201,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
               executeBatch(newSQL, sparkSession)
             } catch {
               case ex: Throwable =>
-                error(s"Stream Query Failed in function : $MethodName. Error --> \n\n${ex.getStackTraceString}")
+                error(s"Stream Query Failed in function : ${methodName}. Error --> \n\n${ex.getStackTraceString}")
                 ex.printStackTrace()
                 error("Force - Stopping Streaming Context")
                 ssc.sparkContext.stop()
@@ -262,10 +256,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     * @param sparkSession : SparkSession
     * @return RDD[Resulting String < either sample data for select queries, or "success" / "failed" for insert queries]
     */
-  def executeBatchSparkMagicRDD(sql: String, sparkSession: SparkSession): RDD[String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def executeBatchSparkMagicRDD(sql: String, sparkSession: SparkSession): RDD[String] = withMethdNameLogging { methodName =>
     sparkSession.sparkContext.setLogLevel("ERROR")
     val sparkAppName = sparkSession.conf.get("spark.app.name")
     logMethodAccess(sparkSession.sparkContext.getConf.getAppId
@@ -275,7 +266,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
       , yarnCluster
       , user
       , toLogFriendlyString(s"${yarnCluster}/${user}/${sparkAppName}")
-      , MethodName
+      , methodName
       , sql
       , scala.collection.mutable.Map("sql" -> sql)
     )
@@ -323,10 +314,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     * @return RDD[Resulting String] < either sample data for select queries, or "success" / "failed" for insert queries
     */
 
-  def executeStreamSparkMagicRDD(sql: String, sparkSession: SparkSession): RDD[String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def executeStreamSparkMagicRDD(sql: String, sparkSession: SparkSession): RDD[String] = withMethdNameLogging { methodName =>
     sparkSession.sparkContext.setLogLevel("ERROR")
     val sparkAppName = sparkSession.conf.get("spark.app.name")
     logMethodAccess(sparkSession.sparkContext.getConf.getAppId
@@ -336,7 +324,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
       , yarnCluster
       , user
       , toLogFriendlyString(s"${yarnCluster}/${user}/${sparkAppName}")
-      , MethodName
+      , methodName
       , sql
       , scala.collection.mutable.Map("sql" -> sql)
     )
@@ -393,7 +381,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
               }
               catch {
                 case ex: Throwable =>
-                  error(s"Stream Query Failed in function : $MethodName. Error --> \n\n${ex.getStackTraceString}")
+                  error(s"Stream Query Failed in function : ${methodName}. Error --> \n\n${ex.getStackTraceString}")
                   ex.printStackTrace()
                   error("Force - Stopping Streaming Context")
                   ssc.sparkContext.stop()
@@ -436,10 +424,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     */
 
   @deprecated
-  def executeBatchSparkMagicJSON(sql: String, sparkSession: SparkSession): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def executeBatchSparkMagicJSON(sql: String, sparkSession: SparkSession): String = withMethdNameLogging { methodName =>
     val sparkAppName = sparkSession.conf.get("spark.app.name")
     logMethodAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkSession.conf.get("spark.app.name")
@@ -448,7 +433,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
       , yarnCluster
       , user
       , toLogFriendlyString(s"${yarnCluster}/${user}/${sparkAppName}")
-      , MethodName
+      , methodName
       , sql
       , scala.collection.mutable.Map("sql" -> sql)
     )
@@ -493,10 +478,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     */
 
   @deprecated
-  def executeStreamSparkMagicJSON(sql: String, sparkSession: SparkSession): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def executeStreamSparkMagicJSON(sql: String, sparkSession: SparkSession): String = withMethdNameLogging { methodName =>
     val sparkAppName = sparkSession.conf.get("spark.app.name")
     logMethodAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkSession.conf.get("spark.app.name")
@@ -505,7 +487,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
       , yarnCluster
       , user
       , toLogFriendlyString(s"${yarnCluster}/${user}/${sparkAppName}")
-      , MethodName
+      , methodName
       , sql
       , scala.collection.mutable.Map("sql" -> sql)
     )

@@ -35,11 +35,7 @@ object ZooKeeperAdminClient extends Logger {
     * @param zNode    Fully Qualified Path of the File to Write data into
     * @param someData Content to Write
     */
-  def writetoZK(zServers: String, zNode: String, someData: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def writetoZK(zServers: String, zNode: String, someData: String): Unit = withMethdNameLogging { methodName =>
     info(s"Zookeeper WRITE Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
     try {
       val zookeeperClient: ZooKeeperClient = new ZooKeeperClient(zServers)
@@ -63,11 +59,7 @@ object ZooKeeperAdminClient extends Logger {
     * @param zNode Fully Qualified Path of the File to Read
     * @return Content of the File
     */
-  def readFromZK(zServers: String, zNode: String): Option[String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def readFromZK(zServers: String, zNode: String): Option[String] = withMethdNameLogging { methodName =>
     info(s"Zookeeper READ Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
     var read: Option[String] = None
     try {
@@ -91,10 +83,7 @@ object ZooKeeperAdminClient extends Logger {
     *
     * @param zNode Fully Qualified Path of the File to Write data into
     */
-  def deleteNodeOnZK(zServers: String, zNode: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def deleteNodeOnZK(zServers: String, zNode: String): Unit = withMethdNameLogging { methodName =>
 
     info(s"Zookeeper DELETE Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
     try {

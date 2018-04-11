@@ -46,10 +46,7 @@ object KafkaAdminClient extends Logger {
     * @param numberOfPartitions    Number of Partitions
     * @param numberOfReplica       Number of Replicas
     */
-  def createTopicIfNotExists(zookKeeperHostAndPort: String, kafkaTopicName: String, numberOfPartitions: Int, numberOfReplica: Int): Unit = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  def createTopicIfNotExists(zookKeeperHostAndPort: String, kafkaTopicName: String, numberOfPartitions: Int, numberOfReplica: Int): Unit = withMethdNameLogging { methodName =>
     val topicName = kafkaTopicName
     val noOfPartitions = numberOfPartitions
     val noOfReplication = numberOfReplica
@@ -70,10 +67,7 @@ object KafkaAdminClient extends Logger {
     * @param zookKeeperHostAndPort Zookeeper Host & Port | Example localhost:2181
     * @param kafkaTopicName        Kafka Topic Name
     */
-  def deleteTopicIfExists(zookKeeperHostAndPort: String, kafkaTopicName: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  def deleteTopicIfExists(zookKeeperHostAndPort: String, kafkaTopicName: String): Unit = withMethdNameLogging { methodName =>
     val topicName = kafkaTopicName
     val client = zkClient(zookKeeperHostAndPort)
     val connect = zkConnection(zookKeeperHostAndPort)
@@ -91,10 +85,7 @@ object KafkaAdminClient extends Logger {
     * @param kafkaTopicName        Kafka Topic Name
     * @return True if Topic Exists , otherwise False
     */
-  def isTopicExists(zookKeeperHostAndPort: String, kafkaTopicName: String): Boolean = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  def isTopicExists(zookKeeperHostAndPort: String, kafkaTopicName: String): Boolean = withMethdNameLogging { methodName =>
     val client = zkClient(zookKeeperHostAndPort)
     val connect = zkConnection(zookKeeperHostAndPort)
     val zkUtil: ZkUtils = new ZkUtils(client, connect, isSecurityEnabled)

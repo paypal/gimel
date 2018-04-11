@@ -117,11 +117,7 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
     * @param allParams args
     * @return Map[String, String]
     */
-  def resolveRunTimeParameters(allParams: Array[String]): Map[String, String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def resolveRunTimeParameters(allParams: Array[String]): Map[String, String] = withMethdNameLogging { methodName =>
     var paramsMapBuilder: Map[String, String] = Map()
     info(s"All Params From User --> ${allParams.mkString("\n")}")
 
@@ -183,11 +179,7 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
   /**
     * Creates the Hive DataBase for PCataLog
     */
-  def bootStrapHiveDB(): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def bootStrapHiveDB(): Unit = withMethdNameLogging { methodName =>
     try {
       val hiveDDL =
         s""" create database if not exists ${pcatProps.benchMarkTestHiveDB}
@@ -196,12 +188,12 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
 
       sparkSession.sql(hiveDDL)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"$methodName" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("Hive DB" -> hiveDDL)
     }
     catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method $methodName")
     }
   }
 
@@ -209,18 +201,14 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
   /**
     * Drops the Hive Database in the End
     */
-  def cleanUpHiveDB(): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def cleanUpHiveDB(): Unit = withMethdNameLogging { methodName =>
     try {
       sparkSession.sql(s"DROP DATABASE IF EXISTS ${pcatProps.benchMarkTestHiveDB} CASCADE")
       sparkSession.sql(s"dfs -rm -r -f ${pcatProps.benchMarkTestHiveLocation}")
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"$methodName" -> s"Success @ ${Calendar.getInstance.getTime}")
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method $methodName")
     }
   }
 
@@ -230,11 +218,7 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
     * @param numberOfRows Total Number of Sample Rows to Prep
     * @return DataFrame
     */
-  def prepareBenchMarkTestData(numberOfRows: Int = 10): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def prepareBenchMarkTestData(numberOfRows: Int = 10): DataFrame = withMethdNameLogging { methodName =>
     try {
       def stringed(n: Int) = s"""{"id":$n,"time_created":"1500934200","time_processed":"1500934200","flags":"4325376","account_number":$n,"transaction_id":"NULL","counterparty":$n,"payee_email":"NULL","amount":"-545","status":"S","type":"U","reason":"NULL","time_received_payee":"NULL","time_created_payer":"NULL","memo":"NULL","payment_id":$n,"ach_id":"0","sync_group":"NULL","address_id":"0","payee_email_upper":"NULL","parent_id":"NULL","shared_id":$n,"cctrans_id":$n,"counterparty_alias":"NULL","counterparty_alias_type":"E","counterparty_alias_upper":"NULL","message":"NULL","time_user":"1500934200","message_id":$n,"subtype":"G","flags2":"268435712","time_inactive":"0","target_alias_id":$n,"counterparty_last_login_ip":"NULL","balance_at_time_created":"0","accept_deny_method":"NULL","currency_code":"USD","usd_amount":"-545","base_id":$n,"flags3":"163840","time_updated":"1500934200","transition":"A","flags4":"0","time_row_updated":"2017-07-24:15:10:04","flags5":$n,"db_ts_updated":"2017-07-24:22:10:04.000000000","db_ts_created":"2017-07-24:22:10:04.000000000","flags6":"128","flags7":"0"}"""
 
@@ -242,11 +226,11 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
       val rdd: RDD[String] = sparkSession.sparkContext.parallelize(texts, 50)
       val df: DataFrame = sparkSession.read.json(rdd)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"$methodName" -> s"Success @ ${Calendar.getInstance.getTime}")
       df
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method $methodName")
     }
   }
 
@@ -257,10 +241,7 @@ class BenchmarkTestUtils(val allParams: Array[String], val sparkSession: SparkSe
     * @param ex      Throwable Exception
     * @param message A Custom Message
     */
-  def handleException(ex: Throwable, message: String = ""): Nothing = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def handleException(ex: Throwable, message: String = ""): Nothing = withMethdNameLogging { _ =>
     cleanUpHiveDB()
     ex.printStackTrace()
     throw new Exception(s"An Error Occurred <$message>")

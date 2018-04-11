@@ -62,8 +62,8 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     * @return A Tuple of (DDL , STATS)
     */
   private def bootStrapKafka() = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
+    def methodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    info(" @Begin --> " + methodName)
 
     try {
       KafkaAdminClient.deleteTopicIfExists(
@@ -76,10 +76,10 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
         , 1
         , 1
       )
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     }
     catch {
-      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${MethodName}")
+      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats)
   }
@@ -89,11 +89,7 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapStreamKafkaHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapStreamKafkaHive() = withMethdNameLogging { methodName =>
     cleanUpKafkaHive()
     try {
       val topicName = s"${gimelProps.smokeTestKafkaTopic}_1"
@@ -121,11 +117,11 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
            |)
          """.stripMargin
       deployDDL(kafkaDDL)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_CDH_Hive_Table_Streaming" -> kafkaDDL)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats)
   }
@@ -134,17 +130,17 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     * Drops Kafka Hive Table Created to Test Data API - Read and Write
     */
   private def cleanUpKafkaHive() = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
+    def methodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    info(" @Begin --> " + methodName)
 
     try {
       val dropTableStatement = s"drop table if exists ${dataSetName}"
       sparkSession.sql(dropTableStatement)
       ddls += ("kafka_hive_ddl_drop" -> dropTableStatement)
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     }
     catch {
-      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${MethodName}")
+      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -153,11 +149,7 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootstrapStreamESHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootstrapStreamESHive() = withMethdNameLogging { methodName =>
     try {
       val typeName = gimelProps.tagToAdd.replace("_", "")
       val esDDL =
@@ -181,12 +173,12 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
       // we are not using sparkSession.sql because spark 2.1 version doesnt support Stored by ES Storage Handler and Serde.so we are replacing with Hive JDBC as it supports both versions(1.6 and 2.1)
       deployDDL(esDDL)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_Kafka_stream_es" -> esDDL)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -197,12 +189,9 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     * @param inDF The input data frame.
     * @return @return A Tuple of (DDL , STATS, Optional[DataFrame])
     */
-  override def validateAPI(inDF: Option[DataFrame]): (Map[String, String], Map[String, String], Option[DataFrame]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  override def validateAPI(inDF: Option[DataFrame]): (Map[String, String], Map[String, String], Option[DataFrame]) = withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"$MethodName-$storage"
+    val tag = s"${methodName}-$storage"
     try {
       sparkSession.sql(s"set gimel.kafka.throttle.streaming.window.seconds=${gimelProps.smokeTestKafkaStreamBatchInterval}")
       sparkSession.sql(s"set gimel.kafka.throttle.batch.fetchRowsOnFirstRun=250")
@@ -220,7 +209,7 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
       (ddls, stats, inDF)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -243,20 +232,16 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def kafkaStreamCleanUp() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def kafkaStreamCleanUp() = withMethdNameLogging { methodName =>
     try {
       val dropDDL = s"drop table if exists $dataSetName"
       sparkSession.sql(dropDDL)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("CDH_Hive_Table__Kafka_Stream_Drop" -> dropDDL)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -265,20 +250,16 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def kafkaStreamESHiveCleanUp() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def kafkaStreamESHiveCleanUp() = withMethdNameLogging { methodName =>
     try {
       val dropDDL = s"drop table if exists $dataSetNameES"
       sparkSession.sql(dropDDL)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("Kafka_Stream_ES_Drop_Table" -> dropDDL)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -287,20 +268,17 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def kafkaStreamESCleanUp(url: String) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def kafkaStreamESCleanUp(url: String) = withMethdNameLogging { methodName =>
     info("delete index")
     info(url)
     try {
       val output = storageadmin.ESAdminClient.deleteIndex(url)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("Kafka_Stream_ES_Index Dropped_Status" -> output)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 

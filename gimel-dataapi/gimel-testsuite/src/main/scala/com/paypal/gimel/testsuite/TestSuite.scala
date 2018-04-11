@@ -122,11 +122,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) ex
     * @param allParams args
     * @return Map[String, String]
     */
-  def resolveRunTimeParameters(allParams: Array[String]): Map[String, String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def resolveRunTimeParameters(allParams: Array[String]): Map[String, String] = withMethdNameLogging { methodName =>
     var paramsMapBuilder: Map[String, String] = Map()
     info(s"All Params From User --> ${allParams.mkString("\n")}")
 
@@ -185,11 +181,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) ex
   /**
     * Creates the Hive DataBase for PCataLog
     */
-  def bootStrapHiveDB(): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def bootStrapHiveDB(): Unit = withMethdNameLogging { methodName =>
     try {
       val hiveDDL =
         s""" create database if not exists ${gimelProps.smokeTestHiveDB}
@@ -198,11 +190,11 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) ex
 
       sparkSession.sql(hiveDDL)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("Hive DB" -> hiveDDL)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -210,11 +202,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) ex
     * Creates An Index to Store the SmokeTestStats
     */
 
-  def bootStrapESIndexForStats(): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def bootStrapESIndexForStats(): Unit = withMethdNameLogging { methodName =>
     try {
       val esDDL =
         s"""
@@ -238,11 +226,11 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) ex
 
       deployDDL(esDDL)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("SmokeTestResultHiveTableDDL" -> esDDL)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -251,10 +239,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) ex
     *
     * @param stats Map[Key, Value]
     */
-  def postResults(stats: Map[String, String]): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def postResults(stats: Map[String, String]): Unit = withMethdNameLogging { methodName =>
     val cluster = params.getOrElse("cluster", "unknown_cluster")
     val sessionName = sparkSession.sparkContext.appName
     val sessionUser = sparkSession.sparkContext.sparkUser
@@ -277,18 +262,14 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) ex
   /**
     * Drops the Hive Database in the End
     */
-  def cleanUpHiveDB(): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def cleanUpHiveDB(): Unit = withMethdNameLogging { methodName =>
     try {
       sparkSession.sql(s"DROP DATABASE IF EXISTS ${gimelProps.smokeTestHiveDB} CASCADE")
       sparkSession.sql(s"dfs -rm -r -f ${gimelProps.smokeTestHiveLocation}")
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -298,10 +279,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) ex
     * @param ex      Throwable Exception
     * @param message A Custom Message
     */
-  def handleException(ex: Throwable, message: String = ""): Nothing = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def handleException(ex: Throwable, message: String = ""): Nothing = withMethdNameLogging { methodName =>
     //    cleanUpHiveDB()
     ex.printStackTrace()
     throw new Exception(s"An Error Occurred <$message> \n ${ex.getMessage}")
@@ -313,11 +291,7 @@ class TestUtils(val allParams: Array[String], val sparkSession: SparkSession) ex
     * @param executeDDL ddl string
     *
     */
-  def deployDDL(executeDDL: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def deployDDL(executeDDL: String): Unit = withMethdNameLogging { methodName =>
     hiveJDBCUtils.withStatement { statement =>
       hiveJarsForDDL.split(",").foreach { jarsToAdd =>
         statement.execute(s"ADD JAR $jarsToAdd")

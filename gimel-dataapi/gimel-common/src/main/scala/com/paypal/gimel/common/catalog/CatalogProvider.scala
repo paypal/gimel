@@ -58,10 +58,7 @@ object CatalogProvider extends Logger {
     */
 
   def getDataSetProperties(datasetName: String,
-                           options: Map[String, Any] = Map[String, Any]()): DataSetProperties = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+                           options: Map[String, Any] = Map[String, Any]()): DataSetProperties = withMethdNameLogging { methodName =>
     val resolvedSourceTable = resolveDataSetName(datasetName)
     val catalogProvider = options.getOrElse(CatalogProviderConfigs.CATALOG_PROVIDER, CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER)
     println(s"Catalog Provider is --> ${catalogProvider}")
@@ -160,10 +157,7 @@ object CatalogProvider extends Logger {
     * @return DataSetProperties
     */
 
-  def getDataSetPropertiesFromHive(hiveTableName: String): DataSetProperties = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  def getDataSetPropertiesFromHive(hiveTableName: String): DataSetProperties = withMethdNameLogging { methodName =>
     val hiveTable = getHiveTable(hiveTableName)
     val Array(nameSpace, datasetName) = hiveTableName.split('.')
     val tableProps: Map[String, String] = hiveTable.getParameters.asScala.toMap
@@ -201,10 +195,7 @@ object CatalogProvider extends Logger {
     * @return Table
     */
 
-  def getHiveTable(tableName: String): Table = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  def getHiveTable(tableName: String): Table = withMethdNameLogging { methodName =>
     val hiveClient = new HiveMetaStoreClient(new HiveConf())
     val Array(hiveDataBase, hiveTable) = tableName.split('.')
     val hiveTableProps: Table = hiveClient.getTable(hiveDataBase, hiveTable)

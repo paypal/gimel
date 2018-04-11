@@ -40,11 +40,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
   /**
     * Creates Kafka Hive Table for Data API
     */
-  private def bootStrapKafkaHive(): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapKafkaHive(): Unit = withMethdNameLogging { methodName =>
     try {
       cleanUpKafkaHive()
 
@@ -173,11 +169,11 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
       info(s"DDLS -> $hiveTableDDL")
       sparkSession.sql(hiveTableDDL)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"$methodName" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("kafka_avro_DDL" -> hiveTableDDL)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method $methodName")
     }
   }
 
@@ -186,11 +182,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapKafka() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapKafka() = withMethdNameLogging { methodName =>
     try {
       KafkaAdminClient.deleteTopicIfExists(
         pcatProps.zkHostAndPort
@@ -202,10 +194,10 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
         , 1
         , 1
       )
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"$methodName" -> s"Success @ ${Calendar.getInstance.getTime}")
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method $methodName")
     }
     (ddls, stats)
   }
@@ -215,11 +207,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
     *
     * @return A Tuple of (DDL , STATS)
     */
-  override def bootStrap(): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  override def bootStrap(): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     bootStrapKafka()
     bootStrapKafkaHive()
     (ddls, stats)
@@ -230,11 +218,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
     *
     * @return (DDL, STATS) - both are Map[String, String]
     */
-  override def cleanUp(): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  override def cleanUp(): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     cleanUpKafka()
     cleanUpKafkaHive()
     (ddls, stats)
@@ -258,13 +242,10 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
     */
 
 
-  private def benchmarkKafkaAvro() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def benchmarkKafkaAvro() = withMethdNameLogging { methodName =>
 
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"$MethodName-$storage"
+    val tag = s"$methodName-$storage"
 
     try {
       val testDataCount = testData.count()
@@ -278,7 +259,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
     } catch {
       case ex: Throwable =>
         stats += (s"$tag" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method $methodName")
     }
     (ddls, stats)
   }
@@ -287,40 +268,32 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
   /**
     * Drops Kafka Topic Creates
     */
-  private def cleanUpKafka() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpKafka() = withMethdNameLogging { methodName =>
     try {
       storageadmin.KafkaAdminClient.deleteTopicIfExists(
         pcatProps.zkHostAndPort
         , topicName_dataset
       )
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
   /**
     * Drops Kafka Hive Table
     */
-  private def cleanUpKafkaHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpKafkaHive() = withMethdNameLogging { methodName =>
     try {
       val dropTableStatement = s"drop table if exists $dataSetName"
       sparkSession.sql(dropTableStatement)
       ddls += ("kafka_hive_ddl_drop" -> dropTableStatement)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 

@@ -58,22 +58,18 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: G
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def cleanUpHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpHive() = withMethdNameLogging { methodName =>
     try {
       val dropTableDDL = s"drop table if exists ${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestHiveTable}"
       sparkSession.sql(dropTableDDL)
       HDFSAdminClient.deletePath(s"${gimelProps.smokeTestHiveLocation}/${gimelProps.smokeTestHiveTable}", true)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("Hive_Table_Drop_DDL" -> dropTableDDL)
       ddls += ("Hive_Table_Delete_HDFS" -> s"${gimelProps.smokeTestHiveLocation}/${gimelProps.smokeTestHiveTable}")
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -82,11 +78,7 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: G
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapHive = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapHive = withMethdNameLogging { methodName =>
     try {
       val sampleDF = prepareSmokeTestData()
       val columnSet: Array[String] = sampleDF.columns
@@ -98,12 +90,12 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: G
         , columnSet)
       deployDDL(hiveDDL)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_hive" -> hiveDDL)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 }

@@ -54,11 +54,7 @@ object HBaseAdminClient extends Logger {
     * @param hbaseColumnFamilyName HBASE Column Family
     * @param hbaseSiteXmlHdfs      HBASE Site XML provided in HDFS
     */
-  def createHbaseTableIfNotExists(hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: Array[String], hbaseSiteXmlHdfs: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def createHbaseTableIfNotExists(hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: Array[String], hbaseSiteXmlHdfs: String): Unit = withMethdNameLogging { methodName =>
     val connection = createConnection(hbaseSiteXmlHdfs)
     try {
       createHbaseTableIfNotExists(connection, hbaseNameSpace, hbaseTable, hbaseColumnFamilyName)
@@ -80,11 +76,7 @@ object HBaseAdminClient extends Logger {
     * @param hbaseTable            HBASE Table
     * @param hbaseColumnFamilyName HBASE Column Family
     */
-  def createHbaseTableIfNotExists(connection: Connection, hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: Array[String]): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def createHbaseTableIfNotExists(connection: Connection, hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: Array[String]): Unit = withMethdNameLogging { methodName =>
     // HBASE Admin
     val admin: Admin = connection.getAdmin
     try {
@@ -123,10 +115,7 @@ object HBaseAdminClient extends Logger {
     * @param hbaseColumnFamilyName HBASE Column Family
     * @param hbaseSiteXmlHdfs      HBASE Site XML provided in HDFS
     */
-  def createHbaseTableIfNotExists(hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: String, hbaseSiteXmlHdfs: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def createHbaseTableIfNotExists(hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: String, hbaseSiteXmlHdfs: String): Unit = withMethdNameLogging { methodName =>
     try {
       createHbaseTableIfNotExists(hbaseNameSpace, hbaseTable, Array(hbaseColumnFamilyName), hbaseSiteXmlHdfs)
     } catch {
@@ -145,10 +134,7 @@ object HBaseAdminClient extends Logger {
     * @param hbaseTable            HBASE Table
     * @param hbaseColumnFamilyName HBASE Column Family
     */
-  def createHbaseTableIfNotExists(connection: Connection, hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def createHbaseTableIfNotExists(connection: Connection, hbaseNameSpace: String, hbaseTable: String, hbaseColumnFamilyName: String): Unit = withMethdNameLogging { methodName =>
     try {
       createHbaseTableIfNotExists(connection, hbaseNameSpace, hbaseTable, Array(hbaseColumnFamilyName))
     } catch {
@@ -166,11 +152,7 @@ object HBaseAdminClient extends Logger {
     * @param hbaseNameSpace HBASE NameSpace
     * @param hbaseTable     HBASE Table
     */
-  def deleteHbaseTable(connection: Connection, hbaseNameSpace: String, hbaseTable: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-    info("Dropping HBASE table --> ")
+  def deleteHbaseTable(connection: Connection, hbaseNameSpace: String, hbaseTable: String): Unit = withMethdNameLogging { methodName =>
     // HBASE Admin
     val admin: Admin = connection.getAdmin
     try {
@@ -202,11 +184,7 @@ object HBaseAdminClient extends Logger {
     * @param hbaseTable       HBASE Table
     * @param hbaseSiteXmlHdfs HBASE Site XMl provided in HDFS
     */
-  def deleteHbaseTable(hbaseNameSpace: String, hbaseTable: String, hbaseSiteXmlHdfs: String): Unit = {
-
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def deleteHbaseTable(hbaseNameSpace: String, hbaseTable: String, hbaseSiteXmlHdfs: String): Unit = withMethdNameLogging { methodName =>
     info("Dropping HBASE table --> ")
 
     val connection = createConnection(hbaseSiteXmlHdfs)
@@ -228,11 +206,7 @@ object HBaseAdminClient extends Logger {
     * @param hbaseNameSpace HBASE NameSpace
     * @param clusterName    HBASE Cluster Name : optional
     */
-  def createHbaseNameSpaceIfNotExists(hbaseNameSpace: String, clusterName: String, hbaseSiteXmlHdfs: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def createHbaseNameSpaceIfNotExists(hbaseNameSpace: String, clusterName: String, hbaseSiteXmlHdfs: String): Unit = withMethdNameLogging { methodName =>
     val connection = createConnection(hbaseSiteXmlHdfs)
     try {
       createHbaseNameSpaceIfNotExists(connection, hbaseNameSpace, clusterName)
@@ -253,10 +227,7 @@ object HBaseAdminClient extends Logger {
     * @param hbaseNameSpace HBASE NameSpace
     * @param clusterName    HBASE Cluster Name : optional
     */
-  def createHbaseNameSpaceIfNotExists(connection: Connection, hbaseNameSpace: String, clusterName: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def createHbaseNameSpaceIfNotExists(connection: Connection, hbaseNameSpace: String, clusterName: String): Unit = withMethdNameLogging { methodName =>
 
     // HBASE Admin
     val admin: Admin = connection.getAdmin
@@ -289,11 +260,7 @@ object HBaseAdminClient extends Logger {
     *
     * @param connection HBase Connection
     */
-  def getAllNamespaces(connection: Connection): Array[String] = {
-
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def getAllNamespaces(connection: Connection): Array[String] = withMethdNameLogging { methodName =>
     info("Getting all namespaces --> ")
 
     // HBASE Admin
@@ -315,12 +282,7 @@ object HBaseAdminClient extends Logger {
     *
     * @param hbaseSiteXmlHdfs HBASE Site XMl provided in HDFS
     */
-  def getAllNamespaces(hbaseSiteXmlHdfs: String): Array[String] = {
-
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def getAllNamespaces(hbaseSiteXmlHdfs: String): Array[String] = withMethdNameLogging { methodName =>
     info("Hbase Site XML --> " + hbaseSiteXmlHdfs)
     info("Getting all namespaces --> ")
     val connection = createConnection(hbaseSiteXmlHdfs)
@@ -343,12 +305,7 @@ object HBaseAdminClient extends Logger {
     * @param namespace        Namespace name
     * @param hbaseSiteXmlHdfs HBASE Site XMl provided in HDFS
     */
-  def getTablesFromNamespace(namespace: String, hbaseSiteXmlHdfs: String): Array[String] = {
-
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def getTablesFromNamespace(namespace: String, hbaseSiteXmlHdfs: String): Array[String] = withMethdNameLogging { methodName =>
     info("Getting all tables from namespaces " + namespace + "--> ")
     val connection = createConnection(hbaseSiteXmlHdfs)
     // HBASE Admin
@@ -373,12 +330,7 @@ object HBaseAdminClient extends Logger {
     * @param connection HBase Connection
     * @param namespace  Namespace name
     */
-  def getTablesFromNamespace(connection: Connection, namespace: String): Array[String] = {
-
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def getTablesFromNamespace(connection: Connection, namespace: String): Array[String] = withMethdNameLogging { methodName =>
     info("Getting all tables from namespaces " + namespace + "--> ")
     // HBASE Admin
     val admin: Admin = connection.getAdmin
@@ -404,11 +356,7 @@ object HBaseAdminClient extends Logger {
     * @return hbaseSiteXML LocalPath
     */
 
-  def getHbaseSiteXml(hbaseSiteXMLHDFS: String): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def getHbaseSiteXml(hbaseSiteXMLHDFS: String): String = withMethdNameLogging { methodName =>
     val hbaseConfigFileLocation = hbaseSiteXMLHDFS match {
       case "NONE" =>
         warning("THERE IS NO HBASE SITE XML SPECIFIED, WILL TRY TO USE WHATEVER IS VISIBLE TO THE SESSION !")

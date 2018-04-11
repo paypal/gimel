@@ -40,11 +40,7 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
     *
     * @return A Tuple of (DDL , STATS)
     */
-  override def cleanUp(): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-     info(" @Begin --> " + MethodName)
-
+  override def cleanUp(): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     cleanUpAerospike()
     cleanUpAerospikeHive()
     (ddls, stats)
@@ -64,11 +60,7 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapAerospikeHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-     info(" @Begin --> " + MethodName)
-
+  private def bootStrapAerospikeHive() = withMethdNameLogging { methodName =>
     try {
       val aerospikeNameSpace: String = gimelProps.smokeTestAerospikeNamespace
       val aerospikeSetName: String = gimelProps.smokeTestAerospikeSetName
@@ -94,12 +86,12 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
 
       deployDDL(aerospikeDDL)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_aerospike" -> aerospikeDDL)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -109,13 +101,9 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
     * @param testData DataFrame (Optional)
     * @return @return A Tuple of (DDL , STATS, Optional[DataFrame])
     */
-  override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-     info(" @Begin --> " + MethodName)
-
+  override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"$MethodName-$storage"
+    val tag = s"${methodName}-$storage"
     try {
       val testData = prepareSmokeTestData(gimelProps.smokeTestSampleRowsCount.toInt)
       val dataSet = dataSetName
@@ -134,7 +122,7 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
     } catch {
       case ex: Throwable =>
         stats += (s"$tag" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats, testData)
   }
@@ -144,36 +132,28 @@ class AerospikeValidation(dataset: DataSet, sparkSession: SparkSession, gimelPro
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def cleanUpAerospike() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-     info(" @Begin --> " + MethodName)
-
+  private def cleanUpAerospike() = withMethdNameLogging { methodName =>
     try {
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
   /**
     * Drops Aerospike Hive Table Created to Test Data API - Read and Write
     */
-  private def cleanUpAerospikeHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-     info(" @Begin --> " + MethodName)
-
+  private def cleanUpAerospikeHive() = withMethdNameLogging { methodName =>
     try {
       val dropTableStatement = s"drop table if exists $dataSetName"
       sparkSession.sql(dropTableStatement)
       ddls += ("aerospike_hive_ddl_drop" -> dropTableStatement)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 }

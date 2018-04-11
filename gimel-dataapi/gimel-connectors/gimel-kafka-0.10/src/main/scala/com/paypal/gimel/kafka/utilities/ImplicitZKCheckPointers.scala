@@ -46,8 +46,6 @@ object ImplicitZKCheckPointers extends Logger {
       *
       */
     def saveZkCheckPoint: Boolean = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
       val zkServers = checkPointingInfo._1.host
       val zkNode = checkPointingInfo._1.node
       val contentToWrite = checkPointingInfo._2.toStringOfKafkaOffsetRanges
@@ -74,11 +72,7 @@ object ImplicitZKCheckPointers extends Logger {
       * @return Some(Array[OffsetRange])
       *
       */
-    def fetchZkCheckPoint: Option[Array[OffsetRange]] = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      info(" @Begin --> " + MethodName)
-
+    def fetchZkCheckPoint: Option[Array[OffsetRange]] =withMethdNameLogging { methodName =>
       val zkServers = zooKeeperDetails.host
       val zkNode = zooKeeperDetails.node
       if (zkServers.isEmpty) throw new ZooKeeperCheckPointerException("Expected CheckPoint Directory, but got Empty String !")

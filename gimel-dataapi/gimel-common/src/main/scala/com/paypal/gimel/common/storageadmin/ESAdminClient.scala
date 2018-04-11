@@ -32,10 +32,7 @@ object ESAdminClient extends Logger {
     *
     * @param url Delete ES Index
     */
-  def deleteIndex(url: String): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def deleteIndex(url: String): String = withMethdNameLogging { methodName =>
     info("delete index")
     info(url)
     try {

@@ -143,11 +143,7 @@ class GimelTestSuiteProperties(userProps: Map[String, String] = Map[String, Stri
     *
     * @return mutable.Map[String, String]
     */
-  private def getProps: mutable.Map[String, String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-     info(" @Begin --> " + MethodName)
-
+  private def getProps: mutable.Map[String, String] = withMethdNameLogging { methodName =>
     val props: Properties = new Properties()
     val configStream = this.getClass.getResourceAsStream(GimelConstants.GIMEL_PROPERTIES_FILE_NAME)
     props.load(configStream)

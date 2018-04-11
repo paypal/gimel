@@ -111,11 +111,7 @@ object KafkaUtilities extends Logger {
     *         , false if we need to switch to batch
     */
   def isStreamable(sparkSession: SparkSession, props: Map[String, String]
-                   , rowsInBatch: Map[Int, Map[String, String]] = defaultRowsPerBatch): Boolean = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+                   , rowsInBatch: Map[Int, Map[String, String]] = defaultRowsPerBatch): Boolean = withMethdNameLogging { methodName =>
     //    val dSet = com.paypal.gimel.DataSet(hiveContext)
     val dataSet = props(GimelConstants.DATASET)
     //    import com.paypal.gimel.DataSetUtils._
@@ -185,11 +181,7 @@ object KafkaUtilities extends Logger {
     */
 
   def inStreamCheckPoint(zkHost: String, zkNode: String
-                         , offsetRange: Array[OffsetRange]): Boolean = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+                         , offsetRange: Array[OffsetRange]): Boolean = withMethdNameLogging { methodName =>
     val zk = ZooKeeperHostAndNode(zkHost, zkNode)
     (zk, offsetRange).saveZkCheckPoint
   }
@@ -276,11 +268,7 @@ object KafkaUtilities extends Logger {
     * @return DataFrame
     */
   def wrappedStringDataToDF(columnAlias: String, sqlContext: SQLContext
-                            , wrappedData: RDD[WrappedData]): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+                            , wrappedData: RDD[WrappedData]): DataFrame = withMethdNameLogging { methodName =>
     info("Attempting to Convert Value in Wrapped Data to String Type")
     try {
       val rdd: RDD[(String, String)] = wrappedData.map { x =>
@@ -304,11 +292,7 @@ object KafkaUtilities extends Logger {
     * @param zkNode Zookeeper Path
     * @param msg    Some Message or A Reason for Clearing CheckPoint
     */
-  def clearCheckPoint(zkHost: String, zkNode: String, msg: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def clearCheckPoint(zkHost: String, zkNode: String, msg: String): Unit = withMethdNameLogging { methodName =>
     val zk = ZooKeeperHostAndNode(zkHost, zkNode)
     zk.deleteZkCheckPoint()
   }
@@ -322,11 +306,7 @@ object KafkaUtilities extends Logger {
     * @return Option[Array[OffsetRange]
     */
 
-  def getLastCheckPointFromZK(zkHost: String, zkNode: String): Option[Array[OffsetRange]] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def getLastCheckPointFromZK(zkHost: String, zkNode: String): Option[Array[OffsetRange]] = withMethdNameLogging { methodName =>
     try {
       val zk = ZooKeeperHostAndNode(zkHost, zkNode)
       val lastCheckPoint: Option[Array[OffsetRange]] = zk.fetchZkCheckPoint
@@ -801,11 +781,7 @@ object KafkaUtilities extends Logger {
     * @return DataFrame
     */
   def rddAsDF(sqlContext: SQLContext, messageColumnAlias: String
-              , rdd: RDD[(String, String)]): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+              , rdd: RDD[(String, String)]): DataFrame = withMethdNameLogging { methodName =>
     try {
       val dataIntermediate = sqlContext.createDataFrame(rdd)
         .withColumnRenamed("_2", "message").withColumnRenamed("_1", "key")
@@ -854,11 +830,7 @@ object KafkaUtilities extends Logger {
     * @param numberOfReplica       Number of Replicas
     */
   def createTopicIfNotExists(zookKeeperHostAndPort: String, kafkaTopicName: String
-                             , numberOfPartitions: Int, numberOfReplica: Int): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+                             , numberOfPartitions: Int, numberOfReplica: Int): Unit =withMethdNameLogging { methodName =>
     KafkaAdminClient.createTopicIfNotExists(
       zookKeeperHostAndPort
       , kafkaTopicName
@@ -873,11 +845,7 @@ object KafkaUtilities extends Logger {
     * @param zookKeeperHostAndPort Zookeeper Host & Port | Example localhost:2181
     * @param kafkaTopicName        Kafka Topic Name
     */
-  def deleteTopicIfExists(zookKeeperHostAndPort: String, kafkaTopicName: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def deleteTopicIfExists(zookKeeperHostAndPort: String, kafkaTopicName: String): Unit = withMethdNameLogging { methodName =>
     storageadmin.KafkaAdminClient.deleteTopicIfExists(
       zookKeeperHostAndPort
       , kafkaTopicName

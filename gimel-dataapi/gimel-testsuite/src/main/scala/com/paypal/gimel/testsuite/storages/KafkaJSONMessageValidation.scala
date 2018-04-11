@@ -28,6 +28,7 @@ import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.storageadmin
 import com.paypal.gimel.common.storageadmin.KafkaAdminClient
 import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
+import com.paypal.gimel.sql.GimelQueryProcessor.withMethdNameLogging
 import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 
 class KafkaJSONMessageValidation(dataset: DataSet, sparkSession: SparkSession, gimelProps: GimelTestSuiteProperties)
@@ -41,10 +42,7 @@ class KafkaJSONMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
   /**
     * Creates Kafka Hive Table for Data API
     */
-  private def bootStrapKafkaHive(): Unit = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapKafkaHive(): Unit = withMethdNameLogging { methodName =>
     try {
       cleanUpKafkaHive()
       val hiveTableDDL =
@@ -74,11 +72,11 @@ class KafkaJSONMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
       info(s"DDLS -> $hiveTableDDL")
       sparkSession.sql(hiveTableDDL)
 
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_CDH_kafka" -> hiveTableDDL)
     }
     catch {
-      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${MethodName}")
+      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -87,10 +85,7 @@ class KafkaJSONMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapKafka() = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapKafka() = withMethdNameLogging { methodName =>
     try {
       KafkaAdminClient.deleteTopicIfExists(
         gimelProps.zkHostAndPort
@@ -102,10 +97,10 @@ class KafkaJSONMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
         , 1
         , 1
       )
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     }
     catch {
-      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${MethodName}")
+      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats)
   }
@@ -115,10 +110,7 @@ class KafkaJSONMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
     *
     * @return A Tuple of (DDL , STATS)
     */
-  override def bootStrap(): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  override def bootStrap(): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     bootStrapKafka()
     bootStrapKafkaHive()
     (ddls, stats)
@@ -129,10 +121,7 @@ class KafkaJSONMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
     *
     * @return (DDL, STATS) - both are Map[String,String]
     */
-  override def cleanUp(): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  override def cleanUp(): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     cleanUpKafka()
     cleanUpKafkaHive()
     (ddls, stats)
@@ -141,38 +130,32 @@ class KafkaJSONMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
   /**
     * Drops Kafka Topic Creates for Smoke Test Purpose
     */
-  private def cleanUpKafka() = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpKafka() = withMethdNameLogging { methodName =>
     try {
       storageadmin.KafkaAdminClient.deleteTopicIfExists(
         gimelProps.zkHostAndPort
         , topicName
       )
 
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     }
     catch {
-      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${MethodName}")
+      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
   /**
     * Drops Kafka Hive Table Created to Test Data API - Read and Write
     */
-  private def cleanUpKafkaHive() = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpKafkaHive() = withMethdNameLogging { methodName =>
     try {
       val dropTableStatement = s"drop table if exists ${dataSetName}"
       sparkSession.sql(dropTableStatement)
       ddls += ("kafka_hive_ddl_drop" -> dropTableStatement)
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     }
     catch {
-      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${MethodName}")
+      case ex: Throwable => handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -182,12 +165,9 @@ class KafkaJSONMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
     * @param testData DataFrame (Optional)
     * @return @return A Tuple of (DDL , STATS, Optional[DataFrame])
     */
-  override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"${MethodName}-${storage}"
+    val tag = s"${methodName}-${storage}"
     try {
       val testDataDF: DataFrame = prepareSmokeTestData(gimelProps.smokeTestSampleRowsCount.toInt)
       val dataSet = dataSetName
@@ -206,7 +186,7 @@ class KafkaJSONMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
     catch {
       case ex: Throwable => {
         stats += (s"${tag}" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method ${MethodName}")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
       }
     }
     (ddls, stats, testData)

@@ -50,11 +50,7 @@ object SparkAvroUtilities extends Logger {
     * @return RDD[GenericRecord]
     */
 
-  def dataFrametoGenericRecord(dataFrame: DataFrame, avroSchemaString: String): RDD[GenericRecord] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def dataFrametoGenericRecord(dataFrame: DataFrame, avroSchemaString: String): RDD[GenericRecord] = withMethdNameLogging { methodName =>
     try {
       if (!isDFFieldsEqualAvroFields(dataFrame, avroSchemaString)) {
         throw new SparkAvroConversionException(s"Incompatible DataFrame Schema Vs Provided Avro Schema.")
@@ -96,10 +92,7 @@ object SparkAvroUtilities extends Logger {
     * @return DataFrame
     */
 
-  def genericRecordToDFViaAvroSQLConvertor(sqlContext: SQLContext, genericRecRDD: RDD[GenericRecord], schemaString: String): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def genericRecordToDFViaAvroSQLConvertor(sqlContext: SQLContext, genericRecRDD: RDD[GenericRecord], schemaString: String): DataFrame = withMethdNameLogging { methodName =>
     import com.databricks.spark.avro.SchemaConverters._
     try {
       val rowRDD: RDD[Row] = genericRecRDD.map { x =>
@@ -126,11 +119,7 @@ object SparkAvroUtilities extends Logger {
     * @param avroSchemaString Avro Schema String
     * @return Boolean
     */
-  def isDFFieldsEqualAvroFields(dataFrame: DataFrame, avroSchemaString: String): Boolean = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def isDFFieldsEqualAvroFields(dataFrame: DataFrame, avroSchemaString: String): Boolean = withMethdNameLogging { methodName =>
     try {
       val dfFields = dataFrame.schema.fieldNames
       val avroSchema = (new Schema.Parser).parse(avroSchemaString)
@@ -288,11 +277,7 @@ object SparkAvroUtilities extends Logger {
     * @param schemaString  The AVRO schema String
     * @return DataFrame
     */
-  def genericRecordToDataFrameViaJSON(sqlContext: SQLContext, genericRecRDD: RDD[GenericRecord], schemaString: String): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def genericRecordToDataFrameViaJSON(sqlContext: SQLContext, genericRecRDD: RDD[GenericRecord], schemaString: String): DataFrame = withMethdNameLogging { methodName =>
     try {
       val avroSchema: Schema = (new Schema.Parser).parse(schemaString)
       val fields: Seq[String] = avroSchema.getFields.asScala.map { x => x.name() }.toArray.toSeq

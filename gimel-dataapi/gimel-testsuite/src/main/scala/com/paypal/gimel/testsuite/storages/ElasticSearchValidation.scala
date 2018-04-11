@@ -62,20 +62,16 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, gime
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def cleanUpESHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpESHive() = withMethdNameLogging { methodName =>
     try {
       val dropDDL = s"drop table if exists $dataSetName"
       sparkSession.sql(dropDDL)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("ES_Drop_Table" -> dropDDL)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -84,20 +80,17 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, gime
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def cleanUpES(url: String) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def cleanUpES(url: String) = withMethdNameLogging { methodName =>
     info("delete index")
     info(url)
     try {
       val output = storageadmin.ESAdminClient.deleteIndex(url)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("ES_Index Dropped_Status" -> output)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -106,11 +99,7 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, gime
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapES() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapES() = withMethdNameLogging { methodName =>
     try {
       val typeName = gimelProps.tagToAdd.replace("_", "")
       val esDDL =
@@ -137,12 +126,12 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, gime
 
       deployDDL(esDDL)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_es" -> esDDL)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 

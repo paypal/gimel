@@ -130,10 +130,7 @@ class HBaseUtilities(sparkSession: SparkSession) extends Logger {
     * @param dataDrame DataFrame to cast all columns to string format.
     * @return Dataframe with all string data.
     */
-  private def castAllColsToString(dataDrame: DataFrame): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def castAllColsToString(dataDrame: DataFrame): DataFrame = withMethdNameLogging { methodName =>
 
     info("Casting All Columns as String")
     val k = dataDrame.schema.fieldNames.foldRight(dataDrame) {

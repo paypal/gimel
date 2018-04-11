@@ -74,11 +74,7 @@ class GimelProperties(userProps: Map[String, String] = Map[String, String]()) ex
     *
     * @return mutable.Map[String, String]
     */
-  private def getProps: mutable.Map[String, String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def getProps: mutable.Map[String, String] = withMethdNameLogging { methodName =>
     val props: Properties = new Properties()
     userProps.contains(GimelConstants.GIMEL_PROPERTIES_FILE_KEY) match {
       case true =>

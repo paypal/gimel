@@ -51,10 +51,7 @@ class HiveJDBCUtils(val props: GimelProperties, cluster: String = "unknown_clust
     * @param fn to be executed with connection.
     * @return
     */
-  def withConnection(fn: Connection => Any): Any = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def withConnection(fn: Connection => Any): Any = withMethdNameLogging { methodName =>
     info("Trying to create hive connection")
     val connection = ugi.doAs(new PrivilegedAction[Connection] {
       override def run(): Connection = DriverManager.getConnection(props.hiveURL(cluster))
@@ -82,10 +79,7 @@ class HiveJDBCUtils(val props: GimelProperties, cluster: String = "unknown_clust
     * @param fn to be executed with connection.
     * @return
     */
-  def withStatement(fn: Statement => Any): Any = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def withStatement(fn: Statement => Any): Any = withMethdNameLogging { methodName =>
     withConnection {
       connection =>
         val statement = connection.createStatement

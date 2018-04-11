@@ -71,13 +71,10 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def benchmarkHBase() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def benchmarkHBase() = withMethdNameLogging { methodName =>
 
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"$MethodName-$storage"
+    val tag = s"$methodName-$storage"
 
     try {
       val testDataCount = testData.count()
@@ -95,7 +92,7 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
     } catch {
       case ex: Throwable =>
         stats += (s"$tag" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method $methodName")
     }
     (ddls, stats)
   }
@@ -106,11 +103,7 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapHBase() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapHBase() = withMethdNameLogging { methodName =>
     try {
       cleanUpHBase()
       HBaseAdminClient.createHbaseTableIfNotExists(
@@ -125,11 +118,11 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
         , pcatProps.benchMarkTestHBASETableColumnFamily
         , pcatProps.benchMarkTestHBASESiteXMLHDFS
       )
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -138,11 +131,7 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapHBaseHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapHBaseHive() = withMethdNameLogging { methodName =>
     try {
       val hbaseNameSpace: String = pcatProps.hbaseNameSpace
       val hbaseTableName_Dataset: String = pcatProps.benchMarkTestHBASETable_Dataset
@@ -162,13 +151,13 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
       sparkSession.sql(hbaseDDL_Dataset)
       sparkSession.sql(hbaseDDL_Native)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_hbase_Dataset" -> hbaseDDL_Dataset)
       ddls += ("DDL_hbase_Native" -> hbaseDDL_Native)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -177,11 +166,7 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def cleanUpHBase() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpHBase() = withMethdNameLogging { methodName =>
     try {
       info("Dropping HBASE table --> ")
       storageadmin.HBaseAdminClient.deleteHbaseTable(
@@ -194,11 +179,11 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
         , pcatProps.benchMarkTestHBASETable_Native
         , pcatProps.benchMarkTestHBASESiteXMLHDFS
       )
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"$methodName" -> s"Success @ ${Calendar.getInstance.getTime}")
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method $methodName")
     }
   }
 
@@ -208,13 +193,9 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
     * @return A Tuple of (DDL , STATS)
     */
 
-  def benchmarkNativeHbaseAPI(testDataOption: Option[DataFrame] = None): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def benchmarkNativeHbaseAPI(testDataOption: Option[DataFrame] = None): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"$MethodName-$storage"
+    val tag = s"$methodName-$storage"
     val datasetReadApiKey = s"$tag-" + "Read"
     val datasetWriteApiKey = s"$tag-" + "Write"
     var resultsAPIData: Map[String, String] = Map()
@@ -258,7 +239,7 @@ class HBaseValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: 
     } catch {
       case ex: Throwable =>
         stats += (s"$tag" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method $methodName")
     }
     (ddls, stats)
   }

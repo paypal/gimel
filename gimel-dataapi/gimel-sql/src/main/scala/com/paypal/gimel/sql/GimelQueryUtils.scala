@@ -159,10 +159,7 @@ object GimelQueryUtils extends Logger {
     * @return DataFrame
     */
 
-  def executePushdownQuery(selectSQL: String, sparkSession: SparkSession): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    info(" @Begin --> " + MethodName)
-
+  def executePushdownQuery(selectSQL: String, sparkSession: SparkSession): DataFrame = withMethdNameLogging { methodName =>
     val authUtilities: JDBCAuthUtilities = JDBCAuthUtilities(sparkSession)
     val usernameConf: Map[String, String] = sparkSession.conf.getAll.contains(JdbcConstants.jdbcUserName) match {
       case true => Map(JdbcConstants.jdbcUserName -> sparkSession.conf.get(JdbcConstants.jdbcUserName))
@@ -203,11 +200,7 @@ object GimelQueryUtils extends Logger {
     * @param dataSet      Dataset Object
     * @return Tuple of (Resolved Original SQL, Resolved Select SQL, List of (KafkaDataSet)
     */
-  def resolveSQLWithTmpTables(originalSQL: String, selectSQL: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, String, List[com.paypal.gimel.kafka.DataSet]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def resolveSQLWithTmpTables(originalSQL: String, selectSQL: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, String, List[com.paypal.gimel.kafka.DataSet]) = withMethdNameLogging { methodName =>
     var kafkaDataSets: List[com.paypal.gimel.kafka.DataSet] = List()
     var sqlTmpString = selectSQL
     var sqlOriginalString = originalSQL
@@ -217,7 +210,7 @@ object GimelQueryUtils extends Logger {
         val df = dataSet.read(eachSource, options)
         cacheIfRequested(df, eachSource, options)
         if (dataSet.latestKafkaDataSetReader.isDefined) {
-          info(s"@$MethodName | Added Kafka Reader for Source --> $eachSource")
+          info(s"@${methodName} | Added Kafka Reader for Source --> $eachSource")
           kafkaDataSets = kafkaDataSets ++ List(dataSet.latestKafkaDataSetReader.get)
         }
         val tabNames = eachSource.split("\\.")
@@ -262,11 +255,7 @@ object GimelQueryUtils extends Logger {
     * @param sql SQL String
     * @return true - if there is an "insert" clause, else false
     */
-  def isHavingInsert(sql: String): Boolean = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def isHavingInsert(sql: String): Boolean = withMethdNameLogging { methodName =>
     val uniformSQL = sql.replace("\n", " ")
     uniformSQL.toUpperCase().contains("INSERT")
   }
@@ -277,11 +266,7 @@ object GimelQueryUtils extends Logger {
     * @param sql SQL String
     * @return SQL String - that has just the select clause
     */
-  def getSelectClause(sql: String): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def getSelectClause(sql: String): String = withMethdNameLogging { methodName =>
     val uniformSQL = sql.replace("\n", " ")
     val sqlParts: Array[String] = uniformSQL.split(" ")
     val selectClauseOnly = if (isHavingInsert(sql)) {
@@ -299,11 +284,7 @@ object GimelQueryUtils extends Logger {
     * @param sql SQL String
     * @return Table Name
     */
-  def getTargetTables(sql: String): Option[String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def getTargetTables(sql: String): Option[String] = withMethdNameLogging { methodName =>
     SQLParser.getTargetTables(sql)
   }
 
@@ -314,11 +295,7 @@ object GimelQueryUtils extends Logger {
     * @return Tuple ( String with concatenated options read from the SparkSession , Same Props as a Map[String, String] )
     */
 
-  def getOptions(sparkSession: SparkSession): (String, Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def getOptions(sparkSession: SparkSession): (String, Map[String, String]) = withMethdNameLogging { methodName =>
     val hiveConf: Map[String, String] = sparkSession.conf.getAll
     val optionsToCheck: Map[String, String] = Map(
       KafkaConfigs.rowCountOnFirstRunKey -> "250"
@@ -380,11 +357,7 @@ object GimelQueryUtils extends Logger {
     * @param dataset      DataSet
     * @return Result String
     */
-  def executeResolvedQuery(clientSQL: String, dest: Option[String], selectSQL: String, sparkSession: SparkSession, dataset: com.paypal.gimel.DataSet): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def executeResolvedQuery(clientSQL: String, dest: Option[String], selectSQL: String, sparkSession: SparkSession, dataset: com.paypal.gimel.DataSet): String = withMethdNameLogging { methodName =>
     info(s"Client SQL is --> $clientSQL")
     info(s"Select SQL is --> $selectSQL")
     var resultString = ""
@@ -404,7 +377,7 @@ object GimelQueryUtils extends Logger {
         case Failure(e) =>
           e.printStackTrace()
           resultString =
-            s"""Query Failed in function : $MethodName via path dataset.write. Error -->
+            s"""Query Failed in function : ${methodName} via path dataset.write. Error -->
                 |
                |${e.getStackTraceString}""".stripMargin
           error(resultString)
@@ -453,11 +426,7 @@ object GimelQueryUtils extends Logger {
     * @param dataset      DataSet
     * @return RDD[Result JSON String]
     */
-  //  def executeResolvedQuerySparkMagic(clientSQL: String, dest: Option[String], selectSQL: String, hiveContext: HiveContext, dataset: DataSet): RDD[String] = {
-  //    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-  //
-  //    info(" @Begin --> " + MethodName)
-  //
+  //  def executeResolvedQuerySparkMagic(clientSQL: String, dest: Option[String], selectSQL: String, hiveContext: HiveContext, dataset: DataSet): RDD[String] = withMethdNameLogging { methodName =>
   //    info(s"Client SQL is --> $clientSQL")
   //    info(s"Select SQL is --> $selectSQL")
   //    silence
@@ -465,11 +434,7 @@ object GimelQueryUtils extends Logger {
   //    selectDF.toJSON
   //  }
 
-  def executeResolvedQuerySparkMagic(clientSQL: String, dest: Option[String], selectSQL: String, sparkSession: SparkSession, dataset: com.paypal.gimel.DataSet): RDD[String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def executeResolvedQuerySparkMagic(clientSQL: String, dest: Option[String], selectSQL: String, sparkSession: SparkSession, dataset: com.paypal.gimel.DataSet): RDD[String] = withMethdNameLogging { methodName =>
     info(s"Client SQL is --> $clientSQL")
     info(s"Select SQL is --> $selectSQL")
     var resultString = ""
@@ -534,11 +499,7 @@ object GimelQueryUtils extends Logger {
     * @param dataSet      DataSet
     * @return Tuple ( Target Table, select SQL String, List(KafkaDataSet)  )
     */
-  def resolveSQL(sql: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, Option[String], String, List[com.paypal.gimel.kafka.DataSet]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info("@Begin --> " + MethodName)
-
+  def resolveSQL(sql: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, Option[String], String, List[com.paypal.gimel.kafka.DataSet]) = withMethdNameLogging { methodName =>
     info(s"incoming SQL --> $sql")
     val uniformSQL = sql.replace("\n", " ")
     val selectClauseOnly = getSelectClause(uniformSQL)

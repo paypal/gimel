@@ -72,13 +72,9 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: S
     * @return A Tuple of (DDL , STATS)
     */
 
-  private def benchmarkHive = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def benchmarkHive =withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"${MethodName}-${storage}"
+    val tag = s"${methodName}-${storage}"
 
     try {
       val testDataCount = testData.count()
@@ -96,7 +92,7 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: S
     } catch {
       case ex: Throwable =>
         stats += (s"${tag}" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method ${MethodName}")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats)
   }
@@ -107,24 +103,20 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: S
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def cleanUpHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpHive() = withMethdNameLogging { methodName =>
     try {
       val dropTableDDL_Native = s"drop table if exists ${pcatProps.benchMarkTestHiveDB}.${pcatProps.benchMarkTestHiveTable_NativeAPI}"
       val deleteHDFSStmt_Native = s"dfs -rm -r -f /tmp/${pcatProps.benchMarkTestHiveTable_NativeAPI}"
       sparkSession.sql(dropTableDDL_Native)
       sparkSession.sql(deleteHDFSStmt_Native)
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("Hive_Table_Drop_DDL_Native" -> dropTableDDL_Native)
       ddls += ("Hive_Table_Delete_HDFS_Native" -> deleteHDFSStmt_Native)
       val dropTableDDL_Dataset = s"drop table if exists ${pcatProps.benchMarkTestHiveDB}.${pcatProps.benchMarkTestHiveTable_DatasetAPI}"
       val deleteHDFSStmt_Dataset = s"dfs -rm -r -f /tmp/${pcatProps.benchMarkTestHiveTable_DatasetAPI}"
       sparkSession.sql(dropTableDDL_Dataset)
       sparkSession.sql(deleteHDFSStmt_Dataset)
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("Hive_Table_Drop_DDL" -> dropTableDDL_Dataset)
       ddls += ("Hive_Table_Delete_HDFS" -> deleteHDFSStmt_Dataset)
 
@@ -138,7 +130,7 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: S
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method ${MethodName}")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -147,11 +139,7 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: S
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapHive() = withMethdNameLogging { methodName =>
     try {
       val sampleDF = testData.limit(10)
       val columnSet: Array[String] = sampleDF.columns
@@ -163,7 +151,7 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: S
         , columnSet)
       sparkSession.sql(hiveDDL_Native)
 
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_hive_Native" -> hiveDDL_Native)
       val hiveDDL_Datset = HiveSchemaUtils.generateTableDDL("external"
         , pcatProps.benchMarkTestHiveDB
@@ -173,12 +161,12 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: S
         , columnSet)
       sparkSession.sql(hiveDDL_Datset)
 
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_hive_Dataset" -> hiveDDL_Datset)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method ${MethodName}")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -188,13 +176,9 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: S
     * @return A Tuple of (DDL , STATS)
     */
 
-  def benchmarkNativeHiveAPI(testDataOption: Option[DataFrame] = None): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def benchmarkNativeHiveAPI(testDataOption: Option[DataFrame] = None): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"${MethodName}-${storage}"
+    val tag = s"${methodName}-${storage}"
     val NativeReadApiKey = s"${tag}-" + "Read"
     val NativeWriteApiKey = s"${tag}-" + "Write"
     var resultsAPIData: Map[String, String] = Map()
@@ -234,7 +218,7 @@ class HiveValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: S
     } catch {
       case ex: Throwable =>
         stats += (s"${tag}" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method ${MethodName}")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats)
   }

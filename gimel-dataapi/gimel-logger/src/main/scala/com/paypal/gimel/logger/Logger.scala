@@ -294,4 +294,12 @@ trait Logger extends Serializable {
     accessAuditInfo
   }
 
+  def withMethdNameLogging[T](fn: String => T ): T = {
+    val methodName: String = new Exception().getStackTrace.drop(2).head.getMethodName
+    info(" @Begin --> " + methodName)
+    val t = fn(methodName)
+    info(" @End --> " + methodName)
+    t
+  }
+
 }

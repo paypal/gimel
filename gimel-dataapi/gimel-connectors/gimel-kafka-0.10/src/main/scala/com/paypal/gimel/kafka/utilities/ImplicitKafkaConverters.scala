@@ -132,11 +132,7 @@ object ImplicitKafkaConverters extends Logger {
       * @example val testing: Array[TopicAndPartition] = ("localhost:8080,localhost:8081", "test").toTopicAndPartitions
       * @return Array[TopicAndPartition]
       */
-    def toTopicAndPartitions: Array[TopicAndPartition] = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      info(" @Begin --> " + MethodName)
-
+    def toTopicAndPartitions: Array[TopicAndPartition] =withMethdNameLogging { methodName =>
       val kafkaBrokers = kafka.client.ClientUtils.parseBrokerList(brokersAndTopic.brokers)
       val kafkaTopics: Set[String] = brokersAndTopic.topic.split(",").toSet
       val offsetMetadata: TopicMetadataResponse = kafka.client.ClientUtils.fetchTopicMetadata(kafkaTopics, kafkaBrokers, clientID.toString, 1000000, 0)
@@ -154,11 +150,7 @@ object ImplicitKafkaConverters extends Logger {
       * @return Array[OffsetRange]
       *
       */
-    def toKafkaOffsetsPerPartition: Array[OffsetRange] = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      info(" @Begin --> " + MethodName)
-
+    def toKafkaOffsetsPerPartition: Array[OffsetRange] = withMethdNameLogging { methodName =>
       val topicAndPartitions: Array[TopicAndPartition] = brokersAndTopic.toTopicAndPartitions
       info("The Topic And Partitions are --> ")
       topicAndPartitions.foreach(println)
@@ -178,11 +170,7 @@ object ImplicitKafkaConverters extends Logger {
       * @param topicAndPartition Kafka TopicAndPartition
       * @return Tuple(host, port)
       */
-    private def findLeader(topicAndPartition: TopicAndPartition): (String, Int) = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      info(" @Begin --> " + MethodName)
-
+    private def findLeader(topicAndPartition: TopicAndPartition): (String, Int) =withMethdNameLogging { methodName =>
       val topicMetadataRequest = TopicMetadataRequest(0, 111, clientID.toString, Seq(topicAndPartition.topic))
       val consumer = new kafka.consumer.SimpleConsumer(host1, port1, 10000, Int.MaxValue, clientID.toString)
       val k11: TopicMetadataResponse = consumer.send(topicMetadataRequest)
@@ -206,11 +194,7 @@ object ImplicitKafkaConverters extends Logger {
       * @return Array[OffsetRange]
       * @example (Array(OffsetRange("a", 0, 1, 1), OffsetRange("a", 1, 2, 100)) ,Array( OffsetRange("a", 1, 2, 100),OffsetRange("a", 0, 1, 100))).toNewOffsetRange
       */
-    def toNewOffsetRanges: Array[OffsetRange] = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      info(" @Begin --> " + MethodName)
-
+    def toNewOffsetRanges: Array[OffsetRange] = withMethdNameLogging { methodName =>
       val sortedLeft = offsetRangePairs._1.sortBy(offsetRange => offsetRange.partition)
       val sortedRight = offsetRangePairs._2.sortBy(offsetRange => offsetRange.partition)
       val combinedAfterSort = sortedLeft.zip(sortedRight)
@@ -244,11 +228,7 @@ object ImplicitKafkaConverters extends Logger {
       * @return Array[OffsetRange]
       *
       */
-    def applyThresholdPerPartition(maxPerPartition: Long): Array[OffsetRange] = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      info(" @Begin --> " + MethodName)
-
+    def applyThresholdPerPartition(maxPerPartition: Long): Array[OffsetRange] = withMethdNameLogging { methodName =>
       offsetRanges.map {
         eachOffsetRange =>
           val fromOffset = eachOffsetRange.fromOffset
@@ -265,11 +245,7 @@ object ImplicitKafkaConverters extends Logger {
       * @param parallelism Number of parallel shards
       * @return Array[OffsetRange]
       */
-    def parallelizeOffsetRanges(parallelism: Int, minRowsPerParallel: Long): Array[OffsetRange] = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      info(" @Begin --> " + MethodName)
-
+    def parallelizeOffsetRanges(parallelism: Int, minRowsPerParallel: Long): Array[OffsetRange] = withMethdNameLogging { methodName =>
       val returningRanges = offsetRanges.flatMap(erange => parallelizeOffsetRange(erange, parallelism, minRowsPerParallel))
       info("Outgoing Array of OffsetRanges --> ")
       returningRanges.foreach(println)
@@ -277,10 +253,7 @@ object ImplicitKafkaConverters extends Logger {
     }
 
     // parallelizeOffsetRange(OffsetRange("a", 1, 1, 20), 3)
-    private def parallelizeOffsetRange(eachRange: OffsetRange, parallel: Int, minRowsPerParallel: Long): Array[OffsetRange] = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      info(" @Begin --> " + MethodName)
+    private def parallelizeOffsetRange(eachRange: OffsetRange, parallel: Int, minRowsPerParallel: Long): Array[OffsetRange] = withMethdNameLogging { methodName =>
 
       val total = eachRange.untilOffset - eachRange.fromOffset
       if ((total > minRowsPerParallel)) {

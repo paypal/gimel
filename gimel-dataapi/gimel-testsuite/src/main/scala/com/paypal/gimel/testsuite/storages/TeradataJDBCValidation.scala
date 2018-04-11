@@ -62,10 +62,7 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapTeradata() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def bootStrapTeradata() = withMethdNameLogging { methodName =>
     JDBCAdminClient.createTeradataTableIfNotExists(teradataURL, username, password, teradataTable)
   }
 
@@ -74,10 +71,7 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapTeradataHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def bootStrapTeradataHive() = withMethdNameLogging { methodName =>
     try {
       cleanUpTeradataHive()
       val hiveTableDDL =
@@ -101,12 +95,12 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
       info(s"DDLS -> $hiveTableDDL")
       deployDDL(hiveTableDDL)
       ddls += ("teradata_hive_ddl" -> hiveTableDDL)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       (ddls, stats)
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -115,19 +109,13 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
     *
     * @return A Tuple of (DDL , STATS)
     */
-  override def cleanUp(): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    info(" @Begin --> " + MethodName)
-
+  override def cleanUp(): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     cleanUpTeradata
     cleanUpTeradataHive()
     (ddls, stats)
   }
 
-  private def cleanUpTeradata = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def cleanUpTeradata = withMethdNameLogging { methodName =>
     JDBCAdminClient.dropTeradataTableIfExists(teradataURL, username, password, teradataTable)
 
   }
@@ -137,19 +125,16 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def cleanUpTeradataHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def cleanUpTeradataHive() = withMethdNameLogging { methodName =>
     try {
       val dropTableStatement = s"DROP TABLE IF EXISTS $dataSetName"
       sparkSession.sql(dropTableStatement)
       ddls += ("teradata_hive_ddl_drop" -> dropTableStatement)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -159,12 +144,9 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
     * @param testData DataFrame (Optional)
     * @return @return A Tuple of (DDL , STATS, Optional[DataFrame])
     */
-  override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"$MethodName-$storage"
+    val tag = s"${methodName}-$storage"
     try {
       val testData = prepareSmokeTestData(gimelProps.smokeTestSampleRowsCount.toInt)
       val dataSet = dataSetName
@@ -189,7 +171,7 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
     } catch {
       case ex: Throwable =>
         stats += (s"$tag" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats, testData)
   }

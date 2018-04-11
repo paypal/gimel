@@ -44,11 +44,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     *
     * @return A Tuple of (DDL , STATS)
     */
-  override def cleanUp(): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  override def cleanUp(): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     cleanUpHBase()
     cleanUpHBaseHive()
     (ddls, stats)
@@ -69,11 +65,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapHBase() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapHBase() = withMethdNameLogging { methodName =>
     try {
       // cleanUpHBase()
       HBaseAdminClient.createHbaseTableIfNotExists(
@@ -82,11 +74,11 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
         , gimelProps.smokeTestHBASETableColumnFamily.split(",")
         , gimelProps.smokeTestHBASESiteXMLHDFS
       )
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -96,11 +88,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     * @param numberOfRows Total Number of Sample Rows to Prep
     * @return DataFrame
     */
-  override def prepareSmokeTestData(numberOfRows: Int = 1000): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  override def prepareSmokeTestData(numberOfRows: Int = 1000): DataFrame = withMethdNameLogging { methodName =>
     try {
       def stringed(n: Int) = s"""{"id": $n,"name": "MAC-$n", "address": "MAC-${n + 1}", "age": "${n + 1}", "company": "MAC-$n", "designation": "MAC-$n", "salary": "${n * 10000}" }"""
 
@@ -108,11 +96,11 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
       val rdd: RDD[String] = sparkSession.sparkContext.parallelize(texts)
       val dataFrameToWrite: DataFrame = sparkSession.read.json(rdd)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       dataFrameToWrite
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -121,11 +109,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapHBaseHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapHBaseHive() = withMethdNameLogging { methodName =>
     try {
       val hbaseNameSpace: String = gimelProps.hbaseNameSpace
       val hbaseTableName: String = gimelProps.smokeTestHBASETable
@@ -141,12 +125,12 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
 
       deployDDL(hbaseDDL)
 
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_hbase" -> hbaseDDL)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -156,13 +140,9 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     * @param testData DataFrame (Optional)
     * @return @return A Tuple of (DDL , STATS, Optional[DataFrame])
     */
-  override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  override def validateAPI(testData: Option[DataFrame] = None): (Map[String, String], Map[String, String], Option[DataFrame]) = withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"$MethodName-$storage"
+    val tag = s"${methodName}-$storage"
     try {
       val testData = prepareSmokeTestData(gimelProps.smokeTestSampleRowsCount.toInt)
       val dataSet = dataSetName
@@ -213,7 +193,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     } catch {
       case ex: Throwable =>
         stats += (s"$tag" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats, testData)
   }
@@ -223,11 +203,7 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def cleanUpHBase() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpHBase() = withMethdNameLogging { methodName =>
     try {
       info("Dropping HBASE table --> ")
       storageadmin.HBaseAdminClient.deleteHbaseTable(
@@ -235,30 +211,26 @@ class HBaseLookUpValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
         , gimelProps.smokeTestHBASETable
         , gimelProps.smokeTestHBASESiteXMLHDFS
       )
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
   /**
     * Drops HBase Hive Table Created to Test Data API - Read and Write
     */
-  private def cleanUpHBaseHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpHBaseHive() = withMethdNameLogging { methodName =>
     try {
       val dropTableStatement = s"drop table if exists $dataSetName"
       sparkSession.sql(dropTableStatement)
       ddls += ("hbase_hive_ddl_drop" -> dropTableStatement)
-      stats += (s"$MethodName" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method $MethodName")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 

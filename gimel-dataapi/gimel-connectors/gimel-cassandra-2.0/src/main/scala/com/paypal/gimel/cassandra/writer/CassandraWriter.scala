@@ -36,11 +36,7 @@ object CassandraWriter extends Logger {
     * @param dataFrame    DataFrame
     * @return DataFrame
     */
-  def writeToTable(sparkSession: SparkSession, conf: CassandraClientConfiguration, dataFrame: DataFrame): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def writeToTable(sparkSession: SparkSession, conf: CassandraClientConfiguration, dataFrame: DataFrame): DataFrame = withMethdNameLogging { methodName =>
     sparkSession.setCassandraConf(conf.cassandraCluster, CassandraConnectorConf.ConnectionHostParam.option(conf.cassandraHosts))
     sparkSession.setCassandraConf(CassandraConnectorConf.KeepAliveMillisParam.option(conf.cassandraSparkTtl))
 

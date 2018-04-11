@@ -40,11 +40,7 @@ object DruidRealtimeWriter extends DruidWriter {
     * @return Dataframe
     */
   def writeToTable(sparkSession: SparkSession,
-                   conf: DruidClientConfiguration, dataFrame: DataFrame): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+                   conf: DruidClientConfiguration, dataFrame: DataFrame): DataFrame = withMethdNameLogging { methodName =>
     // Convert to RDD of Map[String, String]
     val eventsRDD: RDD[Map[String, Any]] = dataFrame.rdd
       .map(row => {
@@ -80,11 +76,7 @@ object DruidRealtimeWriter extends DruidWriter {
     */
   def writeToTable(sparkSession: SparkSession,
                    conf: DruidClientConfiguration,
-                   rdd: RDD[Map[String, Any]]): RDD[Map[String, Any]] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+                   rdd: RDD[Map[String, Any]]): RDD[Map[String, Any]] = withMethdNameLogging { methodName =>
     // Convert to RDD of Map[String, String]
     val eventsRDD: RDD[Map[String, Any]] = rdd
       .map(rowMap => {

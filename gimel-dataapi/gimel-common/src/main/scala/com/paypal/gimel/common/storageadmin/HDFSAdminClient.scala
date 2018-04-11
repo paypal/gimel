@@ -39,10 +39,7 @@ object HDFSAdminClient extends Logger {
     * @param path      Fully Qualified Path of the File to Write data into
     * @param recursive true - delete path recursively, false - delete just the provided path
     */
-  def deletePath(path: String, recursive: Boolean): AnyVal = {
-    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    info(" @Begin --> " + MethodName)
-
+  def deletePath(path: String, recursive: Boolean): AnyVal = withMethdNameLogging { methodName =>
     try {
       val conf = new org.apache.hadoop.conf.Configuration()
       val fs = FileSystem.get(conf)
@@ -67,11 +64,7 @@ object HDFSAdminClient extends Logger {
     * @param path    Fully Qualified Path of the File to Write data into
     * @param toWrite Content to Write
     */
-  def writeHDFSFile(path: String, toWrite: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(s" @Begin -->  + $MethodName")
-
+  def writeHDFSFile(path: String, toWrite: String): Unit = withMethdNameLogging { methodName =>
     try {
       if (toWrite.isEmpty) {
         throw new Exception(s"Provided Content to Write into $path is empty!")
@@ -97,10 +90,7 @@ object HDFSAdminClient extends Logger {
     * @param path Fully Qualified Path of the File to Read
     * @return Content of the File
     */
-  def readHDFSFile(path: String): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(s" @Begin -->  + $MethodName")
+  def readHDFSFile(path: String): String = withMethdNameLogging { methodName =>
     try {
       val conf = new org.apache.hadoop.conf.Configuration()
       val fs = FileSystem.get(conf)
@@ -132,10 +122,7 @@ object HDFSAdminClient extends Logger {
     * @param path Fully Qualified Path of the File to Read
     * @return Content of the File
     */
-  def standaloneHDFSRead(path: String, principal: String, keyTabPath: String): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(s" @Begin -->  + $MethodName")
+  def standaloneHDFSRead(path: String, principal: String, keyTabPath: String): String =withMethdNameLogging { methodName =>
     try {
       val conf = new org.apache.hadoop.conf.Configuration()
       val hdfsPath = new Path(path)

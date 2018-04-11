@@ -79,13 +79,9 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def benchmarkES() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def benchmarkES() = withMethdNameLogging{ methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"${MethodName}-${storage}"
+    val tag = s"${methodName}-${storage}"
 
     try {
       val testDataCount = testData.count()
@@ -103,7 +99,7 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
     } catch {
       case ex: Throwable =>
         stats += (s"${tag}" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method ${MethodName}")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats)
   }
@@ -114,20 +110,16 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def cleanUpESHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def cleanUpESHive() = withMethdNameLogging{ methodName =>
     try {
       val dropDDL = s"drop table if exists ${dataSetName}"
       sparkSession.sql(dropDDL)
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("ES_Drop_Table" -> dropDDL)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method ${MethodName}")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -136,20 +128,17 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def cleanUpES(url: String) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  private def cleanUpES(url: String) = withMethdNameLogging{ methodName =>
     info("delete index")
     info(url)
     try {
       val output = storageadmin.ESAdminClient.deleteIndex(url)
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("ES_Index Dropped_Status" -> output)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method ${MethodName}")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -159,11 +148,7 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
     *
     * @return A Tuple of (DDL , STATS)
     */
-  private def bootStrapESHive() = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  private def bootStrapESHive() = withMethdNameLogging { methodName =>
     try {
       val esDDL =
         s"""
@@ -186,12 +171,12 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
 
       sparkSession.sql(esDDL)
 
-      stats += (s"${MethodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
+      stats += (s"${methodName}" -> s"Success @ ${Calendar.getInstance.getTime}")
       ddls += ("DDL_es" -> esDDL)
       (ddls, stats)
     } catch {
       case ex: Throwable =>
-        handleException(ex, s"Some Error While Executing Method ${MethodName}")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
   }
 
@@ -200,13 +185,9 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
     *
     * @return A Tuple of (DDL , STATS)
     */
-  def benchmarkNativeESAPI(testDataOption: Option[DataFrame] = None): (Map[String, String], Map[String, String]) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def benchmarkNativeESAPI(testDataOption: Option[DataFrame] = None): (Map[String, String], Map[String, String]) = withMethdNameLogging { methodName =>
     val storage = this.getClass.getName.replace(".", "_")
-    val tag = s"${MethodName}-${storage}"
+    val tag = s"${methodName}-${storage}"
     val NativeReadApiKey = s"${tag}-" + "Read"
     val NativeWriteApiKey = s"${tag}-" + "Write"
     var resultsAPIData: Map[String, String] = Map()
@@ -247,7 +228,7 @@ class ElasticSearchValidation(dataset: DataSet, sparkSession: SparkSession, sqlC
     } catch {
       case ex: Throwable =>
         stats += (s"${tag}" -> s"Failure @ ${Calendar.getInstance.getTime}")
-        handleException(ex, s"Some Error While Executing Method ${MethodName}")
+        handleException(ex, s"Some Error While Executing Method ${methodName}")
     }
     (ddls, stats)
   }

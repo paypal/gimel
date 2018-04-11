@@ -44,11 +44,7 @@ object ImplicitHDFSCheckPointers extends Logger {
       * @return true if Success
       *
       */
-    def saveCheckPoint: Boolean = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      info(" @Begin --> " + MethodName)
-
+    def saveCheckPoint: Boolean = withMethdNameLogging { methodName =>
       val latestFile = "/latest"
       val checkPointDir = offsetRangesAndCheckPointDirectory._2
       val checkPointFile = checkPointDir + latestFile
@@ -86,11 +82,7 @@ object ImplicitHDFSCheckPointers extends Logger {
       * @return Some(Array[OffsetRange])
       *
       */
-    def fetchCheckPoint: Option[Array[OffsetRange]] = {
-      def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-      info(" @Begin --> " + MethodName)
-
+    def fetchCheckPoint: Option[Array[OffsetRange]] = withMethdNameLogging { methodName =>
       if (checkPointDirectoryPath.isEmpty) throw new HDFSCheckPointerException("Expected CheckPoint Directory, but got Empty String !")
       val latestFile = "/latest"
       val checkPointDir = checkPointDirectoryPath

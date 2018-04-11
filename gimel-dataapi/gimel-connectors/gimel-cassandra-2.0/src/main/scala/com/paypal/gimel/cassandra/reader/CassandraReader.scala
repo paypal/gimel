@@ -35,11 +35,7 @@ object CassandraReader extends Logger {
     * @param conf         CassandraClientConfiguration
     * @return DataFrame
     */
-  def readTable(sparkSession: SparkSession, conf: CassandraClientConfiguration): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
-
+  def readTable(sparkSession: SparkSession, conf: CassandraClientConfiguration): DataFrame =withMethdNameLogging { methodName =>
     sparkSession.setCassandraConf(conf.cassandraCluster, CassandraConnectorConf.ConnectionHostParam.option(conf.cassandraHosts))
     sparkSession.setCassandraConf(CassandraConnectorConf.KeepAliveMillisParam.option(conf.cassandraSparkTtl))
 

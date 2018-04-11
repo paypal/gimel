@@ -32,10 +32,7 @@ object JDBCAdminClient extends Logger {
     * @param url           teradata data source URL
     * @param teradataTable table to be created
     */
-  def createTeradataTableIfNotExists(url: String, username: String, password: String, teradataTable: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def createTeradataTableIfNotExists(url: String, username: String, password: String, teradataTable: String): Unit =withMethdNameLogging { methodName =>
     val createTable =
       s"""
          |CREATE  TABLE $teradataTable
@@ -64,10 +61,7 @@ object JDBCAdminClient extends Logger {
     * @param url           teradata data source URL
     * @param teradataTable table to be dropped
     */
-  def dropTeradataTableIfExists(url: String, username: String, password: String, teradataTable: String) {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    info(" @Begin --> " + MethodName)
+  def dropTeradataTableIfExists(url: String, username: String, password: String, teradataTable: String) = withMethdNameLogging { methodName =>
     val dropTable =
       s"""
          |DROP  TABLE $teradataTable
