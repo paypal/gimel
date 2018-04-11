@@ -5,8 +5,6 @@
 # Bootstrap Data
 
 ### Create Elastic Dataset
-
-
 <table>
   <tbody>
     <tr>
