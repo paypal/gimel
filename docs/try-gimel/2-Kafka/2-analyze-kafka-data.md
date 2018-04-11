@@ -1,12 +1,15 @@
 
-* [G-SQL](#g--sql)
+* [G-SQL](#g-sql)
     * [Load Flights Data into Kafka Dataset](#load-flights-data-into-kafka-dataset)
     * [Cache Flights](#cache-flights)
     * [Read Data from Kafka](#read-data-from-kafka)
-* [Scala API](#scala-api)
+* [Scala API for Catalog Provider-USER](#scala-api-for-catalog-provider-user)
     * [Set Options](#set-options)
     * [Load Flights Data into Kafka Dataset](#load-flights-data-into-kafka-dataset)
-    * [Read Data from Kafka](#read-data-from-kafka)
+    * [Read Data from Kafka](#read-data-from-kafka-1)
+* [Scala API for Catalog Provider-HIVE](#scala-api-for-catalog-provider-hive)
+    * [Load Flights Data into Kafka Dataset](#load-flights-data-into-kafka-dataset)
+    * [Read Data from Kafka](#read-data-from-kafka-2)
    
 # G-SQL
 
@@ -26,8 +29,11 @@ gsql("select * from flights").show(10)
 ```
 ______________________________________________________
 
-# Scala API
+# Scala API for Catalog Provider-USER
 
+*Please execute the steps in this section if you have choosen CatalogProvider as USER or if you executed the following command*
+
+```gsql("set gimel.catalog.provider=USER")```
 ## Set options
 ```
 val datasetKafkaPropsJson = """{ 
@@ -83,6 +89,27 @@ val df = dataSet.read("pcatalog.flights_kafka_json",kafkaOptions)
 df.show(10)
 ```
 _________________________________________________
+# Scala API for Catalog Provider-HIVE
 
+*Please execute the steps in this section if you have choosen CatalogProvider as HIVE or if you executed the following command*
 
+```gsql("set gimel.catalog.provider=HIVE")```
+
+## Load Flights Data into Kafka Dataset
+```
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val hivedf = dataSet.read("pcatalog.flights_hdfs")
+val df = dataSet.write("pcatalog.flights_kafka_json",hivedf)
+df.count
+```
+
+## Read Data from Kafka
+```
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val df = dataSet.read("pcatalog.flights_kafka_json")
+df.show(10)
+```
+_________________________________________________
 

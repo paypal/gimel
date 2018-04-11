@@ -1,4 +1,5 @@
 
+* [Summary](#summary)
 * [Gimel Standalone](#gimel-standalone)
    * [Overview](#overview)
    * [Install Docker](#install-docker)
@@ -6,6 +7,19 @@
    * [Run Gimel Quickstart Script](#run-gimel-quickstart-script)
    * [Common Imports and Initializations](#common-imports-and-initializations)
    
+# Summary
+
+ * Install Docker
+ * **Note:** *At any point if there is any failure , power down gimel  ```quickstart/stop-gimel down```*
+ * Clone Gimel Repo 
+ * Download Gimel Jar
+ * Run the bootstrap module
+ * Once spark-session is ready : play with Gimel Data API / GSQL
+ 
+ 
+ 
+___________________________________________________________________________________________________________________
+
 # Gimel Standalone
 
 ## Overview
@@ -22,7 +36,7 @@ ________________________________________________________________________________
 ## Install Docker
 
 * Install docker on your machine 
-  * MAC - https://docs.docker.com/docker-for-mac/install/
+  * MAC - <a href="https://docs.docker.com/docker-for-mac/install/" target="_blank">Docker Installation</a>
   * Start Docker Service
   * Increase the memory by navigating to Preferences > Advanced > Memory
   * (Optional) Clear existing containers and images
@@ -35,8 +49,8 @@ ________________________________________________________________________________
 
 ## Download the Gimel Jar
 
-* Clone the repo [Gimel](https://github.com/paypal/gimel)
-* Download the gimel jar from [Here](https://drive.google.com/uc?id=1mVia6-dTyX9ZU2-r91TFJu4_hEhapVRA&export=download)
+* Clone the repo <a href="https://github.com/paypal/gimel" target="_blank">Gimel</a>
+* Download the gimel jar from <a href="https://drive.google.com/uc?id=1mVia6-dTyX9ZU2-r91TFJu4_hEhapVRA&export=download" target="_blank">Here</a>
 * Navigate to the folder gimel/gimel-dataapi/gimel-standalone/ - ```cd gimel/gimel-dataapi/gimel-standalone/```
 * Create lib folder in gimel-standalone - ```mkdir lib```
 * Copy the downloaded jar in lib
@@ -45,27 +59,35 @@ ________________________________________________________________________________
 
 ## Run Gimel Quickstart Script
 
+* Navigate back to the GIMEL-HOME folder
 ```
-$ quickstart/gimel {STORAGE_SYSTEM}
+$ cd ../../
+```
+
+* To install all the dockers and bootstrap storages, please execute the following command
+```
+$ quickstart/start-gimel {STORAGE_SYSTEM}
 ```
 
 * STORAGE_SYSTEM can be either ```all``` or comma seperated list like as follows
 ```
-$ quickstart/gimel kafka,elasticsearch,hbase
+$ quickstart/start-gimel kafka,elasticsearch,hbase-master,hbase-regionserver
 ```
-* This script will do the following:
-  * Start docker containers for each storage
-  * Bootstrap the physical storages (Create Kafka Topic and HBase tables)
-  * Start a spark-shell with gimel jar added
+
+**Note:** *This script will do the following*
+  * *Start docker containers for each storage*
+  * *Bootstrap the physical storages (Create Kafka Topic and HBase tables)*
   
-Note: If you want to start your own spark-shell, Run the following command
+  
+* To start the spark shell run the following command
 
 ```
 docker exec -it spark-master bash -c \
 "export USER=an;export SPARK_HOME=/spark/;export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin; \
 /spark/bin/spark-shell --jars /root/gimel-sql-1.2.0-SNAPSHOT-uber.jar"
 ```
-  
+
+**Note:** *You can view the Spark UI  <a href="http://localhost:4040" target="_blank">here</a>*
 ___________________________________________________________________________________________________________________
 
 ## Common Imports and Initializations

@@ -15,6 +15,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+export docker_option=$1
+if [ -z $docker_option ]; then
+   docker_option="down"
+fi
 export this_file=${0}
 export this_script_path=`dirname ${this_file}`
 source $this_script_path/set-env
@@ -22,7 +26,7 @@ source ${GIMEL_HOME}/build/gimel_functions
 
 cd ${GIMEL_HOME}/gimel-dataapi/gimel-standalone/docker
 write_log "Current Directory is --> ${PWD}"
-run_cmd "docker-compose stop -t 30"
+run_cmd "docker-compose $docker_option -t 30"
 
 write_log "clearing the HDFS local data ..."
 run_cmd "rm -rf {GIMEL_HOME}/gimel-dataapi/gimel-quickstart/__MAXOSX"

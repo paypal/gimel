@@ -1,12 +1,15 @@
 
-* [G-SQL](#g--sql)
+* [G-SQL](#g-sql)
     * [Load Flights Data into Elastic Dataset](#load-flights-data-into-elastic-dataset)
     * [Cache Flights](#cache-flights)
     * [Read Data from Elastic](#read-data-from-elastic)
-* [Scala API](#scala-api)
+* [Scala API for Catalog Provider-USER](#scala-api-for-catalog-provider--user)
     * [Set Options](#set-options)
-    * [Load Flights Data into Elastic Dataset](#load-flights-data-into-elastic-dataset)
-    * [Read Data from Elastic](#read-data-from-elastic)
+    * [Load Flights Data into Elastic Dataset](#load-flights-data-into-elastic-dataset-1)
+    * [Read Data from Elastic](#read-data-from-elastic-1)
+* [Scala API for Catalog Provider-HIVE](#scala-api-for-catalog-provider--hive)
+    * [Load Flights Data into Elastic Dataset](#load-flights-data-into-elastic-dataset-2)
+    * [Read Data from Elastic](#read-data-from-elastic-2)
    
 # G-SQL
 
@@ -26,11 +29,14 @@ gsql("select * from flights_elastic").show(10)
 ```
 ______________________________________________________
 
-# Scala API
+# Scala API for Catalog Provider-USER
 
+*Please execute the steps in this section if you have choosen CatalogProvider as USER or if you executed the following command*
+
+```gsql("set gimel.catalog.provider=USER")```
 ## Set options
 ```
-val datasetPropsJson = {
+val datasetPropsJson = """{
                                   "datasetType": "ELASTIC_SEARCH",
                                   "fields": [],
                                   "partitionFields": [],
@@ -49,8 +55,8 @@ val datasetPropsJson = {
                               		  "gimel.storage.type":"ELASTIC_SEARCH",
                               		  "datasetName":"pcatalog.gimel_flights_elastic"
                                   }
-                              }
-val options = Map("pcatalog.flights_hdfs.dataSetProperties"->datasetPropsJson)
+                              }"""
+val options = Map("pcatalog.gimel_flights_elastic.dataSetProperties"->datasetPropsJson)
 
 val datasetHivePropsJson = """{ 
                                       "datasetType": "HDFS",
@@ -82,6 +88,32 @@ val dataSet = DataSet(spark)
 val df = dataSet.read("pcatalog.gimel_flights_elastic",options)
 df.show(10)
 ```
+_________________________________________________
+
+
+# Scala API for Catalog Provider-HIVE
+
+*Please execute the steps in this section if you have choosen CatalogProvider as HIVE or if you executed the following command*
+
+```gsql("set gimel.catalog.provider=HIVE")```
+
+## Load Flights Data into Elastic Dataset
+```
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val hivedf = dataSet.read("pcatalog.flights_hdfs")
+val df = dataSet.write("pcatalog.gimel_flights_elastic",hivedf)
+df.count
+```
+
+## Read Data from Elastic
+```
+import com.paypal.gimel._
+val dataSet = DataSet(spark)
+val df = dataSet.read("pcatalog.gimel_flights_elastic")
+df.show(10)
+```
+
 _________________________________________________
 
 
