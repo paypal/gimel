@@ -1,4 +1,4 @@
-* [Disclaimer](#disclaimer)
+* [Note](#note)
 * [Setting Catalog Provider](#setting-catalog-provider)
 * [Bootstrap Data](#bootstrap-data)
    * [Bootstrap Flights Data](#bootstrap-flights-data) 
@@ -6,10 +6,9 @@
    * [Bootstrap Flights Lookup Data](#bootstrap-flights-lookup-data)
       * [Create HDFS Datasets for loading Flights Lookup Data](#create-hdfs-datasets-for-loading-flights-lookup-data)
 
-# Disclaimer
-**Note:** 
+# Note 
 
-*The ```quickstart/gimel``` by default creates all the hive DDLs which you are seeing below. 
+*The ```quickstart/start-gimel``` by default creates all the hive DDLs which you are seeing below. 
 If you want to build a custom dataset hive table, these can be used as a reference.*
 
 *Also if you want to see the tables which got created. Please execute the following command in a new terminal.*
