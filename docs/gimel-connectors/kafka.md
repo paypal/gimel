@@ -68,7 +68,7 @@
 
 | Property | Mandatory? | Description | Example | Default |
 |----------|------------|-------------|------------|-------------------|
-| gimel.kafka.bootstrap.servers | Y | the broker list for kafka | host1:9092,host2:9092 | |
+| bootstrap.servers | Y | the broker list for kafka | host1:9092,host2:9092 | |
 | gimel.kafka.kafka.whitelist.topics | Y | the topic name in kafka | flights | |
 | key.serializer | Y | the kafka key serializer | | org.apache.kafka.common.serialization.StringSerializer |
 | value.serializer | Y | the kafka message serializer | org.apache.kafka.common.serialization.StringSerializer | org.apache.kafka.common.serialization.ByteArraySerializer |
@@ -112,7 +112,7 @@ CREATE EXTERNAL TABLE `default.user`(
 LOCATION 'hdfs:///tmp/user'
 TBLPROPERTIES (
   'gimel.storage.type' = 'KAFKA',
-  'gimel.kafka.bootstrap.servers'='localhost:9092',
+  'bootstrap.servers'='localhost:9092',
   'gimel.kafka.whitelist.topics'='user',
   'gimel.kafka.checkpoint.zookeeper.host'='zk_host:2181',
   'gimel.kafka.checkpoint.zookeeper.path'='/pcatalog/kafka_consumer/checkpoint',
@@ -145,7 +145,7 @@ CREATE EXTERNAL TABLE `default.user`(
 LOCATION 'hdfs:///tmp/user'
 TBLPROPERTIES (
   'gimel.storage.type' = 'KAFKA',
-  'gimel.kafka.bootstrap.servers'='localhost:9092',
+  'bootstrap.servers'='localhost:9092',
   'gimel.kafka.whitelist.topics'='kafka_topic',
   'gimel.kafka.checkpoint.zookeeper.host'='zkhost:2181',
   'gimel.kafka.checkpoint.zookeeper.path'='/pcatalog/kafka_consumer/checkpoint',
@@ -290,7 +290,7 @@ CREATE EXTERNAL TABLE `default.hiveTable`(
    )
    TBLPROPERTIES (
      'gimel.storage.type' = 'KAFKA',
-     'gimel.kafka.bootstrap.servers'='zk_host:9092',
+     'bootstrap.servers'='zk_host:9092',
      'gimel.kafka.whitelist.topics'='your_topic',
      'key.serializer'='org.apache.kafka.common.serialization.StringSerializer',
      'value.serializer'='org.apache.kafka.common.serialization.StringSerializer',
