@@ -12,7 +12,7 @@ Contents
 
   * [Edit on GitHub](https://github.com/paypal/gimel)
   * [APIs & Version Compatibility](#stack-&-version-compatibility)
-  * [Getting Started](getting-started.md)
+  * [Getting Started](getting-started/build-gimel.md)
   * [Gimel Catalog Providers](gimel-catalog/catalog-provider.md)
   * [Contribution Guidelines](CONTRIBUTING.md)
   * [Questions](#questions)
