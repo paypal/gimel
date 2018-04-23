@@ -56,12 +56,6 @@ ________________________________________________________________________________
 ```
 cd gimel
 ```
-
-* Export GIMEL_HOME variable by setting it to the current folder.
-```
-export GIMEL_HOME=`pwd`
-echo $GIMEL_HOME
-```
 * Navigate to the folder gimel-dataapi/gimel-standalone/ - ```cd gimel-dataapi/gimel-standalone/```
 * Create lib folder in gimel-standalone - ```mkdir lib```
 * Copy the downloaded jar in lib
