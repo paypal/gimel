@@ -127,6 +127,26 @@ object ImplicitKafkaConverters {
     val port1: Int = brokers(0).split(":")(1).toInt
     val latestTime: Long = -1L
     val earliestTime: Long = -2L
+    val topicMetadata: TopicMetadata = toTopicMetadataAndLeaders._1
+    val partitionAndLeader: Seq[(Int, String, Int)] = toTopicMetadataAndLeaders._2
+
+
+    /**
+      * Take Topic Name and return topicMetadata and partition and Leader
+      * @return (topic Metadata , partitionAndLeader)
+      */
+    def toTopicMetadataAndLeaders: (TopicMetadata, Seq[(Int, String, Int)]) = {
+      val topic = brokersAndTopic.topic
+      val topicMetadataRequest = TopicMetadataRequest(0, 111, clientID.toString, Seq(topic))
+      val consumer = new kafka.consumer.SimpleConsumer(host1, port1, 10000, Int.MaxValue, clientID.toString)
+      val k11: TopicMetadataResponse = consumer.send(topicMetadataRequest)
+      val topicMetadata: TopicMetadata = k11.topicsMetadata.head
+      val partitionAndLeader: Seq[(Int, String, Int)] = topicMetadata.partitionsMetadata.map { eachPartition =>
+        (eachPartition.partitionId, eachPartition.leader.get.host, eachPartition.leader.get.port)
+      }
+      (topicMetadata, partitionAndLeader)
+    }
+
 
     /**
       * Converts a given Tuple of KafkaBrokers & Topic into KafkaTopicAndPartitions
@@ -175,23 +195,15 @@ object ImplicitKafkaConverters {
     }
 
     /**
-      * Take a TopicAndPartition and Returns a Tuple of leader Host & Port
+      * Take a TopicAndPartition and partitionLeader and Maps to each partition
       *
-      * @param topicAndPartition Kafka TopicAndPartition
+      * @param topicAndPartition
       * @return Tuple(host, port)
       */
     private def findLeader(topicAndPartition: TopicAndPartition): (String, Int) = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
       logger.info(" @Begin --> " + MethodName)
-
-      val topicMetadataRequest = TopicMetadataRequest(0, 111, clientID.toString, Seq(topicAndPartition.topic))
-      val consumer = new kafka.consumer.SimpleConsumer(host1, port1, 10000, Int.MaxValue, clientID.toString)
-      val k11: TopicMetadataResponse = consumer.send(topicMetadataRequest)
-      val topicMetadata: TopicMetadata = k11.topicsMetadata.head
-      val partitionAndLeader: Seq[(Int, String, Int)] = topicMetadata.partitionsMetadata.map { eachPartition =>
-        (eachPartition.partitionId, eachPartition.leader.get.host, eachPartition.leader.get.port)
-      }
       val leaderDetails = partitionAndLeader.find(x => x._1 == topicAndPartition.partition)
       (leaderDetails.get._2, leaderDetails.get._3)
     }
