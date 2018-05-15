@@ -15,6 +15,20 @@ OR
 git clone https://github.com/paypal/gimel.git
 cd gimel
 ```
+## Before building with maven
+
+This Project depends on below project as dependency.
+
+https://github.com/sasha-polev/aerospar
+https://github.com/qubole/Hive-JDBC-Storage-Handler
+https://github.com/hortonworks-spark/shc
+
+For convenience, we've included binaries for all above projects.
+Please run following command to install all dependencies before building with maven.
+
+```bash
+$sh build/install_dependencies
+```
 
 ## Maven Profiles
 
