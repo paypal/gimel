@@ -16,7 +16,8 @@
 # limitations under the License.
 
 
-this_dir=`dirname build/install_dependencies`
+this_script=`pwd`/$BASH_SOURCE
+this_dir=`dirname $this_script`
 # Source reusable functions
 source ${this_dir}/gimel_functions
 
@@ -24,13 +25,13 @@ source ${this_dir}/gimel_functions
 
 write_log "Begin    | Script | $0"
 
-mvn install:install-file -DgroupId=qubole-hive-JDBC -DartifactId=qubole-hive-JDBC -Dversion=0.0.7 -Dpackaging=jar -Dfile=lib/qubole-hive-JDBC.jar 1>>/dev/null 2>&1
+mvn install:install-file -DgroupId=qubole-hive-JDBC -DartifactId=qubole-hive-JDBC -Dversion=0.0.7 -Dpackaging=jar -Dfile=${this_dir}/../lib/qubole-hive-JDBC.jar 1>>/dev/null 2>&1
 check_error $? "install qubole-hive-JDBC"
 
-mvn install:install-file -DgroupId=com.hortonworks -DartifactId=shc-core -Dversion=1.1.2-2.2-s_2.11 -Dpackaging=jar -Dfile=lib/shc-core.jar 1>>/dev/null 2>&1
+mvn install:install-file -DgroupId=com.hortonworks -DartifactId=shc-core -Dversion=1.1.2-2.2-s_2.11 -Dpackaging=jar -Dfile=${this_dir}/../lib/shc-core.jar 1>>/dev/null 2>&1
 check_error $? "install shc-core"
 
-mvn install:install-file -DgroupId=com.osscube -DartifactId=aerospike-spark -Dversion=0.3-SNAPSHOT -Dpackaging=jar -Dfile=lib/aerospike-spark.jar 1>>/dev/null 2>&1
+mvn install:install-file -DgroupId=com.osscube -DartifactId=aerospike-spark -Dversion=0.3-SNAPSHOT -Dpackaging=jar -Dfile=${this_dir}/../lib/aerospike-spark.jar 1>>/dev/null 2>&1
 check_error $? "install aerospike-spark"
 
 write_log "Complete | Script | $0"
