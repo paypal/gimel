@@ -503,6 +503,41 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   }
 
   /**
+    * Makes a HTTPS PUT call to the URL and returns the output along with status code.
+    *
+    * @param url
+    * @param data
+    * @return (ResponseBody, Https Status Code)
+    */
+  def httpsPut(url: String, data: String = ""): (Int, String) = {
+    logger.info(s"PUT request -> $url and data -> ${data}")
+    try {
+      val urlObject: URL = new URL(url)
+      val conn: HttpsURLConnection = urlObject.openConnection().asInstanceOf[HttpsURLConnection]
+      conn.setRequestProperty("Content-type", "application/json")
+      conn.setRequestMethod("PUT")
+      conn.setDoOutput(true)
+
+      val wr: DataOutputStream = new DataOutputStream(conn.getOutputStream())
+      wr.writeBytes(data)
+      wr.close()
+
+      val in: BufferedReader = new BufferedReader(new InputStreamReader(conn.getInputStream()))
+      val response = in.lines.collect(Collectors.toList[String]).toArray().mkString("")
+      in.close()
+
+      logger.info(s"PUT response is: $response")
+      (conn.getResponseCode, response)
+    } catch {
+      case e: Throwable =>
+        logger.error(e.getStackTraceString)
+        e.printStackTrace()
+        throw e
+    }
+
+  }
+
+  /**
     * Post Implementation
     *
     * @param url     URI

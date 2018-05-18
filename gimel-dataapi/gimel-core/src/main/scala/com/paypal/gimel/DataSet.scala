@@ -19,7 +19,6 @@
 
 package com.paypal.gimel
 
-import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
 import scala.language.implicitConversions
 import scala.reflect.runtime.universe._
@@ -41,7 +40,7 @@ import com.paypal.gimel.logger.Logger
 
 object DataSetType extends Enumeration {
   type SystemType = Value
-  val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID = Value
+  val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID, RESTAPI = Value
 }
 
 class DataSet(val sparkSession: SparkSession) {
@@ -384,6 +383,8 @@ object DataSetUtils {
             DataSetType.DRUID
           case "HDFS" =>
             DataSetType.HDFS
+          case "RESTAPI" =>
+            DataSetType.RESTAPI
           case _ =>
             DataSetType.HIVE
         }
@@ -421,6 +422,8 @@ object DataSetUtils {
         new com.paypal.gimel.hdfs.DataSet(sparkSession)
       case DataSetType.DRUID =>
         new com.paypal.gimel.druid.DataSet(sparkSession)
+      case DataSetType.RESTAPI =>
+        new com.paypal.gimel.restapi.DataSet(sparkSession)
     }
   }
 
