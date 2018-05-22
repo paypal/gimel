@@ -15,6 +15,7 @@ Contents
   * [Getting Started](getting-started/build-gimel.md)
   * [Gimel Catalog Providers](gimel-catalog/catalog-provider.md)
   * [Contribution Guidelines](CONTRIBUTING.md)
+  * [Adding a new connector](gimel-connectors/adding-new-connector.md)
   * [Questions](#questions)
 
 --------------------------------------------------------------------------------------------------------------------
