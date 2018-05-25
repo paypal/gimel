@@ -1,6 +1,6 @@
 
 
-## Python Support
+## PySpark / Python Support
 
 - Gimel Data API is fully compatible with pyspark, although the library itself is built in Scala.
 - Pyspark provides an extremely powerful feature to tap into the JVM, and thus get a reference to all Java/Scala classes/objects in the JVM.
@@ -70,3 +70,48 @@ python_df = DataFrame(scala_df, jspark)
 # from now - you may use regular pyspark lingua to play with the data
 python_df.show(10)
 ```
+<<<<<<< HEAD
+=======
+
+## Sample Read and Write illustration
+
+```python
+# DataSet
+dataset = ScalaDataSet.apply(jspark)
+
+# Read from HDFS
+hdfs_data = DataFrame(dataset.read("pcatalog.flights_hdfs",""),jspark)
+
+# Illustration Count
+hdfs_data.count()
+# 1398164
+
+# Read from Kafka
+kafka_data = DataFrame(dataset.read("pcatalog.flights_kafka",""),jspark)
+
+# Illustration Count
+kafka_data.count()
+# 0
+
+# Write to Kafka
+dataset.write("pcatalog.flights_kafka",hdfs_data._jdf,"")
+
+# Read from Kafka post-write
+kafka_data = DataFrame(dataset.read("pcatalog.flights_kafka",""),jspark)
+
+# Illustration Count
+kafka_data.count()
+# 1398164
+
+# Sample Data
+kafka_data.show(3)
+
+#+-------------------+----------+--------+-----------------+---------+-------+-------------+----------------+----+--------------+--------+--------------+--------+-------+--------------------+------+-------------------+---------+------+----------------+--------------+--------+--------------+-------------+-----+----+
+#|ACTUAL_ELAPSED_TIME|AIRLINE_ID|AIR_TIME|CANCELLATION_CODE|CANCELLED|CARRIER|CARRIER_DELAY|CRS_ELAPSED_TIME|DEST|DEST_CITY_NAME|DISTANCE|DISTANCE_GROUP|DIVERTED|FLIGHTS|             FL_DATE|FL_NUM|LATE_AIRCRAFT_DELAY|NAS_DELAY|ORIGIN|ORIGIN_CITY_NAME|SECURITY_DELAY|TAIL_NUM|UNIQUE_CARRIER|WEATHER_DELAY|month|year|
+#+-------------------+----------+--------+-----------------+---------+-------+-------------+----------------+----+--------------+--------+--------------+--------+-------+--------------------+------+-------------------+---------+------+----------------+--------------+--------+--------------+-------------+-----+----+
+#|               68.0|     20304|    39.0|             null|      0.0|     OO|         null|            62.0| ORD|   Chicago, IL|   157.0|             1|     0.0|    1.0|2017-10-01T00:00:...|  2936|               null|     null|   FWA|  Fort Wayne, IN|          null|  N464SW|            OO|         null|   10|2017|
+#|               63.0|     20304|    35.0|             null|      0.0|     OO|         null|            60.0| ORD|   Chicago, IL|   137.0|             1|     0.0|    1.0|2017-10-01T00:00:...|  2940|               null|     null|   GRR|Grand Rapids, MI|          null|  N727SK|            OO|         null|   10|2017|
+#|               65.0|     20304|    42.0|             null|      0.0|     OO|         null|            72.0| ALO|  Waterloo, IA|   234.0|             1|     0.0|    1.0|2017-10-01T00:00:...|  2942|               null|     null|   ORD|     Chicago, IL|          null|  N423SW|            OO|         null|   10|2017|
+#+-------------------+----------+--------+-----------------+---------+-------+-------------+----------------+----+--------------+--------+--------------+--------+-------+--------------------+------+-------------------+---------+------+----------------+--------------+--------+--------------+-------------+-----+----+
+```
+>>>>>>> [100] Add Python / Pyspark Support for Gimel
