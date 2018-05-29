@@ -70,8 +70,6 @@ python_df = DataFrame(scala_df, jspark)
 # from now - you may use regular pyspark lingua to play with the data
 python_df.show(10)
 ```
-<<<<<<< HEAD
-=======
 
 ## Sample Read and Write illustration
 
@@ -114,4 +112,3 @@ kafka_data.show(3)
 #|               65.0|     20304|    42.0|             null|      0.0|     OO|         null|            72.0| ALO|  Waterloo, IA|   234.0|             1|     0.0|    1.0|2017-10-01T00:00:...|  2942|               null|     null|   ORD|     Chicago, IL|          null|  N423SW|            OO|         null|   10|2017|
 #+-------------------+----------+--------+-----------------+---------+-------+-------------+----------------+----+--------------+--------+--------------+--------+-------+--------------------+------+-------------------+---------+------+----------------+--------------+--------+--------------+-------------+-----+----+
 ```
->>>>>>> [100] Add Python / Pyspark Support for Gimel
