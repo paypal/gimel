@@ -25,6 +25,7 @@ import org.apache.spark.streaming.kafka010.OffsetRange
 import org.scalatest._
 
 import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
+import com.paypal.gimel.kafka.utilities.KafkaUtilities._
 
 class KafkaConvertersTests extends FunSpec with Matchers {
 
@@ -53,6 +54,35 @@ class KafkaConvertersTests extends FunSpec with Matchers {
     val sampleString: Array[String] = "test,0,1,100|test,1,1,101".split('|')
     val offsetRanges: Array[OffsetRange] = sampleString.map(CheckPointString).toKafkaOffsetRanges
     offsetRanges shouldEqual expectedOffsetRanges
+  }
+
+  it("should convert a json string of custom partition information to an array of offset ranges") {
+    val sampleRange: Array[OffsetRange] = Array(
+      OffsetRange("test", 0, 1, 100),
+      OffsetRange("test", 1, 1, 100))
+    val defaultRange: Array[OffsetRange] = Array(
+      OffsetRange("test", 0, 1, 100),
+      OffsetRange("test", 2, 1, 100))
+    val sampleJson: String =
+      """[{"topic":"test","offsetRange":[{"partition":0,"from":1,"to":100},{"partition":1,"from":1,"to":100}]}]"""
+    /*
+    Happy case for Batch
+    The value returned should be a valid conversion of the sampleJson to an Array[OffsetRange]
+    */
+    val finalOffsetRanges: Array[OffsetRange] = getCustomOffsetRangeForReader(sampleJson, "BATCH")
+    finalOffsetRanges shouldEqual(sampleRange)
+
+    val sampleRangeForStream: Array[OffsetRange] = Array(
+      OffsetRange("test", 0, 1, 100),
+      OffsetRange("test", 1, 1, -1))
+    /*
+    To offset missing case for Stream
+    The value returned should be a valid conversion of the sampleJson to an Array[OffsetRange] with To offset as -1
+    */
+    val sampleJsonForStream: String =
+      """[{"topic":"test","offsetRange":[{"partition":0,"from":1,"to":100},{"partition":1,"from":1}]}]"""
+    val finalOffsetRangesForStreamWithoutTo: Array[OffsetRange] = getCustomOffsetRangeForReader(sampleJsonForStream, "STREAM")
+    finalOffsetRangesForStreamWithoutTo shouldEqual(sampleRangeForStream)
   }
 
 }
