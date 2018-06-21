@@ -91,7 +91,7 @@
 | gimel.kafka.throttle.streaming.isParallel | N | <br>Use in Streaming Mode to parallelize the steps where deserialization happens<br>this feature is recommended if preserving ordering is not a necessity in the sink (like HDFS)<br>Once messages are fetched from kafka, with this flag turned ON, messages can be repartition across executors to process data in parallel via below listed properties<br> | false | true |
 | gimel.kafka.throttle.streaming.maxRatePerPartition | N | Max Records to Process per partition | 1000 | 3600 |
 | gimel.kafka.throttle.stream.parallelism.factor | N | The number of executors / repartitions to create while deserializing. | 10 | 10 |
-
+| gimel.kafka.custom.offset.range | N | The Custom Offset range and partition to read from | [{\"topic\": \"gimel.demo.flights.json\",\"offsetRange\": [{\"partition\": 0,\"from\": 1200000,\"to\": 1200001}]}] | |
 
 --------------------------------------------------------------------------------------------------------------------
 

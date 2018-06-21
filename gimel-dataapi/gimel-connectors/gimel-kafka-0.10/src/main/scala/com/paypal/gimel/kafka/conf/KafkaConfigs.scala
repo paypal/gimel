@@ -72,6 +72,7 @@ object KafkaConfigs {
   val streamFailureWindowFactorKey: String = "gimel.kafka.fail.stream.window.factor"
   val kafkaConsumerReadCheckpointKey: String = "gimel.kafka.reader.checkpoint.save"
   val kafkaConsumerClearCheckpointKey: String = "gimel.kafka.reader.checkpoint.clear"
+  val customOffsetRange: String = "gimel.kafka.custom.offset.range"
   // default packages used in Kafka read/write API
   val paypalMetricsReporterValue: String = "com.paypal.kafka.reporters.KafkaClientMetricsReporter"
   val paypalInterceptorClassName: String = "com.paypal.kafka.clients.interceptors.MonitoringConsumerInterceptor"

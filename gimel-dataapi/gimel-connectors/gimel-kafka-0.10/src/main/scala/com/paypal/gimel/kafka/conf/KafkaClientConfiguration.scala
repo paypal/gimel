@@ -91,6 +91,9 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
   val kafkaZKTimeOutMilliSec: String = tableProps.getOrElse(KafkaConfigs.zookeeperConnectionTimeoutKey, 10000.toString)
   val kafkaAutoOffsetReset: String = tableProps.getOrElse(KafkaConfigs.offsetResetKey, "smallest")
   val kafkaTopic: String = tableProps.getOrElse(KafkaConfigs.whiteListTopicsKey, "")
+  val kafkaCustomOffsetRange: String = tableProps.getOrElse(KafkaConfigs.customOffsetRange, "")
+  val consumerModeBatch: String = tableProps.getOrElse(KafkaConstants.gimelAuditRunTypeBatch, "BATCH")
+  val consumerModeStream: String = tableProps.getOrElse(KafkaConstants.gimelAuditRunTypeStream, "STREAM")
 
   // Kafka Serde
   val kafkaKeySerializer: String = tableProps.getOrElse(KafkaConfigs.serializerKey, KafkaConfigs.kafkaStringSerializer)
