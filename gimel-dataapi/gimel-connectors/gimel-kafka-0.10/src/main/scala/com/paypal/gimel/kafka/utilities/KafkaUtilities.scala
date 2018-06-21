@@ -33,7 +33,6 @@ import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.apache.spark.streaming.kafka010._
 import org.apache.spark.streaming.kafka010.KafkaUtils._
 import spray.json._
@@ -48,11 +47,22 @@ import com.paypal.gimel.common.utilities.DataSetUtils._
 import com.paypal.gimel.datastreamfactory.WrappedData
 import com.paypal.gimel.kafka.avro.SparkAvroUtilities._
 import com.paypal.gimel.kafka.conf._
+import com.paypal.gimel.kafka.conf.KafkaJsonProtocol.{offsetPropertiesFormat, offsetRangePropertiesFormat}
 import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.kafka.utilities.ImplicitZKCheckPointers._
 
 
 case class MessageInfo[T: TypeTag](key: String, message: T, topic: String, partition: Int, offset: Long)
+
+/*
+Case classes for reading custom offset properties from the user defined properties
+ */
+case class OffsetRangeProperties(partition: Int,
+                                 from: Long,
+                                 to: Option[Long])
+
+case class OffsetProperties(topic: String,
+                            offsetRange: Array[OffsetRangeProperties])
 
 object KafkaUtilities {
 
@@ -390,6 +400,41 @@ object KafkaUtilities {
     }
   }
 
+  /**
+    * Function Gets
+    * a custom offset range as a JSON from the user defined properties
+    * Converts it to an array of offset ranges and returns them
+    *
+    * @param offsetRange       user given custom offset ranges, if available
+    * @return Array[OffsetRange]
+    */
+
+  def getCustomOffsetRangeForReader(offsetRange: String, consumerMode: String): Array[OffsetRange] = {
+    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    try {
+        val offsetRangeObject = offsetRange.parseJson.convertTo[Seq[OffsetProperties]]
+        val finalOffsetRanges = offsetRangeObject.flatMap {
+          eachTopicRange =>
+            eachTopicRange.offsetRange.map {
+              eachOffsetRange => {
+                var toOffset = 0L
+                if (consumerMode == KafkaConstants.gimelAuditRunTypeStream) {
+                  toOffset = eachOffsetRange.to.getOrElse(-1)
+                }
+                else if (consumerMode == KafkaConstants.gimelAuditRunTypeBatch) {
+                  toOffset = eachOffsetRange.to.get
+                }
+                OffsetRange(eachTopicRange.topic, eachOffsetRange.partition, eachOffsetRange.from, toOffset)
+              }
+            }
+        }.toArray
+        finalOffsetRanges
+    } catch {
+      case ex: Throwable =>
+        ex.printStackTrace()
+        throw ex
+    }
+  }
 
   /**
     * Converts an RDD[Wrapped Data] into RDD[GenericRecord]
