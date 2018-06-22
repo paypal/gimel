@@ -74,16 +74,25 @@ object KafkaStreamConsumer {
       val (schemaString, kafkaTopic, brokers) = (conf.avroSchemaString, conf.kafkaTopic, conf.kafkaHostsAndPort)
       logger.info(s"Zookeeper Server : ${conf.zkHostAndPort}")
       logger.info(s"Zookeeper Checkpoint : ${conf.zkCheckPoint}")
-      val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoint)
-      if (lastCheckPoint == None) {
-        logger.info("No CheckPoint Found !")
-      } else {
-        logger.info(s"Found Checkpoint Value --> ${lastCheckPoint.get.mkString("|")}")
-      }
-      val availableOffsetRange: Array[OffsetRange] = BrokersAndTopic(brokers, kafkaTopic).toKafkaOffsetsPerPartition
-      val startOffsetsForStream: Map[TopicPartition, Long] = lastCheckPoint.getOrElse(availableOffsetRange).map {
-        x => (new TopicPartition(x.topic, x.partition) -> x.untilOffset)
-      }.toMap
+      val startOffsetsForStream: Map[TopicPartition, Long] =
+        if (conf.kafkaCustomOffsetRange.isEmpty()) {
+          val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoint)
+          if (lastCheckPoint == None) {
+            logger.info("No CheckPoint Found !")
+          } else {
+            logger.info(s"Found Checkpoint Value --> ${lastCheckPoint.get.mkString("|")}")
+          }
+          val availableOffsetRange: Array[OffsetRange] = BrokersAndTopic(brokers, kafkaTopic).toKafkaOffsetsPerPartition
+           lastCheckPoint.getOrElse(availableOffsetRange).map {
+            x => (new TopicPartition(x.topic, x.partition) -> x.untilOffset)
+          }.toMap
+        }
+        else {
+          val customOffsetRangesForStream: Array[OffsetRange] = getCustomOffsetRangeForReader(conf.kafkaCustomOffsetRange, conf.consumerModeStream)
+          customOffsetRangesForStream.map {
+            x => (new TopicPartition(x.topic, x.partition) -> x.fromOffset)
+          }.toMap
+        }
       var kafkaParams: Map[String, Object] = Map()
       conf.kafkaConsumerProps.foreach(x => kafkaParams += (x._1 -> x._2))
       val (keyDeSer, valDeSer) = (getSerDe(conf.kafkaKeyDeSerializer), getSerDe(conf.kafkaValueDeSerializer))
