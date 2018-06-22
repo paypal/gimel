@@ -69,7 +69,7 @@
 | Property | Mandatory? | Description | Example | Default |
 |----------|------------|-------------|------------|-------------------|
 | bootstrap.servers | Y | the broker list for kafka | host1:9092,host2:9092 | |
-| gimel.kafka.kafka.whitelist.topics | Y | the topic name in kafka | flights | |
+| gimel.kafka.kafka.whitelist.topics | Y | the topic names in kafka separated by comma | flights,flights1 | |
 | key.serializer | Y | the kafka key serializer | | org.apache.kafka.common.serialization.StringSerializer |
 | value.serializer | Y | the kafka message serializer | org.apache.kafka.common.serialization.StringSerializer | org.apache.kafka.common.serialization.ByteArraySerializer |
 | key.deserializer | Y | the kafka key DeSerializer | | org.apache.kafka.common.serialization.StringDeserializer |

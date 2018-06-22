@@ -90,10 +90,10 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
   val kafkaConsumerID: String = props.getOrElse(KafkaConfigs.consumerId, tableProps.getOrElse(KafkaConfigs.consumerId, appTag)).toString.replaceAllLiterally("/", "_").replaceAllLiterally(":", "_")
   val kafkaZKTimeOutMilliSec: String = tableProps.getOrElse(KafkaConfigs.zookeeperConnectionTimeoutKey, 10000.toString)
   val kafkaAutoOffsetReset: String = tableProps.getOrElse(KafkaConfigs.offsetResetKey, "smallest")
-  val kafkaTopic: String = tableProps.getOrElse(KafkaConfigs.whiteListTopicsKey, "")
   val kafkaCustomOffsetRange: String = tableProps.getOrElse(KafkaConfigs.customOffsetRange, "")
   val consumerModeBatch: String = tableProps.getOrElse(KafkaConstants.gimelAuditRunTypeBatch, "BATCH")
   val consumerModeStream: String = tableProps.getOrElse(KafkaConstants.gimelAuditRunTypeStream, "STREAM")
+  val kafkaTopics: String = tableProps.getOrElse(KafkaConfigs.whiteListTopicsKey, "")
 
   // Kafka Serde
   val kafkaKeySerializer: String = tableProps.getOrElse(KafkaConfigs.serializerKey, KafkaConfigs.kafkaStringSerializer)
@@ -108,8 +108,10 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
   val zkHostAndPort: String = tableProps.getOrElse(KafkaConfigs.zookeeperCheckpointHost, pcatProps.zkHostAndPort)
   if (pcatProps.kafkaConsumerCheckPointRoot == "") throw new Exception("Root CheckPoint Path for ZK cannot be Empty")
   if (appTag == "") throw new Exception("appTag cannot be Empty")
-  if (kafkaTopic == "") throw new Exception("kafkaTopic cannot be Empty")
-  val zkCheckPoint: String = tableProps.getOrElse(KafkaConfigs.zookeeperCheckpointPath, pcatProps.kafkaConsumerCheckPointRoot) + "/" + appTag + "/" + kafkaTopic
+  if (kafkaTopics == "") throw new Exception("kafkaTopics cannot be Empty")
+  val zkCheckPoints: Seq[String] = kafkaTopics.split(",").map{ kafkaTopic =>
+    tableProps.getOrElse(KafkaConfigs.zookeeperCheckpointPath, pcatProps.kafkaConsumerCheckPointRoot) + "/" + appTag + "/" + kafkaTopic
+  }
 
   // Kafka Monitoring for PayPal
   /*
@@ -141,7 +143,7 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
     , KafkaConfigs.kafkaGroupIdKey -> KafkaConsumerGroupID
     , KafkaConfigs.zookeeperConnectionTimeoutKey -> kafkaZKTimeOutMilliSec
     , KafkaConfigs.offsetResetKey -> kafkaAutoOffsetReset
-    , KafkaConfigs.kafkaTopicKey -> kafkaTopic
+    , KafkaConfigs.kafkaTopicKey -> kafkaTopics
     , KafkaConfigs.serializerKey -> kafkaKeySerializer
     , KafkaConfigs.serializerValue -> kafkaValueSerializer
     , KafkaConfigs.deSerializerKey -> kafkaKeyDeSerializer
@@ -155,7 +157,7 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
   val producerProps = scala.collection.immutable.Map(KafkaConfigs.kafkaServerKey -> kafkaHostsAndPort
     , KafkaConfigs.serializerKey -> kafkaKeySerializer
     , KafkaConfigs.serializerValue -> kafkaValueSerializer
-    , KafkaConfigs.kafkaTopicKey -> kafkaTopic)
+    , KafkaConfigs.kafkaTopicKey -> kafkaTopics)
   producerProps.foreach { kvPair => kafkaProducerProps.put(kvPair._1.toString, kvPair._2.toString) }
 
   logger.info(s"kafkaProducerProps --> ${kafkaProducerProps.asScala.mkString("\n")}")

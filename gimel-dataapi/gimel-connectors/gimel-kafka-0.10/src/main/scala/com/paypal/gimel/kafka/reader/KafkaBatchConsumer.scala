@@ -59,8 +59,8 @@ object KafkaBatchConsumer {
       val finalOffsetRangesForReader: Array[OffsetRange] =
         if (conf.kafkaCustomOffsetRange.isEmpty()) {
           logger.info(s"""No custom offset information was given by the user""")
-          val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoint)
-          val availableOffsetRange: Array[OffsetRange] = BrokersAndTopic(conf.kafkaHostsAndPort, conf.kafkaTopic).toKafkaOffsetsPerPartition
+          val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoints)
+          val availableOffsetRange: Array[OffsetRange] = BrokersAndTopic(conf.kafkaHostsAndPort, conf.kafkaTopics).toKafkaOffsetsPerPartition
           val newOffsetRangesForReader = getNewOffsetRangeForReader(lastCheckPoint, availableOffsetRange, conf.fetchRowsOnFirstRun)
           logger.info("Offset Ranges From Difference -->")
           newOffsetRangesForReader.foreach(x => logger.info(x.toString))

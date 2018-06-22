@@ -54,7 +54,7 @@ object KafkaBatchProducer {
     logger.info(" @Begin --> " + MethodName)
 
     val kafkaProps: Properties = conf.kafkaProducerProps
-    val kafkaTopic = conf.kafkaTopic
+    val kafkaTopic = conf.kafkaTopics
     logger.info(s"Kafka Props for Producer -> ${kafkaProps.asScala.mkString("\n")}")
     logger.info("Begin Publishing to Kafka....")
     try {
@@ -109,7 +109,7 @@ object KafkaBatchProducer {
       case (_, "org.apache.kafka.common.serialization.ByteArraySerializer") => {
         val kafkaProps: Properties = conf.kafkaProducerProps
         val avroSchemaString = conf.avroSchemaString
-        val kafkaTopic = conf.kafkaTopic
+        val kafkaTopic = conf.kafkaTopics
         logger.debug(s"Kafka Props for Producer -> ${kafkaProps.asScala.mkString("\n")}")
         logger.debug(s"avro Schema --> ${avroSchemaString}")
         logger.debug(s"dataframe Schema --> ${dataFrame.schema}")
