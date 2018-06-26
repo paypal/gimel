@@ -71,12 +71,12 @@ object KafkaStreamConsumer {
         .set("spark.streaming.backpressure.enabled", "true")
         .set("spark.streaming.kafka.maxRatePerPartition", streamRate)
       // Resolve all the Properties & Determine Kafka CheckPoint before reading from Kafka
-      val (schemaString, kafkaTopic, brokers) = (conf.avroSchemaString, conf.kafkaTopic, conf.kafkaHostsAndPort)
+      val (schemaString, kafkaTopic, brokers) = (conf.avroSchemaString, conf.kafkaTopics, conf.kafkaHostsAndPort)
       logger.info(s"Zookeeper Server : ${conf.zkHostAndPort}")
-      logger.info(s"Zookeeper Checkpoint : ${conf.zkCheckPoint}")
+      logger.info(s"Zookeeper Checkpoint : ${conf.zkCheckPoints}")
       val startOffsetsForStream: Map[TopicPartition, Long] =
         if (conf.kafkaCustomOffsetRange.isEmpty()) {
-          val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoint)
+          val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoints)
           if (lastCheckPoint == None) {
             logger.info("No CheckPoint Found !")
           } else {
@@ -97,7 +97,7 @@ object KafkaStreamConsumer {
       conf.kafkaConsumerProps.foreach(x => kafkaParams += (x._1 -> x._2))
       val (keyDeSer, valDeSer) = (getSerDe(conf.kafkaKeyDeSerializer), getSerDe(conf.kafkaValueDeSerializer))
       kafkaParams +=("key.deserializer" -> keyDeSer, "value.deserializer" -> valDeSer)
-      val consumerStrategy = ConsumerStrategies.Subscribe[Any, Any](Seq(kafkaTopic), kafkaParams, startOffsetsForStream)
+      val consumerStrategy = ConsumerStrategies.Subscribe[Any, Any](kafkaTopic.split(",").toSet, kafkaParams, startOffsetsForStream)
       val locationStrategy = LocationStrategies.PreferConsistent
       logger.info(
         s"""
@@ -114,7 +114,7 @@ object KafkaStreamConsumer {
         rdd
       }.map { x => WrappedData(x.key(), x.value()) }
       // CheckPointer Function - CheckPoints each window
-      val saveCheckPoint: (Array[OffsetRange]) => Boolean = inStreamCheckPoint(conf.zkHostAndPort, conf.zkCheckPoint, _)
+      val saveCheckPoint: (Array[OffsetRange]) => Boolean = inStreamCheckPoint(conf.zkHostAndPort, conf.zkCheckPoints, _)
       // Convertor Function : takes Raw Data and Returns AvroGeneric Data
       val bytesToGenericRDD: (RDD[WrappedData]) => RDD[GenericRecord] =
         wrappedDataToAvro(_, conf.avroSchemaKey, conf.avroSchemaURL, conf.avroSchemaSource, conf.avroSchemaString, isStreamParallel, streamParallels, conf.cdhAllSchemaDetails)
@@ -125,7 +125,7 @@ object KafkaStreamConsumer {
       // Convertor Function - RDD[GenericRecord] => DataFrame
       val genericRecToDF: (SQLContext, RDD[GenericRecord]) => DataFrame = SparkAvroUtilities.genericRecordtoDF(_, _, finalSchema)
       // Provide Option to Clear CheckPoint
-      val deleteCheckPoint: (String) => Unit = clearCheckPoint(conf.zkHostAndPort, conf.zkCheckPoint, _: String)
+      val deleteCheckPoint: (String) => Unit = clearCheckPoint(conf.zkHostAndPort, conf.zkCheckPoints, _: String)
       // Provide Option to Get DataFrame for a Simple String Message from Kafka Topic
       val columnAlias = kafkaMessageColumnAlias(conf)
       //      val wrappedDataToDF: (SQLContext, RDD[WrappedData]) => DataFrame = wrappedStringDataToDF(columnAlias, _, _)

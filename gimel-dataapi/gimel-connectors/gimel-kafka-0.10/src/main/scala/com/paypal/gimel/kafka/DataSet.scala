@@ -30,7 +30,7 @@ import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.kafka.conf.KafkaClientConfiguration
 import com.paypal.gimel.kafka.reader.KafkaBatchConsumer
 import com.paypal.gimel.kafka.utilities.ImplicitZKCheckPointers._
-import com.paypal.gimel.kafka.utilities.ZooKeeperHostAndNode
+import com.paypal.gimel.kafka.utilities.ZooKeeperHostAndNodes
 import com.paypal.gimel.kafka.writer.KafkaBatchProducer
 import com.paypal.gimel.logger.Logger
 
@@ -58,9 +58,9 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     if (alreadyCheckPointed) {
       logger.warning("Already Check-Pointed, Consume Again to Checkpoint !")
     } else {
-      val zkNode = conf.zkCheckPoint
+      val zkNode = conf.zkCheckPoints
       val zkHost = conf.zkHostAndPort
-      val zk = ZooKeeperHostAndNode(zkHost, zkNode)
+      val zk = ZooKeeperHostAndNodes(zkHost, zkNode)
       (zk, readTillOffsetRange.get).saveZkCheckPoint
       alreadyCheckPointed = true
       logger.info(s"Check-Point --> ${readTillOffsetRange.get.mkString("|")} | Success @ -> ${zk} ")
@@ -71,9 +71,9 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * Completely Clear the CheckPointed Offsets, leading to Read from Earliest offsets from Kafka
     */
   def clearCheckPoint(): Unit = {
-    val zkNode = conf.zkCheckPoint
+    val zkNode = conf.zkCheckPoints
     val zkHost = conf.zkHostAndPort
-    val zk = ZooKeeperHostAndNode(zkHost, zkNode)
+    val zk = ZooKeeperHostAndNodes(zkHost, zkNode)
     zk.deleteZkCheckPoint()
   }
 

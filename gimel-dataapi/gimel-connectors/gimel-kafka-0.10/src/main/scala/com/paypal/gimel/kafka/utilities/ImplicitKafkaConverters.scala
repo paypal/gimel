@@ -127,26 +127,6 @@ object ImplicitKafkaConverters {
     val port1: Int = brokers(0).split(":")(1).toInt
     val latestTime: Long = -1L
     val earliestTime: Long = -2L
-    val topicMetadata: TopicMetadata = toTopicMetadataAndLeaders._1
-    val partitionAndLeader: Seq[(Int, String, Int)] = toTopicMetadataAndLeaders._2
-
-
-    /**
-      * Take Topic Name and return topicMetadata and partition and Leader
-      * @return (topic Metadata , partitionAndLeader)
-      */
-    def toTopicMetadataAndLeaders: (TopicMetadata, Seq[(Int, String, Int)]) = {
-      val topic = brokersAndTopic.topic
-      val topicMetadataRequest = TopicMetadataRequest(0, 111, clientID.toString, Seq(topic))
-      val consumer = new kafka.consumer.SimpleConsumer(host1, port1, 10000, Int.MaxValue, clientID.toString)
-      val k11: TopicMetadataResponse = consumer.send(topicMetadataRequest)
-      val topicMetadata: TopicMetadata = k11.topicsMetadata.head
-      val partitionAndLeader: Seq[(Int, String, Int)] = topicMetadata.partitionsMetadata.map { eachPartition =>
-        (eachPartition.partitionId, eachPartition.leader.get.host, eachPartition.leader.get.port)
-      }
-      (topicMetadata, partitionAndLeader)
-    }
-
 
     /**
       * Converts a given Tuple of KafkaBrokers & Topic into KafkaTopicAndPartitions
@@ -154,7 +134,7 @@ object ImplicitKafkaConverters {
       * @example val testing: Array[TopicAndPartition] = ("localhost:8080,localhost:8081", "test").toTopicAndPartitions
       * @return Array[TopicAndPartition]
       */
-    def toTopicAndPartitions: Array[TopicAndPartition] = {
+    def toTopicAndPartitions: Map[TopicAndPartition, (String, Int)] = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
       logger.info(" @Begin --> " + MethodName)
@@ -162,10 +142,10 @@ object ImplicitKafkaConverters {
       val kafkaBrokers = kafka.client.ClientUtils.parseBrokerList(brokersAndTopic.brokers)
       val kafkaTopics: Set[String] = brokersAndTopic.topic.split(",").toSet
       val offsetMetadata: TopicMetadataResponse = kafka.client.ClientUtils.fetchTopicMetadata(kafkaTopics, kafkaBrokers, clientID.toString, 1000000, 0)
-      val topicAndPartitions = offsetMetadata.topicsMetadata.map {
+      val topicAndPartitions: Map[TopicAndPartition, (String, Int)] = offsetMetadata.topicsMetadata.flatMap {
         topicMetadata =>
-          topicMetadata.partitionsMetadata.map(x => TopicAndPartition(topicMetadata.topic, x.partitionId)).toList
-      }.head.toArray
+          topicMetadata.partitionsMetadata.map(x => (TopicAndPartition(topicMetadata.topic, x.partitionId), (x.leader.get.host, x.leader.get.port)))
+      }.toMap
       topicAndPartitions
     }
 
@@ -181,17 +161,17 @@ object ImplicitKafkaConverters {
 
       logger.info(" @Begin --> " + MethodName)
 
-      val topicAndPartitions: Array[TopicAndPartition] = brokersAndTopic.toTopicAndPartitions
+      val topicAndPartitions: Map[TopicAndPartition, (String, Int)] = brokersAndTopic.toTopicAndPartitions
       logger.info("The Topic And Partitions are --> ")
       topicAndPartitions.foreach(println)
       topicAndPartitions.map {
         topicAndPartition =>
           val (host, port) = findLeader(topicAndPartition)
           val consumer = new kafka.consumer.SimpleConsumer(host, port, 10000, Int.MaxValue, clientID.toString)
-          val earliestOffset: Long = consumer.earliestOrLatestOffset(topicAndPartition, earliestTime, clientID)
-          val latestOffset: Long = consumer.earliestOrLatestOffset(topicAndPartition, latestTime, clientID)
-          OffsetRange(topicAndPartition.topic, topicAndPartition.partition, earliestOffset, latestOffset)
-      }
+          val earliestOffset: Long = consumer.earliestOrLatestOffset(topicAndPartition._1, earliestTime, clientID)
+          val latestOffset: Long = consumer.earliestOrLatestOffset(topicAndPartition._1, latestTime, clientID)
+          OffsetRange(topicAndPartition._1.topic, topicAndPartition._1.partition, earliestOffset, latestOffset)
+      }.toArray
     }
 
     /**
@@ -200,12 +180,12 @@ object ImplicitKafkaConverters {
       * @param topicAndPartition
       * @return Tuple(host, port)
       */
-    private def findLeader(topicAndPartition: TopicAndPartition): (String, Int) = {
+    private def findLeader(topicAndPartition: (TopicAndPartition, (String, Int))): (String, Int) = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
       logger.info(" @Begin --> " + MethodName)
-      val leaderDetails = partitionAndLeader.find(x => x._1 == topicAndPartition.partition)
-      (leaderDetails.get._2, leaderDetails.get._3)
+      val leaderDetails: (String, Int) = (topicAndPartition._2._1, topicAndPartition._2._2)
+      leaderDetails
     }
   }
 
