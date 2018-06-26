@@ -27,7 +27,7 @@ import com.paypal.gimel.common.storageadmin.ZooKeeperAdminClient._
 import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.logger.Logger
 
-case class ZooKeeperHostAndNode(host: String, node: String)
+case class ZooKeeperHostAndNodes(host: String, nodes: Seq[String])
 
 /**
   * Provides Implicit, Convenience Functions for Developers to Do CheckPointing Operations
@@ -39,7 +39,7 @@ object ImplicitZKCheckPointers {
   /**
     * @param checkPointingInfo Tuple of (ZooKeeperHostAndNode, Array[Kafka OffsetRange])
     */
-  implicit class ZKCheckPointers(checkPointingInfo: (ZooKeeperHostAndNode, Array[OffsetRange])) {
+  implicit class ZKCheckPointers(checkPointingInfo: (ZooKeeperHostAndNodes, Array[OffsetRange])) {
     /**
       * CheckPoints a Tuple of (Array[OffsetRange], checkPointDirectory)
       *
@@ -53,10 +53,12 @@ object ImplicitZKCheckPointers {
       logger.info(" @Begin --> " + MethodName)
 
       val zkServers = checkPointingInfo._1.host
-      val zkNode = checkPointingInfo._1.node
+      val zkNodes = checkPointingInfo._1.nodes
       val contentToWrite = checkPointingInfo._2.toStringOfKafkaOffsetRanges
       try {
-        writetoZK(zkServers, zkNode, contentToWrite)
+        zkNodes.map { zkNode =>
+          writetoZK(zkServers, zkNode, contentToWrite)
+        }
       } catch {
         case ex: Throwable =>
           throw ex
@@ -70,7 +72,7 @@ object ImplicitZKCheckPointers {
   /**
     * @param zooKeeperDetails ZooKeeperHostAndNode
     */
-  implicit class ZKCheckPointFetcher(zooKeeperDetails: ZooKeeperHostAndNode) {
+  implicit class ZKCheckPointFetcher(zooKeeperDetails: ZooKeeperHostAndNodes) {
     /**
       * Fetches CheckPoints as An Array[OffsetRange]
       *
@@ -80,18 +82,26 @@ object ImplicitZKCheckPointers {
       */
     def fetchZkCheckPoint: Option[Array[OffsetRange]] = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
       logger.info(" @Begin --> " + MethodName)
-
       val zkServers = zooKeeperDetails.host
-      val zkNode = zooKeeperDetails.node
+      val zkNodes = zooKeeperDetails.nodes
       if (zkServers.isEmpty) throw new ZooKeeperCheckPointerException("Expected CheckPoint Directory, but got Empty String !")
-      val checkPointString: Option[String] = readFromZK(zkServers, zkNode)
-      checkPointString match {
-        case None =>
-          None
-        case _: Option[String] =>
-          Some(checkPointString.get.split('|').map(x => CheckPointString(x)).toKafkaOffsetRanges)
+      val zkCheckPoints = zkNodes.flatMap { zkNode =>
+        val checkPointString: Option[String] = readFromZK(zkServers, zkNode)
+        checkPointString match {
+          case None =>
+            None
+          case _: Option[String] =>
+            checkPointString.get.split('|').map(x => CheckPointString(x)).toKafkaOffsetRanges
+        }
+      }.filter {
+        None => false
+      }.toArray
+      if (zkCheckPoints.isEmpty) {
+        None
+      }
+      else {
+        Some(zkCheckPoints)
       }
     }
 
@@ -99,9 +109,11 @@ object ImplicitZKCheckPointers {
       * Deletes a ZooKeeper CheckPoint
       */
     def deleteZkCheckPoint(): Unit = {
-      logger.warning(s"WARNING !!!!! Deleting --> host : ${zooKeeperDetails.host} | node : ${zooKeeperDetails.node}")
+      logger.warning(s"WARNING !!!!! Deleting --> host : ${zooKeeperDetails.host} | node : ${zooKeeperDetails.nodes}")
       try {
-        deleteNodeOnZK(zooKeeperDetails.host, zooKeeperDetails.node)
+        zooKeeperDetails.nodes.map { node =>
+          deleteNodeOnZK(zooKeeperDetails.host, node)
+        }
       } catch {
         case ex: Throwable =>
           throw ex
