@@ -141,12 +141,12 @@ object KafkaUtilities {
       GimelConstants.RESOLVED_HIVE_TABLE -> resolveDataSetName(dataSet),
       GimelConstants.APP_TAG -> getAppTag(sparkSession.sparkContext))
     val conf = new KafkaClientConfiguration(newProps)
-    logger.info(s"Zookeeper Details --> ${conf.zkHostAndPort} | ${conf.zkCheckPoint}")
+    logger.info(s"Zookeeper Details --> ${conf.zkHostAndPort} | ${conf.zkCheckPoints}")
     val thresholdRows = 1000000000
     val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort
-      , conf.zkCheckPoint)
+      , conf.zkCheckPoints)
     val availableOffsetRange: Array[OffsetRange] = {
-      BrokersAndTopic(conf.kafkaHostsAndPort, conf.kafkaTopic).toKafkaOffsetsPerPartition
+      BrokersAndTopic(conf.kafkaHostsAndPort, conf.kafkaTopics).toKafkaOffsetsPerPartition
     }
     if (lastCheckPoint.isDefined) {
       logger.info(s"Offsets in CheckPoint --> ${lastCheckPoint.get.mkString("\n")}")
@@ -190,18 +190,18 @@ object KafkaUtilities {
     * Convenience Function to checkpoint a given OffsetRange
     *
     * @param zkHost      Host Server for Zookeeper
-    * @param zkNode      Node where we want to checkPoint
+    * @param zkNodes      Node where we want to checkPoint
     * @param offsetRange Array[OffsetRange]
     * @return Boolean indicating checkpointing status
     */
 
-  def inStreamCheckPoint(zkHost: String, zkNode: String
+  def inStreamCheckPoint(zkHost: String, zkNodes: Seq[String]
                          , offsetRange: Array[OffsetRange]): Boolean = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
 
-    val zk = ZooKeeperHostAndNode(zkHost, zkNode)
+    val zk = ZooKeeperHostAndNodes(zkHost, zkNodes)
     (zk, offsetRange).saveZkCheckPoint
   }
 
@@ -312,15 +312,15 @@ object KafkaUtilities {
     * Completely Clear the CheckPointed Offsets, leading to Read from Earliest offsets from Kafka
     *
     * @param zkHost Zookeeper Host
-    * @param zkNode Zookeeper Path
+    * @param zkNodes Zookeeper Path
     * @param msg    Some Message or A Reason for Clearing CheckPoint
     */
-  def clearCheckPoint(zkHost: String, zkNode: String, msg: String): Unit = {
+  def clearCheckPoint(zkHost: String, zkNodes: Seq[String], msg: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
 
-    val zk = ZooKeeperHostAndNode(zkHost, zkNode)
+    val zk = ZooKeeperHostAndNodes(zkHost, zkNodes)
     zk.deleteZkCheckPoint()
   }
 
@@ -329,17 +329,16 @@ object KafkaUtilities {
     * Gets the Latest CheckPoint from Zookeeper, if available
     *
     * @param zkHost Host Server for Zookeeper
-    * @param zkNode Node where we want to checkPoint
+    * @param zkNodes Node where we want to checkPoint
     * @return Option[Array[OffsetRange]
     */
 
-  def getLastCheckPointFromZK(zkHost: String, zkNode: String): Option[Array[OffsetRange]] = {
+  def getLastCheckPointFromZK(zkHost: String, zkNodes: Seq[String]): Option[Array[OffsetRange]] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
     logger.info(" @Begin --> " + MethodName)
 
     try {
-      val zk = ZooKeeperHostAndNode(zkHost, zkNode)
+      val zk = ZooKeeperHostAndNodes(zkHost, zkNodes)
       val lastCheckPoint: Option[Array[OffsetRange]] = zk.fetchZkCheckPoint
       lastCheckPoint
     } catch {
@@ -797,7 +796,7 @@ object KafkaUtilities {
     logger.info(
       s"""kafka.message.value.type --> ${conf.kafkaMessageValueType}
           |\nValue Serializer --> ${conf.kafkaValueSerializer}""".stripMargin)
-    val wrappedDataRdd = getFromKafkaAsWrappedData(sqlContext, conf, parallelizedRanges)
+    val wrappedDataRdd: RDD[WrappedData] = getFromKafkaAsWrappedData(sqlContext, conf, parallelizedRanges)
     rddToDF(sqlContext, conf.kafkaMessageValueType, conf.kafkaKeySerializer
       , conf.kafkaValueSerializer, wrappedDataRdd, "value", conf.avroSchemaString
       , conf.avroSchemaSource, conf.cdhTopicSchemaMetadata, conf.cdhAllSchemaDetails)
