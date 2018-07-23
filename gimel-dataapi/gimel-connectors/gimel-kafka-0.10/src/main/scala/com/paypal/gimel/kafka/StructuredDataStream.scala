@@ -21,21 +21,21 @@ package com.paypal.gimel.kafka
 
 import scala.language.implicitConversions
 
-import org.apache.spark.streaming.StreamingContext
+import org.apache.spark.sql.SparkSession
 
-import com.paypal.gimel.datastreamfactory.{GimelDataStream, StreamingResult}
+import com.paypal.gimel.datastreamfactory.{GimelStructuredDataStream, StructuredStreamingResult}
 import com.paypal.gimel.kafka.conf.KafkaClientConfiguration
 import com.paypal.gimel.kafka.reader.KafkaStreamConsumer
 import com.paypal.gimel.logger.Logger
 
-class DataStream(streamingContext: StreamingContext) extends GimelDataStream(streamingContext: StreamingContext) {
+class StructuredDataStream(sparkSession: SparkSession) extends GimelStructuredDataStream(sparkSession: SparkSession) {
 
   // GET LOGGER
   val logger = Logger()
   logger.info(s"Initiated --> ${this.getClass.getName}")
 
   /**
-    * Provides DStream for a given configuration
+    * Provides dataframe for a given configuration
     *
     * @param dataset      Kafka Topic Name
     * @param datasetProps Map of K->V kafka Properties
@@ -43,28 +43,12 @@ class DataStream(streamingContext: StreamingContext) extends GimelDataStream(str
     *         Dstream[GenericRecord , Its Equivalent JSON String]
     *         A Function That Takes (SQLContext, RDD[GenericRecord]) , and returns a DataFrame
     */
-  def read(dataset: String, datasetProps: Map[String, Any]): StreamingResult = {
-
+  def read(dataset: String, datasetProps: Map[String, Any]): StructuredStreamingResult = {
     if (datasetProps.isEmpty) {
-      throw new DataStreamException("Props Map Cannot be empty for KafkaDataSet Read")
+      throw new DataStreamException("Props Map Cannot be emtpy for KafkaDataSet Read")
     }
     val conf = new KafkaClientConfiguration(datasetProps)
-    KafkaStreamConsumer.createDStream(streamingContext, conf)
+    KafkaStreamConsumer.createStructuredStream(sparkSession, conf)
   }
 
-}
-
-/**
-  * Custom Exception for KafkaDataStream initiation errors
-  *
-  * @param message Message to Throw
-  * @param cause   A Throwable Cause
-  */
-private class DataStreamException(message: String, cause: Throwable)
-  extends RuntimeException(message) {
-  if (cause != null) {
-    initCause(cause)
-  }
-
-  def this(message: String) = this(message, null)
 }

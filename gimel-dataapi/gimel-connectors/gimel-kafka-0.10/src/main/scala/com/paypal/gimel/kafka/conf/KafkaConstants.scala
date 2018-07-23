@@ -49,6 +49,16 @@ object KafkaConstants {
     "union" -> "union",
     "enum" -> "string",
     "fixed" -> "binary")
+  // STRUCTURED STREAMING SPARK CONSTANTS
+  val KAFKA_FORMAT: String = "org.apache.spark.sql.kafka010.KafkaSourceProvider"
+  val KAFKA_BOOTSTRAP_SERVERS: String = "kafka.bootstrap.servers"
+  val KAFKA_SUBSCRIBE: String = "subscribe"
+  val KAFKA_START_OFFSETS: String = "startingOffsets"
+  val KAFKA_END_OFFSETS: String = "endingOffsets"
+  val STREAM_FAIL_ON_DATA_LOSS: String = "failOnDataLoss"
+  val KAFKA_POLL_TIMEOUT: String = "kafkaConsumer.pollTimeoutMs"
+  val KAFKA_FETCH_RETRIES: String = "fetchOffset.numRetries"
+  val KAFKA_RETRY_INTERVAL: String = "fetchOffset.retryIntervalMs"
   val earliestOffset: String = "earliest"
 }
 

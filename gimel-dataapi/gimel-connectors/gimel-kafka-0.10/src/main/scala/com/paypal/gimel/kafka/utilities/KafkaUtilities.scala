@@ -27,12 +27,15 @@ import scala.collection.immutable.Map
 import scala.collection.mutable
 import scala.language.implicitConversions
 import scala.reflect.runtime.universe._
+import scala.util.parsing.json.JSON
 
 import org.apache.avro.generic.GenericRecord
 import org.apache.kafka.clients.consumer.ConsumerRecord
 import org.apache.kafka.common.serialization._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
+import org.apache.spark.sql.streaming.StreamingQueryListener
+import org.apache.spark.sql.streaming.StreamingQueryListener.{QueryProgressEvent, QueryStartedEvent, QueryTerminatedEvent}
 import org.apache.spark.streaming.kafka010._
 import org.apache.spark.streaming.kafka010.KafkaUtils._
 import spray.json._
@@ -44,7 +47,7 @@ import com.paypal.gimel.common.schema.ConfluentSchemaRegistry
 import com.paypal.gimel.common.storageadmin
 import com.paypal.gimel.common.storageadmin.KafkaAdminClient
 import com.paypal.gimel.common.utilities.DataSetUtils._
-import com.paypal.gimel.datastreamfactory.WrappedData
+import com.paypal.gimel.datastreamfactory.{StreamCheckPointHolder, WrappedData}
 import com.paypal.gimel.kafka.avro.SparkAvroUtilities._
 import com.paypal.gimel.kafka.conf._
 import com.paypal.gimel.kafka.conf.KafkaJsonProtocol.{offsetPropertiesFormat, offsetRangePropertiesFormat}
@@ -203,6 +206,51 @@ object KafkaUtilities {
 
     val zk = ZooKeeperHostAndNodes(zkHost, zkNodes)
     (zk, offsetRange).saveZkCheckPoint
+  }
+
+  /**
+    * Convenience Function to checkpoint a given OffsetRange
+    *
+    * @param sparkSession Spark Session
+    * @param zkHost      Host Server for Zookeeper
+    * @param zkNodes      Node where we want to checkPoint
+    * @return Boolean indicating checkpointing status
+    */
+
+  def inStructuredStreamCheckPoint(sparkSession: SparkSession, zkHost: String, zkNodes: Seq[String]): Unit = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
+    logger.info(" @Begin --> " + MethodName)
+    /*
+    implicit val offsetRangeEncoder = org.apache.spark.sql.Encoders.kryo[OffsetRange]
+    val dataSet: Dataset[OffsetRange] = dataFrame.as[Result].map{ x =>
+      inStreamCheckPoint(zkHost, zkNodes, new Array[OffsetRange](OffsetRange(x.topic, x.partition.toInt, x.offset.toLong, 0L))
+    }
+    // val queryStatusMap = JSON.parseFull(query.lastProgress.json).get.asInstanceOf[Map[String, Any]]
+    // val endOffsetsMap: Map[String, Map[Any, Any]] = queryStatusMap.get("sources").head.asInstanceOf[List[Any]].head.asInstanceOf[Map[Any, Any]].get("endOffset").head.asInstanceOf[Map[String, Map[Any, Any]]]
+    // val endOffsets = endOffsetsMap.flatMap { x =>
+    //  x._2.map { y =>
+    //    OffsetRange(topic = x._1, partition = y._1.asInstanceOf[String].toInt, fromOffset = y._2.asInstanceOf[Double].longValue(), untilOffset = 0L)
+    //  }
+    //}.toArray
+    */
+    sparkSession.streams.addListener(new StreamingQueryListener() {
+      override def onQueryStarted(event: QueryStartedEvent): Unit = Unit
+      override def onQueryProgress(event: QueryProgressEvent): Unit = {
+        val queryStatusMap = JSON.parseFull(event.progress.json).get.asInstanceOf[Map[String, Any]]
+        val endOffsetsMap: Map[String, Map[Any, Any]] = queryStatusMap.get("sources").head.asInstanceOf[List[Any]].head.asInstanceOf[Map[Any, Any]].get("endOffset").head.asInstanceOf[Map[String, Map[Any, Any]]]
+        val endOffsets = endOffsetsMap.flatMap { x =>
+          x._2.map { y =>
+            OffsetRange(topic = x._1, partition = y._1.asInstanceOf[String].toInt, fromOffset = 0L, untilOffset = y._2.asInstanceOf[Double].longValue())
+          }
+        }.toArray
+        StreamCheckPointHolder().setCurentCheckPoint(endOffsets)
+        inStreamCheckPoint(zkHost, zkNodes, endOffsets)
+      }
+      override def onQueryTerminated(event: QueryTerminatedEvent): Unit = {
+        sparkSession.streams.removeListener(this)
+      }
+    })
   }
 
   /**
@@ -664,6 +712,8 @@ object KafkaUtilities {
               , cdhTopicSchemaMetadata: Option[String]
               , cdhAllSchemaDetails: Option[Map[String, (String, mutable.Map[Int, String])]])
   : DataFrame = {
+    logger.info("IN RDD TESTING")
+    logger.info(valueMessageType + " " + valueSerializer)
     (valueMessageType, valueSerializer) match {
       // Bytes Messages
       case (Some("binary"), "org.apache.kafka.common.serialization.ByteArraySerializer") =>
