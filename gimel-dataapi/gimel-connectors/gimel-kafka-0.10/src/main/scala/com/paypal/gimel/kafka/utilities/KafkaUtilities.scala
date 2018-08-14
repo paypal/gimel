@@ -408,32 +408,36 @@ object KafkaUtilities {
     * @return Array[OffsetRange]
     */
 
-  def getCustomOffsetRangeForReader(offsetRange: String, consumerMode: String): Array[OffsetRange] = {
+  def getCustomOffsetRangeForReader(kafkaTopics: Seq[String], offsetRange: String, consumerMode: String): Array[OffsetRange] = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
     try {
-        val offsetRangeObject = offsetRange.parseJson.convertTo[Seq[OffsetProperties]]
-        val finalOffsetRanges = offsetRangeObject.flatMap {
-          eachTopicRange =>
-            eachTopicRange.offsetRange.map {
-              eachOffsetRange => {
-                var toOffset = 0L
-                if (consumerMode == KafkaConstants.gimelAuditRunTypeStream) {
-                  toOffset = eachOffsetRange.to.getOrElse(-1)
-                }
-                else if (consumerMode == KafkaConstants.gimelAuditRunTypeBatch) {
-                  toOffset = eachOffsetRange.to.get
-                }
-                OffsetRange(eachTopicRange.topic, eachOffsetRange.partition, eachOffsetRange.from, toOffset)
+      val offsetRangeObject = offsetRange.parseJson.convertTo[Seq[OffsetProperties]]
+      val finalOffsetRanges = offsetRangeObject.flatMap {
+        eachTopicRange =>
+          eachTopicRange.offsetRange.map {
+            eachOffsetRange => {
+              var toOffset = 0L
+              if (consumerMode == KafkaConstants.gimelAuditRunTypeStream) {
+                toOffset = eachOffsetRange.to.getOrElse(-1)
               }
+              else if (consumerMode == KafkaConstants.gimelAuditRunTypeBatch) {
+                toOffset = eachOffsetRange.to.get
+              }
+              if(!kafkaTopics.contains(eachTopicRange.topic)) {
+                throw new Exception("The topic specified in custom offset range does not match the subscribed topic! Please unset the previous value or check your properties")
+              }
+              OffsetRange(eachTopicRange.topic, eachOffsetRange.partition, eachOffsetRange.from, toOffset)
             }
-        }.toArray
-        finalOffsetRanges
+          }
+      }.toArray
+      finalOffsetRanges
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
         throw ex
     }
   }
+
 
   /**
     * Converts an RDD[Wrapped Data] into RDD[GenericRecord]

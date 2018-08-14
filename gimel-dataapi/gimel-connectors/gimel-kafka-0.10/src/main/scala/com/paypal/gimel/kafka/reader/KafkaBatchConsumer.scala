@@ -68,7 +68,7 @@ object KafkaBatchConsumer {
         }
         else {
           logger.info(s"""Custom offset information was given by the user""")
-          getCustomOffsetRangeForReader(conf.kafkaCustomOffsetRange, conf.consumerModeBatch)
+          getCustomOffsetRangeForReader(conf.kafkaTopics.split(","), conf.kafkaCustomOffsetRange, KafkaConstants.gimelAuditRunTypeBatch)
         }
       logger.info("Offset Ranges After applying Threshold Per Partition/Custom Offsets -->")
       finalOffsetRangesForReader.foreach(x => logger.info(x.toString))

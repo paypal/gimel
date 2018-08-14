@@ -77,18 +77,26 @@ object KafkaStreamConsumer {
       val startOffsetsForStream: Map[TopicPartition, Long] =
         if (conf.kafkaCustomOffsetRange.isEmpty()) {
           val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoints)
+          val availableOffsetRange: Array[OffsetRange] = BrokersAndTopic(brokers, kafkaTopic).toKafkaOffsetsPerPartition
           if (lastCheckPoint == None) {
             logger.info("No CheckPoint Found !")
+            if(conf.kafkaAutoOffsetReset == KafkaConstants.earliestOffset) {
+              availableOffsetRange.map {
+                x => (new TopicPartition(x.topic, x.partition) -> x.fromOffset)
+              }.toMap
+            }
+            availableOffsetRange.map {
+              x => (new TopicPartition(x.topic, x.partition) -> x.untilOffset)
+            }.toMap
           } else {
             logger.info(s"Found Checkpoint Value --> ${lastCheckPoint.get.mkString("|")}")
+            lastCheckPoint.get.map {
+              x => (new TopicPartition(x.topic, x.partition) -> x.untilOffset)
+            }.toMap
           }
-          val availableOffsetRange: Array[OffsetRange] = BrokersAndTopic(brokers, kafkaTopic).toKafkaOffsetsPerPartition
-           lastCheckPoint.getOrElse(availableOffsetRange).map {
-            x => (new TopicPartition(x.topic, x.partition) -> x.untilOffset)
-          }.toMap
         }
         else {
-          val customOffsetRangesForStream: Array[OffsetRange] = getCustomOffsetRangeForReader(conf.kafkaCustomOffsetRange, conf.consumerModeStream)
+          val customOffsetRangesForStream: Array[OffsetRange] = getCustomOffsetRangeForReader(conf.kafkaTopics.split(","), conf.kafkaCustomOffsetRange, KafkaConstants.gimelAuditRunTypeStream)
           customOffsetRangesForStream.map {
             x => (new TopicPartition(x.topic, x.partition) -> x.fromOffset)
           }.toMap
