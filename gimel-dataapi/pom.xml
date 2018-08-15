@@ -87,6 +87,7 @@ under the License.
         <spray.json.version>1.3.3</spray.json.version>
         <teradata.version>16.20.00.06</teradata.version>
         <twitter.zookeeper.version>2.0.0_fs-b</twitter.zookeeper.version>
+        <spark.kafka.connector.version>0-10_2.11</spark.kafka.connector.version>
     </properties>
     
     <build>

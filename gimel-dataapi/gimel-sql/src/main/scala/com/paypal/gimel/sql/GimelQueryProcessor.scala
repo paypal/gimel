@@ -33,23 +33,17 @@ import com.paypal.gimel.datastreamfactory.{StreamingResult, WrappedData}
 import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
-import com.paypal.gimel.sql.writer.CustomSinkProvider
 
 object GimelQueryProcessor {
 
   val logger: Logger = Logger(this.getClass.getName)
   lazy val pCatalogStreamingKafkaTmpTableName = "pcatalog_streaming_kafka_tmp_table"
   val queryUtils = GimelQueryUtils
-  var sparkSession: SparkSession = null
-  var tmpKafkaTable = ""
 
   import queryUtils._
 
   val user = sys.env("USER")
   val yarnCluster = com.paypal.gimel.common.utilities.DataSetUtils.getYarnClusterName()
-
-
-
 
   /**
     * Core Function that will be called from GIMEL-LOGGING for executing a SQL
@@ -63,7 +57,6 @@ object GimelQueryProcessor {
 
     logger.info(" @Begin --> " + MethodName)
     sparkSession.sparkContext.setLogLevel("ERROR")
-    this.sparkSession = sparkSession
     val sparkAppName = sparkSession.conf.get("spark.app.name")
     logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
       , sparkSession.conf.get("spark.app.name")
@@ -141,8 +134,6 @@ object GimelQueryProcessor {
       , scala.collection.mutable.Map("sql" -> sql)
     )
     sparkSession.sparkContext.setLogLevel("ERROR")
-    this.sparkSession = sparkSession
-    println("ENTERED THE FUNCTION")
 
     val defaultGimelLogLevel = sparkSession.conf.get(GimelConstants.LOG_LEVEL, "ERROR").toString
     if (defaultGimelLogLevel == "CONSOLE") {
@@ -189,15 +180,11 @@ object GimelQueryProcessor {
     if (kafkaTables.isEmpty) {
       throw new Exception("ERROR --> No Kafka Type DataSet In the Query To Stream !")
     } else {
-
       val tmpKafkaTable = pCatalogStreamingKafkaTmpTableName
-      this.tmpKafkaTable = tmpKafkaTable
       val newSQL = sql.replaceAll(kafkaTables.head, tmpKafkaTable)
-
       val streamingResult: StreamingResult = dataStream.read(kafkaTables.head, options)
       if (isClearCheckPointEnabled) streamingResult.clearCheckPoint("Clearing CheckPoint As Requested By User")
       try {
-
         streamingResult.dStream.foreachRDD { (rdd, time) =>
           printStats(time, listner)
           val count = rdd.count()
@@ -239,7 +226,6 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
             }
           }
         }
-
       } catch {
         case ex: Throwable =>
           logger.error(s"ERROR In Streaming Window --> \n\n${ex.getStackTraceString}")
@@ -247,22 +233,9 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
           ssc.sparkContext.stop()
           throw ex
       }
-      /*
-      try {
-      # EXPERIMENTAL FOR STRUCTURED STREAMING
-        val sinkProvider = new CustomSinkProvider()
-        val dataStream = StructuredDataStream(sparkSession)
-        val streamingResult = dataStream.read(kafkaTables.head)
-        import sparkSession.implicits._
-        val result = streamingResult.df.selectExpr("CAST(key AS STRING)", "CAST(value AS STRING)")
-          .as[(String, String)]
-        val query = result.writeStream.format(sinkProvider.getClass().getCanonicalName()).queryName("testing").option("checkpointLocation", "/tmp").start()
-        query.awaitTermination(streamawaitTerminationOrTimeout)
-      }
-      */
-       dataStream.streamingContext.start()
-       dataStream.streamingContext.awaitTerminationOrTimeout(streamawaitTerminationOrTimeout)
-       dataStream.streamingContext.stop(false, true)
+      dataStream.streamingContext.start()
+      dataStream.streamingContext.awaitTerminationOrTimeout(streamawaitTerminationOrTimeout)
+      dataStream.streamingContext.stop(false, true)
       "Success"
     }
 
@@ -629,31 +602,3 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     str.replaceAllLiterally("/", "_").replaceAllLiterally(" ", "-")
   }
 }
-/*
-class CustomSink(options: Map[String, String]) extends org.apache.spark.sql.execution.streaming.Sink {
-  val datasetName = "pcatalog.user"
-  val dataset = new DataSet(GimelQueryProcessor.sparkSession)
-  override def addBatch(batchId: Long, data: org.apache.spark.sql.DataFrame): Unit = synchronized {
-    val df = data.sparkSession.createDataFrame(data.rdd, data.schema)
-    df.select("value")
-    println("PRINTING TESTING NOW")
-    df.rdd.collect.foreach(println)
-    dataset.write(datasetName, df)
-  }
-}
-
-class CustomSinkProvider extends org.apache.spark.sql.sources.StreamSinkProvider with org.apache.spark.sql.sources.DataSourceRegister {
-  def createSink(
-                  sqlContext: org.apache.spark.sql.SQLContext,
-                  parameters: Map[String, String],
-                  partitionColumns: Seq[String],
-                  outputMode: org.apache.spark.sql.streaming.OutputMode): org.apache.spark.sql.execution.streaming.Sink = {
-    new CustomSink(parameters)
-  }
-  def shortName(): String = "custom"
-}
-*/
-
-
-
-

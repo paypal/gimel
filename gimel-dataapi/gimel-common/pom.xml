@@ -170,7 +170,7 @@ under the License.
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-sql-kafka-0-10_2.11</artifactId>
+      <artifactId>spark-sql-kafka-${spark.kafka.connector.version}</artifactId>
       <version>${spark.version}</version>
       <scope>${packaging.scope}</scope>
     </dependency>

@@ -221,19 +221,6 @@ object KafkaUtilities {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
-    /*
-    implicit val offsetRangeEncoder = org.apache.spark.sql.Encoders.kryo[OffsetRange]
-    val dataSet: Dataset[OffsetRange] = dataFrame.as[Result].map{ x =>
-      inStreamCheckPoint(zkHost, zkNodes, new Array[OffsetRange](OffsetRange(x.topic, x.partition.toInt, x.offset.toLong, 0L))
-    }
-    // val queryStatusMap = JSON.parseFull(query.lastProgress.json).get.asInstanceOf[Map[String, Any]]
-    // val endOffsetsMap: Map[String, Map[Any, Any]] = queryStatusMap.get("sources").head.asInstanceOf[List[Any]].head.asInstanceOf[Map[Any, Any]].get("endOffset").head.asInstanceOf[Map[String, Map[Any, Any]]]
-    // val endOffsets = endOffsetsMap.flatMap { x =>
-    //  x._2.map { y =>
-    //    OffsetRange(topic = x._1, partition = y._1.asInstanceOf[String].toInt, fromOffset = y._2.asInstanceOf[Double].longValue(), untilOffset = 0L)
-    //  }
-    //}.toArray
-    */
     sparkSession.streams.addListener(new StreamingQueryListener() {
       override def onQueryStarted(event: QueryStartedEvent): Unit = Unit
       override def onQueryProgress(event: QueryProgressEvent): Unit = {
@@ -452,7 +439,8 @@ object KafkaUtilities {
     * a custom offset range as a JSON from the user defined properties
     * Converts it to an array of offset ranges and returns them
     *
-    * @param offsetRange       user given custom offset ranges, if available
+    * @param kafkaTopics sequence of topics
+    * @param offsetRange user given custom offset ranges, if available
     * @return Array[OffsetRange]
     */
 
@@ -485,7 +473,6 @@ object KafkaUtilities {
         throw ex
     }
   }
-
 
   /**
     * Converts an RDD[Wrapped Data] into RDD[GenericRecord]
@@ -712,8 +699,6 @@ object KafkaUtilities {
               , cdhTopicSchemaMetadata: Option[String]
               , cdhAllSchemaDetails: Option[Map[String, (String, mutable.Map[Int, String])]])
   : DataFrame = {
-    logger.info("IN RDD TESTING")
-    logger.info(valueMessageType + " " + valueSerializer)
     (valueMessageType, valueSerializer) match {
       // Bytes Messages
       case (Some("binary"), "org.apache.kafka.common.serialization.ByteArraySerializer") =>

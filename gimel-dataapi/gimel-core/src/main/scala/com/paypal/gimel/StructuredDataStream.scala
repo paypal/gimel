@@ -127,11 +127,6 @@ class StructuredDataStream(val sparkSession: SparkSession) {
   */
 
 object StructuredDataStream {
-
-  val defaultBatchInterval = 25
-
-  import StructuredDataStreamUtils._
-
   /**
     * Client calls for a DataStream with SparkContext,
     * we internally create an HiveContext & provide DataStream

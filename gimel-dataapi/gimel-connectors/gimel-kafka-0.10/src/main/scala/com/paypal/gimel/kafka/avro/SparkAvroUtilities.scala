@@ -150,12 +150,6 @@ object SparkAvroUtilities {
           """.stripMargin
         logger.warning(warningMessage)
       }
-      println(          s"""
-                           |Provided Avro Fields --> ${avroFields.mkString(",")}
-                           |Determined DataFrame Fields --> ${dfFields.mkString(",")}
-                           |Missing Fields in Avro --> ${inDFMissingInAvro.mkString(",")}
-                           |Missing Fields in DataFrame --> ${inAvroMissingInDF.mkString(",")}
-          """.stripMargin)
       isMatching
     } catch {
       case ex: Throwable =>

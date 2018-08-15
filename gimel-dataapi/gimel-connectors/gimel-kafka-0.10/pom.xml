@@ -49,12 +49,6 @@ under the License.
       <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
-
-    <dependency>
-      <groupId>org.json4s</groupId>
-      <artifactId>json4s-native_2.11</artifactId>
-      <version>3.5.3</version>
-    </dependency>
   </dependencies>
 
   <build>
