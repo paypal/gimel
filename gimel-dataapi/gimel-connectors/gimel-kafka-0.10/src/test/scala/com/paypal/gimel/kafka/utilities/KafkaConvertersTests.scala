@@ -69,7 +69,7 @@ class KafkaConvertersTests extends FunSpec with Matchers {
     Happy case for Batch
     The value returned should be a valid conversion of the sampleJson to an Array[OffsetRange]
     */
-    val finalOffsetRanges: Array[OffsetRange] = getCustomOffsetRangeForReader(sampleJson, "BATCH")
+    val finalOffsetRanges: Array[OffsetRange] = getCustomOffsetRangeForReader("test".split(","), sampleJson, "BATCH")
     finalOffsetRanges shouldEqual(sampleRange)
 
     val sampleRangeForStream: Array[OffsetRange] = Array(
@@ -81,7 +81,7 @@ class KafkaConvertersTests extends FunSpec with Matchers {
     */
     val sampleJsonForStream: String =
       """[{"topic":"test","offsetRange":[{"partition":0,"from":1,"to":100},{"partition":1,"from":1}]}]"""
-    val finalOffsetRangesForStreamWithoutTo: Array[OffsetRange] = getCustomOffsetRangeForReader(sampleJsonForStream, "STREAM")
+    val finalOffsetRangesForStreamWithoutTo: Array[OffsetRange] = getCustomOffsetRangeForReader("test".split(","), sampleJsonForStream, "STREAM")
     finalOffsetRangesForStreamWithoutTo shouldEqual(sampleRangeForStream)
   }
 

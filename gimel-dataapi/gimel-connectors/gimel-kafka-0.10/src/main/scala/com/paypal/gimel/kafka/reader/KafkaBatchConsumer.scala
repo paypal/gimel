@@ -25,7 +25,7 @@ import scala.language.implicitConversions
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.streaming.kafka010.OffsetRange
 
-import com.paypal.gimel.kafka.conf.KafkaClientConfiguration
+import com.paypal.gimel.kafka.conf.{KafkaClientConfiguration, KafkaConstants}
 import com.paypal.gimel.kafka.utilities.{BrokersAndTopic, KafkaUtilitiesException}
 import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.kafka.utilities.KafkaUtilities._
