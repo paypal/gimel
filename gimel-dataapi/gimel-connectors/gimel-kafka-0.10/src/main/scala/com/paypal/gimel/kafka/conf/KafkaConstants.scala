@@ -49,5 +49,6 @@ object KafkaConstants {
     "union" -> "union",
     "enum" -> "string",
     "fixed" -> "binary")
+  val earliestOffset: String = "earliest"
 }
 

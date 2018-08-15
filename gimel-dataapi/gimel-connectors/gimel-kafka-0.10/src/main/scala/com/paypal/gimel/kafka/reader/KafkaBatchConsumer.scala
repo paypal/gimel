@@ -25,7 +25,7 @@ import scala.language.implicitConversions
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.streaming.kafka010.OffsetRange
 
-import com.paypal.gimel.kafka.conf.KafkaClientConfiguration
+import com.paypal.gimel.kafka.conf.{KafkaClientConfiguration, KafkaConstants}
 import com.paypal.gimel.kafka.utilities.{BrokersAndTopic, KafkaUtilitiesException}
 import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.kafka.utilities.KafkaUtilities._
@@ -68,7 +68,7 @@ object KafkaBatchConsumer {
         }
         else {
           logger.info(s"""Custom offset information was given by the user""")
-          getCustomOffsetRangeForReader(conf.kafkaCustomOffsetRange, conf.consumerModeBatch)
+          getCustomOffsetRangeForReader(conf.kafkaTopics.split(","), conf.kafkaCustomOffsetRange, KafkaConstants.gimelAuditRunTypeBatch)
         }
       logger.info("Offset Ranges After applying Threshold Per Partition/Custom Offsets -->")
       finalOffsetRangesForReader.foreach(x => logger.info(x.toString))

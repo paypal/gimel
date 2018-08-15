@@ -95,7 +95,7 @@ object ImplicitZKCheckPointers {
             checkPointString.get.split('|').map(x => CheckPointString(x)).toKafkaOffsetRanges
         }
       }.filter {
-        None => false
+        None => true
       }.toArray
       if (zkCheckPoints.isEmpty) {
         None
