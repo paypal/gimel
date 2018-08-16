@@ -24,6 +24,7 @@ import scala.language.implicitConversions
 import scala.util.{Success, Try}
 
 import org.apache.spark.{SparkContext}
+import org.apache.spark.annotation.Experimental
 import org.apache.spark.sql.{SparkSession}
 
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
@@ -37,6 +38,7 @@ object StructuredDataStreamType extends Enumeration {
   val KAFKA = Value
 }
 
+@Experimental
 class StructuredDataStream(val sparkSession: SparkSession) {
 
   import com.paypal.gimel.common.utilities.DataSetUtils._

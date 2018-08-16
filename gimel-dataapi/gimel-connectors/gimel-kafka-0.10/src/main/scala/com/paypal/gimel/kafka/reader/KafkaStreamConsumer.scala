@@ -125,6 +125,13 @@ object KafkaStreamConsumer {
     }
   }
 
+  /**
+    *
+    * Function to set kafka parameters for stream
+    *
+    * @param conf KafkaClientConfiguration object that holds the configuration paremeters
+    * @return Kafka Parameters in a Map[String, Object]
+    */
   private def setKafkaParams(conf: KafkaClientConfiguration) = {
     var kafkaParams: Map[String, Object] = Map()
     conf.kafkaConsumerProps.foreach(x => kafkaParams += (x._1 -> x._2))
@@ -133,6 +140,14 @@ object KafkaStreamConsumer {
     kafkaParams
   }
 
+  /**
+    *
+    * Function to get the starting offsets for the stream to read from
+    *
+    * @param conf KafkaClientConfiguration object that holds the configuration paremeters
+    * @param kafkaTopic The kafkaTopics list to subscribe to
+    * @return Starting Offsets in a Map[TopicPartition, Long]
+    */
   private def getStartOffsets(conf: KafkaClientConfiguration, kafkaTopic: String, brokers: String) = {
     if (conf.kafkaCustomOffsetRange.isEmpty()) {
       val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoints)
@@ -166,11 +181,26 @@ object KafkaStreamConsumer {
     }
   }
 
+  /**
+    *
+    * Function to return the last saved checkpoint from zookeeper
+    *
+    * @param conf KafkaClientConfiguration object that holds the configuration paremeters
+    * @return Optional checkpoint Offsets in a Array[OffsetRange]
+    */
   private def getLastCheckPoint(conf: KafkaClientConfiguration) = {
     val lastCheckPoint: Option[Array[OffsetRange]] = getLastCheckPointFromZK(conf.zkHostAndPort, conf.zkCheckPoints)
     lastCheckPoint
   }
 
+  /**
+    *
+    * Core Function to create a structured stream
+    *
+    * @param sparkSession the spark session passed by the user
+    * @param conf KafkaClientConfiguration object that holds the configuration paremeters
+    * @return StreamingResult in a StructuredStreamingResult Object
+    */
   def createStructuredStream(sparkSession: SparkSession, conf: KafkaClientConfiguration): StructuredStreamingResult = {
     try {
       val sparkConf = sparkSession.sparkContext.getConf
