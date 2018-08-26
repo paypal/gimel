@@ -168,6 +168,12 @@ under the License.
       <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.apache.spark</groupId>
+      <artifactId>spark-sql-kafka-${spark.kafka.connector.version}</artifactId>
+      <version>${spark.version}</version>
+      <scope>${packaging.scope}</scope>
+    </dependency>
   </dependencies>
 
   <build>
