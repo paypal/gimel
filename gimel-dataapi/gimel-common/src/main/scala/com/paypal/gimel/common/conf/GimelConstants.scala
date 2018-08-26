@@ -72,6 +72,9 @@ object GimelConstants {
   val KAFKA_CONSUMER_CHECKPOINT_PATH: String = "gimel.kafka.consumer.checkpoint.root"
   val KAFKA_BROKER_LIST: String = "gimel.kafka.broker"
   val CDH_BROKER_LIST: String = "gimel.kafka.cdh.broker"
+  val STREAM_MODE: String = "gimel.kafka.stream.mode"
+  val DS_STREAM: String = "direct.stream"
+  val BATCH_INTERVAL: String = "15"
 
   // hdfs constants
   val HDFS_IMPL = "fs.hdfs.impl"
