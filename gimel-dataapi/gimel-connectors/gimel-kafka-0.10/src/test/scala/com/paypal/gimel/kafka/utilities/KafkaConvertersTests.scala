@@ -37,7 +37,7 @@ class KafkaConvertersTests extends FunSpec with Matchers {
     stringified shouldBe "test,0,1,100|test,1,1,100"
   }
 
-  it("should converr offset Range to a single parsable checkPoint String") {
+  it("should convert offset Range to a single parsable checkPoint String") {
     val sampleRange = OffsetRange("test", 0, 1, 100)
     val stringiFied = sampleRange.toStringOfKafkaOffsetRange
     stringiFied shouldBe "test,0,1,100"
@@ -83,6 +83,18 @@ class KafkaConvertersTests extends FunSpec with Matchers {
       """[{"topic":"test","offsetRange":[{"partition":0,"from":1,"to":100},{"partition":1,"from":1}]}]"""
     val finalOffsetRangesForStreamWithoutTo: Array[OffsetRange] = getCustomOffsetRangeForReader("test".split(","), sampleJsonForStream, "STREAM")
     finalOffsetRangesForStreamWithoutTo shouldEqual(sampleRangeForStream)
+  }
+
+  it("should return calculated range of offsets") {
+    val offsetArrayTuple: (Array[OffsetRange], Array[OffsetRange]) = (
+      Array(OffsetRange("a", 0, 1, 1), OffsetRange("a", 1, 2, 100)),
+      Array(OffsetRange("a", 1, 2, 100), OffsetRange("a", 0, 1, 200))
+    )
+
+    val sampleNewOffsetRanges = offsetArrayTuple.toNewOffsetRanges
+    sampleNewOffsetRanges.map { offset =>
+      sampleNewOffsetRanges.toStringOfKafkaOffsetRanges shouldEqual "a,0,1,200|a,1,100,100"
+    }
   }
 
 }
