@@ -28,6 +28,7 @@ object SFTPUtilities {
 
   /**
     * It reads the password from HDFS file through HDFS admin client utility
+    * Also if the file is not "700", where the file has some read/write/execute permissions for group and others, we will raise a warning to the user
     * @param filePath - The path of the HDFS ile that has the password
     * @return - returns the password
     */
@@ -38,6 +39,7 @@ object SFTPUtilities {
 
   /**
     * It reads the password from Local file system
+    * Also if the file is not "700", where the file has some read/write/execute permissions for group and others, we will raise a warning to the user
     * @param filePath - - The path of the local file that has the password
     * @return - returns the password
     */
