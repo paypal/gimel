@@ -26,11 +26,21 @@ import com.paypal.gimel.common.storageadmin.HDFSAdminClient
 
 object SFTPUtilities {
 
+  /**
+    * It reads the password from HDFS file through HDFS admin client utility
+    * @param filePath - The path of the HDFS ile that has the password
+    * @return - returns the password
+    */
   def getPasswordFromHDFS(filePath: String): String = {
     FileHandler.warnIfFileAccessibleByOthers(filePath, GimelConstants.HADDOP_FILE_SYSTEM)
     HDFSAdminClient.readHDFSFile(filePath).trim
   }
 
+  /**
+    * It reads the password from Local file system
+    * @param filePath - - The path of the local file that has the password
+    * @return - returns the password
+    */
   def getPasswordFromLocal(filePath: String): String = {
     FileHandler.warnIfFileAccessibleByOthers(filePath, GimelConstants.LOCAL_FILE_SYSTEM)
     scala.io.Source.fromFile(filePath).getLines.mkString
