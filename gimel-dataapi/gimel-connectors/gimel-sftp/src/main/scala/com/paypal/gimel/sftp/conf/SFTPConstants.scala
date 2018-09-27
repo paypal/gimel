@@ -20,7 +20,6 @@
 package com.paypal.gimel.sftp.conf
 
 object SFTPConstants {
-  val dropZoneUrl: String = "dropzone.paypalcorp.com"
   val host: String = "host"
   val username: String = "username"
   val password: String = "password"

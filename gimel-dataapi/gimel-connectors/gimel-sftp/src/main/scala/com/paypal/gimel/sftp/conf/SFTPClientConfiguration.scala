@@ -49,7 +49,7 @@ class SFTPClientConfiguration(val props: Map[String, Any]) {
     case SFTPConstants.batchStrategy => SFTPConstants.passwordLess
   }
   val finalProps: Map[String, String] = allProps ++ Map(
-    SFTPConstants.host -> props.getOrElse(SFTPConfigs.sftpHost, tableProps.getOrElse(SFTPConfigs.sftpHost, SFTPConstants.dropZoneUrl)).toString,
+    SFTPConstants.host -> props.getOrElse(SFTPConfigs.sftpHost, tableProps.get(SFTPConfigs.sftpHost).get).toString,
     SFTPConstants.username -> props.getOrElse(SFTPConfigs.sftpUserName, tableProps.getOrElse(SFTPConfigs.sftpUserName, "")).toString,
     SFTPConstants.password -> password,
     SFTPConstants.filetype -> props.getOrElse(SFTPConfigs.fileType, tableProps.getOrElse(SFTPConfigs.fileType, "")).toString,
