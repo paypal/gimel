@@ -82,6 +82,8 @@ object GimelConstants {
   val DEFAULT_FILE_SYSTEM = "fs.defaultFS"
   val LOCAL_FS = "org.apache.hadoop.fs.LocalFileSystem"
   val DISTRIBUTED_FS = "org.apache.hadoop.hdfs.DistributedFileSystem"
+  val HADDOP_FILE_SYSTEM = "hdfs"
+  val LOCAL_FILE_SYSTEM = "local"
 }
 
 

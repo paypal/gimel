@@ -40,7 +40,7 @@ import com.paypal.gimel.logger.Logger
 
 object DataSetType extends Enumeration {
   type SystemType = Value
-  val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID, RESTAPI = Value
+  val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID, RESTAPI, SFTP = Value
 }
 
 class DataSet(val sparkSession: SparkSession) {
@@ -385,6 +385,8 @@ object DataSetUtils {
             DataSetType.HDFS
           case "RESTAPI" =>
             DataSetType.RESTAPI
+          case "SFTP" =>
+            DataSetType.SFTP
           case _ =>
             DataSetType.HIVE
         }
@@ -424,6 +426,8 @@ object DataSetUtils {
         new com.paypal.gimel.druid.DataSet(sparkSession)
       case DataSetType.RESTAPI =>
         new com.paypal.gimel.restapi.DataSet(sparkSession)
+      case DataSetType.SFTP =>
+        new com.paypal.gimel.sftp.DataSet(sparkSession)
     }
   }
 
