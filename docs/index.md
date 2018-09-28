@@ -1,7 +1,7 @@
 # <img src="images/gimel.png" width="60" height="60" /> Gimel Data API
 
 
-Gimel provides unified Data API to access data from any storage like HDFS, GS, Alluxio, Hbase, Aerospike, BigQuery, Druid, Elastic,  Teradata, Oracle, MySQL, etc.
+Gimel provides unified Data API to access data from any storage like HDFS, GS, Alluxio, Hbase, Aerospike, BigQuery, Druid, Elastic,  Teradata, Oracle, MySQL, SFTP, etc.
 
 
 --------------------------------------------------------------------------------------------------------------------
@@ -40,6 +40,7 @@ Contents
 | <img src="images/hive.png" width="80" height="60" /> | 1.2 | PRODUCTION | [Hive Doc](gimel-connectors/hive.md) | |
 | <img src="images/teradata.png" width="120" height="40" /> | 1.6.2 | EXPERIMENTAL | [Teradata Doc](gimel-connectors/teradata.md) | <br>EXPERIMENTAL API Only<br>Uses JDBC Connector internally<br> |
 | <img src="images/druid.png" width="120" height="40" /> | 0.82 | PRODUCTION | [Druid Doc](gimel-connectors/druid.md) | Only Writes(Non-Batch Mode) |
+| <img src="images/sftp.png" width="120" height="40" /> | 0.82 | PRODUCTION | [SFTP Doc](gimel-connectors/sftp.md) | Read/Write files from/To SFTP server |
 | <img src="images/gimel.png" width="60" height="60" /> <img src="images/sql.png" width="60" height="60" /> | 1.0 | PRODUCTION | [GSQL Doc](gimel-sql/gimel-sql.md) | Refer link for using GSQL (Gimel SQL) API |
 | <br> <img src="images/gimel.png" width="60" height="60" /> <br>TestSuite <br> | 1.0 | PRODUCTION | [Test-Suite Doc](gimel-testsuite/testsuite.md) | Current Implementation works with CataLog Provider - Hive |
 | <br>Gimel Logging<br> | 0.4.2 | PRODUCTION | [Gimel Logging Doc](gimel-logging/gimel-logging.md) | This is the Gimel Logging Framework |
