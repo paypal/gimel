@@ -1,0 +1,20 @@
+#!/bin/sh
+
+this_dir=`dirname build/udc_ui`
+source ${this_dir}/udc_ui_functions
+
+write_log "Begin    | Script | $0"
+
+write_log "--------Installing Angular CLI--------"
+run_cmd "npm install -g @angular/cli"
+check_error $? "npm install -g @angular/cli"
+
+write_log "--------Installing required Node Modules--------"
+run_cmd "npm install"
+check_error $? "npm install"
+
+write_log "--------Building the component distribution--------"
+run_cmd "npm run build"
+check_error $? "npm run build"
+
+write_log "Complete | Script | $0"

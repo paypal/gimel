@@ -1,0 +1,110 @@
+.ngx-datatable.material .datatable-footer {
+  font-size: 13px;
+  border-top: none;
+}
+
+.ngx-datatable.material .datatable-body .datatable-body-row {
+  .action-btn {
+    width: 32px;
+    height: 32px;
+    position: relative;
+    vertical-align: middle;
+    md-icon {
+      font-size: 18px;
+      position: relative;
+      top: -5px;
+    }
+  }
+
+  md-slide-toggle.action-btn {
+    width: auto;
+    height: auto;
+  }
+}
+
+.ngx-datatable.material .empty-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ngx-datatable.material .datatable-body .progress-linear .container{
+  height: 2px;
+}
+
+.ngx-datatable.material a {
+  text-decoration: none;
+}
+
+.ngx-datatable.material a:hover, .ngx-datatable.material a:active, .ngx-datatable.material a:focus {
+  text-decoration: underline;
+}
+
+.ngx-datatable.material .datatable-body .datatable-body-row .datatable-body-cell {
+  word-break: break-all;
+  color: rgba(0,0,0,.87);
+  padding-top: 5px;
+  padding-bottom: 5px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+}
+
+.ngx-datatable.material .datatable-body .datatable-body-row .datatable-body-cell .datatable-body-cell-label {
+  width: 100%;
+  position: relative;
+}
+
+.ngx-datatable.material .datatable-header .datatable-header-cell {
+  color: rgba(0,0,0,.87);
+}
+
+.datatable.fixed-header .datatable-header .datatable-header-inner .datatable-header-cell {
+  font-weight: 500;
+}
+
+.datatable.fixed-header .datatable-header .datatable-header-inner .datatable-header-cell .datatable-header-cell-label {
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+}
+
+.datatable-search-header {
+  position: relative;
+}
+
+.mat-input-container.datatable-search-input {
+  position: absolute;
+  top: -45px;
+  right: 0;
+}
+
+.datatable-status-icon {
+  font-size: 16px;
+  position: relative;
+  top: 2px;
+}
+
+.datatable-body-cell, .datatable-header-cell {
+  user-select: inherit !important;
+}
+
+.datatable-checkbox {
+  padding: 0;
+}
+
+datatable-scroller {
+  overflow-y: hidden;
+}
+
+.ngx-datatable .datatable-body .datatable-scroll {
+  width: auto !important;
+}
+
+.ngx-datatable.scroll-horz .datatable-body {
+  width: auto !important;
+}
+
+.ngx-datatable.fixed-header .datatable-header {
+  width: auto !important;
+}

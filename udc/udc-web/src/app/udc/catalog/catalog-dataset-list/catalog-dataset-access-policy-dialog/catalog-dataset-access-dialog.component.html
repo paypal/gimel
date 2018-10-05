@@ -1,0 +1,63 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="policyForm">
+
+  <div *ngIf="typeName=='Teradata'">
+    <ngx-datatable
+      #datasetObjectAttributesTable
+      class="material favorites-datatable"
+      [loadingIndicator]="loading"
+      [rows]="accessControlList"
+      [columnMode]="'force'"
+      [headerHeight]="35"
+      [footerHeight]="true"
+      [scrollbarH]="true"
+      [limit]="5"
+      [rowHeight]="'auto'">
+      <ngx-datatable-column name="Database" [width]="50">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{row.databaseName}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Role Name" [width]="50" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{row.iamRoleName}}
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+    <br>
+  </div>
+  <div *ngIf="typeName=='Hadoop'">
+    <ngx-datatable
+      #datasetObjectAttributesTable
+      class="material favorites-datatable"
+      [loadingIndicator]="loading"
+      [rows]="accessControlList"
+      [columnMode]="'force'"
+      [headerHeight]="35"
+      [footerHeight]="true"
+      [scrollbarH]="true"
+      [limit]="5"
+      [rowHeight]="'auto'">
+      <ngx-datatable-column name="Access Types" [width]="5">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{row.accessTypes}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Groups" [width]="10">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{row.groups}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Users" [width]="80" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{row.users}}
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+  </div>
+
+
+  <div class="dialog-footer">
+    <button md-button type="button" color="primary" (click)="cancel()">Close</button>
+  </div>
+</form>

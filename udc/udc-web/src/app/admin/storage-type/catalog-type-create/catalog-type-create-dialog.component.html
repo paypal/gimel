@@ -1,0 +1,102 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+  <div>
+
+    <md-input-container class="full-width">
+      <input mdInput #storageTypeName placeholder="Type Name"
+             formControlName="storageTypeName">
+      <md-hint *ngIf="formErrors.storageTypeName" class="alert-danger">
+        {{formErrors.storageTypeName}}
+      </md-hint>
+      <md-hint align="end">{{storageTypeName.value.length}} / {{maxCharsForName}}</md-hint>
+    </md-input-container>
+
+    <md-input-container class="full-width">
+    <textarea mdInput #storageTypeDescription rows="3" placeholder="Type Description"
+              formControlName="storageTypeDescription">
+    </textarea>
+      <md-hint *ngIf="formErrors.storageTypeDescription" class="alert-danger">
+        {{formErrors.storageTypeDescription}}
+      </md-hint>
+      <md-hint align="end">{{storageTypeDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
+    </md-input-container>
+
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <md-select required placeholder="Storage Category" [floatPlaceholder]="'never'"
+                   formControlName="storageCategory">
+          <md-option *ngFor="let storageCategory of storageCategories" [value]="storageCategory">
+            {{ storageCategory['storageName'] }}
+          </md-option>
+        </md-select>
+        <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+      </div>
+    </div>
+
+    <md-input-container class="full-width">
+      <input mdInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
+      <md-hint *ngIf="formErrors.createdUser" class="alert-danger">
+        {{formErrors.createdUser}}
+      </md-hint>
+      <md-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+    </md-input-container>
+
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <md-input-container class="m-md">
+        <input mdInput  placeholder="Attribute Key" formControlName="attributeKey">
+      </md-input-container>
+      <md-input-container class="m-md">
+        <input mdInput  placeholder="Description" formControlName="attributeDesc">
+      </md-input-container>
+      <div fxFlex="55" fxFlexAlign="center" class="m-md">
+        <md-select placeholder="Storage System Level" [floatPlaceholder]="'never'"
+                   formControlName="isStorageSystemLevel">
+          <md-option value="Y">Yes</md-option>
+          <md-option value="N">No</md-option>
+        </md-select>
+      </div>
+      <div class="m-lg">
+        <button md-raised-button class="app-details-btn" type="button" [disabled]="!createForm.valid"
+                (click)="addToAttributes()">Add
+        </button>
+      </div>
+    </div>
+
+    <div>
+      <h4>Type Attributes</h4>
+    </div>
+    <ngx-datatable
+      #typeAttributesTable
+      class="material favorites-datatable"
+      [rows]="typeAttributes"
+      [columnMode]="'force'"
+      [headerHeight]="35"
+      [footerHeight]="true"
+      [scrollbarH]="true"
+      [scrollbarV]="true"
+      [rowHeight]="50">
+      <ngx-datatable-column name="Attribute Key" [width]="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.storageDsAttributeKeyName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Attribute Description" [width]="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.storageDsAttributeKeyDesc }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Is Storage System Level" [width]="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.isStorageSystemLevel }}
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+    <br>
+
+    <div class="dialog-footer">
+      <button md-button type="button" (click)="cancel()">Cancel</button>
+      <button md-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
+    </div>
+
+  </div>
+</form>

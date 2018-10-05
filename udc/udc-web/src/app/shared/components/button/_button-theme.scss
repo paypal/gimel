@@ -1,0 +1,25 @@
+@import '~@angular/material/theming';
+
+@mixin button-theme($theme) {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+
+  .app-details-btn {
+    border: solid 1px mat-color($primary) !important;
+    color: mat-color($primary) !important;
+    background: white;
+    margin: 0 2px !important;
+  }
+
+  .app-details-btn:hover, .app-details-btn:focus {
+    .md-button-focus-overlay {
+      opacity: 0 !important;
+    }
+  }
+
+  .app-details-btn:disabled {
+    border: none !important;
+    color: mat-color(mat-palette($mat-grey, 500)) !important;
+    cursor: not-allowed !important;
+  }
+}

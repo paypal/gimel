@@ -1,0 +1,32 @@
+<span *ngIf="!inProgress">
+    <span *ngIf="!errorStatus">
+        <button md-icon-button class="action-btn grey-btn"
+                [md-menu-trigger-for]="posXMenuOverlay">
+        <md-icon>more_vert</md-icon>
+        </button>
+        <md-menu x-position="after" y-position="below" [overlapTrigger]="false" #posXMenuOverlay="mdMenu">
+          <span *ngIf="isActiveYN == 'Y'">
+            <a md-menu-item routerLink="." (click)="deleteSystem()">Disable System</a></span>
+          <span *ngIf="isActiveYN == 'N'">
+            <a md-menu-item routerLink="." (click)="enableSystem()">Enable System</a></span>
+          <a md-menu-item routerLink="." (click)="openEditSystemDialog()">Edit System</a>
+          <a md-menu-item routerLink="." (click)="openAttributesDialog()">View Attributes</a>
+        </md-menu>
+    </span>
+  <span *ngIf="isGimelCompatible=='Y'">
+    <button md-icon-button class="action-btn grey-btn" mdTooltip="Gimel is supported on this store">
+      <img style="height: 20px;display: block;line-height:0;" src="assets/images/gimel.png" alt="Bookmark">
+    </button>
+  </span>
+  <span *ngIf="isGimelCompatible=='N'">
+    <button md-icon-button class="action-btn grey-btn" mdTooltip="Gimel is not supported on this store">
+      <md-icon style="color:red;">error</md-icon>
+    </button>
+  </span>
+
+</span>
+<span *ngIf="inProgress">
+    <span *ngIf="actionMsg"> {{actionMsg}} </span> &emsp;
+    <md-progress-bar mode="indeterminate" color="primary"></md-progress-bar>
+
+</span>

@@ -1,0 +1,48 @@
+#!/bin/sh
+
+export this_file=${0}
+export this_script_path="$( cd "$( dirname "$this_file" )" && pwd)"
+cd ${this_script_path}
+cd ..
+export UDC_HOME=${PWD}
+source ${UDC_HOME}/build/udc_ui_functions
+write_log "Current Working Directory is  ${UDC_HOME}"
+
+export this_dir=`dirname $0`
+source ${this_script_path}/set-env
+
+
+write_log "------------------------------------------------------------------------------"
+write_log "                 Stopping Docker Container for UDC-UI"
+write_log "------------------------------------------------------------------------------"
+run_cmd "docker stop ${udc_ui_container_name}" "ignore_errors"
+check_warning $? "docker stop ${udc_ui_container_name}"
+
+run_cmd "docker rm ${udc_ui_container_name}" "ignore_errors"
+check_warning $? "docker rm ${udc_ui_container_name}"
+
+
+write_log "------------------------------------------------------------------------------"
+write_log "          Checking if udc-ui image is installed already"
+write_log "------------------------------------------------------------------------------"
+if test ! -z "$(docker images -q ${udc_ui_image_name})"; then
+        write_log "Docker image for ${udc_ui_image_name} already Exists"
+        get_option "Do you wish to reinstall the docker image for UDC-UI  ? "
+        if [ "${install_status}" = "Y" ]
+        then
+                run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_ui_image_name} ."
+                check_error $? "docker build -f ${UDC_HOME}/Dockerfile -t ${udc_ui_image_name} ."
+        else
+                write_log "Skipping installing UDC-UI docker image"
+        fi
+else
+        run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_ui_image_name} ."
+        check_error $? "docker build -f $UDC_HOME/Dockerfile -t ${udc_ui_image_name} ."
+fi
+
+
+write_log "------------------------------------------------------------------------------"
+write_log "         Starting the UDC-UI DOCKER CONTAINER"
+write_log "------------------------------------------------------------------------------"
+run_cmd "docker run -it -p ${exposed_port}:${default_port} --name ${udc_ui_container_name} ${udc_ui_image_name}"
+check_error $? "docker run -it -p ${exposed_port}:${default_port} --name ${udc_ui_container_name} ${udc_ui_image_name}"

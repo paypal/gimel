@@ -1,0 +1,71 @@
+<div class="app-container">
+
+  <div>
+    <div class="detail-content-container">
+      <md-input-container class="table-search">
+        <input #searchDB mdInput (keyup)='search(searchDB.value)'>
+        <md-placeholder>
+          <md-icon class="icon-16">search</md-icon>
+          Search
+        </md-placeholder>
+      </md-input-container>
+      <button md-raised-button routerLink="." (click)="createUserDialag()" class="app-details-btn">
+        Create User
+      </button>
+    </div>
+  </div>
+  <ngx-datatable
+    #catalogUsersTable
+    class="material favorites-datatable"
+    [loadingIndicator]="loading"
+    [rows]="displayList"
+    [columnMode]="'force'"
+    [headerHeight]="35"
+    [footerHeight]="true"
+    [scrollbarH]="true"
+    [limit]="20"
+    [rowHeight]="50"
+    [sorts]="[{prop: 'userId', dir: 'asc'}]">
+    <ngx-datatable-column name="User ID" [width]="100">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.userId }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="User Name" [width]="100">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.userName }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Full Name" [width]="200" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.userFullName}}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Status" [width]="150" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <span [ngSwitch]="row.isActiveYN">
+          <md-icon class="favorite-success" *ngSwitchCase="'Y'" style="color:yellowgreen;">thumb_up</md-icon>
+          <md-icon class="favorite-danger" *ngSwitchCase="'N'" style="color:red;">thumb_down</md-icon>
+        </span>
+        <span *ngIf="row.isActiveYN == 'Y'">Active</span>
+        <span *ngIf="row.isActiveYN == 'N'">In-Active</span>
+      </ng-template>
+    </ngx-datatable-column>
+
+
+    <span>
+      <ngx-datatable-column name="Actions" [width]="150" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <app-catalog-user-action
+          [userId]="row.userId"
+          [userName]="row.userName"
+          [userFullName]="row.userFullName"
+          [isActiveYN]="row.isActiveYN"
+          (refresh)=refreshRow($event)>
+        </app-catalog-user-action>
+      </ng-template>
+    </ngx-datatable-column>
+    </span>
+
+  </ngx-datatable>
+</div>

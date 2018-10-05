@@ -1,0 +1,28 @@
+@import '~@angular/material/theming';
+
+@mixin icon-theme($theme) {
+  $accent: map-get($theme, accent);
+
+  .external-link::after {
+    font-family: "Material Icons";
+    content: "open_in_new";
+    display: inline-block;
+    height: 13px;
+    margin-left: 4px;
+    width: 15px;
+    position: relative;
+    top: 2px;
+  }
+
+  .text-warning::before {
+    font-family: "Material Icons";
+    content: "warning";
+    display: inline-block;
+    height: 13px;
+    margin-right: 4px;
+    width: 15px;
+    position: relative;
+    top: 2px;
+    color: mat-color($accent);
+  }
+}

@@ -1,0 +1,27 @@
+<div class="app-container">
+  <div class="app-container" *ngIf="dataLoading">
+    <md-progress-bar mode="indeterminate"></md-progress-bar>
+  </div>
+  <div class="app-container" *ngIf="!dataLoading">
+    <md-tab-group>
+      <md-tab label="Sample Data">
+        <div class="app-container">
+          <ngx-datatable
+            #datasetObjectAttributesTable
+            class="material favorites-datatable"
+            [loadingIndicator]="loading"
+            [columns]='headersList'
+            [rows]="rowsList"
+            [columnMode]="'force'"
+            [headerHeight]="35"
+            [footerHeight]="true"
+            [scrollbarH]="true"
+            [limit]="5"
+            [messages]="emptySampleData"
+            [rowHeight]="50">
+          </ngx-datatable>
+        </div>
+      </md-tab>
+    </md-tab-group>
+  </div>
+</div>

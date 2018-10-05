@@ -1,0 +1,19 @@
+<span *ngIf="!inProgress">
+    <span *ngIf="!errorStatus">
+        <button md-icon-button class="action-btn grey-btn"
+                [md-menu-trigger-for]="posXMenuOverlay">
+        <md-icon>more_vert</md-icon>
+        </button>
+        <md-menu x-position="after" y-position="below" [overlapTrigger]="false" #posXMenuOverlay="mdMenu">
+          <span *ngIf="isActiveYN == 'Y'">
+            <a md-menu-item routerLink="." (click)="deleteUser()">Disable User</a></span>
+          <span *ngIf="isActiveYN == 'N'">
+            <a md-menu-item routerLink="." (click)="enableUser()">Enable User</a></span>
+            <a md-menu-item routerLink="." (click)="openEditUserDialog()">Edit User</a>
+        </md-menu>
+    </span>
+</span>
+<span *ngIf="inProgress">
+    <span *ngIf="actionMsg"> {{actionMsg}} </span> &emsp;
+    <md-progress-bar mode="indeterminate" color="primary"></md-progress-bar>
+</span>

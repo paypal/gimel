@@ -1,0 +1,38 @@
+<md-card class="search-result-card">
+  <md-tab-group style="max-height: 300px;" *ngIf="cds && cds.length !== 0">
+    <div *ngFor="let cd of cds">
+      <md-tab *ngIf="cd.datasets.length > 0">
+        <ng-template md-tab-label>{{cd.storageTypeName +"(" + cd.datasets.length + ")"}}</ng-template>
+        <md-nav-list dense>
+          <md-list-item *ngFor="let dataset of (cd.datasets ? cd.datasets.slice(0, 10) : [])">
+            <a md-line (click)="closeSearch()"
+               [routerLink]="['/standalone', 'dataset', dataset.storageDataSetId]">
+              <div [innerHTML]="dataset.storageDataSetName | highlight : searchTerm"></div>
+            </a>
+          </md-list-item>
+          <md-list-item *ngIf="cds  && cds.length > 0">
+              <div fxLayout="row" fxLayoutAlign="space-between" style="padding-left: 120px;">
+                <div fxFlex="60" class="main-container">
+                  <button md-raised-button color="primary"
+                          id="button" type="submit"
+                          [routerLink]="['/standalone', 'datasets', searchTerm]" routerLinkActive="active">
+                    Search
+                  </button>
+                </div>
+                <div fxFlex="50" class="main-container">
+                  <button md-raised-button color="primary"
+                          id="advancec_button" type="submit"
+                          routerLink="/udc/datasets" routerLinkActive="active">
+                    Advanced Search
+                  </button>
+                </div>
+              </div>
+          </md-list-item>
+        </md-nav-list>
+      </md-tab>
+    </div>
+  </md-tab-group>
+  <md-nav-list dense *ngIf="!cds  || cds.length === 0">
+    <md-list-item>No results found</md-list-item>
+  </md-nav-list>
+</md-card>

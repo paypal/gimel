@@ -1,0 +1,17 @@
+md-list [md-subheader]:first-child {
+  font-size: 18px;
+}
+
+.list-content {
+  max-height: 500px;
+  width: 400px;
+  overflow: auto;
+
+  ul {
+    padding-left: 24px;
+  }
+}
+
+md-card {
+  padding: 0;
+}

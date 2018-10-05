@@ -1,0 +1,14 @@
+@import '~@angular/material/theming';
+
+@mixin ghtoolbar-theme($theme) {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+
+  .gh-toolbar button {
+    color: white;
+  }
+
+  .annocement-notification {
+    background: mat-color($accent);
+  }
+}

@@ -1,0 +1,24 @@
+<div class="search-box-container" cdk-overlay-origin #trigger="cdkOverlayOrigin">
+  <div class="search-box" [class.search-box-focus]="searchBoxFocus"
+       data-intro="Search for Datasets.">
+    <span class="search-box-icon">
+      <md-icon *ngIf="!searching">search</md-icon>
+      <md-spinner *ngIf="searching"></md-spinner>
+    </span>
+    <input #searchBoxInput class="search-box-input" type="text"
+           [placeholder]="true?'Search Datasets':''" (keyup)="search(searchBoxInput.value)"
+           (focus)="onFocus()" (blur)="onBlur()"/>
+  </div>
+</div>
+
+<div *rxContext="let result on searchResults">
+  <ng-template cdk-connected-overlay [origin]="trigger" [width]="512" hasBackdrop
+               [open]="canOpenSearch()"
+               (backdropClick)="closeSearch(searchBoxInput)"
+               backdropClass="md-overlay-transparent-backdrop">
+    <app-gh-searchbox-result [cds]="result"
+                             [searchTerm]="searchTerm"
+                             (onClick)="closeSearch(searchBoxInput)">
+    </app-gh-searchbox-result>
+  </ng-template>
+</div>

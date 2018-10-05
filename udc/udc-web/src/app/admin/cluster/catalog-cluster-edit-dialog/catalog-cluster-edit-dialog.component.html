@@ -1,0 +1,69 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="editClusterForm" (ngSubmit)="onSubmit()">
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Cluster ID" value="{{clusterId}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedClusterName placeholder="Cluster Name" value="{{clusterName}}"
+           formControlName="modifiedClusterName">
+    <md-hint *ngIf="formErrors.modifiedClusterName" class="alert-danger">
+      {{formErrors.modifiedClusterName}}
+    </md-hint>
+    <md-hint align="end">{{modifiedClusterName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <textarea mdInput #modifiedClusterDescription rows="5" placeholder="Description"
+              value="{{clusterDescription}}" formControlName="modifiedClusterDescription">
+    </textarea>
+    <md-hint *ngIf="formErrors.modifiedClusterDescription" class="alert-danger">
+      {{formErrors.modifiedClusterDescription}}
+    </md-hint>
+    <md-hint align="end">{{modifiedClusterDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedLivyEndPoint placeholder="Livy End Point" value="{{livyEndPoint}}"
+           formControlName="modifiedLivyEndPoint">
+    <md-hint *ngIf="formErrors.modifiedLivyEndPoint" class="alert-danger">
+      {{formErrors.modifiedLivyEndPoint}}
+    </md-hint>
+    <md-hint align="end">{{modifiedLivyEndPoint.value.length}} / {{maxCharsForDescName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedLivyPort placeholder="Livy Port" value="{{livyPort}}"
+           formControlName="modifiedLivyPort">
+    <md-hint *ngIf="formErrors.modifiedLivyPort" class="alert-danger">
+      {{formErrors.modifiedLivyPort}}
+    </md-hint>
+    <md-hint align="end">{{modifiedLivyPort.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+      {{formErrors.updatedUser}}
+    </md-hint>
+    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+  </md-input-container>
+
+
+  <br><br>
+
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!editClusterForm.valid">Update</button>
+  </div>
+
+
+</form>

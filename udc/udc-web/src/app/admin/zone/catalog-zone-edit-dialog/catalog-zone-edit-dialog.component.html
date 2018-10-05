@@ -1,0 +1,50 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="editZoneForm" (ngSubmit)="onSubmit()">
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Zone ID" value="{{zoneId}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedZoneName placeholder="Zone Name" value="{{zoneName}}"
+           formControlName="modifiedZoneName">
+    <md-hint *ngIf="formErrors.modifiedZoneName" class="alert-danger">
+      {{formErrors.modifiedZoneName}}
+    </md-hint>
+    <md-hint align="end">{{modifiedZoneName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <textarea mdInput #modifiedZoneDescription rows="5" placeholder="Description"
+              value="{{zoneDescription}}" formControlName="modifiedZoneDescription">
+    </textarea>
+    <md-hint *ngIf="formErrors.modifiedZoneDescription" class="alert-danger">
+      {{formErrors.modifiedZoneDescription}}
+    </md-hint>
+    <md-hint align="end">{{modifiedZoneDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+      {{formErrors.updatedUser}}
+    </md-hint>
+    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+  </md-input-container>
+
+
+  <br><br>
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!editZoneForm.valid">Update</button>
+  </div>
+
+
+</form>

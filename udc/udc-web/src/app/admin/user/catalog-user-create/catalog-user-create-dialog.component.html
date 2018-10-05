@@ -1,0 +1,32 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+
+
+  <md-input-container class="full-width">
+    <input mdInput #userName placeholder="User Name"
+           formControlName="userName">
+    <md-hint *ngIf="formErrors.userName" class="alert-danger">
+      {{formErrors.userName}}
+    </md-hint>
+    <md-hint align="end">{{userName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #userFullName placeholder="User Full Name"
+           formControlName="userFullName">
+    <md-hint *ngIf="formErrors.userFullName" class="alert-danger">
+      {{formErrors.userFullName}}
+    </md-hint>
+    <md-hint align="end">{{userFullName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <br><br>
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
+  </div>
+
+
+</form>

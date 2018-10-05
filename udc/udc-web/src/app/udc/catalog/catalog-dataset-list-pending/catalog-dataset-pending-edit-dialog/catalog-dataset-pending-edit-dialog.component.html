@@ -1,0 +1,148 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Dataset ID" value="{{storageDataSetId}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput placeholder="Dataset" value="{{storageDataSetName}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput placeholder="Dataset Alias"
+           value="{{storageDataSetAliasName}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <textarea mdInput rows="5" placeholder="Description"
+              value="{{storageDataSetDescription}}" disabled>
+    </textarea>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}"
+           disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+      {{formErrors.updatedUser}}
+    </md-hint>
+    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+  </md-input-container>
+
+  <div>
+    <h4> ObjectAttributes</h4>
+  </div>
+  <ngx-datatable
+    #objectAttributesTable
+    class="material"
+    [headerHeight]="50"
+    [limit]="5"
+    [columnMode]="'force'"
+    [footerHeight]="50"
+    [rowHeight]="'auto'"
+    [rows]="objectAttributes">
+    <ngx-datatable-column name="Attribute Name">
+      <ng-template ngx-datatable-cell-template let-row="row">
+            <span
+              title="Double click to edit"
+              (dblclick)="editing[row.$$index + '-storageDsAttributeKeyName'] = true"
+              *ngIf="!editing[row.$$index + '-storageDsAttributeKeyName']">
+              {{row.storageDsAttributeKeyName}}
+            </span>
+        <input
+          autofocus
+          (blur)="updateObjectValue($event, 'storageDsAttributeKeyName', row)"
+          *ngIf="editing[row.$$index + '-storageDsAttributeKeyName']"
+          type="text"
+          [value]="row.storageDsAttributeKeyName"
+          disabled
+        />
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Attribute Value">
+      <ng-template ngx-datatable-cell-template let-row="row">
+            <span
+              title="Double click to edit"
+              (dblclick)="editing[row.$$index + '-objectAttributeValue'] = true"
+              *ngIf="!editing[row.$$index + '-objectAttributeValue']">
+              {{row.objectAttributeValue}}
+            </span>
+        <input
+          autofocus
+          (blur)="updateObjectValue($event, 'objectAttributeValue', row)"
+          *ngIf="editing[row.$$index + '-objectAttributeValue']"
+          type="text"
+          [value]="row.objectAttributeValue"
+        />
+      </ng-template>
+    </ngx-datatable-column>
+  </ngx-datatable>
+
+  <div>
+    <h4>System Attributes</h4>
+  </div>
+  <ngx-datatable
+    #systemAttributesTable
+    class="material"
+    [headerHeight]="50"
+    [limit]="5"
+    [columnMode]="'force'"
+    [footerHeight]="50"
+    [rowHeight]="'auto'"
+    [rows]="systemAttributes">
+    <ngx-datatable-column name="Attribute Name">
+      <ng-template ngx-datatable-cell-template let-row="row">
+            <span
+              title="Double click to edit"
+              (dblclick)="editing[row.$$index + '-storageDsAttributeKeyName'] = true"
+              *ngIf="!editing[row.$$index + '-storageDsAttributeKeyName']">
+              {{row.storageDsAttributeKeyName}}
+            </span>
+        <input
+          autofocus
+          (blur)="updateSystemValue($event, 'storageDsAttributeKeyName', row)"
+          *ngIf="editing[row.$$index + '-storageDsAttributeKeyName']"
+          type="text"
+          [value]="row.storageDsAttributeKeyName"
+          disabled
+        />
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Attribute Value">
+      <ng-template ngx-datatable-cell-template let-row="row">
+            <span
+              title="Double click to edit"
+              (dblclick)="editing[row.$$index + '-storageSystemAttributeValue'] = true"
+              *ngIf="!editing[row.$$index + '-storageSystemAttributeValue']">
+              {{row.storageSystemAttributeValue}}
+            </span>
+        <input
+          autofocus
+          (blur)="updateSystemValue($event, 'storageSystemAttributeValue', row)"
+          *ngIf="editing[row.$$index + '-storageSystemAttributeValue']"
+          type="text"
+          [value]="row.storageSystemAttributeValue"
+        />
+      </ng-template>
+    </ngx-datatable-column>
+  </ngx-datatable>
+
+  <br><br>
+
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!editForm.valid">Register</button>
+  </div>
+
+
+</form>

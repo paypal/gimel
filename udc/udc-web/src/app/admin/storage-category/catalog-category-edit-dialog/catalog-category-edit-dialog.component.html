@@ -1,0 +1,49 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="editCategoryForm" (ngSubmit)="onSubmit()">
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Cluster ID" value="{{storageId}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedStorageName placeholder="Dataset" value="{{storageName}}"
+           formControlName="modifiedStorageName">
+    <md-hint *ngIf="formErrors.modifiedStorageName" class="alert-danger">
+      {{formErrors.modifiedStorageName}}
+    </md-hint>
+    <md-hint align="end">{{modifiedStorageName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <textarea mdInput #modifiedStorageDescription rows="5" placeholder="Description"
+              value="{{storageDescription}}" formControlName="modifiedStorageDescription">
+    </textarea>
+    <md-hint *ngIf="formErrors.modifiedStorageDescription" class="alert-danger">
+      {{formErrors.modifiedStorageDescription}}
+    </md-hint>
+    <md-hint align="end">{{modifiedStorageDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+      {{formErrors.updatedUser}}
+    </md-hint>
+    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+  </md-input-container>
+  <br><br>
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!editCategoryForm.valid">Update</button>
+  </div>
+
+
+</form>

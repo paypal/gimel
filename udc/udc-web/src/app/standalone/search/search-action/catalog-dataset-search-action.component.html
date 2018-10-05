@@ -1,0 +1,44 @@
+<span *ngIf="!inProgress">
+    <span *ngIf="isGimelCompatible=='Y'">
+      <button md-icon-button class="action-btn grey-btn" mdTooltip="This dataset can be accessed via Gimel">
+        <img style="height: 20px;display: block;line-height:0;" src="assets/images/gimel.png" alt="Bookmark">
+      </button>
+    </span>
+    <span *ngIf="isGimelCompatible=='N'">
+      <button md-icon-button class="action-btn grey-btn" mdTooltip="This dataset cannot be accessed via Gimel">
+        <img style="height: 20px;display: block;line-height:0;" src="assets/images/ungimel.png" alt="Bookmark">
+      </button>
+    </span>
+    <span *ngIf="isReadCompatible=='Y'">
+        <a md-line class="action-btn grey-btn"
+           [routerLink]="['/standalone', 'sampledata', storageDataSetName, objectId]" mdTooltip="View Sample Data"
+           target="_blank"><md-icon
+          style="color:green;height: 7px;vertical-align: middle;">video_library</md-icon></a>
+    </span>
+    <span *ngIf="isReadCompatible=='N'">
+     <button md-icon-button class="action-btn grey-btn" mdTooltip="Sample Data is unacessible">
+        <img style="height: 20px;width: auto;display: block;line-height:0;" src="assets/images/unsampledata.png"
+             alt="Bookmark">
+      </button>
+    </span>
+    <span *ngIf="zoneName.includes('az')">
+      <button md-icon-button class="action-btn grey-btn" mdTooltip="This dataset can be accessed in Analytics Zone">
+        <img style="height: 15px;display: block;line-height:0;" src="assets/images/az.png" alt="Bookmark">
+      </button>
+    </span>
+    <span *ngIf="zoneName.includes('rz')">
+      <button md-icon-button class="action-btn grey-btn" mdTooltip="This dataset can be accessed in Restricted Zone">
+        <img style="height: 15px;display: block;line-height:0;" src="assets/images/rz.png" alt="Bookmark">
+      </button>
+
+    </span>
+    <span *ngIf="zoneName.includes('corp')">
+      <button md-icon-button class="action-btn grey-btn" mdTooltip="This dataset can be accessed in Corp Zone">
+        <img style="height: 15px;display: block;line-height:0;" src="assets/images/corp.png" alt="Bookmark">
+      </button>
+    </span>
+</span>
+<span *ngIf="inProgress">
+    <span *ngIf="actionMsg"> {{actionMsg}} </span> &emsp;
+    <md-progress-bar mode="indeterminate" color="primary"></md-progress-bar>
+</span>

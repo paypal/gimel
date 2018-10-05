@@ -1,0 +1,41 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="editTypeForm">
+
+  <ngx-datatable
+    #typeAttributesTable
+    class="material"
+    [headerHeight]="50"
+    [limit]="5"
+    [columnMode]="'force'"
+    [footerHeight]="50"
+    [rowHeight]="'auto'"
+    [rows]="typeAttributes">
+    <ngx-datatable-column name="Attribute Key ID" [width]="150">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageDsAttributeKeyId }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Attribute Key" [width]="200">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageDsAttributeKeyName }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Storage System Level" [width]="200">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.isStorageSystemLevel }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Status" [width]="150">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.isActiveYN }}
+      </ng-template>
+    </ngx-datatable-column>
+  </ngx-datatable>
+  <br>
+
+  <div class="dialog-footer">
+    <button md-button type="button" color="primary" (click)="cancel()">Close</button>
+  </div>
+
+
+</form>
