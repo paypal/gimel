@@ -18,6 +18,6 @@ Gimel provides unified Data API to access data from any storage like HDFS, GS, A
 
 # Questions
 
-  * [Slack](https://gimel-dev.slack.com)
+  * [Slack (opens the invite link)](https://gimel-dev.slack.com/x-341898137591-449590379888/reset/enQtNDUwMjMyNDM1MTg3LWUwOGFhNDlhMWQyMWY2YWEwMTM3NmVmMGM5Y2MwZThjNDdmZGE4ZWIxMGUwZGZkN2NlZjUwMGM0Mzc1ZGIyNTU)
   * [User Forum](https://groups.google.com/d/forum/gimel-user)
   * [Developer Forum](https://groups.google.com/d/forum/gimel-dev)
