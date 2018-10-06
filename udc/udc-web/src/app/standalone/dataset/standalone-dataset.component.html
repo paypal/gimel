@@ -1,0 +1,303 @@
+<div class="app-container">
+  <div class="app-container" *ngIf="detailsLoading">
+    <md-progress-bar mode="indeterminate"></md-progress-bar>
+  </div>
+  <div class="app-container" *ngIf="!detailsLoading">
+    <md-tab-group>
+      <md-tab label="Overview">
+        <md-grid-list cols="2" rowHeight="300">
+          <md-grid-tile>
+            <md-list dense>
+              <md-list-item>
+                <table>
+                  <tr>
+                    <td><h4>Dataset ID</h4></td>
+                    <td>{{dataset.storageDataSetId}}</td>
+                  </tr>
+                  <tr>
+                    <td><h4>Dataset</h4></td>
+                    <td>{{dataset.storageDataSetName}}</td>
+                  </tr>
+                  <tr>
+                    <td><h4>Object ID</h4></td>
+                    <td>{{dataset.objectSchemaMapId}}</td>
+                  </tr>
+                  <tr>
+                    <td><h4>Is Auto Registered ?</h4></td>
+                    <td>{{dataset.isAutoRegistered}}</td>
+                  </tr>
+                  <tr>
+                    <td><h4>Datastore</h4></td>
+                    <td>{{dataset.storageSystemName}}</td>
+                  </tr>
+                </table>
+              </md-list-item>
+            </md-list>
+          </md-grid-tile>
+          <md-grid-tile>
+            <md-list dense>
+              <md-list-item>
+                <table>
+                  <tr>
+                    <td><h4>Alias Name</h4></td>
+                    <td>{{dataset.storageDataSetAliasName}}</td>
+                  </tr>
+                  <tr>
+                    <td><h4>Created By</h4></td>
+                    <td>{{dataset.createdUserOnStore}}</td>
+                  </tr>
+                  <tr>
+                    <td><h4>Created Timestamp</h4></td>
+                    <td>{{dataset.createdTimestampOnStore}}</td>
+                  </tr>
+                  <tr>
+                    <td><h4>Last Updated By</h4></td>
+                    <td>{{dataset.updatedUser}}</td>
+                  </tr>
+                  <tr>
+                    <td><h4>Updated Timestamp</h4></td>
+                    <td>{{dataset.updatedTimestamp}}</td>
+                  </tr>
+                </table>
+              </md-list-item>
+            </md-list>
+          </md-grid-tile>
+        </md-grid-list>
+      </md-tab>
+      <md-tab label="Schema Details">
+        <div class="app-container" *ngIf="!detailsLoading">
+          <ngx-datatable
+            #datasetColumnsTable
+            class="material favorites-datatable"
+            [loadingIndicator]="loading"
+            [rows]="columnList"
+            [columnMode]="'force'"
+            [headerHeight]="35"
+            [footerHeight]="true"
+            [scrollbarH]="true"
+            [limit]="20"
+            [rowHeight]="'auto'">
+            <ngx-datatable-column name="Column Name" [width]="20">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{row.columnName}}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Column Type" [width]="20">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{row.columnType}}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Partition Status" [width]="20">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <span *ngIf="row.partitionStatus">{{row.partitionStatus}}</span>
+                <span *ngIf="!row.partitionStatus"><div>N/A</div></span>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Column Family" [width]="20">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <span *ngIf="row.columnFamily">{{row.columnFamily}}</span>
+                <span *ngIf="!row.columnFamily"><div>N/A</div></span>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Column Classification" [width]="20">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <span *ngIf="row.columnClass">{{row.columnClass}}</span>
+                <span *ngIf="!row.columnClass"><div>N/A</div></span>
+                <span>
+                   <button md-icon-button class="action-btn grey-btn"
+                           mdTooltip="Classification is not vetted by the dataset owner">
+                     <md-icon style="color:gray;">error</md-icon>
+                   </button>
+                </span>
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Is Restricted" [width]="20">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                <span *ngIf="row.restrictionStatus">{{row.restrictionStatus}}</span>
+                <span *ngIf="!row.restrictionStatus"><div>false</div></span>
+              </ng-template>
+            </ngx-datatable-column>
+            <br>
+            <!--<ngx-datatable-footer>-->
+            <!--<ng-template ngx-datatable-footer-template>-->
+            <!--<div>-->
+            <!--<div>-->
+            <!--<button md-icon-button class="action-btn grey-btn">-->
+            <!--<md-icon style="color:gray;">error</md-icon>-->
+            <!--</button>-->
+            <!--<strong> Column Classification is based on column name and not vetted by the dataset owner</strong>-->
+            <!--</div>-->
+            <!--</div>-->
+            <!--</ng-template>-->
+            <!--</ngx-datatable-footer>-->
+          </ngx-datatable>
+        </div>
+        <div class="app-container" *ngIf="detailsLoading">
+          <md-progress-bar mode="indeterminate"></md-progress-bar>
+        </div>
+      </md-tab>
+      <md-tab label="System Attributes">
+        <div class="app-container" *ngIf="!detailsLoading">
+          <ngx-datatable
+            #datasetSystemAttributesTable
+            class="material favorites-datatable"
+            [loadingIndicator]="loading"
+            [rows]="systemAttributesList"
+            [columnMode]="'force'"
+            [headerHeight]="35"
+            [footerHeight]="true"
+            [scrollbarH]="true"
+            [limit]="20"
+            [rowHeight]="'auto'">
+            <ngx-datatable-column name="Type Attribute Value" [width]="40">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{row.storageDsAttributeKeyName}}
+              </ng-template>
+            </ngx-datatable-column>
+            <ngx-datatable-column name="System Attribute Value" [width]="40">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{row.storageSystemAttributeValue}}
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable>
+        </div>
+        <div class="app-container" *ngIf="detailsLoading">
+          <md-progress-bar mode="indeterminate"></md-progress-bar>
+        </div>
+      </md-tab>
+      <md-tab label="Object Attributes">
+        <div class="app-container" *ngIf="!detailsLoading">
+          <ngx-datatable
+            #datasetObjectAttributesTable
+            class="material favorites-datatable"
+            [loadingIndicator]="loading"
+            [rows]="objectAttributesList"
+            [columnMode]="'force'"
+            [headerHeight]="35"
+            [footerHeight]="true"
+            [scrollbarH]="true"
+            [limit]="20"
+            [rowHeight]="'auto'">
+            <ngx-datatable-column name="Type Attribute Value" [width]="40">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{row.storageDsAttributeKeyName}}
+              </ng-template>
+            </ngx-datatable-column>
+
+            <ngx-datatable-column name="Object Attribute Value" [width]="40">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{row.objectAttributeValue}}
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable>
+        </div>
+        <div class="app-container" *ngIf="detailsLoading">
+          <md-progress-bar mode="indeterminate"></md-progress-bar>
+        </div>
+      </md-tab>
+      <md-tab label="Sample Data">
+        <div class="app-container" *ngIf="!dataLoading">
+          <ngx-datatable
+            #datasetObjectAttributesTable
+            class="material favorites-datatable"
+            [loadingIndicator]="loading"
+            [columns]='headersList'
+            [rows]="rowsList"
+            [columnMode]="'force'"
+            [headerHeight]="35"
+            [footerHeight]="true"
+            [scrollbarH]="true"
+            [limit]="5"
+            [messages]="emptySampleData"
+            [rowHeight]="'auto'">
+          </ngx-datatable>
+        </div>
+        <div class="app-container" *ngIf="dataLoading">
+          <md-progress-bar mode="indeterminate"></md-progress-bar>
+        </div>
+      </md-tab>
+      <md-tab label="Access Control">
+        <div class="app-container" *ngIf="!detailsLoading">
+          <div *ngIf="type!='Hive' && type!='Hbase' && type!='Teradata'">
+            <ngx-datatable
+              #datasetObjectAttributesTable
+              class="material favorites-datatable"
+              [loadingIndicator]="loading"
+              [rows]="accessControlList"
+              [columnMode]="'force'"
+              [headerHeight]="35"
+              [footerHeight]="true"
+              [scrollbarH]="true"
+              [limit]="5"
+              [messages]="kafkaMessages"
+              [rowHeight]="'auto'">
+              <ngx-datatable-footer>
+                <ng-template
+                  ngx-datatable-footer-template>
+                </ng-template>
+              </ngx-datatable-footer>
+            </ngx-datatable>
+          </div>
+          <div *ngIf="type=='Hbase' || type=='Hive'">
+            <ngx-datatable
+              #datasetObjectAttributesTable
+              class="material favorites-datatable"
+              [loadingIndicator]="loading"
+              [rows]="accessControlList"
+              [columnMode]="'force'"
+              [headerHeight]="35"
+              [footerHeight]="true"
+              [scrollbarH]="true"
+              [limit]="5"
+              [messages]="messages"
+              [rowHeight]="'auto'">
+              <ngx-datatable-column name="Access Types" [width]="5">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{row.accessTypes}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Groups" [width]="10">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{row.groups}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Users" [width]="80" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{row.users}}
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+          <div *ngIf="type=='Teradata'">
+            <ngx-datatable
+              #datasetObjectAttributesTable
+              class="material favorites-datatable"
+              [loadingIndicator]="loading"
+              [rows]="accessControlList"
+              [columnMode]="'force'"
+              [headerHeight]="35"
+              [footerHeight]="true"
+              [scrollbarH]="true"
+              [limit]="5"
+              [messages]="messages"
+              [rowHeight]="'auto'">
+              <ngx-datatable-column name="Database" [width]="10">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{row.databaseName}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Role Name" [width]="80" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{row.iamRoleName}}
+                </ng-template>
+              </ngx-datatable-column>
+            </ngx-datatable>
+          </div>
+        </div>
+        <div class="app-container" *ngIf="detailsLoading">
+          <md-progress-bar mode="indeterminate"></md-progress-bar>
+        </div>
+      </md-tab>
+    </md-tab-group>
+  </div>
+</div>

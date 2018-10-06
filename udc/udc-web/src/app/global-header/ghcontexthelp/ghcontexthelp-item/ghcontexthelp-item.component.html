@@ -1,0 +1,11 @@
+<md-list-item (click)="toggleHelp($event)" [class.last-content]="lastcontent">
+  <span md-line>
+    {{title}}
+  </span>
+  <md-icon *ngIf="show">keyboard_arrow_up</md-icon>
+  <md-icon *ngIf="!show">keyboard_arrow_down</md-icon>
+</md-list-item>
+<div *ngIf="show" class="help-content" [@expandCollapseAnimation]>
+  <ng-content></ng-content>
+</div>
+<md-divider *ngIf="!lastcontent"></md-divider>

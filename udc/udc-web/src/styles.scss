@@ -1,0 +1,296 @@
+/* You can add global styles to this file, and also import other style files */
+@import '~@angular/material/theming';
+@import '~@swimlane/ngx-datatable/release/assets/icons.css';
+@import '~@swimlane/ngx-datatable/release/index.css';
+@import '~@swimlane/ngx-datatable/release/themes/material.css';
+@import '~spinkit/scss/spinners/7-three-bounce.scss';
+@import './app/shared/components/datatable/datatable.component.scss';
+@import './app/shared/components/hamburger/hamburger.component.scss';
+
+$font-family: RobotoDraft, Roboto, 'Helvetica Neue', sans-serif;
+
+html, body {
+  margin: 0;
+  height: 100%;
+  min-height: 100%;
+  font-family: $font-family;
+  font-feature-settings: "liga", "kern";
+  font-kerning: normal;
+  -webkit-font-smoothing: antialiased;
+  background: mat-color(mat-palette($mat-grey, 50));
+  overflow: auto;
+}
+
+.text-roboto {
+  font-family: $font-family !important;
+}
+
+hr {
+  border-style: solid;
+  border-color: mat-color(mat-palette($mat-grey, 200));
+}
+
+.app-container {
+  font-size: 14px;
+  padding: 20px 32px;
+  position: relative;
+  background-color: white;
+}
+
+.app-container-searchbox {
+  height: 100%;
+}
+
+.app-top-container {
+  position: relative;
+}
+
+.app-top-container-search {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex:1;
+  height: 100vh;
+}
+
+.dialog-heading {
+  color: #373737;
+  font-size: 22px;
+  min-width: 250px;
+}
+
+.dialog-heading-margin-bottom {
+  color: #373737;
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+
+.dialog-subheading {
+  color: mat-color(mat-palette($mat-grey, 600));
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.sub-heading {
+  color: black;
+  font-size: 18px;
+}
+
+.alert-danger {
+  color: mat-color(mat-palette($mat-red));
+  opacity: 1;
+}
+
+.alert-warning {
+  color: mat-color(mat-palette($mat-orange, 500));
+  opacity: 1;
+}
+
+label, .label {
+  color: mat-color(mat-palette($mat-grey, 600));
+}
+
+.star-border-icon {
+  color: mat-color(mat-palette($mat-grey, 400));
+}
+
+.progress-in-row {
+  display: inline-block !important;
+  height: 16px !important;
+  width: 16px !important;
+  top: 3px;
+  margin-right: 8px;
+}
+
+.preload-content {
+  text-align: center;
+  margin-top: 200px;
+}
+
+.favorites-datatable {
+  background: initial !important;
+  box-shadow: none !important;
+  font-size: 13px;
+  overflow: scroll;
+}
+
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.full-width {
+  width: 100%;
+}
+
+.select-spacing {
+  margin: 40px 0 0 0;
+}
+
+hide {
+  display: none;
+}
+
+.customize-btn-container {
+  position: absolute;
+  top: -45px;
+  right: 32px;
+  z-index: 11;
+}
+
+.pull-right {
+  float: right;
+}
+
+.pull-left {
+  float: left;
+}
+
+.pull-center {
+  display: block;
+  margin: 0 auto;
+  height: 100px;
+}
+
+.page-card {
+  padding: 10px;
+  box-shadow: 0px 1px 1px rgba(0, 0, 0, .2);
+}
+
+.md-option-sm.mat-option {
+  display: block;
+  line-height: 30px;
+  height: 30px;
+  padding: 0 12px;
+  font-size: 13px;
+}
+
+.breadcrumb {
+  text-decoration: none;
+  font-weight: bold;
+}
+
+.widget-container {
+  box-shadow: 0px 1px 1px rgba(0, 0, 0, .2);
+}
+
+.fill-remaining {
+  flex-grow: 1;
+}
+
+.date-range-toggle-group {
+  position: absolute;
+  right: 60px;
+  top: 14px;
+  font-size: 14px;
+}
+
+.icon-16 {
+  height: 14px !important;
+  width: 14px !important;
+  font-size: 13px;
+  position: relative;
+  top: 2px;
+}
+
+.mat-autocomplete-panel {
+  max-width: none !important;
+  max-height: 240px !important;
+}
+
+md-option {
+  overflow: visible !important;
+  text-overflow: inherit !important;
+  white-space: nowrap !important;
+}
+
+.table-search {
+  height: 36px;
+  width: 130px;
+  margin: -4px 10px 0 0;
+}
+
+.detail-content-container {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.mat-slide-toggle.flex-start {
+  margin: 6px auto 6px 0;
+}
+
+// http://stackoverflow.com/questions/7725652/css-scrollbar-style-cross-browser
+::-webkit-scrollbar {
+  width: 12px; /* for vertical scrollbars */
+  height: 12px; /* for horizontal scrollbars */
+}
+
+::-webkit-scrollbar-track {
+  background: #fafafa;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.green {
+  color: mat-color(mat-palette($mat-green, 500));
+}
+
+.amber {
+  color: mat-color(mat-palette($mat-amber, 500));
+}
+
+.red {
+  color: mat-color(mat-palette($mat-red, 500));
+}
+
+.success-alert-box {
+  border: solid 1px mat-color(mat-palette($mat-green, 500));
+  border-radius: 10px;
+}
+
+.error-alert-box {
+  border: solid 1px mat-color(mat-palette($mat-red, 500));
+  border-radius: 10px;
+}
+
+.readonly {
+  cursor: not-allowed;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.status-cell {
+  cursor: pointer;
+}
+
+.float-right {
+  float: right;
+}
+
+.annocement-notification {
+  padding: 4px;
+  border-radius: 50%;
+  position: absolute;
+  margin-left: -20px;
+  margin-top: 5px;
+}
+
+.tabular-svg-icon {
+  height: 20px !important;
+  width: 20px !important;
+  vertical-align: middle;
+}
+
+md-progress-spinner.medium-spinner {
+  width: 50px;
+  height: 50px;
+  margin: auto;
+}

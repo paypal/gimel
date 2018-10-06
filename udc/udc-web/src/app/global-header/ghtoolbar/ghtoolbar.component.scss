@@ -1,0 +1,46 @@
+.account-name-list-item /deep/ .mat-list-item {
+  color:#ccc;
+  cursor: initial;
+  background: none;
+}
+
+:host /deep/ [md-icon-button]:hover::after {
+  border-radius: initial;
+}
+
+:host /deep/ button, a, app-changelog-root button {
+  md-icon {
+    opacity: 1;
+  }
+
+  &:hover {
+    md-icon {
+      opacity: 1;
+    }
+  }
+}
+
+.annocement-container {
+  position: relative;
+}
+
+/* svg icon in md-list is not aligned with normal material icon, temp fix */
+.list-svg-icon {
+  width: 75px !important;
+}
+
+.text-align-helper {
+  text-align: left;
+}
+
+.user-image {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+  object-position: 50% 50%;
+}
+
+//.min-nav.hover {
+//  background-color: #2e3b4c;
+//}

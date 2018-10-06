@@ -1,0 +1,22 @@
+#!/bin/sh
+
+this_dir=`dirname build/udc`
+source ${this_dir}/udc_functions
+
+write_log "Begin    | Script | $0"
+user_args=$@
+user_args_count=$#
+default_args="install T10"
+write_log "User Arguments : ${user_args}"
+
+if [ $user_args_count -gt 0 ]; then
+  resolved_args=${user_args_count}
+else 
+  write_log "User supplied arguments : None. Defaulting to argument : ${default_args}"
+fi
+
+
+mvn clean install "$@"
+check_error $? "mvn clean install $@"
+
+write_log "Complete | Script | $0"

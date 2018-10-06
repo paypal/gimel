@@ -1,0 +1,99 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+
+
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Object ID" value="{{objectId}}" disabled>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedObjectName placeholder="Object Name" value="{{objectName}}"
+           formControlName="modifiedObjectName">
+    <md-hint *ngIf="formErrors.modifiedObjectName" class="alert-danger">
+      {{formErrors.modifiedObjectName}}
+    </md-hint>
+    <md-hint align="end">{{modifiedObjectName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedContainerName placeholder="Container Name"
+           value="{{containerName}}" formControlName="modifiedContainerName">
+    <md-hint *ngIf="formErrors.modifiedContainerName" class="alert-danger">
+      {{formErrors.modifiedContainerName}}
+    </md-hint>
+    <md-hint align="end">{{modifiedContainerName.value.length}} / {{maxCharsForAliasName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+      {{formErrors.updatedUser}}
+    </md-hint>
+    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+  </md-input-container>
+  <br>
+
+  <ngx-datatable
+    #objectAttributesTable
+    class="material"
+    [headerHeight]="50"
+    [limit]="5"
+    [columnMode]="'force'"
+    [footerHeight]="50"
+    [rowHeight]="'auto'"
+    [rows]="objectAttributes">
+    <ngx-datatable-column name="Attribute Key" [width]="150">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageDsAttributeKeyName }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Attribute Value">
+      <ng-template ngx-datatable-cell-template let-row="row">
+            <span
+              title="Double click to edit"
+              (dblclick)="editing[row.$$index + '-objectAttributeValue'] = true"
+              *ngIf="!editing[row.$$index + '-objectAttributeValue']">
+              {{row.objectAttributeValue}}
+            </span>
+        <input
+          autofocus
+          (blur)="updateValue($event, 'objectAttributeValue', row)"
+          *ngIf="editing[row.$$index + '-objectAttributeValue']"
+          type="text"
+          [value]="row.objectAttributeValue"
+        />
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Is this customized ?">
+      <ng-template ngx-datatable-cell-template let-row="row">
+            <span
+              title="Double click to edit"
+              (dblclick)="editing[row.$$index + '-isCustomized'] = true"
+              *ngIf="!editing[row.$$index + '-isCustomized']">
+              {{row.isCustomized}}
+            </span>
+        <input
+          autofocus
+          (blur)="updateValue($event, 'isCustomized', row)"
+          *ngIf="editing[row.$$index + '-isCustomized']"
+          type="text"
+          [value]="row.isCustomized"
+        />
+      </ng-template>
+    </ngx-datatable-column>
+  </ngx-datatable>
+  <br>
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!editForm.valid">Update</button>
+  </div>
+
+
+</form>

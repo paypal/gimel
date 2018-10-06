@@ -1,0 +1,61 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+
+
+  <md-input-container class="full-width">
+    <input mdInput #clusterName placeholder="Cluster Name"
+           formControlName="clusterName">
+    <md-hint *ngIf="formErrors.clusterName" class="alert-danger">
+      {{formErrors.clusterName}}
+    </md-hint>
+    <md-hint align="end">{{clusterName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput #livyEndPoint placeholder="Livy End point"
+           formControlName="livyEndPoint">
+    <md-hint *ngIf="formErrors.livyEndPoint" class="alert-danger">
+      {{formErrors.livyEndPoint}}
+    </md-hint>
+    <md-hint align="end">{{livyEndPoint.value.length}} / {{maxCharsForDescName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput #livyPort placeholder="Livy Port"
+           formControlName="livyPort">
+    <md-hint *ngIf="formErrors.livyPort" class="alert-danger">
+      {{formErrors.livyPort}}
+    </md-hint>
+    <md-hint align="end">{{livyPort.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+
+
+  <md-input-container class="full-width">
+    <textarea mdInput #clusterDescription rows="5" placeholder="Description"
+              formControlName="clusterDescription">
+    </textarea>
+    <md-hint *ngIf="formErrors.clusterDescription" class="alert-danger">
+      {{formErrors.clusterDescription}}
+    </md-hint>
+    <md-hint align="end">{{clusterDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
+    <md-hint *ngIf="formErrors.createdUser" class="alert-danger">
+      {{formErrors.createdUser}}
+    </md-hint>
+    <md-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+  </md-input-container>
+
+  <br><br>
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
+  </div>
+
+
+</form>

@@ -1,0 +1,39 @@
+@import '~@angular/material/theming';
+
+@mixin global-header-theme($theme) {
+  $primary: map-get($theme, primary);
+  $accent: map-get($theme, accent);
+
+  .search-button {
+    color: mat-color($primary) !important;
+  }
+
+  .sidenav-fixed {
+    background: mat-color($primary) !important;
+  }
+
+  .pulse-layer {
+    background-color: mat-color($primary);
+  }
+
+  .highlight {
+    color: mat-color(mat-palette($accent));
+  }
+
+  .header-logo {
+    background: mat-color($primary);
+  }
+
+  .search-box {
+    background: rgba(255,255,255,0.2);
+  }
+
+  .search-box.introjs-showElement {
+    background: rgba(mat-color($primary), 0.8) !important;
+  }
+
+  .mat-icon-button.introjs-showElement {
+    background: mat-color($primary);
+    border-radius: 0%;
+  }
+}

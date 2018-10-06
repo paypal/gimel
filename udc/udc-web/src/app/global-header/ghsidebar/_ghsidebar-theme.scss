@@ -1,0 +1,26 @@
+@import '~@angular/material/theming';
+
+@mixin ghsidebar-theme($theme) {
+  $primary: map-get($theme, primary);
+
+  .sidenav-fixed {
+    md-icon {
+      color: mat-color($primary, 50);
+    }
+
+    .search-button {
+      md-icon {
+        color: mat-color($primary);
+      }
+    }
+
+    button {
+      &:hover {
+        md-icon {
+          transition: color .25s ease-in;
+          color: mat-color($primary);
+        }
+      }
+    }
+  }
+}

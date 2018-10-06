@@ -1,0 +1,10 @@
+@import '~@angular/material/theming';
+
+@mixin spinner-theme($theme) {
+  $primary: map-get($theme, primary);
+  .sk-three-bounce {
+    .sk-child {
+      background: mat-color($primary);
+    }
+  }
+}

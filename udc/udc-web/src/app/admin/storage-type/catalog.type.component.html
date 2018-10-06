@@ -1,0 +1,55 @@
+<div class="app-top-container">
+  <div class="app-container">
+    <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
+      <div fxFlex="100" class="main-container">
+        <md-card>
+          <div>
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <div fxFlex="50%" *ngIf="!projectLoaded">
+                <md-select class="long_dropdown" placeholder="Loading..." disabled></md-select>
+                <button md-icon-button class="action-btn grey-btn" disabled>
+                  <md-icon>refresh</md-icon>
+                </button>
+              </div>
+
+              <div fxFlex="50%" *ngIf="loaded && projectLoaded">
+                <md-select [(ngModel)]="projectName" (ngModelChange)="disableDropDown()"
+                           placeholder="Datastore Categories"
+                           class="long_dropdown">
+                  <md-option *ngFor="let row of displayList" [value]="row.storageName">{{ row.storageName }}</md-option>
+                </md-select>
+                <span *ngIf="projectName">
+                  <button md-icon-button class="action-btn grey-btn" md-tooltip="Refresh Categories"
+                          (click)="refreshProject()">
+                    <md-icon>refresh</md-icon>
+                  </button>
+                </span>
+                <span *ngIf="!projectName">
+                  <button md-icon-button class="action-btn grey-btn" disabled>
+                    <md-icon>refresh</md-icon>
+                  </button>
+                </span>
+              </div>
+              <div fxFlex="50%" *ngIf="!loaded && projectLoaded">
+                <md-select class="long_dropdown" placeholder={{projectName}} disabled></md-select>
+                <button md-icon-button class="action-btn grey-btn" disabled>
+                  <md-icon>refresh</md-icon>
+                </button>
+              </div>
+              <div fxFlex="100%">
+                <img class="udc_logo pull-right" src="assets/images/udc-interim-logo.png">
+              </div>
+            </div>
+          </div>
+          <br/>
+          <md-tab-group>
+            <md-tab label="Datastore Types">
+              <app-catalog-type-list [project]="projectName" [refresh]="refresh" (loaded)=enableDropDown()>
+              </app-catalog-type-list>
+            </md-tab>
+          </md-tab-group>
+        </md-card>
+      </div>
+    </div>
+  </div>
+</div>

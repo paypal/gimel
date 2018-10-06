@@ -1,0 +1,41 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+
+
+  <md-input-container class="full-width">
+    <input mdInput #zoneName placeholder="Zone Name"
+           formControlName="zoneName">
+    <md-hint *ngIf="formErrors.zoneName" class="alert-danger">
+      {{formErrors.zoneName}}
+    </md-hint>
+    <md-hint align="end">{{zoneName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <textarea mdInput #zoneDescription rows="5" placeholder="Description"
+              formControlName="zoneDescription">
+    </textarea>
+    <md-hint *ngIf="formErrors.zoneDescription" class="alert-danger">
+      {{formErrors.zoneDescription}}
+    </md-hint>
+    <md-hint align="end">{{zoneDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
+    <md-hint *ngIf="formErrors.createdUser" class="alert-danger">
+      {{formErrors.createdUser}}
+    </md-hint>
+    <md-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+  </md-input-container>
+
+  <br><br>
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
+  </div>
+
+
+</form>

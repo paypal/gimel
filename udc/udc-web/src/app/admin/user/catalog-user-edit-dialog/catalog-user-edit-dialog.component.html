@@ -1,0 +1,37 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="editUserForm" (ngSubmit)="onSubmit()">
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="User ID" value="{{userId}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedUserName placeholder="User Name" value="{{userName}}"
+           formControlName="modifiedUserName">
+    <md-hint *ngIf="formErrors.modifiedUserName" class="alert-danger">
+      {{formErrors.modifiedUserName}}
+    </md-hint>
+    <md-hint align="end">{{modifiedUserName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <textarea mdInput #modifiedUserFullName rows="5" placeholder="Full Name"
+              value="{{userFullName}}" formControlName="modifiedUserFullName">
+    </textarea>
+    <md-hint *ngIf="formErrors.modifiedUserFullName" class="alert-danger">
+      {{formErrors.modifiedUserFullName}}
+    </md-hint>
+    <md-hint align="end">{{modifiedUserFullName.value.length}} / {{maxCharsForUserFullName}}</md-hint>
+  </md-input-container>
+
+  <br><br>
+
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!editUserForm.valid">Update</button>
+  </div>
+
+
+</form>

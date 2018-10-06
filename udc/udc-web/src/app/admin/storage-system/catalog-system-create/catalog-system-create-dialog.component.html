@@ -1,0 +1,178 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+  <div>
+
+    <md-input-container class="full-width">
+      <input mdInput #storageSystemName placeholder="System Name"
+             formControlName="storageSystemName">
+      <md-hint *ngIf="formErrors.storageSystemName" class="alert-danger">
+        {{formErrors.storageSystemName}}
+      </md-hint>
+      <md-hint align="end">{{storageSystemName.value.length}} / {{maxCharsForName}}</md-hint>
+    </md-input-container>
+
+    <md-input-container class="full-width">
+    <textarea mdInput #storageSystemDescription rows="3" placeholder="System Description"
+              formControlName="storageSystemDescription">
+    </textarea>
+      <md-hint *ngIf="formErrors.storageSystemDescription" class="alert-danger">
+        {{formErrors.storageSystemDescription}}
+      </md-hint>
+      <md-hint align="end">{{storageSystemDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
+    </md-input-container>
+
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <md-select required placeholder="Is Gimel Supported" [floatPlaceholder]="'never'"
+                   formControlName="isGimelCompatible">
+          <md-option *ngFor="let isGimelCompatible of compatibilityList" [value]="isGimelCompatible">
+            {{isGimelCompatible}}
+          </md-option>
+        </md-select>
+      </div>
+    </div>
+    <br>
+
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <md-select required placeholder="Is Read Supported" [floatPlaceholder]="'never'"
+                   formControlName="isReadCompatible">
+          <md-option *ngFor="let isReadCompatible of compatibilityList" [value]="isReadCompatible">
+            {{isReadCompatible}}
+          </md-option>
+        </md-select>
+      </div>
+    </div>
+    <br>
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <md-select *ngIf="!zoneLoading" required placeholder="Assigned Zone" [floatPlaceholder]="'never'"
+                   formControlName="zone">
+          <md-option *ngFor="let zone of zoneList" [value]="zone">
+            {{ zone['zoneName'] }}
+          </md-option>
+        </md-select>
+        <md-progress-bar mode="indeterminate" *ngIf="zoneLoading"></md-progress-bar>
+      </div>
+    </div>
+    <br>
+
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <md-select *ngIf="!dbLoading" required placeholder="Storage Type" [floatPlaceholder]="'never'"
+                   formControlName="storageType" (change)="onStorageTypeChange()">
+          <md-option *ngFor="let storageType of storageTypes" [value]="storageType">
+            {{ storageType['storageTypeName'] }}
+          </md-option>
+        </md-select>
+        <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+      </div>
+    </div>
+    <br>
+
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <md-select *ngIf="!clusterLoading" required placeholder="Assigned Cluster-For the Discovery Service"
+                   [floatPlaceholder]="'never'"
+                   formControlName="cluster">
+          <md-option *ngFor="let cluster of clusterList" [value]="cluster">
+            {{ cluster['clusterName'] }}
+          </md-option>
+        </md-select>
+        <md-progress-bar mode="indeterminate" *ngIf="clusterLoading"></md-progress-bar>
+      </div>
+    </div>
+    <br>
+
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <md-select *ngIf="!clusterLoading" required placeholder="Running Cluster-For invoking queries"
+                   [floatPlaceholder]="'never'"
+                   formControlName="runningCluster">
+          <md-option *ngFor="let runningCluster of clusterList" [value]="runningCluster">
+            {{ runningCluster['clusterName'] }}
+          </md-option>
+        </md-select>
+        <md-progress-bar mode="indeterminate" *ngIf="clusterLoading"></md-progress-bar>
+      </div>
+    </div>
+    <br>
+
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <md-select *ngIf="!userLoading" required placeholder="Admin User" [floatPlaceholder]="'never'"
+                   formControlName="adminUser">
+          <md-option *ngFor="let adminUser of userList" [value]="adminUser">
+            {{ adminUser['userName'] }}
+          </md-option>
+        </md-select>
+        <md-progress-bar mode="indeterminate" *ngIf="userLoading"></md-progress-bar>
+      </div>
+    </div>
+
+    <md-input-container class="full-width">
+      <input mdInput #containers required="true" placeholder="Containers" formControlName="containers">
+      <md-hint *ngIf="formErrors.containers" class="alert-danger">
+        {{formErrors.containers}}
+      </md-hint>
+      <md-hint align="end">{{containers.value.length}} / {{maxCharsForUserName}}</md-hint>
+    </md-input-container>
+
+    <md-input-container class="full-width">
+      <input mdInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
+      <md-hint *ngIf="formErrors.createdUser" class="alert-danger">
+        {{formErrors.createdUser}}
+      </md-hint>
+      <md-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+    </md-input-container>
+
+    <div>
+      <h4>System Attributes</h4>
+    </div>
+
+    <ngx-datatable
+      #typeAttributesTable
+      class="material"
+      [headerHeight]="50"
+      [limit]="5"
+      [columnMode]="'force'"
+      [footerHeight]="50"
+      [rowHeight]="'auto'"
+      [rows]="typeAttributes">
+      <ngx-datatable-column name="Attribute Key ID" [width]="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.storageDsAttributeKeyId }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Attribute Key" [width]="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.storageDsAttributeKeyName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Attribute Value">
+        <ng-template ngx-datatable-cell-template let-row="row">
+            <span
+              title="Double click to edit"
+              (dblclick)="editing[row.$$index + '-storageTypeAttributeValue'] = true"
+              *ngIf="!editing[row.$$index + '-storageTypeAttributeValue']">
+              {{row.storageTypeAttributeValue}}
+            </span>
+          <input
+            autofocus
+            (blur)="updateValue($event, 'storageTypeAttributeValue', row)"
+            *ngIf="editing[row.$$index + '-storageTypeAttributeValue']"
+            type="text"
+            [value]="row.storageTypeAttributeValue"
+          />
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+    <br>
+
+    <div class="dialog-footer">
+      <button md-button type="button" (click)="cancel()">Cancel</button>
+      <button md-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
+    </div>
+
+  </div>
+</form>

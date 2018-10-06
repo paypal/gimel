@@ -1,0 +1,132 @@
+<md-tab-group>
+
+
+  <md-tab label="Overview">
+    <div class="app-container" *ngIf="!detailsLoading">
+      <md-grid-list cols="2" rowHeight="300">
+        <md-grid-tile>
+          <md-list dense>
+            <md-list-item>
+              <table>
+                <tr>
+                  <td><h4>Object ID</h4></td>
+                  <td>{{statusData.objectId}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Object Name</h4></td>
+                  <td>{{statusData.objectName}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Container Name</h4></td>
+                  <td>{{statusData.containerName}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Is it Discovered </h4></td>
+                  <td>{{isSelfDiscovered}}</td>
+                </tr>
+              </table>
+            </md-list-item>
+          </md-list>
+        </md-grid-tile>
+        <md-grid-tile>
+          <md-list dense>
+            <md-list-item>
+              <table>
+                <tr>
+                  <td><h4>Created By</h4></td>
+                  <td>{{statusData.createdUserOnStore}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Created Timestamp</h4></td>
+                  <td>{{statusData.createdTimestampOnStore}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Last Updated By</h4></td>
+                  <td>{{statusData.updatedUser}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Updated Timestamp</h4></td>
+                  <td>{{statusData.updatedTimestamp}}</td>
+                </tr>
+              </table>
+            </md-list-item>
+          </md-list>
+        </md-grid-tile>
+      </md-grid-list>
+    </div>
+    <div class="app-container" *ngIf="detailsLoading">
+      <md-progress-bar mode="indeterminate"></md-progress-bar>
+    </div>
+  </md-tab>
+  <md-tab label="Schema Details">
+    <div class="app-container" *ngIf="!detailsLoading">
+      <ngx-datatable
+        #datasetColumnsTable
+        class="material favorites-datatable"
+        [loadingIndicator]="loading"
+        [rows]="columnList"
+        [columnMode]="'force'"
+        [headerHeight]="35"
+        [footerHeight]="true"
+        [scrollbarH]="true"
+        [limit]="5"
+        [rowHeight]="50">
+        <ngx-datatable-column name="Column Name" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row.columnName}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Column Type" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row.columnType}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Column Family" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span *ngIf="row.columnFamily">
+              {{row.columnFamily}}
+            </span>
+            <span *ngIf="!row.columnFamily">
+              <div>N/A</div>
+            </span>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+    <div class="app-container" *ngIf="detailsLoading">
+      <md-progress-bar mode="indeterminate"></md-progress-bar>
+    </div>
+  </md-tab>
+  <md-tab label="Object Attributes">
+    <div class="app-container" *ngIf="!detailsLoading">
+      <ngx-datatable
+        #datasetObjectAttributesTable
+        class="material favorites-datatable"
+        [loadingIndicator]="loading"
+        [rows]="objectAttributesList"
+        [columnMode]="'force'"
+        [headerHeight]="35"
+        [footerHeight]="true"
+        [scrollbarH]="true"
+        [limit]="5"
+        [rowHeight]="50">
+
+        <ngx-datatable-column name="Type Attribute Value" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row.storageDsAttributeKeyName}}
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="Object Attribute Value" [width]="50">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row.objectAttributeValue}}
+          </ng-template>
+        </ngx-datatable-column>
+
+      </ngx-datatable>
+    </div>
+    <div class="app-container" *ngIf="detailsLoading">
+      <md-progress-bar mode="indeterminate"></md-progress-bar>
+    </div>
+  </md-tab>
+</md-tab-group>

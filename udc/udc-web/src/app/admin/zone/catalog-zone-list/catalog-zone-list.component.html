@@ -1,0 +1,71 @@
+<div class="app-container">
+
+  <div>
+    <div class="detail-content-container">
+      <md-input-container class="table-search">
+        <input #searchDB mdInput (keyup)='search(searchDB.value)'>
+        <md-placeholder>
+          <md-icon class="icon-16">search</md-icon>
+          Search
+        </md-placeholder>
+      </md-input-container>
+      <button md-raised-button routerLink="." (click)="createZoneDialog()" class="app-details-btn">
+        Create Zone
+      </button>
+    </div>
+  </div>
+  <ngx-datatable
+    #catalogZonesTable
+    class="material favorites-datatable"
+    [loadingIndicator]="loading"
+    [rows]="displayList"
+    [columnMode]="'force'"
+    [headerHeight]="35"
+    [footerHeight]="true"
+    [scrollbarH]="true"
+    [limit]="20"
+    [rowHeight]="50"
+    [sorts]="[{prop: 'zoneId', dir: 'asc'}]">
+    <ngx-datatable-column name="Zone ID" [width]="100">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.zoneId }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Zone Name" [width]="100">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.zoneName }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Zone Description" [width]="200" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.zoneDescription}}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Status" [width]="150" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <span [ngSwitch]="row.isActiveYN">
+          <md-icon class="favorite-success" *ngSwitchCase="'Y'" style="color:yellowgreen;">airplanemode_active</md-icon>
+          <md-icon class="favorite-danger" *ngSwitchCase="'N'" style="color:red;">airplanemode_inactive</md-icon>
+        </span>
+        <span *ngIf="row.isActiveYN == 'Y'">Active</span>
+        <span *ngIf="row.isActiveYN == 'N'">In-Active</span>
+      </ng-template>
+    </ngx-datatable-column>
+
+    <span>
+      <ngx-datatable-column name="Actions" [width]="150" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <app-catalog-zone-action
+            [zoneId]="row.zoneId"
+            [zoneName]="row.zoneName"
+            [zoneDescription]="row.zoneDescription"
+            [createdUser]="row.createdUser"
+            [isActiveYN]="row.isActiveYN"
+            (refresh)=refreshRow($event)>
+          </app-catalog-zone-action>
+        </ng-template>
+      </ngx-datatable-column>
+    </span>
+
+  </ngx-datatable>
+</div>

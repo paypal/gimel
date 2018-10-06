@@ -1,0 +1,56 @@
+<md-nav-list class="side-nav-list" [class.opened]="opened">
+  <h3 md-subheader class="selected-app-subheader uppercase">Home</h3>
+  <md-list-item @zoomFromLeftAnimation [routerLink]="['/home','search']"
+                routerLinkActive="active">
+    <h3 md-line>Search</h3>
+  </md-list-item>
+
+  <md-divider></md-divider>
+
+  <h3 md-subheader class="selected-app-subheader uppercase">Data Services</h3>
+  <md-list-item @zoomFromLeftAnimation [routerLink]="['/admin','category']"
+                routerLinkActive="active">
+    <h3 md-line>Datastore Category</h3>
+  </md-list-item>
+  <md-list-item @zoomFromLeftAnimation [routerLink]="['/admin','type']"
+                routerLinkActive="active">
+    <h3 md-line>Datastore Type</h3>
+  </md-list-item>
+  <md-divider></md-divider>
+
+  <h3 md-subheader class="selected-app-subheader uppercase">UDC</h3>
+  <md-list-item @zoomFromLeftAnimation [routerLink]="['/admin','system']"
+                routerLinkActive="active">
+    <h3 md-line>Datastore</h3>
+  </md-list-item>
+
+  <md-list-item @zoomFromLeftAnimation [routerLink]="['/udc','objects']"
+                routerLinkActive="active">
+    <h3 md-line>Objects</h3>
+  </md-list-item>
+  <md-list-item @zoomFromLeftAnimation [routerLink]="['/udc','datasets']"
+                routerLinkActive="active">
+    <h3 md-line>Datasets</h3>
+  </md-list-item>
+  <md-list-item  @zoomFromLeftAnimation [routerLink]="['/udc','register']"
+                routerLinkActive="active">
+    <h3 md-line>Register</h3>
+  </md-list-item>
+  <md-divider></md-divider>
+
+  <span>
+    <h3 md-subheader class="selected-app-subheader uppercase">Compute Services</h3>
+      <md-list-item @zoomFromLeftAnimation [routerLink]="['/admin','cluster']"
+                routerLinkActive="active">
+        <h3 md-line>Cluster</h3>
+      </md-list-item>
+    <md-list-item @zoomFromLeftAnimation [routerLink]="['/admin','zone']"
+                  routerLinkActive="active">
+      <h3 md-line>Zone</h3>
+    </md-list-item>
+    <md-divider></md-divider>
+  </span>
+
+  <md-divider></md-divider>
+
+</md-nav-list>

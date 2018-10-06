@@ -1,0 +1,14 @@
+#!/bin/sh
+
+export this_file=${0}
+export this_script_path="$( cd "$( dirname "$this_file" )" && pwd)"
+cd ${this_script_path}
+cd ..
+export UDC_HOME=${PWD}
+source ${UDC_HOME}/build/udc_functions
+write_log "Current Working Directory is  ${UDC_HOME}"
+
+export this_dir=`dirname $0`
+source ${this_script_path}/set-env
+
+docker run -p ${udc_serv_exposed_port}:${udc_serv_exposed_port} --name ${udc_serv_container_name} --link ${mysql_container_name} -d ${udc_serv_image_name}

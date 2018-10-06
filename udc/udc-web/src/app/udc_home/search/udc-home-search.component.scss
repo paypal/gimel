@@ -1,0 +1,36 @@
+@import '~@angular/material/theming';
+
+.udc_logo {
+  width: 100%;
+  padding-top: 60px;
+}
+
+.stats_logo {
+  width: 50%;
+  align: "middle"
+}
+
+.metric_header {
+  color: #4154B2 !important;
+  font-size: 25px !important;
+}
+
+.metric_count {
+  color: #4154B2 !important;
+  font-size: 35px !important;
+}
+
+.metric_text {
+  color: gray !important;
+  font-size: 15px !important;
+}
+
+.compute_logo {
+  width: 90%;
+  padding: 10px;
+}
+
+.data_logo {
+  width: 90%;
+  padding: 10px;
+}

@@ -1,0 +1,15 @@
+@import '~@angular/material/theming';
+
+@mixin datatable-theme($theme) {
+  $primary: map-get($theme, primary);
+
+  .ngx-datatable.fixed-header .datatable-header {
+    border-bottom-color: mat-color(mat-palette($mat-grey, 400));
+  }
+
+  .ngx-datatable.material .datatable-body .datatable-body-row .datatable-body-cell {
+    .action-btn.grey-btn {
+      color: mat-color(mat-palette($mat-grey, 600));
+    }
+  }
+}

@@ -1,0 +1,104 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+  <div>
+
+    <md-input-container class="full-width">
+      <input mdInput #objectName placeholder="Object Name"
+             formControlName="objectName">
+      <md-hint *ngIf="formErrors.objectName" class="alert-danger">
+        {{formErrors.objectName}}
+      </md-hint>
+      <md-hint align="end">{{objectName.value.length}} / {{maxCharsForName}}</md-hint>
+    </md-input-container>
+
+    <md-input-container class="full-width">
+      <input mdInput #containerName placeholder="Container Name"
+             formControlName="containerName">
+      <md-hint *ngIf="formErrors.containerName" class="alert-danger">
+        {{formErrors.containerName}}
+      </md-hint>
+      <md-hint align="end">{{containerName.value.length}} / {{maxCharsForName}}</md-hint>
+    </md-input-container>
+
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <md-select *ngIf="!dbLoading" required placeholder="Storage System" [floatPlaceholder]="'never'"
+                   formControlName="storageSystem" (change)="onStorageTypeChange()">
+          <md-option *ngFor="let storageSystem of storageSystems" [value]="storageSystem">
+            {{ storageSystem['storageSystemName'] }}
+          </md-option>
+        </md-select>
+        <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+      </div>
+    </div>
+    <br>
+
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <md-select placeholder="Do you want the object to be Registered" [floatPlaceholder]="'never'"
+                   formControlName="wantToRegister" (change)="captureRegistrationRequest()">
+          <md-option *ngFor="let option of options" [value]="option">
+            {{ option }}
+          </md-option>
+        </md-select>
+      </div>
+    </div>
+    <br>
+    <md-input-container class="full-width">
+      <input mdInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
+      <md-hint *ngIf="formErrors.createdUser" class="alert-danger">
+        {{formErrors.createdUser}}
+      </md-hint>
+      <md-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+    </md-input-container>
+
+    <div>
+      <h4>Object Attributes</h4>
+    </div>
+
+    <ngx-datatable
+      #typeAttributesTable
+      class="material"
+      [headerHeight]="50"
+      [limit]="5"
+      [columnMode]="'force'"
+      [footerHeight]="50"
+      [rowHeight]="'auto'"
+      [rows]="typeAttributes">
+      <ngx-datatable-column name="Attribute Key ID" [width]="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.storageDsAttributeKeyId }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Attribute Key" [width]="150">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.storageDsAttributeKeyName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Attribute Value">
+        <ng-template ngx-datatable-cell-template let-row="row">
+            <span
+              title="Double click to edit"
+              (dblclick)="editing[row.$$index + '-storageTypeAttributeValue'] = true"
+              *ngIf="!editing[row.$$index + '-storageTypeAttributeValue']">
+              {{row.storageTypeAttributeValue}}
+            </span>
+          <input
+            autofocus
+            (blur)="updateValue($event, 'storageTypeAttributeValue', row)"
+            *ngIf="editing[row.$$index + '-storageTypeAttributeValue']"
+            type="text"
+            [value]="row.storageTypeAttributeValue"
+          />
+        </ng-template>
+      </ngx-datatable-column>
+    </ngx-datatable>
+    <br>
+
+    <div class="dialog-footer">
+      <button md-button type="button" (click)="cancel()">Cancel</button>
+      <button md-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
+    </div>
+
+  </div>
+</form>

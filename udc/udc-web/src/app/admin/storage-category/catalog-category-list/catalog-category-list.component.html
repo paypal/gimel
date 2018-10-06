@@ -1,0 +1,78 @@
+<div class="app-container">
+
+  <div>
+    <div class="detail-content-container">
+      <md-input-container class="table-search">
+        <input #searchDB mdInput (keyup)='search(searchDB.value)'>
+        <md-placeholder>
+          <md-icon class="icon-16">search</md-icon>
+          Search
+        </md-placeholder>
+      </md-input-container>
+      <div>
+        <button md-raised-button routerLink="." (click)="createCategoryDialog()" class="app-details-btn">
+          Create Category
+        </button>
+      </div>
+    </div>
+  </div>
+  <ngx-datatable
+    #catalogCategoriesTable
+    class="material favorites-datatable"
+    [loadingIndicator]="loading"
+    [rows]="displayList"
+    [columnMode]="'force'"
+    [headerHeight]="35"
+    [footerHeight]="true"
+    [scrollbarH]="true"
+    [limit]="20"
+    [rowHeight]="50"
+    [sorts]="[{prop: 'storageId', dir: 'asc'}]">
+    <ngx-datatable-column name="Storage ID" [width]="100">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageId }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Storage Name" [width]="100">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageName }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Storage Description" [width]="200" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageDescription}}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Created Admin" [width]="100" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.createdUser }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Discovery Status" [width]="150" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <span [ngSwitch]="row.isActiveYN">
+          <md-icon class="favorite-success" *ngSwitchCase="'Y'" style="color:yellowgreen;">airplanemode_active</md-icon>
+          <md-icon class="favorite-danger" *ngSwitchCase="'N'" style="color:red;">airplanemode_inactive</md-icon>
+        </span>
+        <span *ngIf="row.isActiveYN == 'Y'">Active</span>
+        <span *ngIf="row.isActiveYN == 'N'">In-Active</span>
+      </ng-template>
+    </ngx-datatable-column>
+
+    <span>
+      <ngx-datatable-column name="Actions" [width]="150" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <app-catalog-category-action
+          [storageId]="row.storageId"
+          [storageName]="row.storageName"
+          [storageDescription]="row.storageDescription"
+          [createdUser]="row.createdUser"
+          [isActiveYN]="row.isActiveYN"
+          (refresh)=refreshRow($event)>
+        </app-catalog-category-action>
+      </ng-template>
+    </ngx-datatable-column>
+    </span>
+
+  </ngx-datatable>
+</div>

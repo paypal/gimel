@@ -1,0 +1,74 @@
+#!/bin/sh
+
+export this_file=${0}
+export this_script_path="$( cd "$( dirname "$this_file" )" && pwd)"
+cd ${this_script_path}
+cd ..
+export UDC_HOME=${PWD}
+source ${UDC_HOME}/build/udc_functions
+write_log "Current Working Directory is  ${UDC_HOME}"
+
+export this_dir=`dirname $0`
+source ${this_script_path}/set-env
+
+write_log "------------------------------------------------------------------------------"
+write_log "                 Stopping Docker Container for UDC-METASTORE"
+write_log "------------------------------------------------------------------------------"
+run_cmd "docker stop ${mysql_container_name}" "ignore_errors"
+check_warning $? "docker stop ${mysql_container_name}"
+
+run_cmd "docker rm ${mysql_container_name}" "ignore_errors"
+check_warning $? "docker rm ${mysql_container_name}"
+
+write_log "------------------------------------------------------------------------------"
+write_log "                 Stopping Docker Container for UDC-SERVICES"
+write_log "------------------------------------------------------------------------------"
+run_cmd "docker stop ${udc_serv_container_name}" "ignore_errors"
+check_warning $? "docker stop ${udc_serv_container_name}"
+
+run_cmd "docker rm ${udc_serv_container_name}" "ignore_errors"
+check_warning $? "docker rm ${udc_serv_container_name}"
+
+write_log "------------------------------------------------------------------------------"
+write_log "          Checking if udc metastore mysql image is installed already"
+write_log "------------------------------------------------------------------------------"
+
+if test ! -z "$(docker images -q ${mysql_image_name})"; then
+	write_log "Docker image for ${mysql_imager_name} already Exists"
+	get_option "Do you wish to pull the Docker Image ? "
+	if [ "${install_status}" = "Y" ]
+	then
+		run_cmd "docker pull ${mysql_image_name}"
+		check_error $? "docker pull ${mysql_image_name}"
+	else
+		write_log "Skipping installing MySQL Docker Image"	
+	fi
+else
+        run_cmd "docker pull ${mysql_image_name}"
+	check_error $? "docker pull ${mysql_image_name}"
+fi
+
+write_log "------------------------------------------------------------------------------"
+write_log "          Checking if udc services image is installed already"
+write_log "------------------------------------------------------------------------------"
+if test ! -z "$(docker images -q ${udc_serv_image_name})"; then
+        write_log "Docker image for ${udc_serv_image_name} already Exists"
+        get_option "Do you wish to reinstall the docker image for services  ? "
+        if [ "${install_status}" = "Y" ]
+        then
+                run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_serv_image_name} ."
+                check_error $? "docker build -f ${UDC_HOME}/Dockerfile -t ${udc_serv_image_name} ."
+        else
+                write_log "Skipping installing UDC-SERVICES docker image"
+        fi
+else
+        run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_serv_image_name} ."
+        check_error $? "docker build -f $UDC_HOME/Dockerfile -t ${udc_serv_image_name} ."
+fi
+
+write_log "------------------------------------------------------------------------------"
+write_log "    Starting Docker Container for UDC-METASTORE and installing database"
+write_log "------------------------------------------------------------------------------"
+
+run_cmd "docker run --name ${mysql_container_name} -p ${mysql_exposed_port}:${mysql_exposed_port} -e MYSQL_ROOT_PASSWORD=${mysql_root_password} -e MYSQL_DATABASE=${mysql_database} -e MYSQL_USER=${mysql_user} -e MYSQL_PASSWORD=${mysql_password} -d ${mysql_image_name}:${mysql_image_tag_name}"
+check_error $? "docker run --name ${mysql_container_name} -p ${mysql_exposed_port}:${mysql_exposed_port} -e MYSQL_ROOT_PASSWORD=${mysql_root_password} -e MYSQL_DATABASE=${mysql_database} -e MYSQL_USER=${mysql_user} -e MYSQL_PASSWORD=${mysql_password} -d ${mysql_image_name}:${mysql_image_tag_name}"

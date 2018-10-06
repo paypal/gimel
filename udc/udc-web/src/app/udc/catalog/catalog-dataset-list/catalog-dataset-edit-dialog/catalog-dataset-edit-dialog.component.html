@@ -1,0 +1,63 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="editForm" (ngSubmit)="onSubmit()">
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Dataset ID" value="{{storageDataSetId}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedDataSetName placeholder="Dataset" value="{{storageDataSetName}}"
+           formControlName="modifiedDataSetName">
+    <md-hint *ngIf="formErrors.modifiedDataSetName" class="alert-danger">
+      {{formErrors.modifiedDataSetName}}
+    </md-hint>
+    <md-hint align="end">{{modifiedDataSetName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedDataSetAliasName placeholder="Dataset Alias"
+           value="{{storageDataSetAliasName}}" formControlName="modifiedDataSetAliasName">
+    <md-hint *ngIf="formErrors.modifiedDataSetAliasName" class="alert-danger">
+      {{formErrors.modifiedDataSetAliasName}}
+    </md-hint>
+    <md-hint align="end">{{modifiedDataSetAliasName.value.length}} / {{maxCharsForAliasName}}</md-hint>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <textarea mdInput #modifiedDataSetDescription rows="5" placeholder="Description"
+              value="{{storageDataSetDescription}}" formControlName="modifiedDataSetDescription">
+    </textarea>
+    <md-hint *ngIf="formErrors.modifiedDataSetDescription" class="alert-danger">
+      {{formErrors.modifiedDataSetDescription}}
+    </md-hint>
+    <md-hint align="end">{{modifiedDataSetDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+      {{formErrors.updatedUser}}
+    </md-hint>
+    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+  </md-input-container>
+
+
+  <br><br>
+
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!editForm.valid">Update</button>
+  </div>
+
+
+</form>
