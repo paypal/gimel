@@ -1,0 +1,29 @@
+:host /deep/ .main-container {
+  position: relative;
+}
+
+:host /deep/ .flex-container {
+  padding: 10px;
+}
+
+:host /deep/ .button-bar {
+  position: relative;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 65px;
+  vertical-align: middle;
+  z-index: 10;
+}
+
+:host /deep/ .button-bar-content {
+  background: white;
+  height: 65px;
+  padding-top: 10px;
+  padding-right: 10px;
+}
+
+:host /deep/ .field-row {
+  margin-bottom: 22px;
+  font-size: 14px;
+}

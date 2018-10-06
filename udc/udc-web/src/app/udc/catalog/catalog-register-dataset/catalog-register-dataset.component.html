@@ -1,0 +1,419 @@
+<div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
+  <div fxFlex="75" class="main-container">
+    <form [formGroup]="datasetForm">
+      <md-card>
+        <md-card-title color="primary">Register Dataset</md-card-title>
+        <md-card-content>
+          <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+            <div fxFlex="45" fxFlexAlign="center">
+              <label>Requester ID</label>
+            </div>
+            <div fxFlex="55" fxFlexAlign="center">
+              <md-input-container [floatPlaceholder]="'never'">
+                <input mdInput required="true" placeholder="Requester ID" value="{{username}}" disabled>
+              </md-input-container>
+            </div>
+          </div>
+
+          <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+            <div fxFlex="45" fxFlexAlign="center">
+              <label>Dataset</label>
+              <p class="info">
+                {{ datasetHint }}
+              </p>
+            </div>
+            <div fxFlex="55" fxFlexAlign="center">
+              <md-input-container [floatPlaceholder]="'never'">
+                <input mdInput required formControlName="dataset" placeholder="Required Field"
+                       (change)="validateDataset($event)">
+                <md-hint *ngIf="formErrors.dataset" class="alert-danger">
+                  {{ formErrors.dataset }}
+                </md-hint>
+              </md-input-container>
+            </div>
+          </div>
+
+          <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+            <label fxFlex="45" fxFlexAlign="center">
+              Description
+            </label>
+            <div fxFlex="55" fxFlexAlign="center">
+              <md-input-container [floatPlaceholder]="'never'">
+                <textarea mdInput md-maxlength="150" rows="5" md-select-on-focus
+                          formControlName="description" placeholder="Required Field"
+                          (change)="validateDescription($event)"></textarea>
+                <md-hint *ngIf="formErrors.description" class="alert-danger">
+                  {{ formErrors.description }}
+                </md-hint>
+              </md-input-container>
+            </div>
+          </div>
+
+          <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+            <label fxFlex="45" fxFlexAlign="center">
+              Storage Category
+            </label>
+            <div fxFlex="55" fxFlexAlign="center">
+              <md-select required placeholder="Required Field" [floatPlaceholder]="'never'"
+                         formControlName="storageCategory" (change)="onStorageCategoryChange()">
+                <md-option *ngFor="let storageCategory of storageCategories" [value]="storageCategory">
+                  {{ storageCategory['storageName'] }}
+                </md-option>
+              </md-select>
+              <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+            </div>
+          </div>
+
+          <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+            <label fxFlex="45" fxFlexAlign="center">
+              Storage Type
+            </label>
+            <div fxFlex="55" fxFlexAlign="center">
+              <md-select required placeholder="Required Field" [floatPlaceholder]="'never'"
+                         formControlName="storageType" (change)="onStorageTypeChange()">
+                <md-option *ngFor="let storageType of storageTypes" [value]="storageType">
+                  {{ storageType['storageTypeName'] }}
+                </md-option>
+              </md-select>
+              <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+            </div>
+          </div>
+
+          <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+            <label fxFlex="45" fxFlexAlign="center">
+              Storage System
+            </label>
+            <div fxFlex="55" fxFlexAlign="center">
+              <md-select required placeholder="Required Field" [floatPlaceholder]="'never'"
+                         formControlName="storageSystem" (change)="onStorageSystemChange()">
+                <md-option *ngFor="let storageSystem of storageSystems" [value]="storageSystem">
+                  {{ storageSystem['storageSystemName'] }}
+                </md-option>
+              </md-select>
+              <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+            </div>
+          </div>
+
+          <div *ngIf="selectedStorageType==='Elastic'">
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                ES Index
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input type="text" mdInput formControlName="container"
+                         (ngModelChange)="filterContainers($event)"
+                         [mdAutocomplete]="containers" required placeholder="Required Field">
+                  <md-autocomplete #containers="mdAutocomplete">
+                    <md-option *ngFor="let option of filteredContainers" [value]="option"
+                               (onSelectionChange)="containerSelect($event, option)" class="md-option-sm">
+                      {{ option }}
+                    </md-option>
+                  </md-autocomplete>
+                </md-input-container>
+                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+              </div>
+            </div>
+
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                ES Type
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input type="text" mdInput formControlName="object"
+                         (ngModelChange)="filterObjects($event)"
+                         [mdAutocomplete]="objects" required placeholder="Required Field">
+                  <md-autocomplete #objects="mdAutocomplete">
+                    <md-option *ngFor="let obj of filteredObjects" [value]="obj"
+                               (onSelectionChange)="objectSelect($event, obj)" class="md-option-sm">
+                      {{ obj }}
+                    </md-option>
+                  </md-autocomplete>
+                </md-input-container>
+              </div>
+            </div>
+          </div>
+
+
+          <div *ngIf="selectedStorageType==='Kafka'">
+
+
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                Namespace
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input type="text" mdInput formControlName="container"
+                         (ngModelChange)="filterContainers($event)"
+                         [mdAutocomplete]="containers" required placeholder="Required Field">
+                  <md-autocomplete #containers="mdAutocomplete" force-select>
+                    <md-option *ngFor="let option of filteredContainers" [value]="option"
+                               (onSelectionChange)="containerSelect($event, option)" class="md-option-sm">
+                      {{ option }}
+                    </md-option>
+                  </md-autocomplete>
+                </md-input-container>
+                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+              </div>
+            </div>
+
+
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                Topic
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input type="text" mdInput formControlName="object"
+                         (ngModelChange)="filterObjects($event)"
+                         [mdAutocomplete]="objects" required placeholder="Required Field">
+                  <md-autocomplete #objects="mdAutocomplete">
+                    <md-option *ngFor="let obj of filteredObjects" [value]="obj"
+                               (onSelectionChange)="objectSelect($event, obj)" class="md-option-sm">
+                      {{ obj }}
+                    </md-option>
+                  </md-autocomplete>
+                </md-input-container>
+                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+              </div>
+            </div>
+
+          </div>
+
+
+          <div *ngIf="selectedStorageType==='Hbase'">
+
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                Namespace
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input type="text" mdInput formControlName="container"
+                         (ngModelChange)="filterContainers($event)"
+                         [mdAutocomplete]="containers" required placeholder="Required Field">
+                  <md-autocomplete #containers="mdAutocomplete">
+                    <md-option *ngFor="let option of filteredContainers" [value]="option"
+                               (onSelectionChange)="containerSelect($event, option)" class="md-option-sm">
+                      {{ option }}
+                    </md-option>
+                  </md-autocomplete>
+                </md-input-container>
+                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+              </div>
+            </div>
+
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                Table
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input type="text" mdInput formControlName="object"
+                         (ngModelChange)="filterObjects($event)"
+                         [mdAutocomplete]="objects" required placeholder="Required Field">
+                  <md-autocomplete #objects="mdAutocomplete">
+                    <md-option *ngFor="let obj of filteredObjects" [value]="obj"
+                               (onSelectionChange)="objectSelect($event, obj)" class="md-option-sm">
+                      {{ obj }}
+                    </md-option>
+                  </md-autocomplete>
+                </md-input-container>
+              </div>
+            </div>
+
+          </div>
+
+
+          <div *ngIf="selectedStorageType==='Teradata'">
+
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                Database
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input type="text" mdInput formControlName="container"
+                         (ngModelChange)="filterContainers($event)"
+                         [mdAutocomplete]="containers" required placeholder="Required Field">
+                  <md-autocomplete #containers="mdAutocomplete">
+                    <md-option *ngFor="let option of filteredContainers" [value]="option"
+                               (onSelectionChange)="containerSelect($event, option)" class="md-option-sm">
+                      {{ option }}
+                    </md-option>
+                  </md-autocomplete>
+                </md-input-container>
+                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+              </div>
+            </div>
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                Table
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input type="text" mdInput formControlName="object"
+                         (ngModelChange)="filterObjects($event)"
+                         [mdAutocomplete]="objects" required placeholder="Required Field">
+                  <md-autocomplete #objects="mdAutocomplete">
+                    <md-option *ngFor="let obj of filteredObjects" [value]="obj"
+                               (onSelectionChange)="objectSelect($event, obj)" class="md-option-sm">
+                      {{ obj }}
+                    </md-option>
+                  </md-autocomplete>
+                </md-input-container>
+              </div>
+            </div>
+          </div>
+
+
+          <div *ngIf="selectedStorageType==='Hive'">
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                Database
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input type="text" mdInput formControlName="container"
+                         (ngModelChange)="filterContainers($event)"
+                         [mdAutocomplete]="containers" required placeholder="Required Field">
+                  <md-autocomplete #containers="mdAutocomplete">
+                    <md-option *ngFor="let option of filteredContainers" [value]="option"
+                               (onSelectionChange)="containerSelect($event, option)" class="md-option-sm">
+                      {{ option }}
+                    </md-option>
+                  </md-autocomplete>
+                </md-input-container>
+                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+              </div>
+            </div>
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                Table
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input type="text" mdInput formControlName="object"
+                         (ngModelChange)="filterObjects($event)"
+                         [mdAutocomplete]="objects" required placeholder="Required Field">
+                  <md-autocomplete #objects="mdAutocomplete">
+                    <md-option *ngFor="let obj of filteredObjects" [value]="obj"
+                               (onSelectionChange)="objectSelect($event, obj)" class="md-option-sm">
+                      {{ obj }}
+                    </md-option>
+                  </md-autocomplete>
+                </md-input-container>
+              </div>
+            </div>
+          </div>
+
+
+          <div *ngIf="selectedStorageType==='HDFS'">
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <div fxFlex="45" fxFlexAlign="center">
+                <label>HDFS Path</label>
+                <p class="info">
+                  {{ hdfsPathHint }}
+                </p>
+              </div>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-input-container [floatPlaceholder]="'never'">
+                  <input mdInput required formControlName="hdfspath" placeholder="Required Field">
+                  <md-hint *ngIf="formErrors.hdfspath" class="alert-danger">
+                    {{ formErrors.hdfspath }}
+                  </md-hint>
+                </md-input-container>
+              </div>
+            </div>
+
+            <div fxLayout="row" fxLayoutAlign="start start">
+              <label fxFlex="45" fxFlexAlign="center">
+                File Format
+              </label>
+              <div fxFlex="55" fxFlexAlign="center">
+                <md-select required formControlName="fileFormat" placeholder="Required Field"
+                           [floatPlaceholder]="'never'" (change)="onFileFormatChange($event)">
+                  <md-option value="Parquet">Parquet</md-option>
+                  <md-option value="ORC">ORC</md-option>
+                  <md-option value="RCFile">RCFile</md-option>
+                  <md-option value="Sequence">Sequence</md-option>
+                  <md-option value="Text">Text</md-option>
+                  <md-option value="Avro">Avro</md-option>
+                </md-select>
+              </div>
+            </div>
+
+            <div *ngIf="selectedFileFormat==='Avro'">
+              <div fxLayout="row" fxLayoutAlign="start start">
+                <div fxFlex="45" fxFlexAlign="center">
+                  <label>Schema Path</label>
+                  <p class="info">
+                    {{ schemaPathHint }}
+                  </p>
+                </div>
+                <div fxFlex="55" fxFlexAlign="center">
+                  <md-input-container [floatPlaceholder]="'never'">
+                    <input mdInput required formControlName="schemaPath" placeholder="Required Field">
+                    <md-hint *ngIf="formErrors.schemaPath" class="alert-danger">
+                      {{ formErrors.schemaPath }}
+                    </md-hint>
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="selectedFileFormat==='Text'">
+              <div fxLayout="row" fxLayoutAlign="start start">
+                <div fxFlex="45" fxFlexAlign="center">
+                  <label>Fields Terminated By</label>
+                  <p class="info">
+                    {{ fieldTerminatorHint }}
+                  </p>
+                </div>
+                <div fxFlex="55" fxFlexAlign="center">
+                  <md-input-container [floatPlaceholder]="'never'">
+                    <input mdInput required formControlName="fieldTerminator" placeholder="Required Field">
+                    <md-hint *ngIf="formErrors.fieldTerminator" class="alert-danger">
+                      {{ formErrors.fieldTerminator }}
+                    </md-hint>
+                  </md-input-container>
+                </div>
+              </div>
+              <div fxLayout="row" fxLayoutAlign="start start">
+                <div fxFlex="45" fxFlexAlign="center">
+                  <label>Rows Terminated By</label>
+                  <p class="info">
+                    {{ rowTerminatorHint }}
+                  </p>
+                </div>
+                <div fxFlex="55" fxFlexAlign="center">
+                  <md-input-container [floatPlaceholder]="'never'">
+                    <input mdInput required formControlName="rowTerminator" placeholder="Required Field">
+                    <md-hint *ngIf="formErrors.rowTerminator" class="alert-danger">
+                      {{ formErrors.rowTerminator }}
+                    </md-hint>
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="button-bar">
+            <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
+              <div fxFlex="100" class="text-right button-bar-content">
+                <button md-button *ngIf="!submitting">Cancel</button>
+                <button md-button *ngIf="!submitting" color="primary" [disabled]="!datasetForm.valid" (click)="save()">
+                  Register
+                </button>
+                <button md-button *ngIf="submitting" color="primary" [disabled]="true">Submitting...</button>
+              </div>
+
+            </div>
+          </div>
+        </md-card-content>
+      </md-card>
+    </form>
+  </div>
+</div>

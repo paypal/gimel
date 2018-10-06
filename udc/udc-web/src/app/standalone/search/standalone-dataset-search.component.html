@@ -1,0 +1,92 @@
+<div class="app-container">
+  <div class="app-container app-container-searchbox">
+    <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
+      <div fxFlex="50" class="main-container">
+        <app-recursive-searchbox [previousSearchTerm]="searchTerm"></app-recursive-searchbox>
+      </div>
+    </div>
+  </div>
+  <div class="app-container" *ngIf="detailsLoading">
+    <md-progress-bar mode="indeterminate"></md-progress-bar>
+  </div>
+  <div class="app-container" *ngIf="!detailsLoading">
+    <div fxFlex="100%">
+      <md-select [(ngModel)]="systemName" placeholder="Datastores" class="long_dropdown" (change)="onStorageSystemChange()">
+        <md-option *ngFor="let row of systemList" [value]="row">{{ row }}
+        </md-option>
+      </md-select>
+    </div>
+    <div>
+      <div class="detail-content-container">
+        <md-input-container class="table-search">
+          <input #searchDB mdInput (keyup)='search(searchDB.value)'>
+          <md-placeholder>
+            <md-icon class="icon-16">search</md-icon>
+            Refine
+          </md-placeholder>
+        </md-input-container>
+      </div>
+    </div>
+    <ngx-datatable
+      #catalogDatasetsTable
+      class="material favorites-datatable"
+      [loadingIndicator]="loading"
+      [rows]="displayList"
+      [columnMode]="'force'"
+      [headerHeight]="35"
+      [footerHeight]="true"
+      [scrollbarH]="true"
+      [limit]="50"
+      [rowHeight]="50">
+      <ngx-datatable-row-detail [rowHeight]="400">
+        <ng-template let-row="row" ngx-datatable-row-detail-template>
+          <div style="padding-left:20px;">
+            <app-catalog-search-dataset-detail [dataset]="row.storageDataSetId"
+                                               [datasetName]="row.storageDataSetName"></app-catalog-search-dataset-detail>
+          </div>
+        </ng-template>
+      </ngx-datatable-row-detail>
+      <ngx-datatable-column
+        [width]="50"
+        [resizeable]="false"
+        [draggable]="false"
+        [canAutoResize]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <button md-icon-button class="action-btn"
+                  (click)="toggleExpandRow(row)">
+            <md-icon *ngIf="!row.$$expanded" md-tooltip="Show dataset Details">keyboard_arrow_down</md-icon>
+            <md-icon *ngIf="row.$$expanded" md-tooltip="Hide dataset Details">keyboard_arrow_up</md-icon>
+          </button>
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Dataset Name" [width]="250" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.storageDataSetName }}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Datastore" [width]="50" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          {{ row.storageSystemName}}
+        </ng-template>
+      </ngx-datatable-column>
+      <ngx-datatable-column name="Actions" [width]="150" [sortable]="false">
+        <ng-template let-row="row" ngx-datatable-cell-template>
+          <app-catalog-search-dataset-action
+            [project]="row.project"
+            [storageDataSetId]="row.storageDataSetId"
+            [storageDataSetName]="row.storageDataSetName"
+            [storageDataSetAliasName]="row.storageDataSetAliasName"
+            [storageDataSetDescription]="row.storageDataSetDescription"
+            [isGimelCompatible]="row.isGimelCompatible"
+            [isReadCompatible]="row.isReadCompatible"
+            [objectId]="row.objectSchemaMapId"
+            [zoneName]="row.zoneName"
+            [createdUser]="row.createdUser"
+            (refresh)=refreshRow($event)>
+          </app-catalog-search-dataset-action>
+        </ng-template>
+      </ngx-datatable-column>
+
+    </ngx-datatable>
+  </div>
+</div>

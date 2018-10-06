@@ -1,0 +1,134 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="editSystemForm" (ngSubmit)="onSubmit()">
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="System ID" value="{{storageSystemId}}" disabled>
+  </md-input-container>
+
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedStorageSystemName placeholder="System" value="{{storageSystemName}}"
+           formControlName="modifiedStorageSystemName">
+    <md-hint *ngIf="formErrors.modifiedStorageSystemName" class="alert-danger">
+      {{formErrors.modifiedStorageSystemName}}
+    </md-hint>
+    <md-hint align="end">{{modifiedStorageSystemName.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput #modifiedContainers placeholder="Containers" value="{{containers}}"
+           formControlName="modifiedContainers">
+    <md-hint *ngIf="formErrors.modifiedContainers" class="alert-danger">
+      {{formErrors.modifiedContainers}}
+    </md-hint>
+    <md-hint align="end">{{modifiedContainers.value.length}} / {{maxCharsForName}}</md-hint>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <textarea mdInput #modifiedStorageSystemDescription rows="5" placeholder="Description"
+              value="{{storageSystemDescription}}" formControlName="modifiedStorageSystemDescription">
+    </textarea>
+    <md-hint *ngIf="formErrors.modifiedStorageSystemDescription" class="alert-danger">
+      {{formErrors.modifiedStorageSystemDescription}}
+    </md-hint>
+    <md-hint align="end">{{modifiedStorageSystemDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
+  </md-input-container>
+
+  <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+    <div fxFlex="100" fxFlexAlign="center">
+      <md-select required placeholder="Is Gimel Supported" [floatPlaceholder]="'never'"
+                 formControlName="isGimelCompatible" style="width: 100%;">
+        <md-option *ngFor="let isGimelCompatible of compatibilityList" [value]="isGimelCompatible">
+          {{isGimelCompatible}}
+        </md-option>
+      </md-select>
+    </div>
+  </div>
+  <br>
+
+  <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+    <div fxFlex="100" fxFlexAlign="center">
+      <md-select required placeholder="Is Read Supported" [floatPlaceholder]="'never'"
+                 formControlName="isReadCompatible" style="width: 100%;">
+        <md-option *ngFor="let isReadCompatible of compatibilityList" [value]="isReadCompatible">
+          {{isReadCompatible}}
+        </md-option>
+      </md-select>
+    </div>
+  </div>
+  <br>
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput required="true" placeholder="Admin User" value="{{adminUserId}}" disabled>
+  </md-input-container>
+
+  <md-input-container class="full-width">
+    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+      {{formErrors.updatedUser}}
+    </md-hint>
+    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
+  </md-input-container>
+
+  <ngx-datatable
+    #typeAttributesTable
+    class="material"
+    [headerHeight]="50"
+    [limit]="5"
+    [columnMode]="'force'"
+    [footerHeight]="50"
+    [rowHeight]="'auto'"
+    [rows]="systemAttributes">
+    <!--<ngx-datatable-column name="Attribute Name">-->
+    <!--<ng-template ngx-datatable-cell-template let-row="row">-->
+    <!--<span-->
+    <!--title="Double click to edit"-->
+    <!--(dblclick)="editing[row.$$index + '-storageDsAttributeKeyName'] = true"-->
+    <!--*ngIf="!editing[row.$$index + '-storageDsAttributeKeyName']">-->
+    <!--{{row.storageDsAttributeKeyName}}-->
+    <!--</span>-->
+    <!--<input-->
+    <!--autofocus-->
+    <!--(blur)="updateValue($event, 'storageDsAttributeKeyName', row)"-->
+    <!--*ngIf="editing[row.$$index + '-storageDsAttributeKeyName']"-->
+    <!--type="text"-->
+    <!--[value]="row.storageDsAttributeKeyName"-->
+    <!--/>-->
+    <!--</ng-template>-->
+    <!--</ngx-datatable-column>-->
+    <ngx-datatable-column name="Attribute Key" [width]="150">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageDsAttributeKeyName }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Attribute Value">
+      <ng-template ngx-datatable-cell-template let-row="row">
+            <span
+              title="Double click to edit"
+              (dblclick)="editing[row.$$index + '-storageSystemAttributeValue'] = true"
+              *ngIf="!editing[row.$$index + '-storageSystemAttributeValue']">
+              {{row.storageSystemAttributeValue}}
+            </span>
+        <input
+          autofocus
+          (blur)="updateValue($event, 'storageSystemAttributeValue', row)"
+          *ngIf="editing[row.$$index + '-storageSystemAttributeValue']"
+          type="text"
+          [value]="row.storageSystemAttributeValue"
+        />
+      </ng-template>
+    </ngx-datatable-column>
+  </ngx-datatable>
+  <br>
+
+  <div class="dialog-footer">
+    <button md-button type="button" (click)="cancel()">Cancel</button>
+    <button md-button type="submit" color="primary" [disabled]="!editSystemForm.valid">Update</button>
+  </div>
+
+
+</form>

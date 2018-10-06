@@ -1,0 +1,33 @@
+<div class="mat-app-background" [class]="globalHeaderTheme$ | async">
+  <div class="pulse-layer-container" *ngIf="sidenavState === 'open'">
+    <div class="pulse-layer" @pulseAnimation (@pulseAnimation.done)="animationDone()">
+    </div>
+    <app-sidenav-content></app-sidenav-content>
+  </div>
+  <div *rxContext="let routerEvents on routerEvents$">
+    <md-sidenav-container [class.no-transform]="routerEvents.page === 'newapp'">
+      <div [class.show-side-nav]="sidenavState === 'open'" class="main-content">
+
+        <md-toolbar color="primary" class="gh-toolbar">
+          <app-ghsidebar [opened]="sidenavState === 'open' || searchState"
+                         [sideNavOpened]="sidenavState === 'open'"
+                         data-intro="Click here to access all UDC assets"
+                         (onToggleSideNav)="toggleSideNav()">
+          </app-ghsidebar>
+          <a class="header-logo" [routerLink]="['/']"
+             data-intro="Quickly go back to the app dashboard from wherever you are">
+            <img class="logo-img" src="assets/images/udc-interim-logo.png">
+            <h1>Unified Data Catalog</h1></a>
+          <span class="fill-remaining">
+          </span>
+          <app-ghtoolbar></app-ghtoolbar>
+        </md-toolbar>
+        <div class="title-header-container">
+          <h1 class="title-header">{{routerEvents.title}}</h1>
+        </div>
+
+        <ng-content></ng-content>
+      </div>
+    </md-sidenav-container>
+  </div>
+</div>

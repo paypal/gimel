@@ -1,0 +1,16 @@
+<span *ngIf="!inProgress">
+    <span *ngIf="!errorStatus">
+        <button md-icon-button class="action-btn grey-btn"
+                [md-menu-trigger-for]="posXMenuOverlay">
+        <md-icon>more_vert</md-icon>
+        </button>
+        <md-menu x-position="after" y-position="below" [overlapTrigger]="false" #posXMenuOverlay="mdMenu">
+          <a md-menu-item routerLink="." (click)="openEditObjectDialog()">Edit Object Properties</a>
+
+        </md-menu>
+    </span>
+</span>
+<span *ngIf="inProgress">
+    <span *ngIf="actionMsg"> {{actionMsg}} </span> &emsp;
+    <md-progress-bar mode="indeterminate" color="primary"></md-progress-bar>
+</span>

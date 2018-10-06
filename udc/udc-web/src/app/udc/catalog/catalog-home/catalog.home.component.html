@@ -1,0 +1,76 @@
+<div class="app-top-container">
+  <div class="app-container">
+    <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
+      <div fxFlex="100" class="main-container">
+        <md-card>
+          <div fxLayout="row" fxLayoutAlign="start center">
+
+            <div fxFlex="50%" *ngIf="!typesLoaded">
+              <md-select class="long_dropdown" placeholder="Loading..." disabled></md-select>
+            </div>
+            <div fxFlex="50%" *ngIf="tloaded && typesLoaded">
+              <md-select [(ngModel)]="typeName" (ngModelChange)="disableDropDownType()" placeholder="Datastore Types"
+                         class="long_dropdown" (change)="onStorageTypeChange()">
+                <md-option *ngFor="let row of displayTypeList" [value]="row.storageTypeName">{{ row.storageTypeName
+                  }}
+                </md-option>
+              </md-select>
+            </div>
+
+
+            <div fxFlex="50%" *ngIf="!systemsLoaded">
+              <md-select class="long_dropdown" placeholder="Loading..." disabled></md-select>
+              <button md-icon-button class="action-btn grey-btn" disabled>
+                <md-icon>refresh</md-icon>
+              </button>
+            </div>
+            <div fxFlex="50%" *ngIf="sloaded && systemsLoaded">
+              <md-select [(ngModel)]="systemName" (ngModelChange)="disableDropDownSystem()" placeholder="Datastores"
+                         class="long_dropdown">
+                <md-option *ngFor="let row of displayList" [value]="row.storageSystemName">{{ row.storageSystemName }}
+                </md-option>
+              </md-select>
+              <span *ngIf="systemName">
+                  <button md-icon-button class="action-btn grey-btn" md-tooltip="Refresh Datasets"
+                          (click)="refreshProject()">
+                    <md-icon>refresh</md-icon>
+                  </button>
+              </span>
+              <span *ngIf="!systemName">
+                  <button md-icon-button class="action-btn grey-btn" disabled>
+                    <md-icon>refresh</md-icon>
+                  </button>
+              </span>
+            </div>
+            <div fxFlex="50%" *ngIf="!sloaded && systemsLoaded">
+              <md-select class="long_dropdown" placeholder={{systemName}} disabled></md-select>
+              <button md-icon-button class="action-btn grey-btn" disabled>
+                <md-icon>refresh</md-icon>
+              </button>
+            </div>
+          </div>
+
+
+          <br/>
+          <md-tab-group>
+            <md-tab label="Registered Datasets">
+              <app-catalog-dataset-list-registered [project]="systemName" [refresh]="refreshSystem"
+                                                   [projectType]="typeName"
+                                                   (loaded)=enableDropDownSystem()></app-catalog-dataset-list-registered>
+            </md-tab>
+            <md-tab label="Pending Datasets">
+              <app-catalog-dataset-list-pending [project]="systemName" [refresh]="refreshSystem"
+                                                [projectType]="typeName"
+                                                (loaded)=enableDropDownSystem()></app-catalog-dataset-list-pending>
+            </md-tab>
+            <md-tab label="Deleted Datasets">
+              <app-catalog-dataset-list-deleted [project]="systemName" [refresh]="refreshSystem"
+                                                [projectType]="typeName"
+                                                (loaded)=enableDropDownSystem()></app-catalog-dataset-list-deleted>
+            </md-tab>
+          </md-tab-group>
+        </md-card>
+      </div>
+    </div>
+  </div>
+</div>

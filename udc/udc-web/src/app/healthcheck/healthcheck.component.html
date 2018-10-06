@@ -1,0 +1,23 @@
+<svg class="svg-health-cmp">
+  <!--<path [attr.d]="describeArc()" [attr.fill]="'none'" [attr.stroke]="color" [attr.stroke-width]="width" />-->
+
+  <text [attr.x]="cx" [attr.y]="25" [attr.font-size]="font" [attr.fill]="BLUE" [attr.text-anchor]="'middle'">
+    {{title}}
+  </text>
+
+  <text [attr.x]="cx" [attr.y]="cy" [attr.font-size]="font" [attr.fill]="color" [attr.text-anchor]="'middle'">
+    Status: {{currentStatus}}
+  </text>
+  
+  <text [attr.x]="cx" [attr.y]="cy + font" [attr.font-size]="font - 15" [attr.fill]="GREEN" [attr.text-anchor]="'middle'">
+    Success Count: {{success}}
+  </text>
+
+  <text [attr.x]="cx" [attr.y]="cy + font + font - 15" [attr.font-size]="font - 15" [attr.fill]="RED" [attr.text-anchor]="'middle'">
+    Failures: {{failure}}
+  </text>
+
+  <text [attr.x]="cx" [attr.y]="cy + cy - 10" [attr.font-size]="font - 20" [attr.fill]="BLUE" [attr.text-anchor]="'middle'">
+    Ping: {{pingUrl}}
+  </text>
+</svg>

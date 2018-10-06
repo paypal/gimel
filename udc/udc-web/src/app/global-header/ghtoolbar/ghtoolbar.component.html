@@ -1,0 +1,71 @@
+<div class="gh-toolbar">
+  <!-- Announcements -->
+  <span class="annocement-container" *ngIf="!(showBanner$ | async)" @fadeInOutAnimation>
+    <button md-icon-button md-tooltip="Announcements" (click)="showAnnouncements()">
+      <md-icon svgIcon="bullhorn"></md-icon>
+    </button>
+    <span class="annocement-notification"></span>
+  </span>
+
+
+  <app-ghsettings></app-ghsettings>
+
+
+  <button data-intro="Get Help for the various Components" md-icon-button overlay-origin (click)="openHelpMenu()"
+          md-tooltip="Help">
+    <md-icon>help</md-icon>
+  </button>
+
+  <!-- Feedback -->
+  <button md-icon-button overlay-origin data-intro="Useful Links" (click)="openFeedbackMenu()" md-tooltip="Feedback">
+    <md-icon>attachment</md-icon>
+  </button>
+
+  <!-- Account -->
+  <button md-icon-button (click)="openAccountMenu()" md-tooltip="Account">
+    <md-icon md-list-icon>account_circle</md-icon>
+  </button>
+</div>
+
+<md-menu #feedbackMenu="mdMenu" y-position="below" x-position="before">
+  <md-nav-list>
+
+    <a md-list-item target="_blank"
+       href="https://github.com/paypal/gimel/issues">
+      <md-icon md-list-icon svgIcon="jira" class="list-svg-icon"></md-icon>
+      <span class="text-align-helper" md-line>Report an issue</span>
+    </a>
+    <a md-list-item target="_blank" href="https://gimel-dev.slack.com/messages/C9ZC29VNH/">
+      <md-icon md-list-icon svgIcon="slack" class="list-svg-icon"></md-icon>
+      <span class="text-align-helper" md-line>gimel-user</span>
+    </a>
+    <a md-list-item target="_blank" href="http://try.gimel.io">
+      <md-icon md-list-icon svgIcon="confluence" class="list-svg-icon"></md-icon>
+      <span class="text-align-helper" md-line>Documentation</span>
+    </a>
+    <a md-list-item target="_blank" href="https://github.com/paypal/gimel">
+      <md-icon md-list-icon svgIcon="github" class="list-svg-icon"></md-icon>
+      <span class="text-align-helper" md-line>Github</span>
+    </a>
+  </md-nav-list>
+</md-menu>
+
+<div [md-menu-trigger-for]="feedbackMenu"></div>
+<div [md-menu-trigger-for]="accountmenu"></div>
+
+<md-menu #accountmenu="mdMenu" y-position="below" x-position="before">
+  <md-nav-list>
+    <a md-list-item class="account-name-list-item" href={{userUrl}} target="_blank">
+      <div>
+        <md-icon md-list-icon>account_circle</md-icon>
+      </div>
+      <div>
+        <span style="font-size: 15px;padding-left: 15px;padding-bottom: 5px" md-line>udcdev</span>
+      </div>
+    </a>
+  </md-nav-list>
+</md-menu>
+
+<ng-template cdk-portal>
+  <app-ghcontexthelp></app-ghcontexthelp>
+</ng-template>

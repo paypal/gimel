@@ -1,0 +1,94 @@
+@import '~@angular/material/theming';
+
+@import '~hover.css/scss/options';
+@import '~hover.css/scss/mixins';
+@import '~hover.css/scss/hacks';
+@import '~hover.css/scss/effects/background-transitions/sweep-to-right';
+@import '~hover.css/scss/effects/background-transitions/shutter-out-vertical';
+@import 'app/global-header/ghtoolbar/ghtoolbar-theme';
+@import 'app/global-header/sidenav-content/sidenav-content-theme';
+@import 'app/shared/components/button/button-theme';
+@import 'app/shared/components/icon/icon-theme';
+@import 'app/shared/components/spinner/spinner-theme';
+@import 'app/shared/components/datatable/datatable-theme';
+@import 'app/global-header/global-header-theme';
+@import 'app/global-header/ghsidebar/ghsidebar-theme';
+ //@import 'app/shared/components/stepper/stepper-theme';
+
+// Include the base styles for Angular Material core. We include this here so that you only
+// have to load a single css file for Angular Material in your app.
+@include mat-core();
+
+// Define the palettes for your theme using the Material Design palettes available in palette.scss
+// (imported above). For each palette, you can optionally specify a default, lighter, and darker
+// hue.
+$primary: mat-palette($mat-indigo, 500);
+$accent:  mat-palette($mat-pink, A200, 100, A400);
+
+// The warn palette is optional (defaults to red).
+$warn:    mat-palette($mat-red);
+
+//For hover css
+$primaryColor: mat-color($primary, 600);
+$activeColor: white;
+
+// Create the theme object (a Sass map containing all of the palettes).
+$theme: mat-light-theme($primary, $accent, $warn);
+
+// Include theme styles for core and each component used in your app.
+// Alternatively, you can import and @include the theme mixins for each component
+// that you are using.
+@include angular-material-theme($theme);
+@include button-theme($theme);
+@include spinner-theme($theme);
+@include ghtoolbar-theme($theme);
+@include sidenav-content-theme($theme);
+@include datatable-theme($theme);
+@include global-header-theme($theme);
+@include ghsidebar-theme($theme);
+//@include app-stepper-theme($theme);
+@include icon-theme($theme);
+
+.green-light-theme {
+  $primary: mat-palette($mat-light-green, 900);
+  $accent:  mat-palette($mat-orange, A400, A100, A700);
+  $warn:    mat-palette($mat-deep-orange);
+  $theme: mat-light-theme($primary, $accent, $warn);
+
+  a.mat-tab-link {
+    color: currentColor;
+  }
+
+  @include angular-material-theme($theme);
+  @include button-theme($theme);
+  @include spinner-theme($theme);
+  @include ghtoolbar-theme($theme);
+  @include sidenav-content-theme($theme);
+  @include datatable-theme($theme);
+  @include global-header-theme($theme);
+  @include ghsidebar-theme($theme);
+  //@include app-stepper-theme($theme);
+  @include icon-theme($theme);
+}
+
+.bluegrey-light-theme {
+  $primary: mat-palette($mat-blue-grey, 900);
+  $accent:  mat-palette($mat-red, A400, A100, A700);
+  $warn:    mat-palette($mat-deep-orange);
+  $theme: mat-light-theme($primary, $accent, $warn);
+
+  a.mat-tab-link {
+    color: currentColor;
+  }
+
+  @include angular-material-theme($theme);
+  @include button-theme($theme);
+  @include spinner-theme($theme);
+  @include ghtoolbar-theme($theme);
+  @include sidenav-content-theme($theme);
+  @include datatable-theme($theme);
+  @include global-header-theme($theme);
+  @include ghsidebar-theme($theme);
+  //@include app-stepper-theme($theme);
+  @include icon-theme($theme);
+}

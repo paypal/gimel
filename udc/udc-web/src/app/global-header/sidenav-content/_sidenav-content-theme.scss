@@ -1,0 +1,22 @@
+@import '~@angular/material/theming';
+
+@mixin sidenav-content-theme($theme) {
+  $accent: map-get($theme, accent);
+  $primary: map-get($theme, primary);
+
+  .side-nav-list {
+    &.opened {
+      background: mat-color($primary) !important;
+    }
+
+    .mat-list-item {
+      @include shutter-out-vertical();
+      color: white;
+      display: block;
+
+      &:hover, &.active {
+        color: mat-color($primary) !important;
+      }
+    }
+  }
+}

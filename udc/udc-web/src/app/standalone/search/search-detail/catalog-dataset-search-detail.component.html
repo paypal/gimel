@@ -1,0 +1,190 @@
+<md-tab-group>
+
+
+  <md-tab label="Overview">
+    <div class="app-container" *ngIf="!detailsLoading">
+      <md-grid-list cols="2" rowHeight="300">
+        <md-grid-tile>
+          <md-list dense>
+            <md-list-item>
+              <table>
+                <tr>
+                  <td><h4>Dataset ID</h4></td>
+                  <td>{{statusData.storageDataSetId}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Dataset</h4></td>
+                  <td>{{statusData.storageDataSetName}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Object ID</h4></td>
+                  <td>{{statusData.objectSchemaMapId}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Is Auto Registered ?</h4></td>
+                  <td>{{statusData.isAutoRegistered}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Datastore</h4></td>
+                  <td>{{statusData.storageSystemName}}</td>
+                </tr>
+              </table>
+            </md-list-item>
+          </md-list>
+        </md-grid-tile>
+        <md-grid-tile>
+          <md-list dense>
+            <md-list-item>
+              <table>
+                <tr>
+                  <td><h4>Alias Name</h4></td>
+                  <td>{{statusData.storageDataSetAliasName}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Created By</h4></td>
+                  <td>{{statusData.createdUserOnStore}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Created Timestamp</h4></td>
+                  <td>{{statusData.createdTimestampOnStore}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Last Updated By</h4></td>
+                  <td>{{statusData.updatedUser}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Updated Timestamp</h4></td>
+                  <td>{{statusData.updatedTimestamp}}</td>
+                </tr>
+              </table>
+            </md-list-item>
+          </md-list>
+        </md-grid-tile>
+      </md-grid-list>
+    </div>
+    <div class="app-container" *ngIf="detailsLoading">
+      <md-progress-bar mode="indeterminate"></md-progress-bar>
+    </div>
+  </md-tab>
+  <md-tab label="Schema Details">
+    <div class="app-container" *ngIf="!detailsLoading">
+      <ngx-datatable
+        #datasetColumnsTable
+        class="material favorites-datatable"
+        [loadingIndicator]="loading"
+        [rows]="columnList"
+        [columnMode]="'force'"
+        [headerHeight]="35"
+        [footerHeight]="true"
+        [scrollbarH]="true"
+        [limit]="5"
+        [rowHeight]="50">
+        <ngx-datatable-column name="Column Name" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row.columnName}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Column Type" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row.columnType}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Partition Status" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span *ngIf="row.partitionStatus">{{row.partitionStatus}}</span>
+            <span *ngIf="!row.partitionStatus"><div>N/A</div></span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Column Family" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span *ngIf="row.columnFamily">
+              {{row.columnFamily}}
+            </span>
+            <span *ngIf="!row.columnFamily">
+              <div>N/A</div>
+            </span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Column Classification" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span *ngIf="row.columnClass">{{row.columnClass}}</span>
+            <span *ngIf="!row.columnClass"><div>N/A</div></span>
+            <span>
+              <button md-icon-button class="action-btn grey-btn"
+                           mdTooltip="Classification is not vetted by the dataset owner">
+                     <md-icon style="color:gray;">error</md-icon>
+              </button>
+            </span>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Is Restricted" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            <span *ngIf="row.restrictionStatus">{{row.restrictionStatus}}</span>
+            <span *ngIf="!row.restrictionStatus"><div>false</div></span>
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+    <div class="app-container" *ngIf="detailsLoading">
+      <md-progress-bar mode="indeterminate"></md-progress-bar>
+    </div>
+  </md-tab>
+  <md-tab label="System Attributes">
+    <div class="app-container" *ngIf="!detailsLoading">
+      <ngx-datatable
+        #datasetSystemAttributesTable
+        class="material favorites-datatable"
+        [loadingIndicator]="loading"
+        [rows]="systemAttributesList"
+        [columnMode]="'force'"
+        [headerHeight]="35"
+        [footerHeight]="true"
+        [scrollbarH]="true"
+        [limit]="5"
+        [rowHeight]="50">
+        <ngx-datatable-column name="Type Attribute Value" [width]="40">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row.storageDsAttributeKeyName}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="System Attribute Value" [width]="40">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row.storageSystemAttributeValue}}
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+    <div class="app-container" *ngIf="detailsLoading">
+      <md-progress-bar mode="indeterminate"></md-progress-bar>
+    </div>
+  </md-tab>
+  <md-tab label="Object Attributes">
+    <div class="app-container" *ngIf="!detailsLoading">
+      <ngx-datatable
+        #datasetObjectAttributesTable
+        class="material favorites-datatable"
+        [loadingIndicator]="loading"
+        [rows]="objectAttributesList"
+        [columnMode]="'force'"
+        [headerHeight]="35"
+        [footerHeight]="true"
+        [scrollbarH]="true"
+        [limit]="5"
+        [rowHeight]="50">
+        <ngx-datatable-column name="Type Attribute Value" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row.storageDsAttributeKeyName}}
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Object Attribute Value" [width]="20">
+          <ng-template let-row="row" ngx-datatable-cell-template>
+            {{row.objectAttributeValue}}
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+    <div class="app-container" *ngIf="detailsLoading">
+      <md-progress-bar mode="indeterminate"></md-progress-bar>
+    </div>
+  </md-tab>
+</md-tab-group>

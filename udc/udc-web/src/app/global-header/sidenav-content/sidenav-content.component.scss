@@ -1,0 +1,86 @@
+md-nav-list {
+  padding-top: 0;
+}
+
+:host /deep/ .mat-list-item-content {
+  height: auto !important;
+  &:hover {
+    background: transparent !important;
+  }
+}
+
+.side-nav-list {
+  position: relative;
+  z-index: 2;
+}
+
+.side-nav-list md-list-item {
+  background: transparent;
+}
+
+
+.side-nav-list md-list-item {
+  color: white;
+
+  &.active {
+    background: white;
+  }
+
+  h3 {
+    font-size: 18px;
+    line-height: 1.618;
+
+    &.sidenav-header-text {
+      font-size: 20px;
+    }
+  }
+
+  md-icon {
+    font-size: 18px;
+    position: relative;
+    top: 3px;
+  }
+
+  &:hover {
+    font-size: 16px;
+  }
+
+  .mat-ripple:focus {
+    outline: none;
+  }
+}
+
+.sidenav-header-logo {
+  width: 32px;
+  padding: 0;
+}
+
+.mat-nav-list .mat-subheader.selected-app-subheader {
+  color: white;
+}
+
+.selected-app-subheader.uppercase {
+  text-transform: uppercase;
+}
+
+.selected-app-subheader.appname {
+  margin-top: -26px;
+}
+
+.sidenav-header {
+  padding-left: 10px;
+}
+
+:host /deep/ .mat-list-item-content {
+  transform-origin: left;
+}
+
+:host /deep/ .mat-list-text {
+  padding: 15px 41px !important;
+}
+
+.mat-list .mat-list-item, .mat-nav-list .mat-list-item {
+  &:focus {
+    outline: none;
+  }
+}

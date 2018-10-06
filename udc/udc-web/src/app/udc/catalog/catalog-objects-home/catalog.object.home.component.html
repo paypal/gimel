@@ -1,0 +1,71 @@
+<div class="app-top-container">
+  <div class="app-container">
+    <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
+      <div fxFlex="100" class="main-container">
+        <md-card>
+          <div>
+            <div fxLayout="row" fxLayoutAlign="start center">
+              <div fxFlex="50%" *ngIf="!systemsLoaded">
+                <md-select class="long_dropdown" placeholder="Loading..." disabled></md-select>
+              </div>
+              <div fxFlex="50%" *ngIf="sloaded && systemsLoaded">
+                <md-select [(ngModel)]="systemName" (ngModelChange)="disableDropDownSystem()" placeholder="Datastores"
+                           class="long_dropdown" (change)="onStorageSystemChange()">
+                  <md-option *ngFor="let row of displaySystemList" [value]="row.storageSystemName">
+                    {{ row.storageSystemName }}
+                  </md-option>
+                </md-select>
+              </div>
+
+
+              <div fxFlex="50%" *ngIf="!containersLoaded">
+                <md-select class="long_dropdown" placeholder="Loading..." disabled></md-select>
+                <button md-icon-button class="action-btn grey-btn" disabled>
+                  <md-icon>refresh</md-icon>
+                </button>
+              </div>
+              <div fxFlex="50%" *ngIf="cloaded && containersLoaded">
+                <md-select [(ngModel)]="containerName" (ngModelChange)="disableDropDownContainer()"
+                           placeholder="Containers"
+                           class="long_dropdown">
+                  <md-option *ngFor="let row of displayContainerList" [value]="row">
+                    {{ row }}
+                  </md-option>
+                </md-select>
+                <span *ngIf="containerName">
+                  <button md-icon-button class="action-btn grey-btn" md-tooltip="Refresh Containers"
+                          (click)="refreshProject()">
+                    <md-icon>refresh</md-icon>
+                  </button>
+                </span>
+                <span *ngIf="!containerName">
+                  <button md-icon-button class="action-btn grey-btn" disabled>
+                    <md-icon>refresh</md-icon>
+                  </button>
+                </span>
+              </div>
+              <div fxFlex="50%" *ngIf="!cloaded && containersLoaded">
+                <md-select class="long_dropdown" placeholder={{containerName}} disabled></md-select>
+                <button md-icon-button class="action-btn grey-btn" disabled>
+                  <md-icon>refresh</md-icon>
+                </button>
+              </div>
+              <div fxFlex="100%">
+                <img class="udc_logo pull-right" src="assets/images/udc-interim-logo.png">
+              </div>
+            </div>
+          </div>
+          <br/>
+          <md-tab-group>
+            <md-tab label="Containers">
+              <app-catalog-object-list [projectType]="systemName" [refresh]="refreshContainer"
+                                       [project]="containerName" [systemMap]="systemMapById"
+                                       (loaded)=enableDropDownContainer()>
+              </app-catalog-object-list>
+            </md-tab>
+          </md-tab-group>
+        </md-card>
+      </div>
+    </div>
+  </div>
+</div>

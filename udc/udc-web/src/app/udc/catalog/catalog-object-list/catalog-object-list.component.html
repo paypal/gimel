@@ -1,0 +1,89 @@
+<div class="app-container">
+  <div>
+    <div class="detail-content-container">
+      <md-input-container class="table-search">
+        <input #searchDB mdInput (keyup)='search(searchDB.value)'>
+        <md-placeholder>
+          <md-icon class="icon-16">search</md-icon>
+          Search
+        </md-placeholder>
+      </md-input-container>
+      <div>
+        <button md-raised-button routerLink="." (click)="createObjectDialog()" class="app-details-btn">
+          Create Object
+        </button>
+      </div>
+    </div>
+  </div>
+  <ngx-datatable
+    #catalogDatasetsTable
+    class="material favorites-datatable"
+    [rows]="displayList"
+    [columnMode]="'force'"
+    [headerHeight]="50"
+    [footerHeight]="50"
+    [rowHeight]="'auto'"
+    [externalPaging]="true"
+    [loadingIndicator]="loading"
+    [count]="page.totalElements"
+    [offset]="page.pageNumber"
+    [limit]="page.size"
+    [scrollbarH]="true"
+    (page)='loadObjectsFromCatalog($event)'
+  >
+    <ngx-datatable-row-detail [rowHeight]="400">
+      <ng-template let-row="row" ngx-datatable-row-detail-template>
+        <div style="padding-left:35px;">
+          <app-catalog-object-detail [object]="row.objectId"></app-catalog-object-detail>
+        </div>
+      </ng-template>
+    </ngx-datatable-row-detail>
+    <ngx-datatable-column
+      [width]="50"
+      [resizeable]="false"
+      [draggable]="false"
+      [canAutoResize]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <button md-icon-button class="action-btn"
+                (click)="toggleExpandRow(row)">
+          <md-icon *ngIf="!row.$$expanded" md-tooltip="Show object Details">keyboard_arrow_down</md-icon>
+          <md-icon *ngIf="row.$$expanded" md-tooltip="Hide object Details">keyboard_arrow_up</md-icon>
+        </button>
+      </ng-template>
+    </ngx-datatable-column>
+    <!--<ngx-datatable-column name="Object ID" [width]="35" [sortable]="false">-->
+      <!--<ng-template let-row="row" ngx-datatable-cell-template>-->
+        <!--{{ row.objectId }}-->
+      <!--</ng-template>-->
+    <!--</ngx-datatable-column>-->
+    <ngx-datatable-column name="Object Name" [width]="200" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.objectName }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Container" [width]="200" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.containerName}}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Datastore" [width]="100" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageSystemName}}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Actions" [width]="100" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <app-catalog-object-action [project]="row.project"
+                                   [objectId]="row.objectId"
+                                   [objectName]="row.objectName"
+                                   [containerName]="row.containerName"
+                                   [storageSystemName]="row.storageSystemName"
+                                   [storageSystemId]="row.storageSystemId"
+                                   [createdUser]="row.createdUser"
+                                   [systemMap]="systemMap"
+                                   (refresh)=refreshRow($event)>
+        </app-catalog-object-action>
+      </ng-template>
+    </ngx-datatable-column>
+  </ngx-datatable>
+</div>

@@ -1,0 +1,23 @@
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="sampleDataForm">
+  <div *ngIf="!detailsLoading">
+    <ngx-datatable
+      class="material favorites-datatable"
+      [columns]='headersList'
+      [rows]="rowsList"
+      [columnMode]="'force'"
+      [headerHeight]="35"
+      [footerHeight]="true"
+      [scrollbarH]="true"
+      [limit]="5"
+      [messages]="emptySampleData"
+      [rowHeight]="50">
+    </ngx-datatable>
+  </div>
+  <div *ngIf="detailsLoading">
+    <md-progress-bar mode="indeterminate"></md-progress-bar>
+  </div>
+  <div class="dialog-footer">
+    <button md-button type="button" color="primary" (click)="cancel()">Close</button>
+  </div>
+</form>

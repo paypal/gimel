@@ -1,0 +1,77 @@
+<div class="app-container">
+  <div>
+    <div class="detail-content-container">
+      <md-input-container class="table-search">
+        <input #searchDB mdInput [(ngModel)]="searchString">
+        <md-placeholder>
+          <md-icon class="icon-16">search</md-icon>
+          Search Datasets
+        </md-placeholder>
+      </md-input-container>
+      <div *ngIf="systemName">
+        <button md-raised-button md-tooltip="Refresh Datasets" (click)="searchDatasets()"
+                class="app-details-btn">
+          Search
+        </button>
+      </div>
+      <div *ngIf="!systemName">
+        <button md-raised-button md-tooltip="Refresh Datasets" (click)="searchDatasets()"
+                class="app-details-btn" disabled>
+          Search
+        </button>
+      </div>
+    </div>
+  </div>
+  <ngx-datatable
+    #catalogDatasetsTable
+    class="material favorites-datatable"
+    [rows]="displayList"
+    [columnMode]="'force'"
+    [loadingIndicator]="loading"
+    [headerHeight]="50"
+    [footerHeight]="50"
+    [rowHeight]="'auto'"
+    [externalPaging]="true"
+    [count]="page.totalElements"
+    [offset]="page.pageNumber"
+    [limit]="page.size"
+    [scrollbarH]="true"
+    (page)='loadDatasetsFromCatalog($event)'
+  >
+    <ngx-datatable-row-detail [rowHeight]="400">
+      <ng-template let-row="row" ngx-datatable-row-detail-template>
+        <div style="padding-left:35px;">
+          <app-catalog-dataset-deleted-detail [dataset]="row.storageDataSetId"></app-catalog-dataset-deleted-detail>
+        </div>
+      </ng-template>
+    </ngx-datatable-row-detail>
+    <ngx-datatable-column
+      [width]="50"
+      [resizeable]="false"
+      [draggable]="false"
+      [canAutoResize]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        <button md-icon-button class="action-btn"
+                (click)="toggleExpandRow(row)">
+          <md-icon *ngIf="!row.$$expanded" md-tooltip="Show Database Details">keyboard_arrow_down</md-icon>
+          <md-icon *ngIf="row.$$expanded" md-tooltip="Hide Database Details">keyboard_arrow_up</md-icon>
+        </button>
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Dataset ID" [width]="35" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageDataSetId }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Dataset Name" [width]="250" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageDataSetName }}
+      </ng-template>
+    </ngx-datatable-column>
+    <ngx-datatable-column name="Datastore" [width]="100" [sortable]="false">
+      <ng-template let-row="row" ngx-datatable-cell-template>
+        {{ row.storageSystemName}}
+      </ng-template>
+    </ngx-datatable-column>
+  </ngx-datatable>
+</div>

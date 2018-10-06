@@ -1,0 +1,139 @@
+md-sidenav-container {
+  height: 100%;
+}
+
+$md-toolbar-min-height: 80px;
+
+.fill-remaining {
+  flex-grow: 1;
+  // text-align: center;
+  min-height: 100%;
+  height: 100%;
+  text-align: right;
+  //vertical-align: middle;
+  padding-top: 40px;
+}
+
+h1 {
+  font-size: 28px;
+  color: white;
+  font-weight: 300;
+  padding: 0;
+  margin: 0;
+  line-height: 1.42;
+  display: inline-block;
+}
+
+md-toolbar {
+  min-height: $md-toolbar-min-height;
+  padding-left: 0;
+  overflow: hidden;
+}
+
+:host /deep/ .gh-toolbar .mat-toolbar-row {
+  height: $md-toolbar-min-height !important;
+}
+
+.header-logo {
+  position: relative;
+  color: white;
+  text-decoration: none;
+  margin-right: 10px;
+  margin-left: 10px;
+
+  h1 {
+    position: relative;
+    padding-left: 50px;
+  }
+}
+
+.sidenav-button {
+  color: white;
+}
+
+:host /deep/ .md-sidenav-backdrop.md-sidenav-shown {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+.sidenav-fixed-content {
+  padding-left: 80px;
+}
+
+.logo-img {
+  position: absolute;
+  width: 40px;
+  top: 10px;
+  // top: -3px;
+}
+
+.title-header {
+  margin-left: 10px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+  color: black;
+  margin-left: 0;
+}
+
+.toolbox-fab-button {
+  position: fixed;
+  bottom: 20px;
+  right: 10px;
+  z-index: 2;
+}
+
+.title-header-container {
+  background: white;
+  padding: 5px 32px;
+  border-bottom: solid 1px #eee;
+  box-shadow: 0 3px 5px -1px rgba(0,0,0,.2), 0 6px 10px 0 rgba(0,0,0,.14), 0 0px 0px 0 rgb(255, 255, 255);
+  position: relative;
+  z-index: 10;
+}
+
+.pulse-layer {
+  position: absolute;
+  opacity: 1;
+  top: 0;
+  left: 0;
+  width: 285px;
+  bottom: 0;
+}
+
+.pulse-layer-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 285px;
+  bottom: 0;
+  z-index: 5;
+  overflow: hidden;
+  background: transparent;
+  overflow-y: auto;
+}
+
+.main-content {
+  min-width: 1024px;
+  position: relative;
+  overflow: hidden;
+}
+
+.show-side-nav {
+  padding-left: 285px;
+  min-width: 1135px;
+}
+
+.no-transform.mat-sidenav-container {
+  transform: none;
+}
+
+:host /deep/ .no-transform .mat-sidenav-content {
+  transform: none !important;
+  min-height:100vh;
+}
+
+.create-app-btn {
+  border: solid 1px rgba(256, 256, 246, 0.4);
+  opacity: 0.7;
+  margin: 0 10px;
+}
