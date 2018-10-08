@@ -75,3 +75,16 @@ Thumbs.db
 
 # docker-files
 package-lock.json
+
+/target/
+.classpath
+.project
+.settings/
+logs/
+.DS_Store
+src/.DS_Store
+.idea/
+*.iml
+.vscode/
+udc/udc-web/dist/
+udc/udc-web/node_modules/
