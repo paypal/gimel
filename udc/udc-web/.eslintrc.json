@@ -1,0 +1,21 @@
+{
+  "parser": "typescript-eslint-parser",
+  "extends": ["airbnb", "plugin:jasmine/recommended"],
+  "plugins": [
+    "typescript",
+    "jasmine"
+  ],
+  "rules": {
+    "import/no-unresolved": "off",
+    "import/imports-first": "off",
+    "no-empty-function": "off",
+    "import/extensions": "off",
+    "import/prefer-default-export": "off",
+    "no-unused-vars": "off",
+    "no-undef": "off",
+    "comma-dangle": "off"
+  },
+  "env": {
+    "jasmine": true
+  }
+}
