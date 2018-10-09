@@ -30,41 +30,17 @@ run_cmd "docker rm ${udc_serv_container_name}" "ignore_errors"
 check_warning $? "docker rm ${udc_serv_container_name}"
 
 write_log "------------------------------------------------------------------------------"
-write_log "          Checking if udc metastore mysql image is installed already"
+write_log "          Installing the Metastore MySQL Image"
 write_log "------------------------------------------------------------------------------"
 
-if test ! -z "$(docker images -q ${mysql_image_name})"; then
-	write_log "Docker image for ${mysql_imager_name} already Exists"
-	get_option "Do you wish to pull the Docker Image ? "
-	if [ "${install_status}" = "Y" ]
-	then
-		run_cmd "docker pull ${mysql_image_name}"
-		check_error $? "docker pull ${mysql_image_name}"
-	else
-		write_log "Skipping installing MySQL Docker Image"	
-	fi
-else
-        run_cmd "docker pull ${mysql_image_name}"
-	check_error $? "docker pull ${mysql_image_name}"
-fi
+run_cmd "docker pull ${mysql_image_name}"
+check_error $? "docker pull ${mysql_image_name}"
 
 write_log "------------------------------------------------------------------------------"
-write_log "          Checking if udc services image is installed already"
+write_log "          Installing the UDC-SERVICES Image"
 write_log "------------------------------------------------------------------------------"
-if test ! -z "$(docker images -q ${udc_serv_image_name})"; then
-        write_log "Docker image for ${udc_serv_image_name} already Exists"
-        get_option "Do you wish to reinstall the docker image for services  ? "
-        if [ "${install_status}" = "Y" ]
-        then
-                run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_serv_image_name} ."
-                check_error $? "docker build -f ${UDC_HOME}/Dockerfile -t ${udc_serv_image_name} ."
-        else
-                write_log "Skipping installing UDC-SERVICES docker image"
-        fi
-else
-        run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_serv_image_name} ."
-        check_error $? "docker build -f $UDC_HOME/Dockerfile -t ${udc_serv_image_name} ."
-fi
+run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_serv_image_name} ."
+check_error $? "docker build -f $UDC_HOME/Dockerfile -t ${udc_serv_image_name} ."
 
 write_log "------------------------------------------------------------------------------"
 write_log "    Starting Docker Container for UDC-METASTORE and installing database"

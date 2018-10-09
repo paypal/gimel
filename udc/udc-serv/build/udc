@@ -1,8 +1,12 @@
 #!/bin/sh
 
-this_dir=`dirname build/udc`
-source ${this_dir}/udc_functions
-
+export this_file=${0}
+echo $this_file
+export this_script_path="$( cd "$( dirname "$this_file" )" && pwd)"
+echo $this_script_path
+cd $this_script_path
+source ${this_script_path}/udc_functions
+cd ..
 write_log "Begin    | Script | $0"
 user_args=$@
 user_args_count=$#
@@ -11,7 +15,7 @@ write_log "User Arguments : ${user_args}"
 
 if [ $user_args_count -gt 0 ]; then
   resolved_args=${user_args_count}
-else 
+else
   write_log "User supplied arguments : None. Defaulting to argument : ${default_args}"
 fi
 
