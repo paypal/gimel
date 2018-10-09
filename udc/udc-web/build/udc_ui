@@ -1,8 +1,13 @@
 #!/bin/sh
 
-this_dir=`dirname build/udc_ui`
-source ${this_dir}/udc_ui_functions
 
+export this_file=${0}
+echo $this_file
+export this_script_path="$( cd "$( dirname "$this_file" )" && pwd)"
+echo $this_script_path
+cd $this_script_path
+source ${this_script_path}/udc_ui_functions
+cd ..
 write_log "Begin    | Script | $0"
 
 write_log "--------Installing Angular CLI--------"
