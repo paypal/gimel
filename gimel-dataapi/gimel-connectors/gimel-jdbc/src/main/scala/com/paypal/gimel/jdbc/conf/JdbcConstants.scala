@@ -22,13 +22,40 @@ package com.paypal.gimel.jdbc.conf
 import com.paypal.gimel.common.conf.GimelConstants
 
 object JdbcConstants {
+
   // basic variable references
   val hdfsPrefix: String = "hdfs:///user"
   val teradataFileName: String = "pass.dat"
-  val batchUserPFILE = s"${hdfsPrefix}/livy/password/pp_batch_opts_admin/teradata/${teradataFileName}"
   val pFile = s"${hdfsPrefix}/${GimelConstants.USER_NAME}/password/teradata/${teradataFileName}"
-  val jdbcUserName: String = s"spark.jdbc.${GimelConstants.USER_NAME}"
+  val jdbcUserName: String = s"gimel.jdbc.${GimelConstants.USER_NAME}"
+  val MYSQL = "MYSQL"
+  val TERADATA = "TERADATA"
+
   // polling properties
-  val jdbcPPath = s"${pFile}/${teradataFileName}"
+  val jdbcPPath = "/etl/LVS/dmetldata11/gimel/conf/pass.dat"
+
+  // default TD properties
+  val defaultTeradataSessions = 5
+  val deafaultCharset = "UTF16"
+  val defaultSessions = "6"
+
+  // JDBC READ configs
+  val NUM_READ_PARTITIONS = 16
+  val defaultReadFetchSize = 1000
+  val defaultFastExportSessions = "16"
+  val defaultLowerBound = 0
+  val defaultUpperBound = 20
+  val defaultReadType = "BATCH"
+  val noPartitionColumn = "10"
+
+  // JDBC write configs
+  val GIMEL_TEMP_PARTITION = "GIMEL_TEMP_PARTITION"
+  val defaultWriteBatchSize = 10000
+  val NUM_WRITE_PARTITIONS = 12
+  val defaultInsertStrategy = "insert"
+  val defaultFastLoadSessions = "12"
+  val defaultWriteType = "BATCH"
+
+
 }
 

@@ -64,6 +64,9 @@ object GimelConstants {
   // HBASE CONSTANTS USED ACROSS ENTIRE GIMEL
   val HBASE_NAMESPACE: String = "gimel.hbase.namespace.name"
 
+  // spark configs
+  val SPARK_SPECULATION = "spark.speculation"
+
   // KAFKA CONSTANTS USED ACROSS ENTIRE GIMEL
   val ZOOKEEPER_LIST: String = "gimel.zookeeper.host"
   val ZOOKEEPER_STATE: String = "gimel.zk.state.prefix"

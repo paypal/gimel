@@ -19,9 +19,12 @@
 
 package com.paypal.gimel.jdbc.utilities
 
-import java.sql.{Connection, DriverManager}
+import java.sql.{Connection, DriverManager, PreparedStatement}
 
-import com.paypal.gimel.common.storageadmin.HDFSAdminClient
+import org.apache.spark.sql.SparkSession
+
+import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
+import com.paypal.gimel.jdbc.utilities.JdbcAuxiliaryUtilities._
 import com.paypal.gimel.logger.Logger
 
 
@@ -39,12 +42,11 @@ object JDBCCommons {
   def getJdbcP(passwordFile: String, principal: String, keyTabPath: String, jdbcURL: String, userName: String): String = {
 
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+
     logger.info(" @Begin --> " + MethodName)
 
-    // val fileContent = HDFSAdminClient.standaloneHDFSRead(passwordFile, principal, keyTabPath).toString
     val fileContent = scala.io.Source.fromFile(passwordFile).getLines().mkString("\n")
     val lines: Array[String] = fileContent.split("\n")
-    logger.info("Lines => " + lines)
     var password = ""
     var validURI: Boolean = false
 
@@ -75,16 +77,16 @@ object JDBCCommons {
   /**
     * This method returns the Hive metastore password from the given password file
     *
-    * @param passwordFile  password file path
+    * @param passwordFile      password file path
     * @param storageSystemName storage system name
     * @return password
     */
   def getHivePassword(passwordFile: String, storageSystemName: String): String = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+
     logger.info(" @Begin --> " + MethodName)
     val fileContent = scala.io.Source.fromFile(passwordFile).getLines().mkString("\n")
     val lines: Array[String] = fileContent.split("\n")
-    logger.info("Lines => " + lines)
     var password = ""
     var validURI: Boolean = false
 
@@ -106,7 +108,6 @@ object JDBCCommons {
     password
   }
 
-
   /**
     *
     * @param url
@@ -116,6 +117,36 @@ object JDBCCommons {
     */
   def getJdbcConnection(url: String, userName: String, password: String): Connection = {
     DriverManager.getConnection(url, userName, password)
+  }
+
+  /**
+    *
+    * @param sparkSession
+    */
+  def getDefaultUser(sparkSession: SparkSession): String = {
+    // get real user of JDBC
+    sparkSession.sparkContext.getConf.get(JdbcConstants.jdbcUserName, sparkSession.sparkContext.sparkUser)
+  }
+
+  /**
+    * This method resets all the configs required to be reset after action in JDBC spark Read/Write API
+    *
+    * @param sparkSession
+    */
+  def resetDefaultConfigs(sparkSession: SparkSession): Unit = {
+
+    // reset JDBC Read type to Batch
+    logger.info(s"Resetting ${JdbcConfigs.teradataReadType} to ${JdbcConstants.defaultReadType}")
+    sparkSession.conf.set(JdbcConfigs.teradataReadType, JdbcConstants.defaultReadType)
+
+    // reset JDBC Write type to Batch
+    logger.info(s"Resetting ${JdbcConfigs.teradataWriteType} to ${JdbcConstants.defaultWriteType}")
+    sparkSession.conf.set(JdbcConfigs.teradataWriteType, JdbcConstants.defaultWriteType)
+
+    // reset JDBC default write strategy to insert
+    logger.info(s"Resetting ${JdbcConfigs.jdbcInsertStrategy} to ${JdbcConstants.defaultInsertStrategy}")
+    sparkSession.conf.set(JdbcConfigs.jdbcInsertStrategy, JdbcConstants.defaultInsertStrategy)
+
   }
 
 }
