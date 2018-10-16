@@ -97,5 +97,32 @@ class KafkaConvertersTests extends FunSpec with Matchers {
     }
   }
 
+  it("should return limited offsetRange by given threshold") {
+    val sampleRange: Array[OffsetRange] = Array(
+      OffsetRange("test-1", 0, 1, 5),
+      OffsetRange("test-2", 1, 1, 100)
+    )
+
+    val partitionsOfOffset = sampleRange.applyThresholdPerPartition(10)
+    partitionsOfOffset.map { offset =>
+      offset.topic match {
+        case "test-1" =>
+          offset.untilOffset shouldBe 5
+        case "test-2" =>
+          offset.untilOffset shouldBe 11
+      }
+    }
+  }
+
+  it("should return parallelized offsetRange") {
+    val sampleRange: Array[OffsetRange] = Array(
+      OffsetRange("test-1", 0, 1, 5),
+      OffsetRange("test-2", 1, 1, 100)
+    )
+    
+    val parallelizeOffsetRanges = sampleRange.parallelizeOffsetRanges(4, 2)
+    parallelizeOffsetRanges.length shouldBe 8
+  }
+
 }
 
