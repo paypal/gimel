@@ -23,22 +23,10 @@ check_warning $? "docker rm ${udc_ui_container_name}"
 
 
 write_log "------------------------------------------------------------------------------"
-write_log "          Checking if udc-ui image is installed already"
+write_log "          Installing udc-ui image"
 write_log "------------------------------------------------------------------------------"
-if test ! -z "$(docker images -q ${udc_ui_image_name})"; then
-        write_log "Docker image for ${udc_ui_image_name} already Exists"
-        get_option "Do you wish to reinstall the docker image for UDC-UI  ? "
-        if [ "${install_status}" = "Y" ]
-        then
-                run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_ui_image_name} ."
-                check_error $? "docker build -f ${UDC_HOME}/Dockerfile -t ${udc_ui_image_name} ."
-        else
-                write_log "Skipping installing UDC-UI docker image"
-        fi
-else
-        run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_ui_image_name} ."
-        check_error $? "docker build -f $UDC_HOME/Dockerfile -t ${udc_ui_image_name} ."
-fi
+run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_ui_image_name} ."
+check_error $? "docker build -f $UDC_HOME/Dockerfile -t ${udc_ui_image_name} ."
 
 
 write_log "------------------------------------------------------------------------------"
