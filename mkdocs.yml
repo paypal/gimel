@@ -1,0 +1,7 @@
+site_name: Gimel
+theme: readthedocs
+
+#pages:
+#- Try Gimel:
+#    - 'Prerequisites': 'try-gimel/0-prerequisite.md'
+#    - 'HDFS API': 'try-gimel/1-HDFS.md'
