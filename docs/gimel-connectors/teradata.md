@@ -582,7 +582,14 @@ spark.sql(s"SET gimel.jdbc.enableQueryPushdown=true")
 
 
 val gsql=com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(_:String,sparkSession);
-gsql("your_sql")
+val sqlString = s""" SELECT count(*) as cnt 	
+                FROM 	gsql("your_sql")
+                datasetname1 a	
+                INNER JOIN 	
+                datasetname2 b	
+                  ON a.id > b.id	
+            """
+gsql(sqlString)
 
 ```
 ### Teradata-To-Any-Storage | JDBC Query PushDown
@@ -601,11 +608,27 @@ spark.sql(s"SET fetchSize=10000")
 spark.sql(s"SET gimel.jdbc.read.type=FASTEXPORT")
 spark.sql(s"SET gimel.jdbc.enableQueryPushdown=true")
 
-// Set this function if your entire select clause is on just one Teradata System, say Simba
-
 // Execute your Query - Entire Query
 val gsql=com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(_:String,sparkSession);
-gsql("your_sql")
+val sqlString = 
+   ""
+   |insert into target_datasetname	
+   | select * from	
+   | (	
+   | select	
+   | distinct(t1.cust_id) as cust_id	
+   | , sum(t2.pmt_usd_amt) over (partition by t1.cust_id) as total_tnx_amt	
+   |  , count(t2.pmt_txnid) over (partition by cust_id) as total_txn_count	
+   |  from	
+   |  datasetname1 t2	
+   |  join datasetname2 t2	
+   |  on t1.cust_id = t2.sndr_id	
+   |  where t2.pmt_cre_dt  >= current_date-2	
+   | ) tbl	
+   | where tbl.total_txn_count > 5000	
+   |""".stripMargin
+
+gsql(sqlString)
    
 ```
 
