@@ -1,4 +1,6 @@
 * [Gimel JDBC API](#gimel-jdbc-api)
+   * [JDBC Password Strategy](#gimel-jdbc-password-strategy)
+   
    * [JDBC Read API](#jdbc-read-api)
       * [How to get the DataSet name](#how-to-get-the-dataset-name)
       * [JDBC Read Options](#teradata-read-options)
@@ -39,6 +41,8 @@
 
 # Gimel JDBC API
 
+## Gimel JDBC Password Strategy
+
 
 ## JDBC Read API
 Gimel JDBC APIs can be used to read data from Teradata. [See how Teradata READ API works.](teradata-docs/teradata-read-explained.md)
@@ -60,7 +64,7 @@ Both of the above ways make use of Dataset which is a logical abstraction over a
 
     ###### Teradata table
        
-        CREATE TABLE PP_SCRATCH.YELP_TIP 
+        CREATE TABLE db_name.YELP_TIP 
         (
         text varchar(500),
         date varchar(500),
@@ -80,8 +84,8 @@ Both of the above ways make use of Dataset which is a logical abstraction over a
         TBLPROPERTIES (
         'gimel.storage.type'='JDBC',
         'gimel.jdbc.driver.class'='com.teradata.jdbc.TeraDriver',
-        'gimel.jdbc.input.table.name'=' PP_SCRATCH.YELP_TIP',
-        'gimel.jdbc.url'='jdbc:teradata://jaguar2.vip.paypal.com'
+        'gimel.jdbc.input.table.name'='db_name.YELP_TIP_HIVE',
+        'gimel.jdbc.url'='jdbc:teradata://url'
         );
       
     
@@ -158,8 +162,9 @@ val options = Map(
         , ("fetchSize", s"${fetchSize}")
 )
 
+val datasetname = ""
 //read API
-val readdf = dataSet.read(s"Teradata.Jaguar.PP_SCRATCH.YELP_TIP", options)
+val readdf = dataSet.read(datasetname, options)
 
 // Do some usecase
 readdf.show()
@@ -185,7 +190,7 @@ val options = Map(
         , ("gimel.jdbc.read.type", "FASTEXPORT")
 )
 
-val readdf = dataSet.read(s"Teradata.Jaguar.PP_SCRATCH.YELP_TIP", options)
+val readdf = dataSet.read(datasetname, options)
 
 
 // Do some usecase
@@ -238,7 +243,7 @@ val options = Map(
         ,("gimel.jdbc.p.file","/user/lapatil/pass.dat")
 )
 
-val readdf = dataSet.read(s"Teradata.Jaguar.PP_SCRATCH.YELP_TIP", options)
+val readdf = dataSet.read(datasetname, options)
 
 // Do some usecase
 readdf.show()
@@ -265,7 +270,7 @@ Both of the above ways make use of Dataset which is a logical abstraction over a
 
     ###### Teradata table
        
-        CREATE TABLE PP_SCRATCH.YELP_TIP 
+        CREATE TABLE db_name.YELP_TIP 
         (
         text varchar(500),
         date varchar(500),
@@ -285,8 +290,8 @@ Both of the above ways make use of Dataset which is a logical abstraction over a
         TBLPROPERTIES (
         'gimel.storage.type'='JDBC',
         'gimel.jdbc.driver.class'='com.teradata.jdbc.TeraDriver',
-        'gimel.jdbc.input.table.name'=' PP_SCRATCH.YELP_TIP',
-        'gimel.jdbc.url'='jdbc:teradata://jaguar2.vip.paypal.com'
+        'gimel.jdbc.input.table.name'='db_name.YELP_TIP',
+        'gimel.jdbc.url'='jdbc:teradata://url'
         );
       
     
@@ -341,7 +346,7 @@ Options with default values:
 
 ### Create Teradata table
 ```sql
-create table pp_scratch.user_test
+create table db_name.user_test
 (
     id bigint,
     "name" varchar(300),
@@ -361,8 +366,8 @@ create external table pcatalog.user_test
 TBLPROPERTIES (
     'gimel.storage.type'='JDBC',
     'gimel.jdbc.driver.class'='com.teradata.jdbc.TeraDriver',
-    'gimel.jdbc.input.table.name'='pp_scratch.user_test',
-    'gimel.jdbc.url'='jdbc:teradata://jaguar2.vip.paypal.com'
+    'gimel.jdbc.input.table.name'='db_name.user_test',
+    'gimel.jdbc.url'='jdbc:teradata://url'
 )
 ```
 ### Teradata Write with GimelProxyUser
@@ -379,7 +384,7 @@ val options: Map[String, String] = Map(
         , ("numPartitions", s"${partitions}")
          )
 
-dataSet.write(s"Teradata.Jaguar.PP_SCRATCH.YELP_TIP", readdf, options)
+dataSet.write(datasetname, readdf, options)
          
 ```
 
@@ -397,7 +402,7 @@ val options: Map[String, String] = Map(
         , ("gimel.jdbc.read.type", "FASTLOAD")
          )
 
-dataSet.write(s"Teradata.Jaguar.PP_SCRATCH.YELP_TIP", readdf, options)
+dataSet.write(datasetname, readdf, options)
          
 ```
 
@@ -442,7 +447,7 @@ val options: Map[String, String] = Map(
         ,("gimel.jdbc.p.strategy","file")
         ,("gimel.jdbc.p.file","/user/lapatil/pass.dat")
          )
-dataSet.write(s"Teradata.Jaguar.PP_SCRATCH.YELP_TIP", readdf, options)
+dataSet.write(datasetname, readdf, options)
 
 ```
 
@@ -495,7 +500,7 @@ val options: Map[String, String] = Map(
         , ("gimel.jdbc.update.setColumns","text,date")
         , ("gimel.jdbc.update.whereColumns","business_id")
          )
-dataSet.write(s"Teradata.Jaguar.PP_SCRATCH.YELP_TIP", readdf, options)
+dataSet.write(datasetname", readdf, options)
 
 ```
 
@@ -523,7 +528,7 @@ val options: Map[String, String] = Map(
         , ("batchSize", s"${batchSize}")
         , ("numPartitions", s"${partitions}")
          )
-dataSet.write(s"Teradata.Jaguar.PP_SCRATCH.YELP_TIP", readdf, options)
+dataSet.write(datasetname, readdf, options)
 
 ```
 
@@ -553,7 +558,7 @@ val options: Map[String, String] = Map(
         , ("gimel.jdbc.update.setColumns","text,date")
         , ("gimel.jdbc.update.whereColumns","business_id")
          )
-dataSet.write(s"Teradata.Jaguar.PP_SCRATCH.YELP_TIP", readdf, options)
+dataSet.write(datasetname, readdf, options)
 
 ```
 
@@ -578,9 +583,9 @@ spark.sql(s"SET gimel.jdbc.enableQueryPushdown=true")
 
 val sql = s""" SELECT count(*) as cnt 
                 FROM 
-                pcatalog.Teradata.Jaguar.pp_scratch.GIMEL_FACT_PMT_2_WRITE_10000M a
+                datasetname1 a
                 INNER JOIN 
-                pcatalog.Teradata.Jaguar.pp_scratch.GIMEL_FACT_PMT_2_WRITE_10000M b
+                datasetname2 b
                   ON a.id > b.id
             """
 val df = GimelQueryProcessor.executeBatch(sql, sparkSession)
@@ -607,18 +612,18 @@ spark.sql(s"SET gimel.jdbc.enableQueryPushdown=true")
 // Execute your Query - Entire Query
  com.paypal.gimel.scaas.GimeQueryProcessor.executeBatch(
    """
-   |insert into PCATALOG.Horton.Hive.default.Gimel_Testing_Hive_Table
+   |insert into target_datasetname
    | select * from
    | (
    | select
-   | distinct(dim_cust.cust_id) as cust_id
-   | , sum(txn.pmt_usd_amt) over (partition by dim_cust.cust_id) as total_tnx_amt
-   |  , count(txn.pmt_txnid) over (partition by cust_id) as total_txn_count
+   | distinct(t1.cust_id) as cust_id
+   | , sum(t2.pmt_usd_amt) over (partition by t1.cust_id) as total_tnx_amt
+   |  , count(t2.pmt_txnid) over (partition by cust_id) as total_txn_count
    |  from
-   |  pcatalog.simba_pp_engineering_views_dim_cust dim_cust
-   |  join pcatalog.simba_pp_engineering_views_fact_pmt txn
-   |  on dim_cust.cust_id = txn.sndr_id
-   |  where txn.pmt_cre_dt  >= current_date-2
+   |  datasetname1 t2
+   |  join datasetname2 t2
+   |  on t1.cust_id = t2.sndr_id
+   |  where t2.pmt_cre_dt  >= current_date-2
    | ) tbl
    | where tbl.total_txn_count > 5000
    |""".stripMargin ,
@@ -627,49 +632,3 @@ spark.sql(s"SET gimel.jdbc.enableQueryPushdown=true")
 ```
 
 --------------------------------------------------------------------------------------------------------------------
-
-
-## Create API
-// We need to pass the schema and system attributes in the json
-
-```scala
-val dataSetProps = s"""
-{"datasetType":"JDBC","fields":[{"fieldName":"id","fieldType":"VARCHAR(10)","isFieldNullable": false},{"fieldName":"name","fieldType":"VARCHAR(10)","isFieldNullable": false}],"partitionFields":[],"props":{"gimel.jdbc.input.table.name":"pp_scratch.yelp_tip_td13","gimel.storage.type":"JDBC","gimel.jdbc.url":"jdbc:teradata://jackal.vip.paypal.com","gimel.jdbc.driver.class":"com.teradata.jdbc.TeraDriver"}}"""
-val options = Map(("gimel.catalog.provider","USER"),("pcatalog.teradata.jackal.pp_scratch.yelp_tip13.dataSetProperties",dataSetProps),("gimel.jdbc.username","balan"),("gimel.jdbc.p.file","hdfs://tahore123/user/bagopalan/pass.dat"));
-spark.conf.set("gimel.catalog.provider","USER")
-val isCreated = dataSet.create("pcatalog.teradata.jackalrocks.pp_skate.yelp_tip13", options)
-```
-
---------------------------------------------------------------------------------------------------------------------
-
-* Create table in teradata database
-```scala
-// We need to pass the schema and a flag getSystemProp to true so that the application will retrive the system attributes
-
-val dataSetProps = s"""{"datasetType":"JDBC","fields":[{"fieldName":"id","fieldType":"VARCHAR(10)","isFieldNullable": false},{"fieldName":"name","fieldType":"VARCHAR(10)","isFieldNullable": false}],"partitionFields":[],"props":{"gimel.jdbc.input.table.name":"pp_scratch.yelp_tip19","gimel.get.system.properties":"true"}}"""
-val options2 = Map(("gimel.catalog.provider","USER"),("pcatalog.teradata.jackal.pp_scratch.yelp_tip19.dataSetProperties",dataSetProps),("gimel.jdbc.username","balan"),("gimel.jdbc.p.file","hdfs://thaore123/user/bagopalan/pass.dat"));
-spark.conf.set("gimel.catalog.provider","USER")
-val isCreated = dataSet.create("pcatalog.teradata.jackalhourse.pp_kate.yelp_tip19", options2 )
-```
-
---------------------------------------------------------------------------------------------------------------------
-
-## Drop API
-```scala
-val options = Map(("gimel.catalog.provider","PCATALOG"),("gimel.jdbc.username","bagopalan"),("gimel.jdbc.p.file","hdfs://tahore123/user/bagopalan/pass.dat"));
-spark.conf.set("gimel.catalog.provider","PCATALOG")
-val isCreated = dataSet.drop("pcatalog.teradata.jackalrocks.pp_skate.yelp_tip13", options)
-```
-
---------------------------------------------------------------------------------------------------------------------
-
-## Truncate API
-* Truncates the table (purge the data from the table)
-```scala
-val options = Map(("gimel.catalog.provider","PCATALOG"),("gimel.jdbc.username","balan"),("gimel.jdbc.p.file","hdfs://tahore123/user/bagopalan/pass.dat"));
-spark.conf.set("gimel.catalog.provider","PCATALOG")
-val isCreated = dataSet.truncate("pcatalog.teradata.jackalhorse.pp_sskate.yelp_tip14", options))
-```
-
---------------------------------------------------------------------------------------------------------------------
-
