@@ -25,6 +25,9 @@ case class ObjectSchemaMapUpload(
                                , clusters: Seq[Int]
                                , query: String = "create table"
                                , storageSystemId: Int = 2
-                               , objectSchema: Seq[ObjectSchema] = Seq()
-                               , objectAttributes: Seq[ObjectAttributeValue] = Seq()
+                               , objectSchema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
+                               , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
+                               , createdUserOnStore: String
+                               , createdTimestampOnStore: String
+
                            )

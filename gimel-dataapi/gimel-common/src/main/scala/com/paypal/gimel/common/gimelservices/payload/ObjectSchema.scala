@@ -20,7 +20,11 @@
 package com.paypal.gimel.common.gimelservices.payload
 
 case class ObjectSchema(
-                   columnName: String = ""
-                   , columnType: String = ""
-                   , columnFamily: String = ""
-                 )
+                         columnName: String = ""
+                         , columnType: String = ""
+                         , columnFamily: String = ""
+                         , columnClass: String
+                         , restrictionStatus: Boolean
+                         , partitionStatus: Boolean
+                         , columnIndex: Int = 0
+                       )

@@ -21,10 +21,13 @@ package com.paypal.gimel.common.gimelservices.payload
 
 
 case class ContainerObject(
-                              containerName: String = ""
+                              objectId: Int = -99
+                              , containerName: String = ""
                               , objectName: String = ""
                               , storageSystemId: Int = -99
-                              , schema: Seq[ObjectSchema]
-                              , objectAttributes: Seq[ObjectAttributeValue]
+                              , schema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
+                              , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
                               , isActiveYN: String
+                              , createdUserOnStore: String
+                              , createdTimestampOnStore: String
                           )

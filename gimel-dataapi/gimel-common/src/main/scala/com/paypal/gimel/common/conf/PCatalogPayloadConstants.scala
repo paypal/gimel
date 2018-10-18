@@ -29,6 +29,8 @@ object PCatalogPayloadConstants {
   val OBJECT_SCHEMA: String = "objectSchema"
   val COLUMN_NAME: String = "columnName"
   val COLUMN_TYPE: String = "columnType"
+  val COLUMN_INDEX: String = "columnIndex"
+  val COLUMN_PARTITION_STATUS: String = "partitionStatus"
   val ACTIVE_FLAG: String = "Y"
   val INACTIVE_FLAG: String = "N"
 }

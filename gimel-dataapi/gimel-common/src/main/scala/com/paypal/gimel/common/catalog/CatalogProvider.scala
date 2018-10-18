@@ -35,7 +35,9 @@ import com.paypal.gimel.logger.Logger
 
 case class Field(fieldName: String,
                  fieldType: String = "string",
-                 isFieldNullable: Boolean = true
+                 isFieldNullable: Boolean = true,
+                 partitionStatus: Boolean = false,
+                 columnIndex: Int = 0
                 )
 
 case class DataSetProperties(datasetType: String,
@@ -63,22 +65,54 @@ object CatalogProvider {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
     logger.info(" @Begin --> " + MethodName)
 
+    // The user options are passed which will override the default service util properties
+    if (!options.isEmpty) {
+      servUtils.customize(options.map { x => (x._1, x._2.toString) })
+    }
+
     val resolvedSourceTable = resolveDataSetName(datasetName)
-    val catalogProvider = options.getOrElse(CatalogProviderConfigs.CATALOG_PROVIDER, CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER)
-    println(s"Catalog Provider is --> ${catalogProvider}")
-    val datasetProps = catalogProvider.toString.toUpperCase() match {
+    val suppliedCatalogProvider: String = options.getOrElse(CatalogProviderConfigs.CATALOG_PROVIDER, CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER).toString
+
+    val catalogProvider: String = (suppliedCatalogProvider.equalsIgnoreCase(CatalogProviderConstants.HIVE_PROVIDER), datasetName.split('.').length > 2) match {
+      case (true, true) =>
+        logger.warning("******************************** WARNING *************************************")
+        logger.warning("It seems the DataSet Name is not regular pattern such as [DB.TBL]")
+        logger.warning(s"However, supplied catalog provider [${suppliedCatalogProvider} is an incompatible combination.]")
+        logger.warning(s"Hence auto OVER-RIDING catalog provider = ${CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER}")
+        logger.warning("******************************** WARNING *************************************")
+        CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER
+      case (false, false) =>
+        if (suppliedCatalogProvider.equalsIgnoreCase(CatalogProviderConstants.USER_PROVIDER)) suppliedCatalogProvider
+        else {
+          logger.warning("******************************** WARNING *************************************")
+          logger.warning("It seems the DataSet Name is of  pattern such as [DB.TBL]")
+          logger.warning(s"However, supplied catalog provider [${suppliedCatalogProvider} is an incompatible combination.]")
+          logger.warning(s"Hence auto OVER-RIDING catalog provider = ${CatalogProviderConstants.HIVE_PROVIDER}")
+          logger.warning("******************************** WARNING *************************************")
+          CatalogProviderConstants.HIVE_PROVIDER
+        }
+      case _ => suppliedCatalogProvider
+    }
+    logger.info(s"Resolved Catalog Provider is --> ${catalogProvider}")
+    val datasetProps = catalogProvider.toUpperCase() match {
       case GimelConstants.USER =>
-        println(s"Resolving Catalog Via catalogProvider --> ${catalogProvider}")
+        logger.info(s"Resolving Catalog Via catalogProvider --> ${catalogProvider}")
         val props = getUserProps(options(datasetName + "." + GimelConstants.DATASET_PROPS))
-        println(s"User Supplied Props --> ${props}")
+        logger.info(s"User Supplied Props --> ${props}")
         props
-      case CatalogProviderConstants.PCATALOG_PROVIDER =>
-        val Array(db: String, dataset: String) = resolvedSourceTable.split('.')
-        db match {
-          case GimelConstants.PCATALOG_STRING =>
-            servUtils.getDataSetProperties(dataset)
-          case _ =>
-            println(
+      case CatalogProviderConstants.PCATALOG_PROVIDER | CatalogProviderConstants.UDC_PROVIDER =>
+        val db = resolvedSourceTable.split('.').head
+        val dataset = resolvedSourceTable.split('.').tail.mkString(".")
+        db.equalsIgnoreCase(GimelConstants.PCATALOG_STRING) | db.equalsIgnoreCase(CatalogProviderConstants.UDC_PROVIDER) match {
+          case true =>
+            if (servUtils.checkIfDataSetExists(dataset)) {
+              servUtils.getDataSetProperties(dataset)
+            }
+            else {
+              servUtils.getDynamicDataSetProperties(dataset, options)
+            }
+          case false =>
+            logger.info(
               s"""
                  |Non-Gimel DataSet --> ${resolvedSourceTable}.
                  |Resolving Props via catalogProvider --> ${CatalogProviderConstants.HIVE_PROVIDER}
@@ -86,13 +120,17 @@ object CatalogProvider {
             getDataSetPropertiesFromHive(resolvedSourceTable)
         }
       case CatalogProviderConstants.HIVE_PROVIDER =>
-        println(s"Resolving Catalog Via catalogProvider --> ${catalogProvider}")
+        logger.info(s"Resolving Catalog Via catalogProvider --> ${catalogProvider}")
         getDataSetPropertiesFromHive(resolvedSourceTable)
       case other =>
         throw new Exception(s"Unknown CatalogProvider --> ${catalogProvider}")
     }
-    println(s"Received Properties --> ${datasetProps}")
-    datasetProps
+    logger.info(s"Received Properties --> ${datasetProps}")
+
+    val newProps = datasetProps.props ++
+      Map("gimel.kafka.avro.schema.string" -> datasetProps.props.getOrElse("gimel.kafka.avro.schema.string", "").replace("\\", "\"")) ++ options.mapValues(_.toString)
+    DataSetProperties(datasetProps.datasetType, datasetProps.fields, datasetProps.partitionFields, newProps)
+
   }
 
   /**

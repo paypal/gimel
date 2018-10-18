@@ -25,14 +25,19 @@ object JdbcConfigs {
   val jdbcDriverClassKey: String = "gimel.jdbc.driver.class"
   val jdbcInputTableNameKey: String = "gimel.jdbc.input.table.name"
   val jdbcUrl: String = "gimel.jdbc.url"
+
   // misc properties for read/write
   val jdbcStorageHandler: String = "org.apache.hadoop.hive.jdbc.storagehandler.JdbcStorageHandler"
   val teradataReadType: String = "gimel.jdbc.read.type"
   val teradataWriteType: String = "gimel.jdbc.write.type"
   val jdbcOutputTableNameKey: String = "gimel.jdbc.output.table.name"
-  val jdbcP: String = "spark.jdbc.p.file"
+  val jdbcP: String = "gimel.jdbc.p.file"
   val jdbcPushDownEnabled: String = "gimel.jdbc.enableQueryPushdown"
   val jdbcInsertStrategy: String = "gimel.jdbc.insertStrategy"
   val jdbcInputDataPartitionCount: String = "gimel.jdbc.inputDataPartition.count"
+  val jdbcPasswordStrategy: String = "gimel.jdbc.p.strategy"
+  val jdbcUpdateSetColumns: String = "gimel.jdbc.update.setColumns"
+  val jdbcUpdateWhereColumns: String = "gimel.jdbc.update.whereColumns"
+
 }
 

@@ -23,7 +23,7 @@ case class StorageSystemContainer(
                                    storageSystemId: Int = -99
                                    , storageSystemName: String = ""
                                    , containerName: String = ""
-                                   , systemAttributes: Seq[StorageSystemAttributeValue] = Seq()
-                                   , typeAttributes: Seq[StorageTypeAttributeKey] = Seq()
+                                   , systemAttributes: Seq[StorageSystemAttributeValue] = Seq.empty[StorageSystemAttributeValue]
+                                   , typeAttributes: Seq[StorageTypeAttributeKey] = Seq.empty[StorageTypeAttributeKey]
                                    , userName: String = ""
                                   )

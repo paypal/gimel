@@ -26,6 +26,8 @@ case class RawObjectSchemaMap(
                                , containerName: String = ""
                                , storageSystemId: Int = -99
                                , query: String = ""
-                               , objectSchema: Seq[ObjectSchema]
-                               , objectAttributes: Seq[ObjectAttributeValue]
+                               , objectSchema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
+                               , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
+                               , createdUserOnStore: String
+                               , createdTimestampOnStore: String
                              )

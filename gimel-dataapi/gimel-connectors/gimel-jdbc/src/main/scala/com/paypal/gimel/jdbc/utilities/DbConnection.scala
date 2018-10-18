@@ -24,14 +24,15 @@ import java.sql.{Connection, DriverManager}
 import scala.runtime.AbstractFunction0
 
 /**
+  *
   * Supporting class to specify a function that returns an open Connection.
   *
-  * @param connectionUrl JDBC connection url
+  * @param jDBCConnectionUtility object of connection to JDBC
   */
-class DbConnection(var connectionUrl: String, var user: String, var password: String)
+class DbConnection(jDBCConnectionUtility: JDBCConnectionUtility)
   extends AbstractFunction0[Connection] with Serializable {
   override def apply(): Connection = {
-    val connection: Connection = DriverManager.getConnection(connectionUrl, user, password)
+    val connection: Connection = jDBCConnectionUtility.getJdbcConnectionAndSetQueryBand()
     connection
   }
 }

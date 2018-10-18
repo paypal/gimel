@@ -21,9 +21,9 @@
 /*
  * A dataset is an entity in Metastore which would ultimately translate to a hive external table.
  * Http End point which gives you this payload is http://localhost:8080/dataSet/dataSet
- * Sample Request -> {"createdUser": "drampally", "storageDataSetName": "flights_dataset","storageSystemId":56,
- * "storageDataSetDescription": "flights dataset","storageContainerName":"default",
- * "clusters":[4,5,6,7,8],"dataSetAttributeValues": [{"storageDsAttributeValue": "flights",
+ * Sample Request -> {"createdUser": "drampally", "storageDataSetName": "wuser_holding_bdpe","storageSystemId":56,
+ * "storageDataSetDescription": "wuser_holding on bdpe","storageContainerName":"default",
+ * "clusters":[4,5,6,7,8],"dataSetAttributeValues": [{"storageDsAttributeValue": "wuser_holding",
  * "createdUser": "drampally","storageDsAttributeKeyId": 8}],"userId": 2,"isAutoRegistered":"Y"}
  */
 
