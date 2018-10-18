@@ -24,7 +24,7 @@ import java.text.SimpleDateFormat
 import java.util.Date
 
 import scala.collection.immutable.Map
-import scala.util.{Failure, Success, Try}]
+import scala.util.{Failure, Success, Try}
 
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
