@@ -94,7 +94,7 @@ The following hive table points to DropZone (SFTP server)
 * The following example says how to give the password for SFTP server using local file system as source
 
 ```scala
-val options = Map("gimel.sftp.username" -> "bagopalan",
+val options = Map("gimel.sftp.username" -> "USERNAME",
                   "gimel.sftp.file.password.strategy" -> "file"
                   "gimel.sftp.file.password.source" -> "local",
                   "gimel.sftp.file.password.path" -> "/x/home/xxxx/mypass.txt",
@@ -116,7 +116,7 @@ sftpDF.show
 * The following example says how to give the password for SFTP server using HDFS file as source
 
 ```scala
-val options = Map("gimel.sftp.username" -> "bagopalan",
+val options = Map("gimel.sftp.username" -> "USERNAME",
                   "gimel.sftp.file.password.strategy" -> "file"
                   "gimel.sftp.file.password.source" -> "hdfs",
                   "gimel.sftp.file.password.path" -> "hdfs://cluster1/user/xxxxxx/mypass.txt",
@@ -131,14 +131,14 @@ val sftpDFRes = dataSet.write("pcatalog.SFTP.DropZone.default.Files", sftpDF, op
 ## SFTP GIMEL GSQL
 
 ``` scala
-spark.sql("set gimel.sftp.username=bagopalan")
+spark.sql("set gimel.sftp.username=USERNAME")
 spark.sql("set gimel.sftp.password=*****")
 spark.sql("set gimel.sftp.filetype=csv")
 spark.sql("set gimel.sftp.file.location=bus_use.csv")
 spark.sql("set header=false")
 spark.sql("set gimel.jdbc.password.strategy=file")
 spark.sql("set hdfsTempLocation=/tmp/basu")
-spark.sql("set gimel.jdbc.p.file=hdfs://cluster1/user/bagopalan/pass.dat")
+spark.sql("set gimel.jdbc.p.file=hdfs://cluster1/user/USERNAME/pass.dat")
 
 val newDF = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch("create table pcatalog.teradata.simba.pp_scratch.myTable1 as select * from pcatalog.SFTP.DropZone.default.Files",spark)
 
