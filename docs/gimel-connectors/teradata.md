@@ -299,7 +299,7 @@ Both of the above ways make use of Dataset which is a logical abstraction over a
 
        
         // no need of schema here
-        CREATE external TABLE UDC.YELP_TIP_HIVE(
+        CREATE external TABLE udc.YELP_TIP_HIVE(
         temp string  
         )
         TBLPROPERTIES (
@@ -372,7 +372,7 @@ create table db_name.user_test
 ### Create Hive Table Pointing to Teradata table
 
 ```sql
-create external table UDC.user_test
+create external table udc.user_test
 (
     id bigint,
     name string,

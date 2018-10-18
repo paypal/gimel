@@ -196,7 +196,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   /**
     * Gets the Cluster Details for a Given Cluster Name
     *
-    * @param name Name of Cluster -- Sample : horton
+    * @param name Name of Cluster -- Sample : cluster1
     * @return ClusterInfo
     */
   def getClusterInfo(name: String): ClusterInfo = {
@@ -288,7 +288,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   }
 
   /**
-    * Get Storage Type Name based on storage system name (e.g. Horton:Hive -> Hive)
+    * Get Storage Type Name based on storage system name (e.g. cluster1:Hive -> Hive)
     *
     * @param storageSystemName
     * @return String
@@ -893,9 +893,9 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       |import com.paypal.pcatalog.pcatalogservices.PCatalogServiceUtilities
       |import com.paypal.pcatalog.pcatalogservices.payload._
       |
-      |val params = Map("clusterName" -> "horton,stampy")
+      |val params = Map("clusterName" -> "cluster1,cluster2")
       |lazy val serviceUtils: PCatalogServiceUtilities = PCatalogServiceUtilities()
-      |lazy val clusters: Array[String] = params.getOrElse("clusterName", "horton").split(",")
+      |lazy val clusters: Array[String] = params.getOrElse("clusterName", "cluster1").split(",")
       |lazy val clustersInfo: Seq[ClusterInfo] = clusters.map(serviceUtils.getClusterInfo(_)).toSeq
       |lazy val storageSystems: Seq[StorageSystem] = serviceUtils.getStorageSystems()
       |

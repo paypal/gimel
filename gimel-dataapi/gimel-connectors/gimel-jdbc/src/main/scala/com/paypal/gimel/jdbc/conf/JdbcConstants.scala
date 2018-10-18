@@ -33,7 +33,7 @@ object JdbcConstants {
   val jdbcDefaultPasswordStrategy = "file"
 
   // polling properties
-  val jdbcPPath = "/etl/LVS/dmetldata11/gimel/conf/pass.dat"
+  val jdbcPPath = "default_path"
 
   // default TD properties
   val defaultTeradataSessions = 5

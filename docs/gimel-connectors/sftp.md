@@ -50,7 +50,7 @@ The following hive table points to DropZone (SFTP server)
       OUTPUTFORMAT
         'org.apache.hadoop.hive.ql.io.HiveIgnoreKeyTextOutputFormat'
       LOCATION
-        'hdfs://horton/tmp/pcatalog/sftp_drop_zone'
+        'hdfs://cluster1/tmp/pcatalog/sftp_drop_zone'
       TBLPROPERTIES (
         'gimel.sftp.host'='dropzone.paypalcorp.com',
         'gimel.storage.type'='SFTP')
@@ -119,7 +119,7 @@ sftpDF.show
 val options = Map("gimel.sftp.username" -> "bagopalan",
                   "gimel.sftp.file.password.strategy" -> "file"
                   "gimel.sftp.file.password.source" -> "hdfs",
-                  "gimel.sftp.file.password.path" -> "hdfs://horton/user/xxxxxx/mypass.txt",
+                  "gimel.sftp.file.password.path" -> "hdfs://cluster1/user/xxxxxx/mypass.txt",
                   "hdfsTempLocation" -> "/tmp/basu", 
                   "header" -> "false", 
                   "gimel.sftp.filetype" -> "json", 
@@ -138,7 +138,7 @@ spark.sql("set gimel.sftp.file.location=bus_use.csv")
 spark.sql("set header=false")
 spark.sql("set gimel.jdbc.password.strategy=file")
 spark.sql("set hdfsTempLocation=/tmp/basu")
-spark.sql("set gimel.jdbc.p.file=hdfs://horton/user/bagopalan/pass.dat")
+spark.sql("set gimel.jdbc.p.file=hdfs://cluster1/user/bagopalan/pass.dat")
 
 val newDF = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch("create table pcatalog.teradata.simba.pp_scratch.myTable1 as select * from pcatalog.SFTP.DropZone.default.Files",spark)
 
@@ -159,7 +159,7 @@ val options = Map("gimel.sftp.file.password.strategy" -> "file",
                         "gimel.sftp.file.password.path" -> "/x/home/USER/mypass.txt",
                         "gimel.sftp.username" -> "username",
                         "header" -> "false",
-                        "hdfsTempLocation" -> "hdfs://horton/user/username/",
+                        "hdfsTempLocation" -> "hdfs://cluster1/user/username/",
                         "gimel.sftp.filetype" -> "xml",
                        "rowTag" -> "YEAR",
                          "gimel.sftp.file.location" -> "myxml.xml" );
@@ -172,7 +172,7 @@ val options = Map("gimel.sftp.file.password.strategy" -> "file",
                         "gimel.sftp.file.password.path" -> "/x/home/USER/mypass.txt",
                         "gimel.sftp.username" -> "username",
                         "header" -> "false",
-                        "hdfsTempLocation" -> "hdfs://horton/user/username/",
+                        "hdfsTempLocation" -> "hdfs://cluster1/user/username/",
                         "gimel.sftp.filetype" -> "xml",
                        "rowTag" -> "YEAR",
                        "rootTag" -> "YEARS",
