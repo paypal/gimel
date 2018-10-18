@@ -20,10 +20,6 @@
       * [Gimel ExecuteBatch with QueryPushDown](#gimel-executebatch-with-querypushdown---with-gimelproxyuser)
       * [Teradata-To-Any-Storage | JDBC Query PushDown](#teradata-to-any-storage--jdbc-query-pushdown)
   
-  * [Create API](#create-api)
-  * [Drop API](#drop-api)
-  * [Truncate API](#truncate-api)
-  
 ---------------------------------------------------------------------------------------------------------------------
   
   * [Teradata Benchmarking](teradata-docs/teradata-benchmarking/README.md)
