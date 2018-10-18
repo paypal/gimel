@@ -19,15 +19,15 @@
 
 package com.paypal.gimel.common.gimelservices.payload
 
-
-case class ContainerObject(
-                              objectId: Int = -99
-                              , containerName: String = ""
-                              , objectName: String = ""
-                              , storageSystemId: Int = -99
-                              , schema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
-                              , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
-                              , isActiveYN: String
-                              , createdUserOnStore: String
-                              , createdTimestampOnStore: String
-                          )
+case class DruidSegment(
+                         dataSource: Option[String] = None
+                         , interval: Option[String] = None
+                         , version: Option[String] = None
+                         , loadSpec: Option[DruidLoadSpec] = None
+                         , dimensions: String = ""
+                         , metrics: String = ""
+                         , shardSpec: Option[DruidShardSpec] = None
+                         , binaryVersion: Option[Int] = None
+                         , size: Option[Int] = None
+                         , identifier: Option[String] = None
+                       )

@@ -125,8 +125,48 @@ object JDBCCommons {
     */
   def getDefaultUser(sparkSession: SparkSession): String = {
     // get real user of JDBC
-    sparkSession.sparkContext.getConf.get(JdbcConstants.jdbcUserName, sparkSession.sparkContext.sparkUser)
+    sparkSession.conf.get(JdbcConstants.jdbcUserName, sparkSession.sparkContext.sparkUser)
   }
+
+  /**
+    * This method sets Query Band for Teradata
+    *
+    * @param conn
+    * @param actualUser
+    */
+  def setQueryBand(conn: Connection, url: String, actualUser: String, jdbcPasswordStrategy: String = JdbcConstants.jdbcDefaultPasswordStrategy): Unit = {
+
+    val jdbcSystem = getJDBCSystem(url)
+
+    jdbcSystem match {
+
+      case JdbcConstants.TERADATA =>
+        val queryBandStatement: String = s"""SET QUERY_BAND = 'PROXYUSER=${actualUser};' FOR SESSION;"""
+        jdbcPasswordStrategy match {
+          case "file" => {
+            // do nothing
+          }
+          case _ => {
+            logger.info(s"Setting QueryBand for ${actualUser}")
+            try {
+              val queryBandSt: PreparedStatement = conn.prepareStatement(queryBandStatement)
+              queryBandSt.execute()
+            }
+            catch {
+              case ex =>
+                logger.info(s"Setting QueryBand failed for --> ${actualUser}")
+                ex.printStackTrace()
+                throw ex
+            }
+          }
+        }
+
+      case _ =>
+      // do nothing
+
+    }
+  }
+
 
   /**
     * This method resets all the configs required to be reset after action in JDBC spark Read/Write API

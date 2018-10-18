@@ -19,15 +19,12 @@
 
 package com.paypal.gimel.common.gimelservices.payload
 
-
-case class ContainerObject(
-                              objectId: Int = -99
-                              , containerName: String = ""
-                              , objectName: String = ""
-                              , storageSystemId: Int = -99
-                              , schema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
-                              , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
-                              , isActiveYN: String
-                              , createdUserOnStore: String
-                              , createdTimestampOnStore: String
-                          )
+case class HiveObjectSchema(
+                         columnName: String = ""
+                         , columnType: String = ""
+                         , columnFamily: String = ""
+                         , columnClass: String
+                         , restrictionStatus: String
+                         , partitionStatus: String
+                         , columnIndex: Int = 0
+                       )

@@ -128,10 +128,10 @@
 [INFO] gimel-testsuite
 [INFO] gimel-examples
 [INFO] gimel-benchmarksuite
-Downloading: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml
 Downloading: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml
-Progress (1): 2.2/20 kBProgress (2): 2.2/20 kB | 2.2/14 kBProgress (2): 5.0/20 kB | 2.2/14 kBProgress (2): 5.0/20 kB | 5.0/14 kBProgress (2): 7.8/20 kB | 5.0/14 kBProgress (2): 7.8/20 kB | 7.8/14 kBProgress (2): 11/20 kB | 7.8/14 kB Progress (2): 13/20 kB | 7.8/14 kBProgress (2): 16/20 kB | 7.8/14 kBProgress (2): 19/20 kB | 7.8/14 kBProgress (2): 20 kB | 7.8/14 kB   Progress (2): 20 kB | 11/14 kB Progress (2): 20 kB | 13/14 kBProgress (2): 20 kB | 14 kB                              Downloaded: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml (20 kB at 35 kB/s)
-Downloaded: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml (14 kB at 23 kB/s)
+Downloading: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml
+Progress (1): 2.2/20 kBProgress (2): 2.2/20 kB | 2.2/14 kBProgress (2): 5.0/20 kB | 2.2/14 kBProgress (2): 5.0/20 kB | 5.0/14 kBProgress (2): 7.8/20 kB | 5.0/14 kBProgress (2): 7.8/20 kB | 7.8/14 kBProgress (2): 11/20 kB | 7.8/14 kB Progress (2): 11/20 kB | 11/14 kB Progress (2): 13/20 kB | 11/14 kBProgress (2): 13/20 kB | 13/14 kBProgress (2): 13/20 kB | 14 kB   Progress (2): 16/20 kB | 14 kBProgress (2): 19/20 kB | 14 kBProgress (2): 20 kB | 14 kB                              Downloaded: https://repo.maven.apache.org/maven2/org/codehaus/mojo/maven-metadata.xml (20 kB at 59 kB/s)
+Downloaded: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-metadata.xml (14 kB at 39 kB/s)
 [INFO] ------------------------------------------------------------------------
 [INFO] Reactor Summary:
 [INFO] 
@@ -161,9 +161,9 @@ Downloaded: https://repo.maven.apache.org/maven2/org/apache/maven/plugins/maven-
 [INFO] ------------------------------------------------------------------------
 [INFO] BUILD FAILURE
 [INFO] ------------------------------------------------------------------------
-[INFO] Total time: 1.805 s
-[INFO] Finished at: 2018-10-12T01:55:03-07:00
-[INFO] Final Memory: 15M/215M
+[INFO] Total time: 1.275 s
+[INFO] Finished at: 2018-10-16T15:11:16-07:00
+[INFO] Final Memory: 17M/277M
 [INFO] ------------------------------------------------------------------------
 [ERROR] No plugin found for prefix 'scalastyle' in the current project and in the plugin groups [org.apache.maven.plugins, org.codehaus.mojo] available from the repositories [local (/Users/lapatil/.m2/repository), central (https://repo.maven.apache.org/maven2)] -> [Help 1]
 [ERROR] 

@@ -68,6 +68,13 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     val jdbcURL = jdbcOptions("url")
     val dbtable = jdbcOptions("dbtable")
 
+    // get real user of JDBC
+    val realUser: String = dataSetProps.getOrElse(JdbcConstants.jdbcUserName, JDBCCommons.getDefaultUser(sparkSession)).toString
+
+    // get password strategy for JDBC
+    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.jdbcDefaultPasswordStrategy).toString
+
+
     // get connection
     var conn: Connection = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
 
@@ -129,7 +136,7 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
       logger.info(s"Setting jdbcPushDownFlag to FALSE in TaskContext")
       sparkSession.sparkContext.setLocalProperty(JdbcConfigs.jdbcPushDownEnabled, "false")
 
-      val jdbcRDD: ExtendedJdbcRDD[Array[Object]] = new ExtendedJdbcRDD(sparkSession.sparkContext, dbConnection, selectStmt, lowerBound, upperBound, numPartitions, fetchSize)
+      val jdbcRDD: ExtendedJdbcRDD[Array[Object]] = new ExtendedJdbcRDD(sparkSession.sparkContext, dbConnection, selectStmt, lowerBound, upperBound, numPartitions, fetchSize, realUser, jdbcPasswordStrategy)
 
       conn = if (conn.isClosed || conn == null) {
         jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
@@ -260,6 +267,13 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
       println(s"WARNING: Maximum number of partitions are SET to ${JdbcConstants.NUM_WRITE_PARTITIONS} due to Teradata connections limitations")
     }
     val insertPartitionsCount: Int = Math.min(userSpecifiedPartitions, JdbcConstants.NUM_WRITE_PARTITIONS)
+    // Get specific URL properties
+    // get real user of JDBC
+    val realUser: String = dataSetProps.getOrElse(JdbcConstants.jdbcUserName, JDBCCommons.getDefaultUser(sparkSession)).toString
+
+    // get password strategy for JDBC
+    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.jdbcDefaultPasswordStrategy).toString
+
 
     val partialArgHolder = if (insertStrategy.equalsIgnoreCase("update") || insertStrategy.equalsIgnoreCase("upsert")) {
       // get Set columns for update API

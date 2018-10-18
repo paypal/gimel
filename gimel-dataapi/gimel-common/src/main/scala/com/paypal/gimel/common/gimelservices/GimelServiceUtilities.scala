@@ -33,6 +33,7 @@ import org.apache.http.impl.client.DefaultHttpClient
 import spray.json.{JsObject, JsValue, _}
 
 import com.paypal.gimel.common.catalog.{DataSetProperties, Field}
+import com.paypal.gimel.common.conf
 import com.paypal.gimel.common.conf.CatalogProviderConstants
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.conf.PCatalogPayloadConstants
@@ -53,9 +54,16 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   // Initiate Logger
   private val logger = Logger(this.getClass.getName)
   // Initiate Sevices Properties
-  private val serviceProperties: GimelServicesProperties = GimelServicesProperties(userProps)
+  private var serviceProperties: GimelServicesProperties = GimelServicesProperties(userProps)
   // Import the custom implementation of JSON Protocols
 
+  /**
+    * Override the properties from user properties
+    * @param props - Set of incoming properties
+    */
+  def customize(props: Map[String, String]): Unit = {
+    serviceProperties = GimelServicesProperties(userProps ++ props)
+  }
 
   /**
     * Makes a HTTPS GET call to the URL and returns the output along with status code.
@@ -71,6 +79,40 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       val resStream: InputStream = conn.getInputStream()
       val response: String = fromInputStream(resStream).getLines().mkString("\n")
       response
+    } catch {
+      case e: Throwable =>
+        logger.error(e.getStackTraceString)
+        e.printStackTrace()
+        throw e
+    }
+  }
+
+  /**
+    * Makes a HTTPS PUT call to the URL and returns the output along with status code.
+    *
+    * @param url
+    * @param data
+    * @return (ResponseBody, Https Status Code)
+    */
+  def httpsPut(url: String, data: String = ""): (Int, String) = {
+    logger.info(s"PUT request -> $url and data -> ${data}")
+    try {
+      val urlObject: URL = new URL(url)
+      val conn: HttpsURLConnection = urlObject.openConnection().asInstanceOf[HttpsURLConnection]
+      conn.setRequestProperty("Content-type", "application/json")
+      conn.setRequestMethod("PUT")
+      conn.setDoOutput(true)
+
+      val wr: DataOutputStream = new DataOutputStream(conn.getOutputStream())
+      wr.writeBytes(data)
+      wr.close()
+
+      val in: BufferedReader = new BufferedReader(new InputStreamReader(conn.getInputStream()))
+      val response = in.lines.collect(Collectors.toList[String]).toArray().mkString("")
+      in.close()
+
+      logger.info(s"PUT response is: $response")
+      (conn.getResponseCode, response)
     } catch {
       case e: Throwable =>
         logger.error(e.getStackTraceString)
@@ -141,13 +183,20 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     * @return Response as Seq[JsObject]
     */
   def getAsObjectList(url: String): Seq[JsObject] = {
-    get(url).parseJson.convertTo[Seq[JsValue]].map(_.asJsObject)
+
+    val output = get(url).parseJson.convertTo[Seq[JsValue]].map(_.asJsObject)
+    if (output == null) {
+      Seq.empty[JsObject]
+    } else {
+      output
+    }
+
   }
 
   /**
     * Gets the Cluster Details for a Given Cluster Name
     *
-    * @param name Name of Cluster -- Sample : test_cluster
+    * @param name Name of Cluster -- Sample : horton
     * @return ClusterInfo
     */
   def getClusterInfo(name: String): ClusterInfo = {
@@ -239,7 +288,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   }
 
   /**
-    * Get Storage Type Name based on storage system name (e.g. test_cluster:Hive -> Hive)
+    * Get Storage Type Name based on storage system name (e.g. Horton:Hive -> Hive)
     *
     * @param storageSystemName
     * @return String
@@ -255,11 +304,23 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     * @return Seq[ObjectSchema]
     */
   def getObjectSchemasByStorageSystem(storageSystemId: Int): Seq[AutoRegisterObject] = {
-    val responseObject: Seq[JsObject] =
-      getAsObjectList(s"${serviceProperties.urlObjectSchemaByStorageSystemId}/$storageSystemId")
+    val responseObject: Seq[JsObject] = getAsObjectList(s"${serviceProperties.urlObjectSchemaByStorageSystemId}/$storageSystemId")
     val objectSchemas = responseObject.map(_.convertTo[AutoRegisterObject])
     objectSchemas
   }
+
+
+  /**
+    * Gets ObjectSchemas for a Given Storage System ID
+    *
+    * @param storageSystemId Storage System Id
+    * @return Seq[ObjectSchema]
+    */
+  def getPagedObjectSchemasByStorageSystem(storageSystemId: Int, page: Int, size: Int): PagedAutoRegisterObject = {
+    val responseObject: JsObject = getAsObject(s"${serviceProperties.urlPagedObjectSchemaByStorageSystemId}/$storageSystemId?page=${page}&size=${size}")
+    responseObject.convertTo[PagedAutoRegisterObject]
+  }
+
 
   def getUserByName(userName: String): User = {
     val responseObject: JsObject = getAsObject(s"${serviceProperties.urlUserByName}/$userName")
@@ -268,14 +329,40 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   }
 
   /**
-    * Gets ObjectSchemas which are not registered
+    * Gets ObjectSchemas for a Given Storage System ID
     *
+    * @param storageSystemId Storage System Id
     * @return Seq[ObjectSchema]
     */
-  def getUnRegisteredObjects(): Seq[AutoRegisterObject] = {
-    val responseObject: Seq[JsObject] = getAsObjectList(s"${serviceProperties.urlObjectSchemaByStorageSystemId}")
-    val objectSchemas = responseObject.map(_.convertTo[AutoRegisterObject])
-    objectSchemas
+  def getPagedUnRegisteredByStorageSystem(storageSystemId: Int, page: Int, size: Int): PagedAutoRegisterObject = {
+    val responseObject: JsObject = getAsObject(s"${serviceProperties.urlUnregisteredObjectSchemaByStorageSystemId}/${storageSystemId}?page=${page}&size=${size}")
+    responseObject.convertTo[PagedAutoRegisterObject]
+  }
+
+  /**
+    * Gets Unregistered Objects for specified storageSystemId
+    *
+    * @return Seq[AutoRegisterObject]
+    */
+  def getUnRegisteredObjects(storageSystemId: Int): Seq[AutoRegisterObject] = {
+    logger.debug(s"storageSystemId:${storageSystemId}")
+
+    var autoRegisterObjects = Seq.empty[AutoRegisterObject]
+    var lastPage: Boolean = false
+    var page = 0
+    val size = 1000
+    do {
+      logger.info(s"Selecting ${page} 'th page for Datastore ID = ${storageSystemId}")
+      val pagedAutoRegisterObjects: PagedAutoRegisterObject = getPagedUnRegisteredByStorageSystem(storageSystemId, page, size)
+      val tempAutoRegisterObjects = pagedAutoRegisterObjects.content
+      tempAutoRegisterObjects.foreach(tempAutoRegisterObject => {
+        autoRegisterObjects = autoRegisterObjects :+ tempAutoRegisterObject
+      })
+      page = page + 1
+      lastPage = pagedAutoRegisterObjects.last
+    }
+    while (!lastPage)
+    autoRegisterObjects
   }
 
   /**
@@ -292,6 +379,13 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     storageTypeAttributes
   }
 
+  /**
+    *
+    * @param storageSystemId
+    * @param containerName
+    * @param objectName
+    * @return
+    */
   def getObjectsBySystemContainerAndObject(storageSystemId: Int, containerName: String, objectName: String): Seq[AutoRegisterObject] = {
     val responseObject: Seq[JsObject] = getAsObjectList(s"${serviceProperties.urlObjectSchemaBySystemContainerObject}/$storageSystemId/$containerName/$objectName")
     val objectSchemas = responseObject.map(_.convertTo[AutoRegisterObject])
@@ -316,8 +410,25 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     * @return Seq[ContainerObject]
     */
   def getContainerObjects(storageSystemId: Int): Seq[ContainerObject] = {
-    val objectSchemas: Seq[AutoRegisterObject] = getObjectSchemasByStorageSystem(storageSystemId)
-    objectSchemas.map(objectSchema => ContainerObject(objectSchema.containerName, objectSchema.objectName, objectSchema.storageSystemId, objectSchema.objectSchema, objectSchema.objectAttributes, objectSchema.isActiveYN))
+    logger.debug(s"storageSystemId:${storageSystemId}")
+
+    var containerObjects = Seq.empty[ContainerObject]
+    var lastPage: Boolean = false
+    var page = 0
+    val size = 1000
+    do {
+      logger.info(s"Selecting ${page} 'th page for Datastore ID = ${storageSystemId}")
+      val objectSchemas: PagedAutoRegisterObject = getPagedObjectSchemasByStorageSystem(storageSystemId, page, size)
+      val autoRegisterObjects = objectSchemas.content
+      autoRegisterObjects.foreach(objectSchema => {
+        val containerObject = ContainerObject(objectSchema.objectId, objectSchema.containerName, objectSchema.objectName, objectSchema.storageSystemId, objectSchema.objectSchema, objectSchema.objectAttributes, objectSchema.isActiveYN, objectSchema.createdUserOnStore, objectSchema.createdTimestampOnStore)
+        containerObjects = containerObjects :+ containerObject
+      })
+      page = page + 1
+      lastPage = objectSchemas.last
+    }
+    while (!lastPage)
+    containerObjects
   }
 
   /**
@@ -398,6 +509,148 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   }
 
   /**
+    * Gets the DataSet PayLoad by DataSet Name
+    *
+    * @param systemStorage Name of DataSet
+    * @return JSON Payload
+    */
+  def getSystemAttributesByName(systemStorage: String): Seq[JsObject] = {
+    val responseObject: Seq[JsObject] = getAsObjectList(s"${serviceProperties.urlStorageSystemAttributesByName}/${systemStorage}")
+    responseObject
+  }
+
+  /**
+    * Gets the Druid Object List
+    *
+    * @param url Service URI
+    * @return JSON Payload
+    */
+  def getDruidDataStoreList(url: String): List[String] = {
+
+    val responseObject = get(url)
+    if (responseObject == null) {
+      List.empty[String]
+    } else {
+      val output: String = responseObject.replaceAll("\\[", "").replaceAll("\\]", "").replaceAll("\"", "")
+      output.split(",").toList
+    }
+  }
+
+  /**
+    * Gets the details of All Druid Datastores
+    *
+    * @return Seq[String]
+    */
+  def getDruidDataStores(): Seq[String] = {
+
+    val responseObject: Seq[String] = getDruidDataStoreList(s"${serviceProperties.urlDruidDataSource}")
+    responseObject
+  }
+
+  /**
+    *
+    * @param url
+    * @return DruidObject
+    */
+  def getDruidObject(url: String): DruidObject = {
+
+    val responseObject: String = get(url)
+    responseObject.parseJson.convertTo[DruidObject]
+  }
+
+  /**
+    *
+    * @param druidDataSource
+    * @return druidObject
+    */
+  def getDruidObjectForDataSource(druidDataSource: String): DruidObject = {
+
+    val responseObject: DruidObject = getDruidObject(s"${serviceProperties.urlDruidDataSource}/${druidDataSource}?${serviceProperties.apiDruidFull}")
+    responseObject
+  }
+
+  /**
+    * Check whether a data set exists in the catalog
+    *
+    * @param dataset Name of DataSet
+    * @return Boolean
+    */
+  def checkIfDataSetExists(dataset: String): Boolean = {
+    val dataSetByNameJs = getDataSetByName(dataset)
+    if (dataSetByNameJs.fields(PCatalogPayloadConstants.SYSTEM_ATTRIBUTES_KEY) == JsNull) {
+      false
+    }
+    else {
+      true
+    }
+  }
+
+  /**
+    * creates the object properties for a given storage types [HIVE, TERADATA, ....]
+    *
+    * @param storageTypeName - could be HIVE, TERADATA
+    * @param dataset         Name of DataSet
+    * @return Boolean
+    */
+  def getObjectPropertiesForSystem(storageTypeName: String, dataset: String): scala.collection.mutable.Map[String, String] = {
+
+    var objProps = scala.collection.mutable.Map[String, String]()
+    storageTypeName.toUpperCase() match {
+      case "HIVE" => {
+        val dbTable = dataset.split('.').tail.mkString(".").split('.').tail.mkString(".")
+        val Array(db, table) = dbTable.split('.')
+        objProps += ("gimel.hive.db.name" -> db)
+        objProps += ("gimel.hive.table.name" -> table)
+      }
+      case "TERADATA" => {
+        val dbTable = dataset.split('.').tail.mkString(".").split('.').tail.mkString(".")
+        objProps += ("gimel.jdbc.input.table.name" -> dbTable)
+      }
+    }
+    objProps
+  }
+
+  /**
+    * gets the system properties for a given storage type and storage system
+    *
+    * @param dataset Name of DataSet
+    * @return Boolean
+    */
+  def getDynamicDataSetProperties(dataset: String, options: Map[String, Any]): DataSetProperties = {
+
+    val storageType = dataset.split('.').head
+    val sotrageTypeSyatem = storageType + "." + dataset.split('.').tail.mkString(".").split('.').head
+    val sysAttrjs: Seq[JsObject] = getSystemAttributesByName(sotrageTypeSyatem)
+    val storageSystemProps = sysAttrjs.map { x =>
+      x.fields(PCatalogPayloadConstants.SYSTEM_ATTRIBUTE_NAME).toString() ->
+        x.fields(PCatalogPayloadConstants.SYSTEM_ATTRIBUTE_VALUE).toString()
+    }.toMap
+    val storageSystemID = sysAttrjs.head.fields("storageSystemID").toString().toInt
+    val storage = getStorageSystem(storageSystemID)
+    val storageTypeName = storage.storageType.storageTypeName
+    val objProps: scala.collection.mutable.Map[String, String] = getObjectPropertiesForSystem(storageTypeName, dataset)
+    val allProps: Map[String, String] = {
+      storageSystemProps ++ objProps
+    }.map {
+      x => x._1.replace("\"", "") -> x._2.replace("\"", "")
+    } ++ Map[String, String](
+      CatalogProviderConstants.PROPS_NAMESPACE -> GimelConstants.PCATALOG_STRING,
+      CatalogProviderConstants.DATASET_PROPS_DATASET -> dataset,
+      CatalogProviderConstants.DYNAMIC_DATASET -> "true"
+    )
+    val storageSystemType = allProps.getOrElse(GimelConstants.STORAGE_TYPE, GimelConstants.NONE_STRING)
+    //  Since it is a dynamic data set, if the user provides PARTITIONED clause for DDL api (CREATE API) we will set up
+    //  the partition field here by getting it from the options which will be passed by GimelQueryProcessor
+    val partitionFields: Array[Field] = options.get(GimelConstants.HIVE_DDL_PARTITIONS_STR) match {
+      case None => Array[Field]()
+      case _ => options.get(GimelConstants.HIVE_DDL_PARTITIONS_STR).get.asInstanceOf[Array[Field]]
+    }
+    val fields = Array[Field]()
+    val dataSetProperties = DataSetProperties(storageSystemType, fields, partitionFields, allProps)
+    dataSetProperties
+  }
+
+  /**
     * Get DataSet By Name via PCatalog Services
     * Return a DataSetProperties Object
     *
@@ -408,7 +661,8 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
 
     val dataSetByNameJs = getDataSetByName(dataset)
 
-    val systemAttributes = dataSetByNameJs
+
+    val systemAttributes: Seq[JsObject] = dataSetByNameJs
       .fields(PCatalogPayloadConstants.SYSTEM_ATTRIBUTES_KEY)
       .toString().parseJson
       .convertTo[Seq[JsValue]]
@@ -441,7 +695,8 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       x => x._1.replace("\"", "") -> x._2.replace("\"", "")
     } ++ Map[String, String](
       CatalogProviderConstants.PROPS_NAMESPACE -> GimelConstants.PCATALOG_STRING,
-      CatalogProviderConstants.DATASET_PROPS_DATASET -> dataset
+      CatalogProviderConstants.DATASET_PROPS_DATASET -> dataset,
+      CatalogProviderConstants.DYNAMIC_DATASET -> "false"
     )
 
     val storageSystemType = allProps.getOrElse(GimelConstants.STORAGE_TYPE, GimelConstants.NONE_STRING)
@@ -452,15 +707,17 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       .convertTo[Seq[JsValue]]
       .map(_.asJsObject)
 
-    val fields = objectSchema.map { x =>
-      Field(x.fields(PCatalogPayloadConstants.COLUMN_NAME).toString,
-        x.fields(PCatalogPayloadConstants.COLUMN_TYPE).toString,
-        x.fields.getOrElse(GimelConstants.NULL_STRING, "true").toString.toBoolean
+    val allFields = objectSchema.map { x =>
+      Field(x.fields(PCatalogPayloadConstants.COLUMN_NAME).toString.replace("\"", ""),
+        x.fields(PCatalogPayloadConstants.COLUMN_TYPE).toString.replace("\"", ""),
+        x.fields.getOrElse(GimelConstants.NULL_STRING, "true").toString.toBoolean,
+        x.fields.getOrElse(PCatalogPayloadConstants.COLUMN_PARTITION_STATUS, false).toString.toBoolean,
+        x.fields.getOrElse(PCatalogPayloadConstants.COLUMN_INDEX, "0").toString.toInt
       )
     }.toArray
 
-    //  @TODO Fill this in once Metastore provided partitions as part of Payload
-    val partitionFields = Array[Field]()
+    val fields = allFields.filter(field => ! field.partitionStatus)
+    val partitionFields = allFields.filter(field => field.partitionStatus)
 
     val dataSetProperties = DataSetProperties(storageSystemType, fields, partitionFields, allProps)
 
@@ -503,41 +760,6 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   }
 
   /**
-    * Makes a HTTPS PUT call to the URL and returns the output along with status code.
-    *
-    * @param url
-    * @param data
-    * @return (ResponseBody, Https Status Code)
-    */
-  def httpsPut(url: String, data: String = ""): (Int, String) = {
-    logger.info(s"PUT request -> $url and data -> ${data}")
-    try {
-      val urlObject: URL = new URL(url)
-      val conn: HttpsURLConnection = urlObject.openConnection().asInstanceOf[HttpsURLConnection]
-      conn.setRequestProperty("Content-type", "application/json")
-      conn.setRequestMethod("PUT")
-      conn.setDoOutput(true)
-
-      val wr: DataOutputStream = new DataOutputStream(conn.getOutputStream())
-      wr.writeBytes(data)
-      wr.close()
-
-      val in: BufferedReader = new BufferedReader(new InputStreamReader(conn.getInputStream()))
-      val response = in.lines.collect(Collectors.toList[String]).toArray().mkString("")
-      in.close()
-
-      logger.info(s"PUT response is: $response")
-      (conn.getResponseCode, response)
-    } catch {
-      case e: Throwable =>
-        logger.error(e.getStackTraceString)
-        e.printStackTrace()
-        throw e
-    }
-
-  }
-
-  /**
     * Post Implementation
     *
     * @param url     URI
@@ -560,7 +782,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       if (status != GimelConstants.HTTP_SUCCESS_STATUS_CODE) {
         logger.error(s"Unable to post to web service $url. Response code is $status")
       } else {
-        logger.info(s"Success. Response --> $status")
+        logger.info(s"Success. Response Posting --> $status")
       }
       (status, response)
     } catch {
@@ -591,7 +813,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       if (status != 200) {
         logger.error(s"Unable to put to web service $url. Response code is $status")
       } else {
-        logger.info(s"Success. Response --> $status")
+        logger.info(s"Success. Response Putting--> $status")
       }
       (status, response)
     } catch {
@@ -671,9 +893,9 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       |import com.paypal.pcatalog.pcatalogservices.PCatalogServiceUtilities
       |import com.paypal.pcatalog.pcatalogservices.payload._
       |
-      |val params = Map("clusterName" -> "test_cluster_1,test_cluster_2")
+      |val params = Map("clusterName" -> "horton,stampy")
       |lazy val serviceUtils: PCatalogServiceUtilities = PCatalogServiceUtilities()
-      |lazy val clusters: Array[String] = params.getOrElse("clusterName", "test_cluster_1").split(",")
+      |lazy val clusters: Array[String] = params.getOrElse("clusterName", "horton").split(",")
       |lazy val clustersInfo: Seq[ClusterInfo] = clusters.map(serviceUtils.getClusterInfo(_)).toSeq
       |lazy val storageSystems: Seq[StorageSystem] = serviceUtils.getStorageSystems()
       |

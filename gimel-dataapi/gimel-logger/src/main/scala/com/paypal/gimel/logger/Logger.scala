@@ -78,6 +78,7 @@ class Logger(config: Any) extends Serializable {
   private var logAudit = false
   var consolePrintEnabled = false
 
+  private var sparkVersion: String = null
   /**
     * Set Log Level Push to Kafka
     *
@@ -86,6 +87,13 @@ class Logger(config: Any) extends Serializable {
   def setLogAudit(customLogAudit: Boolean = true): Unit = {
     logAudit = customLogAudit
   }
+
+  /**
+    * API to set Spark Version for logging
+    *
+    * @param sparkVersion Spark Version
+    */
+  def setSparkVersion(sparkVersion: String): Unit = this.sparkVersion = sparkVersion
 
   /**
     * Set Log Level

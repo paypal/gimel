@@ -31,6 +31,8 @@ object PCatalogUrlConfigs {
   val API_OBJECT_SCHEMA: String = "api.object.schema"
   val DEACTIVATE_OBJECT_SCHEMA: String = "api.object.schema.deactivate"
   val OBJECT_SCHEMA_BY_SYSTEM_ID: String = "api.object.schemas.by.storage.system.id"
+  val PAGED_OBJECT_SCHEMA_BY_SYSTEM_ID: String = "api.paged.object.schemas.by.storage.system.id"
+  val UNREGISTERED_OBJECT_SCHEMA_BY_SYSTEM_ID: String = "api.unregistered.schemas.by.storage.system.id"
   val OBJECT_SCHEMA_BY_SYSTEM_CONTAINER_OBJECT: String = "api.schema.system.container.object"
   val REGISTER_DATASET: String = "api.dataset.register"
   val CHANGE_LOG_DATASET: String = "api.dataset.change.log"
@@ -38,11 +40,17 @@ object PCatalogUrlConfigs {
   val DATASET_DEPLOYMENT_STATUS_FOR_FAILURE: String = "api.dataset.deployment.status.failure"
   val API_STORAGE_SYSTEMS: String = "api.storage.systems"
   val SYSTEM_BY_ID: String = "api.storage.system.by.id"
+  val SYSTEM_ATTRIBUTES_BY_NAME: String = "api.storage.system.attributes.by.name"
   val TYPE_BY_ID: String = "api.storage.type.by.id"
   val CONTAINERS_BY_OBJECT_SCHEMA: String = "api.object.schema.containers"
   val ATTRIBUTE_KEYS_BY_TYPE_ID: String = "api.storage.type.by.attribute.key"
   val USER_BY_NAME: String = "api.user.by.name"
   val STORAGE_SYSTEM_CONTAINERS = "api.storage.system.containers"
   val DATASET_BY_NAME: String = "api.dataset.by.name"
-}
 
+  val REST_DRUID_PROTOCOL: String = "rest.druid.service.method"
+  val REST_DRUID_HOST: String = "rest.druid.service.host"
+  val REST_DRUID_PORT: String = "rest.druid.service.port"
+  val REST_DRUID_DATASOURCES: String = "api.druid.datasources"
+  val REST_DRUID_FULL: String = "api.druid.full"
+}

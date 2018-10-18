@@ -17,13 +17,21 @@
  * limitations under the License.
  */
 
+/*
+ * A PagedAutoRegisterObject is an entity in Metastore which would let the poller know what are the datasets
+ * which needs to be Auto-registered.
+ * Http End point which gives you this payload is http://localhost:8080/objectschema/pagedSchemas/{storageSystemId}?page={page}&size={size}
+ */
 package com.paypal.gimel.common.gimelservices.payload
 
-case class StorageSystemContainer(
-                                   storageSystemId: Int = -99
-                                   , storageSystemName: String = ""
-                                   , containerName: String = ""
-                                   , systemAttributes: Seq[StorageSystemAttributeValue] = Seq.empty[StorageSystemAttributeValue]
-                                   , typeAttributes: Seq[StorageTypeAttributeKey] = Seq.empty[StorageTypeAttributeKey]
-                                   , userName: String = ""
+case class PagedAutoRegisterObject(
+                                    content: Seq[AutoRegisterObject] = Seq.empty[AutoRegisterObject]
+                                    , last: Boolean = false
+                                    , totalPages: Int = 0
+                                    , totalElements: Int = 0
+                                    , size: Int = 0
+                                    , number: Int = 0
+                                    , sort: Option[String] = None
+                                    , first: Boolean = false
+                                    , numberOfElements: Int = 0
                                   )

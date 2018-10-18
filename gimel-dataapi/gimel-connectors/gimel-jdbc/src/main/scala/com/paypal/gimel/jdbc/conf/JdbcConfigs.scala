@@ -35,6 +35,7 @@ object JdbcConfigs {
   val jdbcPushDownEnabled: String = "gimel.jdbc.enableQueryPushdown"
   val jdbcInsertStrategy: String = "gimel.jdbc.insertStrategy"
   val jdbcInputDataPartitionCount: String = "gimel.jdbc.inputDataPartition.count"
+  val jdbcPasswordStrategy: String = "gimel.jdbc.p.strategy"
   val jdbcUpdateSetColumns: String = "gimel.jdbc.update.setColumns"
   val jdbcUpdateWhereColumns: String = "gimel.jdbc.update.whereColumns"
 

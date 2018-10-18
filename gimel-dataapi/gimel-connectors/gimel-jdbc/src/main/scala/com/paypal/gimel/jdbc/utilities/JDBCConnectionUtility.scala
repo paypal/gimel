@@ -23,6 +23,8 @@ import java.sql.{Connection, DriverManager}
 
 import org.apache.spark.sql.SparkSession
 
+import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
+
 /**
   *  This object defines the connection object required any time during Sparksession
   */
@@ -36,8 +38,14 @@ class JDBCConnectionUtility (sparkSession: SparkSession, dataSetProps: Map[Strin
   // get url
   val url = JdbcAuxiliaryUtilities.getJdbcUrl(dataSetProps)
 
+  // get actual user
+  val realUser: String = JDBCCommons.getDefaultUser(sparkSession)
+
   // Get username and password
   private val (userName, password) = authUtilities.getJDBCCredentials(url, dataSetProps)
+
+  val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.jdbcDefaultPasswordStrategy).toString
+
 
   /**
     * This method returns the connection object
@@ -53,6 +61,7 @@ class JDBCConnectionUtility (sparkSession: SparkSession, dataSetProps: Map[Strin
     */
   def getJdbcConnectionAndSetQueryBand(): Connection = {
     val con = getJdbcConnection()
+    JDBCCommons.setQueryBand(con, url, realUser, jdbcPasswordStrategy)
     con
   }
 

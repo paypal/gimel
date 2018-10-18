@@ -30,6 +30,7 @@ object JdbcConstants {
   val jdbcUserName: String = s"gimel.jdbc.${GimelConstants.USER_NAME}"
   val MYSQL = "MYSQL"
   val TERADATA = "TERADATA"
+  val jdbcDefaultPasswordStrategy = "file"
 
   // polling properties
   val jdbcPPath = "/etl/LVS/dmetldata11/gimel/conf/pass.dat"

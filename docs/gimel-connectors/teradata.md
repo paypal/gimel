@@ -42,6 +42,12 @@
 # Gimel JDBC API
 
 ## Gimel JDBC Password Strategy
+In order to provide the username and password for JDBC systems, Gimel provides default strategy as reading password from file.
+But user can also write their own implementation to get the credentials.
+
+Know more about password strategy Gimel uses:    
+<img src="teradata-flow-diagrams/teradata-docs/teradata-flow-diagrams/Teradata ProxyUser.jpg" alt="Teradata Proxyuser"/>
+
 
 
 ## JDBC Read API

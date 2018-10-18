@@ -19,15 +19,10 @@
 
 package com.paypal.gimel.common.gimelservices.payload
 
+import scala.collection.immutable.Seq
 
-case class ContainerObject(
-                              objectId: Int = -99
-                              , containerName: String = ""
-                              , objectName: String = ""
-                              , storageSystemId: Int = -99
-                              , schema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
-                              , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
-                              , isActiveYN: String
-                              , createdUserOnStore: String
-                              , createdTimestampOnStore: String
-                          )
+case class DruidObject(
+                        name: String = ""
+                        , properties: Option[DruidProperties] = None
+                        , segments: Seq[DruidSegment] = Seq.empty[DruidSegment]
+                      )

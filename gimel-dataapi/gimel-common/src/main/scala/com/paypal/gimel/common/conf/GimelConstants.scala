@@ -52,8 +52,11 @@ object GimelConstants {
   val DEFAULT_STRING: String = "default"
   val NULL_STRING: String = "null"
   val PCATALOG_STRING: String = "pcatalog"
+  val UDC_STRING: String = "udc"
   val STORAGE_HANDLER: String = "storage_handler"
   val HTTP_SUCCESS_STATUS_CODE: Int = 200
+  val HIVE_DDL_PARTITIONED_BY_CLAUSE: String = "PARTITIONED"
+  val HIVE_DDL_PARTITIONS_STR: String = "PARTITIONS"
 
   // ELASTIC SEARCH CONSTANTS USED ACROSS ENTIRE GIMEL
   val ES_POLLING_STORAGES: String = "gimel.es.polling"
@@ -63,6 +66,9 @@ object GimelConstants {
 
   // HBASE CONSTANTS USED ACROSS ENTIRE GIMEL
   val HBASE_NAMESPACE: String = "gimel.hbase.namespace.name"
+
+  // TERA DATA RELATED CONSTANTS
+  val STORAGE_TYPE_JDBC = "JDBC"
 
   // spark configs
   val SPARK_SPECULATION = "spark.speculation"

@@ -69,6 +69,8 @@ class ExtendedJdbcRDD[T: ClassTag](
                                     upperBound: Long,
                                     numPartitions: Int,
                                     fetchSize: Int,
+                                    realUser: String,
+                                    jdbcPasswordStrategy: String,
                                     mapRow: (ResultSet) => T = ExtendedJdbcRDD.resultSetToObjectArray _
 
                                   )
