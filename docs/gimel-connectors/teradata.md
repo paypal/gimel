@@ -63,6 +63,8 @@ Both of the above ways make use of Dataset which is a logical abstraction over a
 1. Using UDC. 
 
    Go to UDC and search for the required table and get the dataset name.
+   
+   Note: If you are specifying UDC as catalog provider, then please add rest.service.host and rest.service.port properties as well for every read and write API call.
 
 
 2. Using External Hive Table
