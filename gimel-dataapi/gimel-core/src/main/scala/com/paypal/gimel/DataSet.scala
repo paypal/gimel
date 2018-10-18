@@ -84,6 +84,11 @@ class DataSet(val sparkSession: SparkSession) {
       Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
         sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
           CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER))
+    // if storage type unknown we will default to HIVE PROVIDER
+    if (isStorageTypeUnknown(dataSet)) {
+      formattedProps ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.HIVE_PROVIDER)
+    }
+
     val dataSetProperties: DataSetProperties =
       CatalogProvider.getDataSetProperties(dataSet, formattedProps)
     //    dataSetProperties.
@@ -139,6 +144,12 @@ class DataSet(val sparkSession: SparkSession) {
       Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
         sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
           CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER))
+
+    // if storage type unknown we will default to HIVE PROVIDER
+    if (isStorageTypeUnknown(dataSet)) {
+      formattedProps ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.HIVE_PROVIDER)
+    }
+
     val dataSetProperties: DataSetProperties =
       CatalogProvider.getDataSetProperties(dataSet, formattedProps)
     //    dataSetProperties.
@@ -443,4 +454,18 @@ object DataSetUtils {
       dataSet.latestDataSetReader.get.asInstanceOf[com.paypal.gimel.kafka.DataSet]
     }.toOption
   }
+
+  /**
+    * Checks whether the dataSet is HIVE by scanning the pcatalog phrase and also expecting to have the db and table
+    * names to decide it is a HIVE table
+    *
+    * @param dataSet DataSet
+    * @return Boolean
+    */
+
+  def isStorageTypeUnknown
+  (dataSet: String): Boolean = {
+    dataSet.split('.').head.toLowerCase() != GimelConstants.PCATALOG_STRING && dataSet.split('.').length == 2
+  }
+
 }

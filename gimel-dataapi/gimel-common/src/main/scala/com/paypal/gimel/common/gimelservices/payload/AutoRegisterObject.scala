@@ -21,7 +21,7 @@
  * A AutoRegisterObject is an entity in Metastore which would let the poller know what are the datasets
  * which needs to be Auto-registered.
  * Http End point which gives you this payload is http://localhost:8080/objectschema/schemas
- * Sample Response -> [{"objectId": 8, "objectName": "flights", "containerName": "flightsdba","storageSystemId": 56,
+ * Sample Response -> [{"objectId": 8, "objectName": "tableName", "containerName": "pymtdba","storageSystemId": 56,
  * "clusterId": 5,"query": "CREATE EXTERNAL TABLE "}]
  */
 package com.paypal.gimel.common.gimelservices.payload
@@ -31,8 +31,11 @@ case class AutoRegisterObject(
                          , containerName: String = ""
                          , storageSystemId: Int = -99
                          , query: String = ""
-                         , clusterIds: Seq[Int]
-                         , objectSchema: Seq[ObjectSchema]
-                         , objectAttributes: Seq[ObjectAttributeValue]
-                         , isActiveYN: String
+                         , clusterIds: Seq[Int] = Seq.empty[Int]
+                         , objectSchema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
+                         , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
+                         , isActiveYN: String = ""
+                         , createdUserOnStore: String
+                         , createdTimestampOnStore: String
+
                        )

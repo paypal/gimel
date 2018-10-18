@@ -21,7 +21,7 @@ package com.paypal.gimel.common.gimelservices.payload
 
 case class ClusterInfo(
                           clusterId: Int = 4
-                          , clusterName: String = "unknown_cluster"
+                          , clusterName: String = "cluster1"
                           , clusterDescription: String = ""
-                          , createdUser: String = "gimel_user"
+                          , createdUser: String = "pcatalog"
                       )

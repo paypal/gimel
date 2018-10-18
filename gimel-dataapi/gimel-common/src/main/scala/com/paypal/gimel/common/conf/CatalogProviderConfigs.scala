@@ -21,4 +21,6 @@ package com.paypal.gimel.common.conf
 
 object CatalogProviderConfigs {
   val CATALOG_PROVIDER: String = "gimel.catalog.provider"
+  val CATALOG_PROVIDER_NAME_SPACE: String = "gimel.catalog.provider.name.space"
+
 }
