@@ -45,7 +45,7 @@
 In order to provide the username and password for JDBC systems, Gimel provides default strategy as reading password from file.
 But user can also write their own implementation to get the credentials.
 
-Know more about password strategy Gimel uses:    
+This is how passwprd strategy for Gimel JDBC APIs work:    
 <img src="teradata-docs/teradata-flow-diagrams/Teradata ProxyUser.jpg" alt="Teradata Proxyuser"/>
 
 
@@ -63,7 +63,7 @@ Both of the above ways make use of Dataset which is a logical abstraction over a
 1. Using UDC. 
 
    Go to UDC and search for the required table and get the dataset name.
-   <img src="teradata-docs/teradata-flow-diagrams/PCatalog-dataset-search.png" alt="Pacatalog search"/>
+
 
 2. Using External Hive Table
    Example:
@@ -84,7 +84,7 @@ Both of the above ways make use of Dataset which is a logical abstraction over a
 
        
         // no need of schema here
-        CREATE external TABLE PCATALOG.YELP_TIP_HIVE(
+        CREATE external TABLE udc.YELP_TIP_HIVE(
         temp string  
         )
         TBLPROPERTIES (
@@ -156,8 +156,12 @@ import org.apache.spark._
 import org.apache.spark.sql._
 import com.paypal.gimel.DataSet
 
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
+
 //Initiate DataSet
-val dataSet: DataSet = DataSet(sparkSession)
+val dataSet: DataSet = DataSet(spark)
 
 //options "can" be used to specify extra parameters to read data from teradata
 val partitions = 4
@@ -170,7 +174,7 @@ val options = Map(
 
 val datasetname = ""
 //read API
-val readdf = dataSet.read(datasetname, options)
+val readdf = dataSet.read(udc.datasetname, options)
 
 // Do some usecase
 readdf.show()
@@ -183,8 +187,11 @@ import org.apache.spark._
 import org.apache.spark.sql._
 import com.paypal.gimel.DataSet
 
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
 //Initiate DataSet
-val dataSet: DataSet = DataSet(sparkSession)
+val dataSet: DataSet = DataSet(spark)
 
 //options "can" be used to specify extra parameters to read data from teradata
 val partitions = 4
@@ -196,7 +203,7 @@ val options = Map(
         , ("gimel.jdbc.read.type", "FASTEXPORT")
 )
 
-val readdf = dataSet.read(datasetname, options)
+val readdf = dataSet.read(udc.datasetname, options)
 
 
 // Do some usecase
@@ -217,7 +224,7 @@ This file will contain password in the format ```jdbc_url/$USER,password``` .
 
 e.g. The password for Teradata can be specified in file  ```hdfs:///user/$USER/password/teradata/pass.dat```  as:
 
-```jaguar2.vip.paypal.com/$USER,PASSWORD```
+```url/$USER,PASSWORD```
 
 Password for JDBC data source can be specified as agruments in the APIs in two ways:
 1. Spark Configuration parameters:
@@ -235,8 +242,11 @@ import org.apache.spark._
 import org.apache.spark.sql._
 import com.paypal.gimel.DataSet
 
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
 //Initiate DataSet
-val dataSet: DataSet = DataSet(sparkSession)
+val dataSet: DataSet = DataSet(spark)
 
 val partitions = 4
 val fetchSize = 10000
@@ -249,7 +259,7 @@ val options = Map(
         ,("gimel.jdbc.p.file","/user/lapatil/pass.dat")
 )
 
-val readdf = dataSet.read(datasetname, options)
+val readdf = dataSet.read(udc.datasetname, options)
 
 // Do some usecase
 readdf.show()
@@ -267,9 +277,10 @@ Both of the above ways make use of Dataset which is a logical abstraction over a
 
 #### How to get the DataSet name?
 1. Using UDC
-
    Go to UDC and search for the required table and get the dataset name.
-   <img src="teradata-docs/teradata-flow-diagrams/PCatalog-dataset-search.png" alt="Pacatalog search"/>
+   
+   Note: If you are specifying UDC as catalog provider, then please add ```rest.service.host``` and ```rest.service.port``` properties as well for every read and write API call.
+
 
 2. Using External Hive Table
    Example:
@@ -290,7 +301,7 @@ Both of the above ways make use of Dataset which is a logical abstraction over a
 
        
         // no need of schema here
-        CREATE external TABLE PCATALOG.YELP_TIP_HIVE(
+        CREATE external TABLE UDC.YELP_TIP_HIVE(
         temp string  
         )
         TBLPROPERTIES (
@@ -363,7 +374,7 @@ create table db_name.user_test
 ### Create Hive Table Pointing to Teradata table
 
 ```sql
-create external table pcatalog.user_test
+create external table UDC.user_test
 (
     id bigint,
     name string,
@@ -379,8 +390,11 @@ TBLPROPERTIES (
 ### Teradata Write with GimelProxyUser
 ### Write into Teradata Table using Gimel API- BATCH Write (No FASTLOAD)
 ```scala
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
 //Initiate DataSet
-val dataset = com.paypal.gimel.DataSet(sparkSession)
+val dataset = com.paypal.gimel.DataSet(spark)
 
 val batchSize = 1000
 val partitions = 2
@@ -390,14 +404,18 @@ val options: Map[String, String] = Map(
         , ("numPartitions", s"${partitions}")
          )
 
-dataSet.write(datasetname, readdf, options)
+dataSet.write(udc.datasetname, readdf, options)
          
 ```
 
 ### Write into Teradata Table using Gimel API with FASTLOAD
 ```scala
+
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
 //Initiate DataSet
-val dataset = com.paypal.gimel.DataSet(sparkSession)
+val dataset = com.paypal.gimel.DataSet(spark)
 
 val batchSize = 1000
 val partitions = 2
@@ -408,7 +426,7 @@ val options: Map[String, String] = Map(
         , ("gimel.jdbc.read.type", "FASTLOAD")
          )
 
-dataSet.write(datasetname, readdf, options)
+dataSet.write(udc.datasetname, readdf, options)
          
 ```
 
@@ -427,7 +445,7 @@ This file will contain password in the format ```jdbc_url/$USER,password``` .
 
 e.g. The password for Teradata can be specified in file  ```hdfs:///user/$USER/password/teradata/pass.dat```  as:
 
-```jaguar2.vip.paypal.com/$USER,PASSWORD```
+```url/$USER,PASSWORD```
 
 Password for JDBC data source can be specified as agruments in the APIs in two ways:
 1. Spark Configuration parameters:
@@ -441,8 +459,11 @@ Password for JDBC data source can be specified as agruments in the APIs in two w
 * API Usuage:
 
 ```scala
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
 //Initiate DataSet
-val dataset = com.paypal.gimel.DataSet(sparkSession)
+val dataset = com.paypal.gimel.DataSet(spark)
 
 val batchSize = 1000
 val partitions = 2
@@ -491,10 +512,14 @@ Gimel Teradata write API updates the table based on primary keys in the table.
 
 
 ```scala
+
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
 // set the update option: gimel.jdbc.insertStrategy=update
 
 //Initiate DataSet
-val dataset = com.paypal.gimel.DataSet(sparkSession)
+val dataset = com.paypal.gimel.DataSet(spark)
 
 val batchSize = 1000
 val partitions = 2
@@ -506,7 +531,7 @@ val options: Map[String, String] = Map(
         , ("gimel.jdbc.update.setColumns","text,date")
         , ("gimel.jdbc.update.whereColumns","business_id")
          )
-dataSet.write(datasetname", readdf, options)
+dataSet.write(udc.datasetname", readdf, options)
 
 ```
 
@@ -521,10 +546,14 @@ _NOTE_: No need to specify **gimel.jdbc.update.setColumns** and **gimel.jdbc.upd
 | gimel.jdbc.insertStrategy | - | FullLoad|
 
 ```scala
+
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
 // set the update option: jdbc.insertStrategy=FullLoad
 
 //Initiate DataSet
-val dataset = com.paypal.gimel.DataSet(sparkSession)
+val dataset = com.paypal.gimel.DataSet(spark)
 
 val batchSize = 1000
 val partitions = 2
@@ -534,7 +563,7 @@ val options: Map[String, String] = Map(
         , ("batchSize", s"${batchSize}")
         , ("numPartitions", s"${partitions}")
          )
-dataSet.write(datasetname, readdf, options)
+dataSet.write(udc.datasetname, readdf, options)
 
 ```
 
@@ -551,8 +580,11 @@ Setting this option, API updates the target teradata table wherever primary key 
 
 ```scala
 
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
 //Initiate DataSet
-val dataset = com.paypal.gimel.DataSet(sparkSession)
+val dataset = com.paypal.gimel.DataSet(spark)
 
 val batchSize = 1000
 val partitions = 2
@@ -564,7 +596,7 @@ val options: Map[String, String] = Map(
         , ("gimel.jdbc.update.setColumns","text,date")
         , ("gimel.jdbc.update.whereColumns","business_id")
          )
-dataSet.write(datasetname, readdf, options)
+dataSet.write(udc.datasetname, readdf, options)
 
 ```
 
@@ -577,22 +609,25 @@ dataSet.write(datasetname, readdf, options)
 ### Gimel ExecuteBatch with QueryPushDown - with GimelProxyUser
 
 ```scala
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
 val partitions = 4
 val fetchSize = 10000
 
-spark.sql("set gimel.catalog.provider=PCATALOG")
+spark.sql("set gimel.catalog.provider=UDC")
 spark.sql(s"SET numPartitions=${partitions}")
 spark.sql(s"SET fetchSize=${fetchSize}")
 spark.sql(s"SET gimel.jdbc.read.type=FASTEXPORT")
 spark.sql(s"SET gimel.jdbc.enableQueryPushdown=true")
 
 
-val gsql=com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(_:String,sparkSession);
+val gsql=com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(_:String,spark);
 val sqlString = s""" SELECT count(*) as cnt 	
                 FROM 	gsql("your_sql")
-                datasetname1 a	
+                udc.datasetname1 a	
                 INNER JOIN 	
-                datasetname2 b	
+                udc.datasetname2 b	
                   ON a.id > b.id	
             """
 gsql(sqlString)
@@ -608,17 +643,17 @@ _ENTIRE TERADATA QUERY WILL BE PUSHED TO TD SERVER, ONLY RESULTS WILL BE RETURNE
 import com.paypal.gimel.scaas.GimelQueryProcessor
 
 // Credentials
-spark.sql("set gimel.catalog.provider=PCATALOG")
+spark.sql("set gimel.catalog.provider=UDC")
 spark.sql(s"SET numPartitions=4")
 spark.sql(s"SET fetchSize=10000")
 spark.sql(s"SET gimel.jdbc.read.type=FASTEXPORT")
 spark.sql(s"SET gimel.jdbc.enableQueryPushdown=true")
 
 // Execute your Query - Entire Query
-val gsql=com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(_:String,sparkSession);
+val gsql=com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(_:String,spark);
 val sqlString = 
    ""
-   |insert into target_datasetname	
+   |insert into udc.target_datasetname	
    | select * from	
    | (	
    | select	
@@ -626,8 +661,8 @@ val sqlString =
    | , sum(t2.pmt_usd_amt) over (partition by t1.cust_id) as total_tnx_amt	
    |  , count(t2.pmt_txnid) over (partition by cust_id) as total_txn_count	
    |  from	
-   |  datasetname1 t2	
-   |  join datasetname2 t2	
+   |  udc.datasetname1 t2	
+   |  join udc.datasetname2 t2	
    |  on t1.cust_id = t2.sndr_id	
    |  where t2.pmt_cre_dt  >= current_date-2	
    | ) tbl	
