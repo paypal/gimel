@@ -55,7 +55,7 @@ There are two ways you can read data from Teradata.
 
 Both of the above ways make use of Dataset which is a logical abstraction over actual table in Teradata.
 
-#### How to get the DataSet name?
+#### How to get the DataSet name? 
 1. Using UDC. 
 
    Go to UDC and search for the required table and get the dataset name.
