@@ -230,7 +230,7 @@ Password for JDBC data source can be specified as agruments in the APIs in two w
     Use ```--conf gimel.jdbc.p.file=PASSWORD_FILE_PATH_IN_HDFS```
 2. As options in READ/WRITE APIs:
 
-    ```val options= Map(("gimel.jdbc.p.file", "hdfs:///user/lapatil/password/teradata/pass.dat"))```
+    ```val options= Map(("gimel.jdbc.p.file", "hdfs://path"))```
 
 * API Usuage:
 
@@ -254,7 +254,7 @@ val options = Map(
         , ("fetchSize", s"${fetchSize}")
         , ("gimel.jdbc.read.type", "FASTEXPORT")
         ,("gimel.jdbc.p.strategy","file")
-        ,("gimel.jdbc.p.file","/user/lapatil/pass.dat")
+        ,("gimel.jdbc.p.file","hdfs://path")
 )
 
 val readdf = dataSet.read(udc.datasetname, options)
@@ -451,7 +451,7 @@ Password for JDBC data source can be specified as agruments in the APIs in two w
     Use ```--conf gimel.jdbc.p.file=PASSWORD_FILE_PATH_IN_HDFS```
 2. As options in READ/WRITE APIs:
 
-    ```val options= Map(("gimel.jdbc.p.file", "hdfs:///user/lapatil/password/teradata/pass.dat"))```
+    ```val options= Map(("gimel.jdbc.p.file", "hdfs://path"))```
    
 
 * API Usuage:
@@ -470,7 +470,7 @@ val options: Map[String, String] = Map(
         ("batchSize", s"${batchSize}")
         , ("numPartitions", s"${partitions}")
         ,("gimel.jdbc.p.strategy","file")
-        ,("gimel.jdbc.p.file","/user/lapatil/pass.dat")
+        ,("gimel.jdbc.p.file","hdfs://path")
          )
 dataSet.write(datasetname, readdf, options)
 
