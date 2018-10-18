@@ -472,7 +472,7 @@ val options: Map[String, String] = Map(
         ,("gimel.jdbc.p.strategy","file")
         ,("gimel.jdbc.p.file","hdfs://path")
          )
-dataSet.write(datasetname, readdf, options)
+dataSet.write(udc.datasetname, readdf, options)
 
 ```
 
