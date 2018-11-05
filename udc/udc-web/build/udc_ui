@@ -12,7 +12,7 @@ write_log "Begin    | Script | $0"
 
 write_log "--------Installing Angular CLI--------"
 run_cmd "npm install -g @angular/cli"
-check_error $? "npm install -g @angular/cli"
+check_error $? "npm install @angular/cli"
 
 write_log "--------Installing required Node Modules--------"
 run_cmd "npm install"
