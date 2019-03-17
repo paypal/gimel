@@ -41,20 +41,20 @@ under the License.
         </repository>
         <repository>
             <id>hwx.releases</id>
-            <url>http://repo.hortonworks.com/content/repositories/releases/</url>
+            <url>https://repo.hortonworks.com/content/repositories/releases/</url>
         </repository>
         <repository>
             <id>hwx.public</id>
-            <url>http://repo.hortonworks.com/content/groups/public/</url>
+            <url>https://repo.hortonworks.com/content/groups/public/</url>
         </repository>
         <repository>
             <id>confluent</id>
             <name>Confluent</name>
-            <url>http://packages.confluent.io/maven/</url>
+            <url>https://packages.confluent.io/maven/</url>
         </repository>
 	<repository>
 	    <id>repository.janrain</id>
-	    <url>http://repository-janrain.forge.cloudbees.com/release/</url>
+	    <url>https://repository-janrain.forge.cloudbees.com/release/</url>
 	</repository>
     </repositories>
     <profiles>
