@@ -110,6 +110,8 @@ Teradata Read API supports read from table in two ways:
 
 * **gimel.jdbc.p.file**: (optional)  password file PATH, if using **gimel.jdbc.p.strategy** is set as **file** 
 
+* **gimel.jdbc.password**: (optional) Password from user, if using **gimel.jdbc.p.strategy** is set as **inline**  
+
 * **charset**:(optional)  Character set or encoding of the text.
 
 * **partitionColumn**: The column to be specified as a partitionColumn in order to parallelize the read operation. User can specify it mannually or default partitionColumn will be the Primary Index of the table. 
@@ -135,13 +137,14 @@ Options with default values:
 | ------------- | ------------- |-----------------|
 | gimel.jdbc.username | spark.user | Username |
 | gimel.jdbc.p.file  | hdfs:///user/$USER/password/teradata/pass.dat  | An HDFS file path containing password |
-| charset | UTF16 | ASCII,UTF8,UTF16 |
+| gimel.jdbc.password | - | password |
+| charset | UTF16 | ASCII,UTF8,UTF16 |  
 |numPartitions|16| Required  number of partitions |
 |partitionColumn|Primary index for the table else no column | The column on which the data to be partitioned|
 |lowerBound|min value of primary index column else none| Lower bound of the values in partition column, if known |
 |upperBound|max value of primary index column else none | Upper bound of the values in partition column, if known |
 |fetchSize| 10000 | User specified fetchSize |
-|gimel.jdbc.p.strategy| - | "file" , if gimel.jdbc.p.strategy specified as file, set gimel.jdbc.p.file as well|
+|gimel.jdbc.p.strategy| - | "file" or "inline"|
 | gimel.jdbc.read.type  | - | FASTEXPORT |
 |SESSIONS|5| Required  number of sessions|
 
@@ -263,6 +266,35 @@ val readdf = dataSet.read(udc.datasetname, options)
 readdf.show()
 ```
 
+```scala
+// common imports
+import org.apache.spark._
+import org.apache.spark.sql._
+import com.paypal.gimel.DataSet
+
+// set the catalog provider to Hive/UDC
+spark.sql("set gimel.catalog.provider=HIVE")
+
+//Initiate DataSet
+val dataSet: DataSet = DataSet(spark)
+
+val partitions = 4
+val fetchSize = 10000
+
+val options = Map(
+          ("numPartitions", s"${partitions}")
+        , ("fetchSize", s"${fetchSize}")
+        , ("gimel.jdbc.read.type", "FASTEXPORT")
+        ,("gimel.jdbc.p.strategy","inline")
+        ,("gimel.jdbc.password","password")
+)
+
+val readdf = dataSet.read(udc.datasetname, options)
+
+// Do some usecase
+readdf.show()
+```
+
 ## JDBC Write API
 
 Gimel JDBC APIs can be used to write into Teradata table. [See how Teradata WRITE API works](teradata-docs/teradata-write-explained.md)
@@ -328,6 +360,8 @@ Teradata Write API supports read from table in two ways:
 
 * **gimel.jdbc.p.file**: (optional)  password file PATH, if using **gimel.jdbc.p.strategy** is set as **file** 
 
+* **gimel.jdbc.password**: (optional) Password from user, if using **gimel.jdbc.p.strategy** is set as **inline**  
+
 * **gimel.jdbc.insertStrategy**: This option specifies how you want to write data into Teradata.<br />
                                 1. insert (default): Just insert into Teradata table. <br />
                                 2. FullLoad: Trusncate table and insert into table. <br />
@@ -351,6 +385,7 @@ Options with default values:
 | ------------- | ------------- |-----------------|
 | gimel.jdbc.username | spark.user | Username |
 | gimel.jdbc.p.file  | hdfs:///user/$USER/password/teradata/pass.dat  | An HDFS file path containing password |
+| gimel.jdbc.password | - | password |
 |gimel.jdbc.insertStrategy| insert | insert, FullLoad, upsert, update |
 | charset | UTF16 | ASCII,UTF8,UTF16 |
 |numPartitions|12| Required  number of partitions |

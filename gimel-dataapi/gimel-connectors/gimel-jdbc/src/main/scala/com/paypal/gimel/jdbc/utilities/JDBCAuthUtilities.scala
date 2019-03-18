@@ -24,6 +24,7 @@ import org.apache.spark.sql.SparkSession
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.storageadmin._
 import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
+import com.paypal.gimel.logger.Logger
 
 object JDBCAuthUtilities {
   def apply(sparkSession: SparkSession): JDBCAuthUtilities = new JDBCAuthUtilities(sparkSession: SparkSession)
@@ -33,6 +34,8 @@ object JDBCAuthUtilities {
   * Utilities to resolve the username and password specific to a JDBC data source.
   */
 class JDBCAuthUtilities(sparkSession: SparkSession) extends Serializable {
+
+  val logger = Logger(this.getClass)
 
   /**
     * Returns the spark user.
@@ -79,39 +82,69 @@ class JDBCAuthUtilities(sparkSession: SparkSession) extends Serializable {
   }
 
   /**
+    * This function returns the Gimel JDBC password
+    *
+    * @param dataSetProps dataset properties
+    * @return Gimel JDBC password
+    */
+  private def getInlinePassword(dataSetProps: Map[String, Any]): String = {
+    dataSetProps.getOrElse(JdbcConfigs.jdbcPassword, new String()).toString
+  }
+
+  /**
     * Returns the username and password corresponding to current user.
     *
     * @param url The URL for the JDBC data source.
     * @return a Tuple of (userName, password) used for accessing JDBC data source.
     */
   private def getDBCredentials(url: String, dataSetProps: Map[String, Any]): (String, String) = {
-    var password: String = ""
-    val passwordFile = getPasswordFile(dataSetProps)
-    val fileContent = HDFSAdminClient.readHDFSFile(passwordFile)
+    val jdbcPasswordStrategy =
+      dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.jdbcDefaultPasswordStrategy).toString
     val userName = getUserName(dataSetProps)
-    val lines: Array[String] = fileContent.split("\n")
-    var flag: Boolean = false
-    lines.foreach { line =>
-      // get the url for data source in the password file to verify with the actual table url
-      val userURL = line.split(",")(0)
-      val dataSourceURL = userURL.split("/")(0)
-      // get the actual user in the password file to verify with the actual spark user
-      val urlLength = userURL.split("/").length
-      val actualUser = userURL.split("/")(urlLength - 1)
-      password = line.split(",")(1)
-      // Verify the URL and Username in passwordFile with spark user
-      if (url.contains(dataSourceURL) && actualUser.equalsIgnoreCase(userName)) {
-        flag = true
+    var password: String = ""
+    jdbcPasswordStrategy match {
+      case "file" => {
+        val passwordFile = getPasswordFile(dataSetProps)
+        val fileContent = HDFSAdminClient.readHDFSFile(passwordFile)
+        val lines: Array[String] = fileContent.split("\n")
+        var flag: Boolean = false
+        lines.foreach { line =>
+          // get the url for data source in the password file to verify with the actual table url
+          val userURL = line.split(",")(0)
+          val dataSourceURL = userURL.split("/")(0)
+          // get the actual user in the password file to verify with the actual spark user
+          val urlLength = userURL.split("/").length
+          val actualUser = userURL.split("/")(urlLength - 1)
+          password = line.split(",")(1)
+          // Verify the URL and Username in passwordFile with spark user
+          if (url.contains(dataSourceURL) && actualUser.equalsIgnoreCase(userName)) {
+            flag = true
+            return (userName, password)
+          }
+        }
+        if (!flag) {
+          val msg =
+            """Username or Password NOT FOUND!
+              |Check the configuration parameter or password file"""".stripMargin
+          throw new JDBCAuthException(msg, null)
+        }
+        (userName, password)
+      }
+      case "inline" => {
+        logger.warn("gimel.jdbc.p.strategy=inline is NOT a secure way to supply password. " +
+          "Please switch to gimel.jdbc.p.strategy=file")
+        val password = getInlinePassword(dataSetProps)
+        if(password.length() == 0) {
+          throw new JDBCAuthException("gimel.jdbc.p.strategy=inline was supplied, " +
+            "but gimel.jdbc.password is NOT set", null)
+        }
         return (userName, password)
       }
+      case _ => {
+        val msg = """Invalid jdbcPasswordStrategy"""".stripMargin
+        throw new JDBCAuthException(msg, null)
+      }
     }
-    if (!flag) {
-      val msg =
-        """Username or Password NOT FOUND!
-          |Check the configuration parameter or password file"""".stripMargin
-      throw new JDBCAuthException(msg, null)
-    }
-    (userName, password)
   }
 
   /**
