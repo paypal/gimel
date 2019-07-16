@@ -1,0 +1,541 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div [ngClass]="'dialog-heading-margin-bottom'">
+  <mat-icon class="matIconsCustom">bookmark</mat-icon>
+  {{heading}}</div>
+<form [formGroup]="datasetDescriptionForm">
+
+  <div>
+    <style>
+      table {
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      th, td {
+        padding: 15px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+    </style>
+    <table *ngIf="changeType.includes('TAG')" style="width:100%">
+      <br><br>
+      <tr>
+        <th>Prev Tags</th>
+        <td>
+          <p *ngIf="prevValue.includes('N/A') ">
+            <mat-chip color="primary" selected class="chipCustom"> {{prevValue}}  </mat-chip>
+          </p>
+          <p *ngIf=" !prevValue.includes('N/A')">
+            <mat-chip-list selected class="chipCustom">
+              <mat-chip *ngFor="let val of prevValue" selected color="primary">
+                {{val}} </mat-chip>
+            </mat-chip-list>
+          </p>
+        </td>
+      </tr>
+      <tr>
+        <th>Curr Tags</th>
+        <td>
+          <mat-chip-list selected class="chipCustom">
+            <mat-chip matTooltip="Newly added Tag" style="background: #629e36; color: white;">{{addedTag}}</mat-chip>
+            <mat-chip *ngFor="let val of prevValue" selected color="primary">
+              {{val}} </mat-chip>
+          </mat-chip-list>
+        </td>
+      </tr>
+      <tr>
+        <th>Modified by</th>
+        <td>
+          <mat-chip color="primary" selected class="chipCustom">
+            <mat-icon class="matIconsCustom">person_outline</mat-icon>
+            {{username}} </mat-chip>
+        </td>
+      </tr>
+      <tr>
+        <th>On</th>
+        <td>
+          {{updatedTimestamp}}
+          <mat-icon class="matIconsCustom">history</mat-icon>
+        </td>
+      </tr>
+    </table>
+    <table *ngIf="changeType.includes('OBJECT_DESC')" style="width:100%">
+      <br><br>
+      <tr>
+      <tr>
+        <th>Previous Description</th>
+        <td *ngIf="prevValue"> {{prevValue.value}}</td>
+        <td *ngIf="!prevValue"> N/A</td>
+      </tr>
+      <tr>
+        <th>Current Description</th>
+        <td>
+          {{updatedValue.value}}
+        </td>
+      </tr>
+      <tr>
+        <th>Modified by</th>
+        <td>
+          <mat-chip color="primary" selected class="chipCustom">
+            <mat-icon class="matIconsCustom">person_outline</mat-icon>
+            {{username}} </mat-chip>
+        </td>
+      </tr>
+      <tr>
+        <th>On</th>
+        <td>
+          {{updatedTimestamp}}
+          <mat-icon class="matIconsCustom">history</mat-icon>
+        </td>
+      </tr>
+    </table>
+    <table *ngIf="changeType.includes('DATASET')" style="width:100%">
+      <br><br>
+      <tr>
+        <th>Previous Value</th>
+        <td>
+          <s> {{prevValue}} </s>
+        </td>
+      </tr>
+      <tr>
+        <th>Current Value</th>
+        <td>
+          {{updatedValue}}
+        </td>
+      </tr>
+      <tr>
+        <th>Modified by</th>
+        <td>
+          <mat-chip color="primary" selected class="chipCustom">
+            <mat-icon class="matIconsCustom">person_outline</mat-icon>
+            {{username}} </mat-chip>
+        </td>
+      </tr>
+      <tr>
+        <th>On</th>
+        <td>
+          {{updatedTimestamp}}
+          <mat-icon class="matIconsCustom">history</mat-icon>
+        </td>
+      </tr>
+    </table>
+    <ng-container *ngIf="changeType.includes('COLUMN_DESC')">
+      <table style="width:100%">
+        <br><br>
+        <tr>
+          <th>Column Name</th>
+          <td>
+            {{updatedValue.columnName}}
+          </td>
+        </tr>
+        <tr>
+          <th>Previous Description</th>
+          <td *ngIf="prevValue.columnDesc"> {{prevValue.columnDesc}}</td>
+          <td *ngIf="!prevValue.columnDesc"> N/A</td>
+        </tr>
+        <tr>
+          <th>Current Description</th>
+          <td>{{updatedValue.columnDesc}} </td>
+        </tr>
+        <tr>
+          <th>Modified by</th>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom">
+              <mat-icon class="matIconsCustom">person_outline</mat-icon>
+              {{username}} </mat-chip>
+          </td>
+        </tr>
+        <tr>
+          <th>On</th>
+          <td>
+            {{updatedTimestamp}}
+            <mat-icon class="matIconsCustom">history</mat-icon>
+          </td>
+        </tr>
+        <tr>
+          <th>Status</th>
+          <td>
+            {{"Modified"}}
+          </td>
+        </tr>
+      </table>
+    </ng-container>
+    <ng-container *ngIf="changeType.includes('OBJECT_ATTRIBUTES')">
+      <table *ngFor="let val of updatedValue" style="width:100%">
+        <br><br>
+        <tr>
+          <th>Key Name</th>
+          <td>
+            {{val.keyName}}
+          </td>
+        </tr>
+        <tr>
+          <th>Previous Key Value</th>
+          <td *ngIf="!prevValue.includes('N/A')"><p *ngFor="let val1 of prevValue">
+            <s>{{val1.keyValue}}</s>
+          </td>
+        </tr>
+        <tr>
+          <th>Current Key Value</th>
+          <td>{{val.keyValue}} </td>
+        </tr>
+        <tr>
+          <th>Modified by</th>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom">
+              <mat-icon class="matIconsCustom">person_outline</mat-icon>
+              {{username}} </mat-chip>
+          </td>
+        </tr>
+        <tr>
+          <th>On</th>
+          <td>
+            {{updatedTimestamp}}
+            <mat-icon class="matIconsCustom">history</mat-icon>
+          </td>
+        </tr>
+        <tr>
+          <th>Status</th>
+          <td>
+            {{"Modified"}}
+          </td>
+        </tr>
+      </table>
+    </ng-container>
+    <p>
+    </p>
+    <p>
+    </p>
+    <table *ngIf="changeType.includes('SCHEMA')" style="width:100%">
+      <br><br>
+      <tr>
+        <th>Column Name</th>
+        <th>Column Type</th>
+        <th>Column Classification</th>
+        <th>Partition Status</th>
+        <th> Change Status</th>
+      </tr>
+      <ng-container *ngIf="status.includes('Modified')">
+        <tr *ngFor="let val of modifiedValue">
+          //show the prev and new value in prevColumnName:newColumnName format, similarly for ColumnType, columnClass, partitionStatus
+          <td *ngIf=" modifiedColumn.includes('columnName')"><s>{{val[0].split(':')[0]}}</s> : {{val[0].split(':')[1]}}
+          </td>
+          <td *ngIf=" !modifiedColumn.includes('columnName')">{{val[0]}} </td>
+          <td *ngIf=" modifiedColumn.includes('columnType')"><s>{{val[1].split(':')[0]}}</s> : {{val[1].split(':')[1]}}
+          </td>
+          <td *ngIf=" !modifiedColumn.includes('columnType')">{{val[1]}}</td>
+          <td *ngIf=" modifiedColumn.includes('columnClass')"><s>{{val[2].split(':')[0]}} </s>
+            : {{val[2].split(':')[1]}}</td>
+          <td *ngIf=" !modifiedColumn.includes('columnClass')">{{val[2]}} </td>
+          <td *ngIf=" modifiedColumn.includes('partitionStatus')"><s>{{val[3].split(':')[0]}}</s>
+            : {{val[3].split(':')[1]}}</td>
+          <td *ngIf=" !modifiedColumn.includes('partitionStatus')">{{val[3]}} </td>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom"> {{status}} </mat-chip>
+          </td>
+        </tr>
+        <tr *ngFor="let val of updatedValue">
+          <td>{{val.columnName}}</td>
+          <td>{{val.columnType}}</td>
+          <td>{{val.columnClass}}</td>
+          <td>{{val.partitionStatus}}</td>
+          <td></td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="status.includes('Added')">
+        <tr *ngFor="let val of modifiedValue">
+          <td>{{val.columnName}}</td>
+          <td>{{val.columnType}}</td>
+          <td>{{val.columnClass}}</td>
+          <td>{{val.partitionStatus}}</td>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom"> {{status}} </mat-chip>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="status.includes('Added')">
+        <tr *ngFor="let val of updatedValue">
+          <td>{{val.columnName}}</td>
+          <td>{{val.columnType}}</td>
+          <td>{{val.columnClass}}</td>
+          <td>{{val.partitionStatus}}</td>
+          <td></td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="status.includes('Deleted')">
+        <tr *ngFor="let val of modifiedValue">
+          <td>{{val.columnName}}</td>
+          <td>{{val.columnType}}</td>
+          <td>{{val.columnClass}}</td>
+          <td>{{val.partitionStatus}}</td>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom"> {{status}} </mat-chip>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="status.includes('Deleted')">
+        <tr *ngFor="let val of updatedValue">
+          <td>{{val.columnName}}</td>
+          <td>{{val.columnType}}</td>
+          <td>{{val.columnClass}}</td>
+          <td>{{val.partitionStatus}}</td>
+          <td></td>
+        </tr>
+      </ng-container>
+    </table>
+    <table *ngIf="changeType.includes('CLASSIFICATION')" style="width:100%">
+      <br><br>
+      <tr>
+        <th>Column Name</th>
+        <th>Classification Id</th>
+        <th>Classification Comment</th>
+        <th> Change Status</th>
+      </tr>
+      <ng-container>
+        <tr *ngFor="let val of updatedValue">
+          <td>{{val.columnName}}</td>
+          <td>{{val.classificationId}}</td>
+          <td>{{val.classificationComment}}</td>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom"> {{status}} </mat-chip>
+          </td>
+        </tr>
+      </ng-container>
+    </table>
+    <table *ngIf="changeType.includes('OWNERSHIP')" style="width:100%">
+      <br><br>
+      <ng-container *ngIf="status.includes('EA')">
+        <tr>
+          <th>Owner name</th>
+          <td>
+            <mat-chip selected color="primary">{{updatedValue.ownerName}}</mat-chip>
+          </td>
+        </tr>
+        <tr>
+          <th>Prev EmailList</th>
+          <td>
+            <p *ngIf="prevValue.includes('N/A') ">
+              <mat-chip color="primary" selected class="chipCustom"> {{prevValue}}  </mat-chip>
+            </p>
+            <p *ngIf=" !prevValue.includes('N/A')">
+              <mat-chip-list selected class="chipCustom">
+                <mat-chip *ngFor="let val of prevValue" selected color="primary">
+                  {{val}} </mat-chip>
+              </mat-chip-list>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <th>Curr EmailList</th>
+          <td>
+            <mat-chip-list selected class="chipCustom">
+              <p *ngIf="prevValue.includes('N/A') ">
+                <mat-chip *ngFor="let val of addedOwner" matTooltip="Newly added User"
+                          style="background: #629e36; color: white;">{{val}}</mat-chip>
+              </p>
+              <p *ngIf=" !prevValue.includes('N/A')">
+                <mat-chip *ngFor="let val of addedOwner" matTooltip="Added User"
+                          style="background: #629e36; color: white;">{{val}}</mat-chip>
+              </p>
+              <mat-chip *ngFor="let val of prevValue" selected color="primary">
+                {{val}} </mat-chip>
+            </mat-chip-list>
+          </td>
+        </tr>
+        <tr>
+          <th>Modified by</th>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom">
+              <mat-icon class="matIconsCustom">person_outline</mat-icon>
+              {{username}} </mat-chip>
+          </td>
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="status.includes('ED')">
+        <tr>
+          <th>Owner name</th>
+          <td>
+            <mat-chip selected color="primary">{{ownerName}}</mat-chip>
+          </td>
+        </tr>
+        <tr>
+          <th>Prev OwnersList</th>
+          <td>
+            <p *ngIf="prevValue.includes('N/A') ">
+              <mat-chip color="primary" selected class="chipCustom"> {{prevValue}}  </mat-chip>
+            </p>
+            <p *ngIf=" !prevValue.includes('N/A')">
+              <mat-chip-list selected class="chipCustom">
+                <mat-chip *ngFor="let val of prevValue" selected color="primary">
+                  {{val}} </mat-chip>
+              </mat-chip-list>
+            </p>
+          </td>
+
+        </tr>
+        <tr>
+          <th>Curr OwnersList</th>
+          <td>
+            <mat-chip-list selected class="chipCustom">
+              <s>
+                <mat-chip *ngFor="let val of deletedOwner" matTooltip="Deleted User"
+                          style="background: #629e36; color: white;">{{val}}</mat-chip>
+              </s>
+              <mat-chip *ngFor="let val of updatedValue" selected color="primary">
+                {{val}} </mat-chip>
+            </mat-chip-list>
+          </td>
+
+        </tr>
+        <tr>
+          <th>Modified by</th>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom">
+              <mat-icon class="matIconsCustom">person_outline</mat-icon>
+              {{username}} </mat-chip>
+          </td>
+
+        </tr>
+      </ng-container>
+      <ng-container *ngIf="status.includes('Modified')">
+        <tr>
+          <th>Owner name</th>
+          <td>
+            <mat-chip selected color="primary">{{updatedValue.ownerName}}</mat-chip>
+          </td>
+        </tr>
+        <tr>
+          <th>Previous Description</th>
+          <td *ngIf="prevValue"> {{prevValue.value}}</td>
+          <td *ngIf="!prevValue"> N/A</td>
+        </tr>
+        <tr>
+          <th>Current Description</th>
+          <td>
+            {{updatedValue.value}}
+          </td>
+        </tr>
+        <tr>
+          <th>Modified by</th>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom">
+              <mat-icon class="matIconsCustom">person_outline</mat-icon>
+              {{username}} </mat-chip>
+          </td>
+        </tr>
+      </ng-container>
+
+      <ng-container *ngIf="status.includes('Added')">
+        <tr>
+          <th>Prev Owners</th>
+          <td>
+            <p *ngIf="prevValue.includes('N/A') ">
+              <mat-chip color="primary" selected class="chipCustom"> {{prevValue}}  </mat-chip>
+            </p>
+            <p *ngIf=" !prevValue.includes('N/A')">
+              <mat-chip-list selected class="chipCustom">
+                <mat-chip *ngFor="let val of prevValue" selected color="primary">
+                  {{val}} </mat-chip>
+              </mat-chip-list>
+            </p>
+          </td>
+        </tr>
+        <tr>
+          <th>Curr Owners</th>
+          <td>
+            <mat-chip-list selected class="chipCustom">
+              <p *ngIf="prevValue.includes('N/A') ">
+                <mat-chip *ngFor="let val of addedTag" matTooltip="Newly added User"
+                          style="background: #629e36; color: white;">{{val}}</mat-chip>
+              </p>
+              <p *ngIf=" !prevValue.includes('N/A')">
+                <mat-chip matTooltip="Newly added User"
+                          style="background: #629e36; color: white;">{{addedTag}}</mat-chip>
+              </p>
+              <mat-chip *ngFor="let val of prevValue" selected color="primary">
+                {{val}} </mat-chip>
+            </mat-chip-list>
+          </td>
+        </tr>
+        <tr>
+          <th>Modified by</th>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom">
+              <mat-icon class="matIconsCustom">person_outline</mat-icon>
+              {{username}} </mat-chip>
+          </td>
+        </tr>
+      </ng-container>
+
+
+      <ng-container *ngIf="status.includes('Deleted')">
+        <tr>
+          <th>Prev Owners</th>
+          <td>
+            <p *ngIf="prevValue.includes('N/A') ">
+              <mat-chip color="primary" selected class="chipCustom"> {{prevValue}}  </mat-chip>
+            </p>
+            <p *ngIf=" !prevValue.includes('N/A')">
+              <mat-chip-list selected class="chipCustom">
+                <mat-chip *ngFor="let val of prevValue" selected color="primary">
+                  {{val}} </mat-chip>
+              </mat-chip-list>
+            </p>
+          </td>
+
+        </tr>
+        <tr>
+          <th>Curr Owners</th>
+          <td>
+            <mat-chip-list selected class="chipCustom">
+              <s>
+                <mat-chip *ngFor="let val of addedTag" matTooltip="Deleted User"
+                          style="background: #629e36; color: white;">{{val}}</mat-chip>
+              </s>
+              <mat-chip *ngFor="let val of updatedValue" selected color="primary">
+                {{val}} </mat-chip>
+            </mat-chip-list>
+          </td>
+
+        </tr>
+        <tr>
+          <th>Modified by</th>
+          <td>
+            <mat-chip color="primary" selected class="chipCustom">
+              <mat-icon class="matIconsCustom">person_outline</mat-icon>
+              {{username}} </mat-chip>
+          </td>
+
+        </tr>
+      </ng-container>
+      <tr>
+        <th>On</th>
+        <td>
+          {{updatedTimestamp}}
+          <mat-icon class="matIconsCustom">history</mat-icon>
+        </td>
+      </tr>
+    </table>
+  </div>
+  <div class="dialog-footer">
+    <button mat-button type="button" color="primary" (click)="cancel()">Close</button>
+  </div>
+</form>

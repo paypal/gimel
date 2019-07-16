@@ -1,0 +1,43 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div class="search-box-container" cdk-overlay-origin #trigger="cdkOverlayOrigin">
+  <div class="search-box" [class.search-box-focus]="searchBoxFocus"
+       data-intro="Search for Datasets.">
+    <span class="search-box-icon">
+      <mat-icon *ngIf="!searching">search</mat-icon>
+      <mat-spinner *ngIf="searching" [diameter]="24"></mat-spinner>
+    </span>
+    <input #searchBoxInput class="search-box-input" type="text"
+           [placeholder]="true?'Search Datasets':''" (keyup)="search(searchBoxInput.value, $event)"
+           (focus)="onFocus()" (blur)="onBlur()"/>
+  </div>
+</div>
+
+<div *rxContext="let result on searchResults">
+  <ng-template cdk-connected-overlay [cdkConnectedOverlayOrigin]="trigger" [cdkConnectedOverlayWidth]="512" cdkConnectedOverlayHasBackdrop
+               [cdkConnectedOverlayOpen]="canOpenSearch()"
+               (backdropClick)="closeSearch(searchBoxInput)"
+               cdkConnectedOverlayBackdropClass="mat-overlay-transparent-backdrop">
+    <app-gh-searchbox-result [cds]="result"
+                             [searchTerm]="searchTerm"
+                             (onClick)="closeSearch(searchBoxInput)">
+    </app-gh-searchbox-result>
+  </ng-template>
+</div>

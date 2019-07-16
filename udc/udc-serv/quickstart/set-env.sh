@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 if [ -z $UDC_HOME ]; then
         export UDC_HOME=${PWD}

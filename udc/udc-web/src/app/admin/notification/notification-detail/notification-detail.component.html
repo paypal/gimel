@@ -1,0 +1,78 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<mat-tab-group>
+  <mat-tab label="Overview">
+    <div class="app-container" *ngIf="!detailsLoading">
+      <mat-grid-list cols="2" rowHeight="300">
+        <mat-grid-tile>
+          <mat-list dense>
+            <mat-list-item>
+              <table>
+                <tr>
+                  <td><h4>notification ID</h4></td>
+                  <td>{{statusData.notificationId}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Notification Content</h4></td>
+                  <td>{{statusData.notificationContent}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Notification Message</h4></td>
+                  <td>{{statusData.notificationMessagePage}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Notification Priority </h4></td>
+                  <td>{{statusData.notificationPriority}}</td>
+                </tr>
+              </table>
+            </mat-list-item>
+          </mat-list>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <mat-list dense>
+            <mat-list-item>
+              <table>
+                <tr>
+                  <td><h4>Created By</h4></td>
+                  <td>{{statusData.createdUser}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Created Timestamp</h4></td>
+                  <td>{{statusData.createdTimestamp}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Last Updated By</h4></td>
+                  <td>{{statusData.updatedUser}}</td>
+                </tr>
+                <tr>
+                  <td><h4>Updated Timestamp</h4></td>
+                  <td>{{statusData.updatedTimestamp}}</td>
+                </tr>
+              </table>
+            </mat-list-item>
+          </mat-list>
+        </mat-grid-tile>
+      </mat-grid-list>
+    </div>
+    <div class="app-container" *ngIf="detailsLoading">
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+    </div>
+  </mat-tab>
+</mat-tab-group>

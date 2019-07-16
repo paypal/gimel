@@ -1,0 +1,139 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<div>
+  <form [formGroup]="createForm" class="stepperForm">
+    <mat-horizontal-stepper [linear]="true" #stepper>
+      <mat-step [stepControl]="createForm">
+
+        <ng-template matStepLabel>Fill out the requisites</ng-template>
+
+        <mat-form-field class="full-width">
+          <input required matInput #objectName placeholder="Table Name"
+                 formControlName="objectName">
+          <mat-hint *ngIf="formErrors.objectName" class="alert-danger">
+            {{formErrors.objectName}}
+          </mat-hint>
+          <mat-hint align="end">{{objectName.value.length}} / {{maxCharsForEntryDetails}}</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+          <input required matInput #columnName placeholder="Column Name"
+                 formControlName="columnName">
+          <mat-hint *ngIf="formErrors.columnName" class="alert-danger">
+            {{formErrors.columnName}}
+          </mat-hint>
+          <mat-hint align="end">{{columnName.value.length}} / {{maxCharsForEntryDetails}}</mat-hint>
+        </mat-form-field>
+
+        <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+          <div fxFlex="100" fxFlexAlign="center">
+            <mat-form-field [floatLabel]="'never'">
+              <mat-select required placeholder="Classification"
+                          formControlName="classificationId">
+                <mat-option *ngFor="let classificationCategory of classificationCategories"
+                            [value]="classificationCategory">
+                  {{ classificationCategory }}
+                </mat-option>
+              </mat-select>
+            </mat-form-field>
+            <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
+          </div>
+        </div>
+
+        <mat-form-field class="full-width">
+          <input required matInput #comments placeholder="Comments"
+                 formControlName="comments">
+          <mat-hint *ngIf="formErrors.comments" class="alert-danger">
+            {{formErrors.comments}}
+          </mat-hint>
+          <mat-hint align="end">{{comments.value.length}} / {{maxCharsForEntryDetails}}</mat-hint>
+        </mat-form-field>
+
+        <mat-form-field class="full-width">
+          <input matInput required="true" placeholder="Created User" value="{{username}}" disabled>
+        </mat-form-field>
+
+        <div class="dialog-footer">
+          <div class="m-lg">
+            <button mat-button matStepperNext class="app-details-btn" type="button" [disabled]="!createForm.valid"
+                    (click)="findDatasetMappings()">Next
+            </button>
+          </div>
+        </div>
+      </mat-step>
+
+      <mat-step [stepControl]="createForm">
+        <ng-template matStepLabel>Select Datasets</ng-template>
+
+        <div class="divProgress" *ngIf="!datasetsLoaded">
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        </div>
+        <div *ngIf="datasetsLoaded && allMappedDatasets.length>0">
+          <div>
+            <h4>Dataset Mapping</h4>
+          </div>
+          <ngx-datatable
+            class="material favorites-datatable"
+            [rows]="allMappedDatasets"
+            [columnMode]="'force'"
+            [headerHeight]="50"
+            [footerHeight]="50"
+            [selected]="selected"
+            [selectionType]="'checkbox'"
+            [limit]="5"
+            [rowHeight]="35"
+            (select)='onSelect($event)'>
+            <ngx-datatable-column
+              [width]="30"
+              [sortable]="false"
+              [canAutoResize]="false"
+              [draggable]="false"
+              [resizeable]="false"
+              [headerCheckboxable]="true"
+              [checkboxable]="true">
+            </ngx-datatable-column>
+            <ngx-datatable-column name="Dataset Name" [width]="150">
+              <ng-template let-row="row" ngx-datatable-cell-template>
+                {{ row.storageDataSetName }}
+              </ng-template>
+            </ngx-datatable-column>
+          </ngx-datatable>
+        </div>
+
+        <div class="divError" *ngIf="datasetsLoaded && allMappedDatasets.length==0">
+          <h4 class="errorMsg">No dataset mapping found. You can still go ahead and submit your request.</h4>
+        </div>
+
+        <div  *ngIf="datasetsLoaded" fxLayout="row" fxLayoutAlign="end start" class="appname-row">
+          <div class="m-lg">
+            <button mat-raised-button matStepperPrevious class="app-details-btn" type="button">Back</button>
+          </div>
+          <div class="m-lg">
+            <button mat-raised-button matStepperNext class="app-details-btn submit-btn" type="button"
+                    (click)="onSubmit()">Submit
+            </button>
+          </div>
+        </div>
+
+      </mat-step>
+    </mat-horizontal-stepper>
+  </form>
+</div>

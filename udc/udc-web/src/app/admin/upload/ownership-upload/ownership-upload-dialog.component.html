@@ -1,0 +1,263 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="createForm">
+
+  <input type="file" (change)="changeListener($event.target.files)" multiple="false" />
+
+  <div *ngIf="data.length > 0">
+  <ngx-datatable
+        class='material notification-datatable'
+        [rows]='data'
+        [columnMode]="'force'"
+        [headerHeight]="50"
+        [footerHeight]="50"
+        [rowHeight]="50"
+        [scrollbarV]="true"
+        (page)="onPage($event)">
+        <ngx-datatable-column name="containerName">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-containerName'] = true"
+                *ngIf="!editing[rowIndex + '-containerName']">
+                {{row.containerName}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'containerName', rowIndex)"
+              *ngIf="editing[rowIndex + '-containerName']"
+              type="text"
+              [value]="row.containerName"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="createdUser">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-createdUser'] = true"
+                *ngIf="!editing[rowIndex + '-createdUser']">
+                {{row.createdUser}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'createdUser', rowIndex)"
+              *ngIf="editing[rowIndex + '-createdUser']"
+              type="text"
+              [value]="row.createdUser"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="emailIlist">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-emailIlist'] = true"
+                *ngIf="!editing[rowIndex + '-emailIlist']">
+                {{row.emailIlist}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'emailIlist', rowIndex)"
+              *ngIf="editing[rowIndex + '-emailIlist']"
+              type="text"
+              [value]="row.emailIlist"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="objectName">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-objectName'] = true"
+                *ngIf="!editing[rowIndex + '-objectName']">
+                {{row.objectName}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'objectName', rowIndex)"
+              *ngIf="editing[rowIndex + '-objectName']"
+              type="text"
+              [value]="row.objectName"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="otherOwners">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-otherOwners'] = true"
+                *ngIf="!editing[rowIndex + '-otherOwners']">
+                {{row.otherOwners}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'otherOwners', rowIndex)"
+              *ngIf="editing[rowIndex + '-otherOwners']"
+              type="text"
+              [value]="row.otherOwners"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="ownerEmail">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-ownerEmail'] = true"
+                *ngIf="!editing[rowIndex + '-ownerEmail']">
+                {{row.ownerEmail}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'ownerEmail', rowIndex)"
+              *ngIf="editing[rowIndex + '-ownerEmail']"
+              type="text"
+              [value]="row.ownerEmail"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+
+      <ngx-datatable-column name="ownerName">
+        <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+          <span
+              title="Double click to edit"
+              (dblclick)="editing[rowIndex + '-ownerName'] = true"
+              *ngIf="!editing[rowIndex + '-ownerName']">
+              {{row.ownerName}}
+            </span>
+          <input
+            autofocus
+            (blur)="updateValue($event, 'ownerName', rowIndex)"
+            *ngIf="editing[rowIndex + '-ownerName']"
+            type="text"
+            [value]="row.ownerName"
+          />
+        </ng-template>
+      </ngx-datatable-column>
+
+
+      <ngx-datatable-column name="ownershipComment">
+        <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+          <span
+              title="Double click to edit"
+              (dblclick)="editing[rowIndex + '-ownershipComment'] = true"
+              *ngIf="!editing[rowIndex + '-ownershipComment']">
+              {{row.ownershipComment}}
+            </span>
+          <input
+            autofocus
+            (blur)="updateValue($event, 'ownershipComment', rowIndex)"
+            *ngIf="editing[rowIndex + '-ownershipComment']"
+            type="text"
+            [value]="row.ownershipComment"
+          />
+        </ng-template>
+      </ngx-datatable-column>
+
+
+      <ngx-datatable-column name="providerName">
+        <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+          <span
+              title="Double click to edit"
+              (dblclick)="editing[rowIndex + '-providerName'] = true"
+              *ngIf="!editing[rowIndex + '-providerName']">
+              {{row.providerName}}
+            </span>
+          <input
+            autofocus
+            (blur)="updateValue($event, 'providerName', rowIndex)"
+            *ngIf="editing[rowIndex + '-providerName']"
+            type="text"
+            [value]="row.providerName"
+          />
+        </ng-template>
+    </ngx-datatable-column>
+
+    <ngx-datatable-column name="storageDatasetId">
+      <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+        <span
+            title="Double click to edit"
+            (dblclick)="editing[rowIndex + '-storageDatasetId'] = true"
+            *ngIf="!editing[rowIndex + '-storageDatasetId']">
+            {{row.storageDatasetId}}
+          </span>
+        <input
+          autofocus
+          (blur)="updateValue($event, 'storageDatasetId', rowIndex)"
+          *ngIf="editing[rowIndex + '-storageDatasetId']"
+          type="text"
+          [value]="row.storageDatasetId"
+        />
+      </ng-template>
+    </ngx-datatable-column>
+
+    <ngx-datatable-column name="storageSystemId">
+      <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+        <span
+            title="Double click to edit"
+            (dblclick)="editing[rowIndex + '-storageSystemId'] = true"
+            *ngIf="!editing[rowIndex + '-storageSystemId']">
+            {{row.storageSystemId}}
+          </span>
+        <input
+          autofocus
+          (blur)="updateValue($event, 'storageSystemId', rowIndex)"
+          *ngIf="editing[rowIndex + '-storageSystemId']"
+          type="text"
+          [value]="row.storageSystemId"
+        />
+      </ng-template>
+    </ngx-datatable-column>
+
+    <ngx-datatable-column name="storageSystemName">
+      <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+        <span
+            title="Double click to edit"
+            (dblclick)="editing[rowIndex + '-storageSystemName'] = true"
+            *ngIf="!editing[rowIndex + '-storageSystemName']">
+            {{row.storageSystemName}}
+          </span>
+        <input
+          autofocus
+          (blur)="updateValue($event, 'storageSystemName', rowIndex)"
+          *ngIf="editing[rowIndex + '-storageSystemName']"
+          type="text"
+          [value]="row.storageSystemName"
+        />
+      </ng-template>
+    </ngx-datatable-column>
+
+
+      </ngx-datatable>
+    </div>
+
+  <div class="dialog-footer">
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-button type="submit" color="primary" (click)="uploadOwnership()" [disabled]="data.length < 1">Submit</button>
+  </div>
+
+
+</form>

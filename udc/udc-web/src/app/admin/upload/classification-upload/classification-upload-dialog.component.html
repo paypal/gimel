@@ -1,0 +1,116 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="createForm">
+
+  <input type="file" (change)="changeListener($event.target.files)" multiple="false" />
+
+  <div *ngIf="data.length > 0">
+  <ngx-datatable
+        class='material favorites-datatable'
+        [rows]='data'
+        [columnMode]="'force'"
+        [headerHeight]="50"
+        [footerHeight]="50"
+        [limit]="10"
+        [rowHeight]="35">
+        <ngx-datatable-column name="Table Name">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-objectName'] = true"
+                *ngIf="!editing[rowIndex + '-objectName']">
+                {{row.objectName}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'objectName', rowIndex)"
+              *ngIf="editing[rowIndex + '-objectName']"
+              type="text"
+              [value]="row.objectName"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Column Name">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-columnName'] = true"
+                *ngIf="!editing[rowIndex + '-columnName']">
+                {{row.columnName}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'columnName', rowIndex)"
+              *ngIf="editing[rowIndex + '-columnName']"
+              type="text"
+              [value]="row.columnName"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Classification">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-classificationId'] = true"
+                *ngIf="!editing[rowIndex + '-classificationId']">
+                {{row.classificationId}}
+              </span>
+            <select
+              *ngIf="editing[rowIndex + '-classificationId']"
+              (blur)="editing[rowIndex + '-classificationId'] = false"
+              (change)="updateValue($event, 'classificationId', rowIndex)"
+              [value]="row.classificationId">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+              <option value="5">5</option>
+            </select>
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="Comments">
+            <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+              <span
+                  title="Double click to edit"
+                  (dblclick)="editing[rowIndex + '-classificationComment'] = true"
+                  *ngIf="!editing[rowIndex + '-classificationComment']">
+                  {{row.classificationComment}}
+                </span>
+              <input
+                autofocus
+                (blur)="updateValue($event, 'classificationComment', rowIndex)"
+                *ngIf="editing[rowIndex + '-classificationComment']"
+                type="text"
+                [value]="row.classificationComment"
+              />
+            </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+
+  <div class="footer">
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button *ngIf="!dataSubmitted" mat-button type="submit" color="primary" (click)="uploadClassification()" [disabled]="data.length < 1">Submit</button>
+    <mat-spinner *ngIf="dataSubmitted" [diameter]="18"></mat-spinner>
+  </div>
+
+
+</form>

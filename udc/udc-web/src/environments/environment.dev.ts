@@ -22,7 +22,7 @@ export const environment = {
   production: true,
   profileIndex: 'dev',
   protocol: 'http://',
-  devHost: 'w0lxdwbhdpd0103.worldbank.org',
+  devHost: 'localhost',
   port: '8080',
   uiDevHost: 'localhost',
   uiport: '4200',

@@ -1,0 +1,93 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div class="app-top-container">
+  <div class="app-container udc-upload">
+    <div fxLayout="row" fxLayoutAlign="right right" fxLayoutWrap="wrap" >
+      <div fxFlex="100" class="main-container">
+<!--        <mat-card class="example-card" *ngIf="admin">-->
+<!--          <mat-card-content>-->
+<!--            <div class="card-header"></div>-->
+<!--              <div class="content-icon"><mat-icon style="font-size: 50px;color:#fff;margin-top: 12px;" alt="Additional Information">backup</mat-icon></div>-->
+<!--            <h4 class="card-title">Notifications</h4>-->
+<!--            <hr>-->
+<!--            <p class="card-content">-->
+<!--              Admin User can Add/Edit/Upload Notifications through the portal.  -->
+<!--            </p>-->
+<!--          </mat-card-content>-->
+<!--          <mat-card-actions>-->
+<!--            <button class="upload-btn" mat-button [routerLink]="['/udc','datasets']">Manage</button>-->
+<!--            <button class="upload-btn" mat-button routerLink="." (click)="uploadNotificationDialog()">Upload</button>-->
+<!--            &lt;!&ndash;<button mat-button>SHARE</button>&ndash;&gt;-->
+<!--          </mat-card-actions>-->
+<!--        </mat-card>-->
+
+        <mat-card class="example-card" *ngIf="(admin || classificationAdmin)">
+          <mat-card-content>
+            <div class="card-header"></div>
+            <div class="content-icon"><mat-icon style="font-size: 50px;color:#fff;margin-top: 12px;" alt="Additional Information">backup</mat-icon></div>
+            <h4 class="card-title">Classification</h4>
+            <hr>
+            <p class="card-content">
+                Bulk upload of new classifications
+            </p>
+          </mat-card-content>
+          <mat-card-actions>
+            <button class="upload-btn" mat-button routerLink="." (click)="downloadClassificationCSV()">Download Sample File</button>
+            <button class="upload-btn" mat-button routerLink="." (click)="uploadClassificationDialog()">Upload</button>
+          </mat-card-actions>
+        </mat-card>
+
+<!--        <mat-card class="example-card" *ngIf="admin">-->
+<!--          <mat-card-content>-->
+<!--            <div class="card-header"></div>-->
+<!--            <div class="content-icon"><mat-icon style="font-size: 50px;color:#fff;margin-top: 12px;" alt="Additional Information">backup</mat-icon></div>-->
+<!--            <h4 class="card-title">Ownership</h4>-->
+<!--            <hr>-->
+<!--            <p class="card-content">-->
+<!--                Admin User can Add/Edit/Upload Ownership through the portal.-->
+<!--            </p>-->
+<!--          </mat-card-content>-->
+<!--          <mat-card-actions>-->
+<!--            <button class="upload-btn" mat-button>Manage</button>-->
+<!--            <button class="upload-btn" mat-button routerLink="." (click)="uploadOwnershipDialog()">Upload</button>-->
+<!--            &lt;!&ndash;<button class="upload-btn" mat-button [routerLink]="['/admin','notification']">Upload</button>>&ndash;&gt;-->
+<!--          </mat-card-actions>-->
+<!--        </mat-card>-->
+
+<!--        <mat-card class="example-card">-->
+<!--          <mat-card-content>-->
+<!--            <div class="card-header"></div>-->
+<!--            <div class="content-icon"><mat-icon style="font-size: 50px;color:#fff;margin-top: 12px;" alt="Additional Information">backup</mat-icon></div>-->
+<!--            <h4 class="card-title">Dataset Descriptions</h4>-->
+<!--            <hr>-->
+<!--            <p class="card-content">-->
+<!--              User has option to add/Edit dataset description through upload button or else you can redirect to dataset page by clicking the manage button-->
+<!--            </p>-->
+<!--          </mat-card-content>-->
+<!--          <mat-card-actions>-->
+<!--            <button class="upload-btn" mat-button [routerLink]="['/udc','datasets']">Manage</button>-->
+<!--            <button class="upload-btn" mat-button routerLink="." (click)="uploadDatasetDescriptionDialog()">Upload</button>-->
+<!--          </mat-card-actions>-->
+<!--        </mat-card>-->
+
+      </div>
+    </div>
+  </div>
+</div>

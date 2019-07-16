@@ -1,0 +1,350 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+mat-card.mat-card {
+  /*  not needed styles to reflect it */
+  padding: 0px;
+}
+
+.dataset-card-left{
+  font-size: 15px;
+  font-weight: 400;
+}
+
+.dataset-card-title{
+  font-size: 15px;
+  font-weight: 400;
+
+}
+
+.dataset-card-right{
+  font-size: 15px;
+  font-weight: 400;
+}
+
+::ng-deep mat-grid-tile.mat-grid-tile .mat-figure {
+  align-items: initial;
+  //background-color: #8080800f;
+}
+
+
+.watermark-hive{
+  background-image:url("../../../../assets/images/hive.png") ;opacity:0.6;
+  opacity: 0.4;
+  position: absolute;
+  width: 15%;
+  height: 75%;
+  background-size: 70px 70px;
+  background-repeat: no-repeat;
+  left: 20px;
+  top: 20px;
+}
+
+.watermark-kafka{
+  background-image:url("../../../../assets/images/kafka.png") ;opacity:0.6;
+  opacity: 0.4;
+  position: absolute;
+  width: 15%;
+  height: 75%;
+  background-size: 80px 60px;
+  background-repeat: no-repeat;
+  left: 20px;
+  top: 20px;
+}
+.watermark-elastic{
+  background-image:url("../../../../assets/images/elasticsearch.png") ;opacity:0.6;
+  opacity: 0.4;
+  position: absolute;
+  width: 15%;
+  height: 75%;
+  background-size: 80px 60px;
+  background-repeat: no-repeat;
+  left: 20px;
+  top: 20px;
+}
+.watermark-teradata{
+  background-image:url("../../../../assets/images/teradata.png") ;opacity:0.6;
+  opacity: 0.4;
+  position: absolute;
+  width: 15%;
+  height: 75%;
+  background-size: 80px 60px;
+  background-repeat: no-repeat;
+  left: 20px;
+  top: 20px;
+}
+.watermark-hbase{
+  background-image:url("../../../../assets/images/hbase.png") ;opacity:0.6;
+  opacity: 0.4;
+  position: absolute;
+  width: 15%;
+  height: 75%;
+  background-size: 80px 60px;
+  background-repeat: no-repeat;
+  left: 20px;
+  top: 20px;
+}
+.watermark-s3{
+  background-image:url("../../../../assets/images/s3.png") ;opacity:0.6;
+  opacity: 0.4;
+  position: absolute;
+  width: 15%;
+  height: 75%;
+  background-size: 75px 75px;
+  background-repeat: no-repeat;
+  left: 20px;
+  top: 20px;
+}
+
+.watermark-noimage{
+  background-image:url("../../../../assets/images/noimage.png") ;opacity:0.6;
+  opacity: 0.4;
+  position: absolute;
+  width: 15%;
+  height: 75%;
+  background-size: 75px 75px;
+  background-repeat: no-repeat;
+  left: 20px;
+  top: 20px;
+}
+
+
+.watermark-oracle{
+  background-image:url("../../../../assets/images/oracle.png") ;opacity:0.6;
+  opacity: 0.4;
+  position: absolute;
+  width: 15%;
+  height: 75%;
+  background-size: 75px 75px;
+  background-repeat: no-repeat;
+  left: 20px;
+  top:20px;
+}
+
+.watermark-druid{
+  background-image:url("../../../../assets/images/druid.png") ;opacity:0.6;
+  opacity: 0.4;
+  position: absolute;
+  width: 15%;
+  height: 75%;
+  background-size: 75px 75px;
+  background-repeat: no-repeat;
+  left: 20px;
+  top: 20px;
+}
+
+a {
+  text-decoration: none !important;
+  color: black;
+}
+
+.mat-standard-chip {
+  transition: box-shadow 280ms cubic-bezier(.4,0,.2,1);
+  display: inline-flex;
+  padding: 7px 12px;
+  border-radius: 0px;
+  align-items: center;
+  cursor: default;
+  min-height: 25px;
+}
+
+
+figure.mat-figure {
+  background-color: #80808014;
+}
+
+.app-container {
+  font-size: 16px;
+  padding: 20px 32px;
+  position: relative;
+  background-color: #8080800f;
+}
+
+.mat-card-header .mat-card-title {
+  margin-bottom: 15px;
+}
+
+.mat-card-content>:first-child, .mat-card>:first-child {
+  margin-top: 30px;
+}
+
+
+.mat-card-actions, .mat-card-content, .mat-card-subtitle {
+  display: flex;
+  margin-bottom: 0px;
+
+}
+
+.advance-search .mat-card-actions {
+  margin-left: 0px;
+  padding: 0px;
+}
+
+.advance-search .search-logo{
+  width: 19%;
+  margin-top: 30px;
+  float: left;
+  height: auto;
+}
+.advance-search .search-content{
+  width: 81%;
+  display: inline-block;
+}
+.advance-search .lefticon-list{
+  padding-top:8px;
+  width:20%;
+  position: absolute;
+  bottom: 10px;
+  left: 15px;
+}
+.advance-search .righticon-list{
+  float: right;
+  margin-right : 10px;
+  text-align: right;
+  margin-top: 10px;
+}
+
+/*.advance-search .mat-grid-list > div > .mat-grid-tile{
+  margin-left: 10px;
+}
+
+.advance-search .mat-grid-list div > .mat-grid-tile:nth-child(even) .search-card.mat-card{
+  margin-right: 10px;
+}*/
+
+.advance-search .mat-grid-list{
+  margin-left : 5px;
+  margin-right : 5px;
+}
+.advance-search > mat-grid-list > div > mat-grid-tile:nth-child(1){
+  margin-left: 10px;
+}
+
+.advance-search .search-card.mat-card{
+  margin: 5px;
+  width: 100%;
+}
+.advance-search .search-content .mat-card-title, .search-content .mat-card-title p{
+  margin-bottom: 5px;
+}
+.advance-search .search-content .mat-card-title p{
+  margin-top:15px;
+}
+.advance-search .search-content .mat-card-title p a{
+  font-size: 15px !important;
+}
+.advance-search .search-content .lefticon-list .action-btn{
+  float: left;
+  padding-left:12px;
+  width:25px;
+}
+.advance-search .search-content .righticon-list .action-btn{
+  float: right;
+}
+.advance-search .mat-paginator{
+  margin: 5px 10px;
+}
+.advance-search .mat-raised-button{
+  width: 50px !important;
+  min-width: 50px !important;
+  padding: 0 10px;
+}
+.advance-search .mat-card-actions .mat-raised-button{
+  margin: 0 2px !important;
+}
+/*.advance-search .desc-icon{
+  padding-left : 8px;
+}*/
+
+
+.search-box-input {
+  height: 36px;
+  line-height: 36px;
+  font-size: 15px;
+  border: none;
+  background: none;
+  padding: 0;
+  outline: none;
+  margin-right: 16px;
+  flex: 1;
+  color: rgba(255,255,255,0.2);
+}
+
+.search-box {
+  background: rgba(255,255,255,0.2);
+  border-radius: 2px;
+  display: flex;
+  position: relative;
+  top: 20px;
+  border-color: #4154B2;
+  border-style: solid;
+  border-width: 1.5px;
+  border-radius: 10px;
+}
+
+.search-box {
+  background: white;
+  .search-box-input {
+    color: initial;
+  }
+}
+
+mat-icon {
+  color: white;
+  vertical-align: middle;
+  opacity: 0.5;
+}
+
+.search-box {
+  mat-icon {
+    color: black;
+  }
+}
+
+.search-box-icon {
+  margin: 0 19px;
+  line-height: 36px;
+}
+
+.search-box-container {
+  min-height: 100%;
+  height: 100%;
+  max-width: 512px;
+  margin: 0 auto;
+}
+
+mat-spinner {
+  width: 24px;
+  height: 24px;
+  position: relative;
+  top: 6px;
+}
+
+.norecord{
+  text-align: center;
+  padding-top:70px;
+}
+
+.mat-icon{
+  color : #3737b1;
+}
+
+.mat-card-title a{
+  color : #3737b1;
+}

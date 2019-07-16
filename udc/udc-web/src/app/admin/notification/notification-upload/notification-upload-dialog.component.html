@@ -1,0 +1,148 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="createForm">
+
+  <input type="file" (change)="changeListener($event.target.files)" multiple="false" />
+
+  <div *ngIf="data.length > 0">
+  <ngx-datatable
+        class='material notification-datatable'
+        [rows]='data'
+        [columnMode]="'force'"
+        [headerHeight]="50"
+        [footerHeight]="50"
+        [rowHeight]="50"
+        [scrollbarV]="true"
+        (page)="onPage($event)">
+        <ngx-datatable-column name="notificationContent">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+              title="Double click to edit"
+              (dblclick)="editing[rowIndex + '-notificationContent'] = true"
+              *ngIf="!editing[rowIndex + '-notificationContent']">
+              {{row.notificationContent}}
+            </span>
+          <input
+            autofocus
+            (blur)="updateValue($event, 'notificationContent', rowIndex)"
+            *ngIf="editing[rowIndex + '-notificationContent']"
+            type="text"
+            [value]="row.notificationContent"
+          />
+        </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="notificationId"></ngx-datatable-column>
+        <ngx-datatable-column name="notificationLiveTimeInMin">
+            <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+              <span
+                  title="Double click to edit"
+                  (dblclick)="editing[rowIndex + '-notificationLiveTimeInMin'] = true"
+                  *ngIf="!editing[rowIndex + '-notificationLiveTimeInMin']">
+                  {{row.notificationLiveTimeInMin}}
+                </span>
+              <input
+                autofocus
+                (blur)="updateValue($event, 'notificationLiveTimeInMin', rowIndex)"
+                *ngIf="editing[rowIndex + '-notificationLiveTimeInMin']"
+                type="text"
+                [value]="row.notificationLiveTimeInMin"
+              />
+            </ng-template>
+        </ngx-datatable-column>
+
+        <ngx-datatable-column name="notificationMessagePage">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-notificationMessagePage'] = true"
+                *ngIf="!editing[rowIndex + '-notificationMessagePage']">
+                {{row.notificationMessagePage}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'notificationMessagePage', rowIndex)"
+              *ngIf="editing[rowIndex + '-notificationMessagePage']"
+              type="text"
+              [value]="row.notificationMessagePage"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="notificationPriority">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-notificationPriority'] = true"
+                *ngIf="!editing[rowIndex + '-notificationPriority']">
+                {{row.notificationPriority}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'notificationPriority', rowIndex)"
+              *ngIf="editing[rowIndex + '-notificationPriority']"
+              type="text"
+              [value]="row.notificationPriority"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="notificationType">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-notificationType'] = true"
+                *ngIf="!editing[rowIndex + '-notificationType']">
+                {{row.notificationType}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'notificationType', rowIndex)"
+              *ngIf="editing[rowIndex + '-notificationType']"
+              type="text"
+              [value]="row.notificationType"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+        <ngx-datatable-column name="referenceUrl">
+          <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
+            <span
+                title="Double click to edit"
+                (dblclick)="editing[rowIndex + '-referenceUrl'] = true"
+                *ngIf="!editing[rowIndex + '-referenceUrl']">
+                {{row.referenceUrl}}
+              </span>
+            <input
+              autofocus
+              (blur)="updateValue($event, 'referenceUrl', rowIndex)"
+              *ngIf="editing[rowIndex + '-referenceUrl']"
+              type="text"
+              [value]="row.referenceUrl"
+            />
+          </ng-template>
+        </ngx-datatable-column>
+      </ngx-datatable>
+    </div>
+
+  <div class="dialog-footer">
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-button type="submit" color="primary" (click)="uploadNotification()" [disabled]="data.length < 1">Submit</button>
+  </div>
+
+
+</form>

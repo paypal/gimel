@@ -1,0 +1,92 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="createForm" (ngSubmit)="onSubmit()">
+
+
+  <mat-form-field class="full-width">
+    <input matInput #notificationContent placeholder="Notification Content"
+           formControlName="notificationContent">
+    <mat-hint *ngIf="formErrors.NotificationContent" class="alert-danger">
+      {{formErrors.notificationContent}}
+    </mat-hint>
+    <mat-hint align="end">{{notificationContent.value.length}} / {{maxCharsForName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #notificationPriority required="true" placeholder="Notification Priority" formControlName="notificationPriority">
+    <mat-hint *ngIf="formErrors.notificationPriority" class="alert-danger">
+      {{formErrors.notificationPriority}}
+    </mat-hint>
+    <mat-hint align="end">{{notificationPriority.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #notificationType required="true" placeholder="Notification Type" formControlName="notificationType">
+    <mat-hint *ngIf="formErrors.notificationType" class="alert-danger">
+      {{formErrors.notificationType}}
+    </mat-hint>
+    <mat-hint align="end">{{notificationType.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #referenceUrl rows="5" placeholder="Reference Url"
+              formControlName="referenceUrl">
+    <mat-hint *ngIf="formErrors.referenceUrl" class="alert-danger">
+      {{formErrors.referenceUrl}}
+    </mat-hint>
+    <mat-hint align="end">{{referenceUrl.value.length}} / {{maxCharsForDescName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #notificationMessagePage rows="5" placeholder="Notification MessagePage"
+              formControlName="notificationMessagePage">
+    <mat-hint *ngIf="formErrors.notificationMessagePage" class="alert-danger">
+      {{formErrors.notificationMessagePage}}
+    </mat-hint>
+    <mat-hint align="end">{{notificationMessagePage.value.length}} / {{maxCharsForDescName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #notificationLiveTimeInMin rows="5" placeholder="Notification Live Time In Min"
+              formControlName="notificationLiveTimeInMin">
+    <mat-hint *ngIf="formErrors.notificationLiveTimeInMin" class="alert-danger">
+      {{formErrors.notificationLiveTimeInMin}}
+    </mat-hint>
+    <mat-hint align="end">{{notificationLiveTimeInMin.value.length}} / {{maxCharsForDescName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
+    <mat-hint *ngIf="formErrors.createdUser" class="alert-danger">
+      {{formErrors.createdUser}}
+    </mat-hint>
+    <mat-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
+
+  <br><br>
+
+  <div class="dialog-footer">
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
+  </div>
+
+
+</form>

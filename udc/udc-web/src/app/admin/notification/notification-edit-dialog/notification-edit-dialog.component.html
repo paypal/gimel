@@ -1,0 +1,101 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
+<form [formGroup]="editNotificationForm" (ngSubmit)="onSubmit()">
+
+  <mat-form-field class="full-width">
+    <input matInput #modifiednotificationContent placeholder="Notification Content"
+           formControlName="modifiednotificationContent" value="{{notificationContent}}">
+    <mat-hint *ngIf="formErrors.modifiednotificationContent" class="alert-danger">
+      {{formErrors.modifiednotificationContent}}
+    </mat-hint>
+    <mat-hint align="end">{{modifiednotificationContent.value.length}} / {{maxCharsForName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #modifiednotificationPriority  value="{{notificationPriority}}"
+    placeholder="Notification Priority" formControlName="modifiednotificationPriority">
+    <mat-hint *ngIf="formErrors.modifiednotificationPriority" class="alert-danger">
+      {{formErrors.modifiednotificationPriority}}
+    </mat-hint>
+    <mat-hint align="end">{{modifiednotificationPriority.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #modifiednotificationType placeholder="Notification Type"
+    value="{{notificationType}}" formControlName="modifiednotificationType">
+    <mat-hint *ngIf="formErrors.modifiednotificationType" class="alert-danger">
+      {{formErrors.modifiednotificationType}}
+    </mat-hint>
+    <mat-hint align="end">{{modifiednotificationType.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #modifiedreferenceUrl rows="5" placeholder="Reference Url"
+              formControlName="modifiedreferenceUrl" value="{{referenceUrl}}">
+    <mat-hint *ngIf="formErrors.modifiedreferenceUrl" class="alert-danger">
+      {{formErrors.modifiedreferenceUrl}}
+    </mat-hint>
+    <mat-hint align="end">{{modifiedreferenceUrl.value.length}} / {{maxCharsForDescName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #modifiednotificationMessagePage rows="5" placeholder="Notification MessagePage"
+              formControlName="modifiednotificationMessagePage" value="{{notificationMessagePage}}">
+    <mat-hint *ngIf="formErrors.modifiednotificationMessagePage" class="alert-danger">
+      {{formErrors.modifiednotificationMessagePage}}
+    </mat-hint>
+    <mat-hint align="end">{{modifiednotificationMessagePage.value.length}} / {{maxCharsForDescName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #modifiednotificationLiveTimeInMin rows="5" placeholder="Notification Live Time In Min"
+              formControlName="modifiednotificationLiveTimeInMin" value="{{notificationLiveTimeInMin}}">
+    <mat-hint *ngIf="formErrors.modifiednotificationLiveTimeInMin" class="alert-danger">
+      {{formErrors.modifiednotificationLiveTimeInMin}}
+    </mat-hint>
+    <mat-hint align="end">{{modifiednotificationLiveTimeInMin.value.length}} / {{maxCharsForLiveTimeMin}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #modifiedcreatedUser readonly placeholder="Created User" value="{{createdUser}}" formControlName="modifiedcreatedUser">
+    <mat-hint *ngIf="formErrors.modifiedcreatedUser" class="alert-danger">
+      {{formErrors.modifiedcreatedUser}}
+    </mat-hint>
+    <mat-hint align="end">{{modifiedcreatedUser.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #updatedUser required="true" placeholder="UpdatedUser User" formControlName="updatedUser">
+    <mat-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+      {{formErrors.updatedUser}}
+    </mat-hint>
+    <mat-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
+
+  <br><br>
+
+  <div class="dialog-footer">
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-button type="submit" color="primary" [disabled]="!editNotificationForm.valid">Create</button>
+  </div>
+
+
+</form>

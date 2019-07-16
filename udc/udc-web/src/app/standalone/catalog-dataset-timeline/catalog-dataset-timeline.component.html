@@ -1,0 +1,70 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div class="app-container">
+
+  <p>
+    <mat-form-field>
+      <mat-select [formControl]="filtersCtrl"   (selectionChange)="onTimelineDimensionChange()" [multiple]="true" #multiSelect>
+
+          <ngx-mat-select-search [formControl]="timelineFilterCtrl"></ngx-mat-select-search>
+
+
+        <mat-option *ngFor="let changeLog of filteredTimeline | async" [value]="changeLog">
+          {{changeLog}}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+  </p>
+
+  <div>
+    <mgl-timeline  style="width: 70%; margin-left: 15%"  mobileWidthThreshold=0 *ngIf="filterList.length == 0 && flag==false">
+      <div class="mgl-timeline-line"></div>
+      <span *ngFor="let log of changeLogs" >
+          <mgl-timeline-entry>
+            <mgl-timeline-entry-header (click)="onDotClick()">
+              <mat-chip selected [style.background-color]="log['givecolor']"> {{ log['timelineDimension']}}</mat-chip> {{log['timelineRowText']}}
+              <mat-icon class="infoIcon" (click)="openDialog(log)">info</mat-icon>
+            </mgl-timeline-entry-header>
+            <mgl-timeline-entry-dot class="mgl-timeline-entry-dot" (click)="onDotClick()" matTooltip="{{ log['username'] }}">
+              <img class="userImg" src = "{{ log['imageUrl'] }}" />
+            </mgl-timeline-entry-dot>
+          </mgl-timeline-entry>
+        </span>
+    </mgl-timeline>
+    <mgl-timeline style="width: 70%; margin-left: 15%" mobileWidthThreshold=0 *ngIf="filterList.length > 0">
+      <div class="mgl-timeline-line"></div>
+      <span *ngFor="let log of filterList" >
+          <mgl-timeline-entry>
+            <mgl-timeline-entry-header (click)="onDotClick()">
+              <mat-chip selected [style.background-color]="log['givecolor']"> {{ log['timelineDimension']}}</mat-chip> {{log['timelineRowText']}}
+              <mat-icon class="infoIcon" (click)="openDialog(log)">info</mat-icon>
+            </mgl-timeline-entry-header>
+            <mgl-timeline-entry-dot class="mgl-timeline-entry-dot" (click)="onDotClick()" matTooltip="{{ log['username'] }}">
+              <img class="userImg" src = "{{ log['imageUrl'] }}" />
+            </mgl-timeline-entry-dot>
+          </mgl-timeline-entry>
+        </span>
+    </mgl-timeline>
+    <ng-container *ngIf="filterList.length === 0 && flag===true">
+        <span>No changes</span>
+    </ng-container>
+
+  </div>
+</div>

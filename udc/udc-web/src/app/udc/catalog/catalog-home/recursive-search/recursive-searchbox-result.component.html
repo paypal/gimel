@@ -1,0 +1,50 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<mat-card class="search-result-card">
+  <mat-tab-group *ngIf="cds && cds.length !== 0">
+    <div *ngFor="let cd of cds">
+      <mat-tab *ngIf="cd.datasets.length > 0">
+        <ng-template mat-tab-label>{{cd.storageTypeName +"(" + cd.datasets.length + ")"}}</ng-template>
+        <mat-nav-list dense>
+          <mat-list-item *ngFor="let dataset of (cd.datasets ? cd.datasets.slice(0, 8) : [])">
+            <a mat-line (click)="closeSearch()"
+               [routerLink]="['/standalone', 'dataset', dataset.storageDataSetName]">
+              <div [innerHTML]="dataset.storageDataSetName | highlight : searchTerm"></div>
+            </a>
+          </mat-list-item>
+          <mat-list-item *ngIf="cds  && cds.length > 0">
+            <div fxLayout="row" fxLayoutAlign="space-between">
+              <div fxFlex=100 class="main-container" style="padding-left: 160px;">
+                <button mat-raised-button color="primary"
+                        id="button" type="submit" (click)="closeSearch()"
+                        [routerLink]="['/udc', 'datasets', searchTerm]" routerLinkActive="active">
+                  Search
+                </button>
+              </div>
+            </div>
+          </mat-list-item>
+        </mat-nav-list>
+      </mat-tab>
+    </div>
+  </mat-tab-group>
+  <mat-nav-list dense *ngIf="!cds  || cds.length === 0">
+    <mat-list-item>No results found</mat-list-item>
+  </mat-nav-list>
+</mat-card>
