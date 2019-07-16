@@ -1,0 +1,16 @@
+/target/
+.classpath
+.project
+.settings/
+logs/
+.DS_Store
+src/.DS_Store
+.idea/
+*.iml
+.vscode/
+
+# Docker compose
+docker-compose-base.yml
+docker-compose-qa.yml
+docker-compose-production.yml
+/bin/

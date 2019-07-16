@@ -1,7 +1,29 @@
-import {Component, OnInit} from '@angular/core';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import {CatalogService} from '../services/catalog.service';
-import {StorageSystem} from '../models/catalog-storagesystem';
+import { Component, OnInit } from '@angular/core';
+
+import { CatalogService } from '../services/catalog.service';
+import { StorageSystem } from '../models/catalog-storagesystem';
+import { StorageType } from '../models/catalog-storagetype';
+import { environment } from '../../../../environments/environment';
+import {SessionService} from '../../../core/services/session.service';
 
 @Component({
   selector: 'app-catalog-object-home',
@@ -25,7 +47,8 @@ export class CatalogObjectHomeComponent implements OnInit {
   defaultContainer: string;
   systemMap: Map<string, StorageSystem>;
   systemMapById: Map<number, StorageSystem>;
-  constructor(private catalogService: CatalogService) {
+
+  constructor(private catalogService: CatalogService, private sessionService: SessionService) {
     this.defaultSystem.storageSystemId = 0;
     this.defaultSystem.storageSystemName = 'All';
     this.defaultSystem.storageSystemDescription = 'All';
@@ -57,26 +80,6 @@ export class CatalogObjectHomeComponent implements OnInit {
     });
   }
 
-  loadContainers() {
-    this.containersLoaded = false;
-    this.projectContainerList.push(this.defaultContainer);
-    this.catalogService.getContainers().subscribe(data => {
-      data.map(element => {
-        this.projectContainerList.push(element);
-      });
-    }, error => {
-      this.displayContainerList = this.projectContainerList = [];
-      this.systemsLoaded = true;
-    }, () => {
-      this.displayContainerList = this.projectContainerList.sort((a, b): number => {
-        return a > b ? 1 : -1;
-      });
-      this.enableDropDownSystem();
-      this.containerName = this.defaultContainer;
-      this.containersLoaded = true;
-    });
-  }
-
   onStorageSystemChange() {
     this.projectContainerList = [];
     this.projectContainerList.push(this.defaultContainer);
@@ -101,19 +104,10 @@ export class CatalogObjectHomeComponent implements OnInit {
 
   ngOnInit() {
     this.loadStorageSystems();
-    this.loadContainers();
   }
 
   disableDropDownSystem() {
     this.sloaded = false;
-  }
-
-  disableDropDownContainer() {
-    this.cloaded = false;
-  }
-
-  enableDropDownContainer() {
-    this.cloaded = true;
   }
 
   refreshProject() {

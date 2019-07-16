@@ -1,15 +1,61 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div>
+  <ngx-spinner
+    bdColor="rgba(51, 51, 51, 0.8)"
+    size="large"
+    color="#448aff"
+    type="ball-elastic-dots">
+  </ngx-spinner>
+</div>
 <div class="app-container">
   <div>
     <div class="detail-content-container">
-      <md-input-container class="table-search">
-        <input #searchDB mdInput (keyup)='search(searchDB.value)'>
-        <md-placeholder>
-          <md-icon class="icon-16">search</md-icon>
+      <!--<mat-form-field class="table-search">-->
+      <!--<input #searchDB matInput (keyup)='search(searchDB.value)'>-->
+      <!--<mat-placeholder>-->
+      <!--<mat-icon class="icon-16">search</mat-icon>-->
+      <!--Search-->
+      <!--</mat-placeholder>-->
+      <!--</mat-form-field>-->
+      <mat-form-field class="table-search">
+        <input #searchDB matInput [(ngModel)]="searchString">
+        <mat-placeholder>
+          <mat-icon class="icon-16">search</mat-icon>
+          Search Objects
+        </mat-placeholder>
+      </mat-form-field>
+      <div *ngIf="systemName">
+        <button mat-raised-button mat-tooltip="Refresh Datasets" (click)="searchObjects()"
+                class="app-details-btn">
           Search
-        </md-placeholder>
-      </md-input-container>
-      <div>
-        <button md-raised-button routerLink="." (click)="createObjectDialog()" class="app-details-btn">
+        </button>
+      </div>
+      <div *ngIf="!systemName">
+        <button mat-raised-button mat-tooltip="Refresh Datasets" (click)="searchObjects()"
+                class="app-details-btn" disabled>
+          Search
+        </button>
+      </div>
+      <div *ngIf="admin">
+        <button mat-raised-button routerLink="." (click)="createObjectDialog()" class="app-details-btn">
           Create Object
         </button>
       </div>
@@ -24,7 +70,6 @@
     [footerHeight]="50"
     [rowHeight]="'auto'"
     [externalPaging]="true"
-    [loadingIndicator]="loading"
     [count]="page.totalElements"
     [offset]="page.pageNumber"
     [limit]="page.size"
@@ -44,17 +89,17 @@
       [draggable]="false"
       [canAutoResize]="false">
       <ng-template let-row="row" ngx-datatable-cell-template>
-        <button md-icon-button class="action-btn"
+        <button mat-icon-button class="action-btn"
                 (click)="toggleExpandRow(row)">
-          <md-icon *ngIf="!row.$$expanded" md-tooltip="Show object Details">keyboard_arrow_down</md-icon>
-          <md-icon *ngIf="row.$$expanded" md-tooltip="Hide object Details">keyboard_arrow_up</md-icon>
+          <mat-icon *ngIf="!row.$$expanded" mat-tooltip="Show object Details">keyboard_arrow_down</mat-icon>
+          <mat-icon *ngIf="row.$$expanded" mat-tooltip="Hide object Details">keyboard_arrow_up</mat-icon>
         </button>
       </ng-template>
     </ngx-datatable-column>
     <!--<ngx-datatable-column name="Object ID" [width]="35" [sortable]="false">-->
-      <!--<ng-template let-row="row" ngx-datatable-cell-template>-->
-        <!--{{ row.objectId }}-->
-      <!--</ng-template>-->
+    <!--<ng-template let-row="row" ngx-datatable-cell-template>-->
+    <!--{{ row.objectId }}-->
+    <!--</ng-template>-->
     <!--</ngx-datatable-column>-->
     <ngx-datatable-column name="Object Name" [width]="200" [sortable]="false">
       <ng-template let-row="row" ngx-datatable-cell-template>

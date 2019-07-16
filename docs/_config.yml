@@ -1,6 +1,0 @@
-theme: jekyll-theme-cayman
-
-pages:
-- Try Gimel:
-    - 'Prerequisites': 'Try-Gimel/0-prerequisite.md'
-    - 'HDFS API': 'Try-Gimel/1-HDFS.md'

@@ -1,81 +1,98 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
 <form [formGroup]="editSystemForm" (ngSubmit)="onSubmit()">
 
-  <md-input-container class="full-width">
-    <input mdInput required="true" placeholder="System ID" value="{{storageSystemId}}" disabled>
-  </md-input-container>
+  <mat-form-field class="full-width">
+    <input matInput required="true" placeholder="System ID" value="{{storageSystemId}}" disabled>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <input mdInput #modifiedStorageSystemName placeholder="System" value="{{storageSystemName}}"
+  <mat-form-field class="full-width">
+    <input matInput #modifiedStorageSystemName placeholder="System" value="{{storageSystemName}}"
            formControlName="modifiedStorageSystemName">
-    <md-hint *ngIf="formErrors.modifiedStorageSystemName" class="alert-danger">
+    <mat-hint *ngIf="formErrors.modifiedStorageSystemName" class="alert-danger">
       {{formErrors.modifiedStorageSystemName}}
-    </md-hint>
-    <md-hint align="end">{{modifiedStorageSystemName.value.length}} / {{maxCharsForName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{modifiedStorageSystemName.value.length}} / {{maxCharsForName}}</mat-hint>
+  </mat-form-field>
 
-  <md-input-container class="full-width">
-    <input mdInput #modifiedContainers placeholder="Containers" value="{{containers}}"
+  <mat-form-field class="full-width">
+    <input matInput #modifiedContainers placeholder="Containers" value="{{containers}}"
            formControlName="modifiedContainers">
-    <md-hint *ngIf="formErrors.modifiedContainers" class="alert-danger">
+    <mat-hint *ngIf="formErrors.modifiedContainers" class="alert-danger">
       {{formErrors.modifiedContainers}}
-    </md-hint>
-    <md-hint align="end">{{modifiedContainers.value.length}} / {{maxCharsForName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{modifiedContainers.value.length}} / {{maxCharsForName}}</mat-hint>
+  </mat-form-field>
 
-  <md-input-container class="full-width">
-    <textarea mdInput #modifiedStorageSystemDescription rows="5" placeholder="Description"
+  <mat-form-field class="full-width">
+    <textarea matInput #modifiedStorageSystemDescription rows="5" placeholder="Description"
               value="{{storageSystemDescription}}" formControlName="modifiedStorageSystemDescription">
     </textarea>
-    <md-hint *ngIf="formErrors.modifiedStorageSystemDescription" class="alert-danger">
+    <mat-hint *ngIf="formErrors.modifiedStorageSystemDescription" class="alert-danger">
       {{formErrors.modifiedStorageSystemDescription}}
-    </md-hint>
-    <md-hint align="end">{{modifiedStorageSystemDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
-  </md-input-container>
-
-  <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
-    <div fxFlex="100" fxFlexAlign="center">
-      <md-select required placeholder="Is Gimel Supported" [floatPlaceholder]="'never'"
-                 formControlName="isGimelCompatible" style="width: 100%;">
-        <md-option *ngFor="let isGimelCompatible of compatibilityList" [value]="isGimelCompatible">
-          {{isGimelCompatible}}
-        </md-option>
-      </md-select>
-    </div>
-  </div>
+    </mat-hint>
+    <mat-hint align="end">{{modifiedStorageSystemDescription.value.length}} / {{maxCharsForDescName}}</mat-hint>
+  </mat-form-field>
   <br>
 
   <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
     <div fxFlex="100" fxFlexAlign="center">
-      <md-select required placeholder="Is Read Supported" [floatPlaceholder]="'never'"
+      <mat-form-field [floatLabel]="'never'"><mat-select required placeholder="Is Read Supported"
                  formControlName="isReadCompatible" style="width: 100%;">
-        <md-option *ngFor="let isReadCompatible of compatibilityList" [value]="isReadCompatible">
+        <mat-option *ngFor="let isReadCompatible of compatibilityList" [value]="isReadCompatible">
           {{isReadCompatible}}
-        </md-option>
-      </md-select>
+        </mat-option>
+      </mat-select></mat-form-field>
     </div>
   </div>
+
   <br>
 
-  <md-input-container class="full-width">
-    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
-  </md-input-container>
+  <mat-form-field class="full-width">
+    <input matInput required="true" placeholder="Discovery SLA(in minutes)" value="{{discoverySla}}" disabled>
+  </mat-form-field>
 
-  <md-input-container class="full-width">
-    <input mdInput required="true" placeholder="Admin User" value="{{adminUserId}}" disabled>
-  </md-input-container>
 
-  <md-input-container class="full-width">
-    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
-    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+  <mat-form-field class="full-width">
+    <input matInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput required="true" placeholder="Admin User" value="{{adminUserId}}" disabled>
+  </mat-form-field>
+
+  <mat-form-field class="full-width">
+    <input matInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <mat-hint *ngIf="formErrors.updatedUser" class="alert-danger">
       {{formErrors.updatedUser}}
-    </md-hint>
-    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
+
+  <div>
+    <h4>System Attributes</h4>
+  </div>
 
   <ngx-datatable
-    #typeAttributesTable
     class="material"
     [headerHeight]="50"
     [limit]="5"
@@ -83,40 +100,23 @@
     [footerHeight]="50"
     [rowHeight]="'auto'"
     [rows]="systemAttributes">
-    <!--<ngx-datatable-column name="Attribute Name">-->
-    <!--<ng-template ngx-datatable-cell-template let-row="row">-->
-    <!--<span-->
-    <!--title="Double click to edit"-->
-    <!--(dblclick)="editing[row.$$index + '-storageDsAttributeKeyName'] = true"-->
-    <!--*ngIf="!editing[row.$$index + '-storageDsAttributeKeyName']">-->
-    <!--{{row.storageDsAttributeKeyName}}-->
-    <!--</span>-->
-    <!--<input-->
-    <!--autofocus-->
-    <!--(blur)="updateValue($event, 'storageDsAttributeKeyName', row)"-->
-    <!--*ngIf="editing[row.$$index + '-storageDsAttributeKeyName']"-->
-    <!--type="text"-->
-    <!--[value]="row.storageDsAttributeKeyName"-->
-    <!--/>-->
-    <!--</ng-template>-->
-    <!--</ngx-datatable-column>-->
     <ngx-datatable-column name="Attribute Key" [width]="150">
       <ng-template let-row="row" ngx-datatable-cell-template>
         {{ row.storageDsAttributeKeyName }}
       </ng-template>
     </ngx-datatable-column>
     <ngx-datatable-column name="Attribute Value">
-      <ng-template ngx-datatable-cell-template let-row="row">
+      <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
             <span
               title="Double click to edit"
-              (dblclick)="editing[row.$$index + '-storageSystemAttributeValue'] = true"
-              *ngIf="!editing[row.$$index + '-storageSystemAttributeValue']">
+              (dblclick)="editing[rowIndex + '-storageSystemAttributeValue'] = true"
+              *ngIf="!editing[rowIndex + '-storageSystemAttributeValue']">
               {{row.storageSystemAttributeValue}}
             </span>
         <input
           autofocus
-          (blur)="updateValue($event, 'storageSystemAttributeValue', row)"
-          *ngIf="editing[row.$$index + '-storageSystemAttributeValue']"
+          (blur)="updateValue($event, 'storageSystemAttributeValue', rowIndex)"
+          *ngIf="editing[rowIndex + '-storageSystemAttributeValue']"
           type="text"
           [value]="row.storageSystemAttributeValue"
         />
@@ -126,8 +126,8 @@
   <br>
 
   <div class="dialog-footer">
-    <button md-button type="button" (click)="cancel()">Cancel</button>
-    <button md-button type="submit" color="primary" [disabled]="!editSystemForm.valid">Update</button>
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-button type="submit" color="primary" [disabled]="!editSystemForm.valid">Update</button>
   </div>
 
 

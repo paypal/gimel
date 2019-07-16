@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.service.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -5,6 +24,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,24 +33,16 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
-import com.paypal.udc.cache.UserCache;
-import com.paypal.udc.config.UDCInterceptorConfig;
 import com.paypal.udc.dao.storagesystem.StorageSystemContainerRepository;
 import com.paypal.udc.dao.storagetype.StorageTypeAttributeKeyRepository;
+import com.paypal.udc.dao.user.UserRepository;
 import com.paypal.udc.entity.storagesystem.StorageSystemContainer;
-import com.paypal.udc.interceptor.UDCInterceptor;
 import com.paypal.udc.util.StorageSystemUtil;
 import com.paypal.udc.util.enumeration.ActiveEnumeration;
 
 
 @RunWith(SpringRunner.class)
 public class StorageSystemContainerServiceTest {
-
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
 
     @Mock
     private StorageSystemContainerRepository storageSystemContainerRepository;
@@ -42,7 +54,7 @@ public class StorageSystemContainerServiceTest {
     private StorageTypeAttributeKeyRepository stakr;
 
     @Mock
-    private UserCache userCache;
+    private UserRepository userCache;
 
     @InjectMocks
     private StorageSystemContainerService storageSystemContainerService;
@@ -64,14 +76,14 @@ public class StorageSystemContainerServiceTest {
 
     @Test
     public void verifyValidGetStorageSystemContainerById() throws Exception {
-        when(this.storageSystemContainerRepository.findOne(this.storageSystemContainerId))
-                .thenReturn(this.storageSystemContainer);
+        when(this.storageSystemContainerRepository.findById(this.storageSystemContainerId))
+                .thenReturn(Optional.of(this.storageSystemContainer));
 
         final StorageSystemContainer result = this.storageSystemContainerService
                 .getStorageSystemContainerById(this.storageSystemContainerId);
         assertEquals(this.storageSystemContainer, result);
 
-        verify(this.storageSystemContainerRepository).findOne(this.storageSystemContainerId);
+        verify(this.storageSystemContainerRepository).findById(this.storageSystemContainerId);
     }
 
     @Test
@@ -88,8 +100,8 @@ public class StorageSystemContainerServiceTest {
 
     @Test
     public void verifyValidDeleteStorageSystemContainer() throws Exception {
-        when(this.storageSystemContainerRepository.findOne(this.storageSystemContainerId))
-                .thenReturn(this.storageSystemContainer);
+        when(this.storageSystemContainerRepository.findById(this.storageSystemContainerId))
+                .thenReturn(Optional.of(this.storageSystemContainer));
         when(this.storageSystemContainerRepository.save(this.storageSystemContainer))
                 .thenReturn(this.storageSystemContainer);
 
@@ -97,7 +109,7 @@ public class StorageSystemContainerServiceTest {
                 .deleteStorageSystemContainer(this.storageSystemContainerId);
         assertEquals(this.storageSystemContainer, result);
 
-        verify(this.storageSystemContainerRepository).findOne(this.storageSystemContainerId);
+        verify(this.storageSystemContainerRepository).findById(this.storageSystemContainerId);
     }
 
     @Test
@@ -114,8 +126,8 @@ public class StorageSystemContainerServiceTest {
 
     @Test
     public void verifyValidUpdateStorageSystemContainer() throws Exception {
-        when(this.storageSystemContainerRepository.findOne(this.storageSystemContainerId))
-                .thenReturn(this.storageSystemContainer);
+        when(this.storageSystemContainerRepository.findById(this.storageSystemContainerId))
+                .thenReturn(Optional.of(this.storageSystemContainer));
         when(this.storageSystemContainerRepository.save(this.storageSystemContainer))
                 .thenReturn(this.storageSystemContainer);
 

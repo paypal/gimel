@@ -1,9 +1,28 @@
-import {Component, OnInit} from '@angular/core';
-import {FormGroup, FormBuilder, Validators} from '@angular/forms';
-import {MdDialogRef} from '@angular/material';
-import {CustomValidators, onValueChanged} from '../../../shared/utils';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {Cluster} from '../../models/catalog-cluster';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { MatDialogRef } from '@angular/material';
+import { CustomValidators, onValueChanged } from '../../../shared/utils';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { Cluster } from '../../models/catalog-cluster';
 
 @Component({
   selector: 'app-catalog-cluster-create-dialog',
@@ -24,7 +43,7 @@ export class CatalogCreateClusterDialogComponent implements OnInit {
   private readonly regex = '^(([a-z0-9]+\-)*[a-z0-9]+)*$';
 
   formErrors = {
-    'clusterName': '', 'clusterDescription': '', 'createdUser': '', 'livyEndPoint': '', 'livyPort': '',
+    'clusterName': '', 'clusterDescription': '', 'createdUser': '',
   };
 
   validationMessages = {
@@ -40,18 +59,10 @@ export class CatalogCreateClusterDialogComponent implements OnInit {
       'required': 'Cluster description is required.',
       'maxlength': `name cannot be more than ${ this.maxCharsForDescName } characters long.`,
       'pattern': this.nameHint,
-    }, 'livyEndPoint': {
-      'required': 'Livy End point is required.',
-      'maxlength': `name cannot be more than ${ this.maxCharsForDescName } characters long.`,
-      'pattern': this.nameHint,
-    }, 'livyPort': {
-      'required': 'Livy Port is required.',
-      'maxlength': `name cannot be more than ${ this.maxCharsForName } characters long.`,
-      'pattern': this.nameHint,
-    }
+    },
   };
 
-  constructor(public dialogRef: MdDialogRef<CatalogCreateClusterDialogComponent>, private fb: FormBuilder, private catalogService: CatalogService) {
+  constructor(public dialogRef: MatDialogRef<CatalogCreateClusterDialogComponent>, private fb: FormBuilder, private catalogService: CatalogService) {
   }
 
   ngOnInit() {
@@ -59,8 +70,6 @@ export class CatalogCreateClusterDialogComponent implements OnInit {
       'clusterName': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForName), Validators.pattern(this.regex)]],
       'clusterDescription': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForDescName)]],
       'createdUser': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForUserName), Validators.pattern(this.regex)]],
-      'livyEndPoint': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForDescName)]],
-      'livyPort': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForName), Validators.pattern(this.regex)]],
     });
 
     this.createForm.valueChanges.subscribe(data => onValueChanged(this.createForm, this.formErrors, this.validationMessages));
@@ -90,7 +99,6 @@ export class CatalogCreateClusterDialogComponent implements OnInit {
         this.dialogRef.close({status: 'user fail', error: 'Invalid Username'});
       });
 
-
   }
 
   private populateCluster(submitValue) {
@@ -98,8 +106,6 @@ export class CatalogCreateClusterDialogComponent implements OnInit {
     cluster.clusterDescription = submitValue.clusterDescription;
     cluster.createdUser = submitValue.createdUser;
     cluster.clusterName = submitValue.clusterName;
-    cluster.livyEndPoint = submitValue.livyEndPoint;
-    cluster.livyPort = submitValue.livyPort;
     return cluster;
   }
 }

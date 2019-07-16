@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.service.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -16,22 +35,22 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit4.SpringRunner;
-import com.paypal.udc.cache.ObjectSchemaMapCache;
-import com.paypal.udc.config.UDCInterceptorConfig;
-import com.paypal.udc.dao.ClusterRepository;
-import com.paypal.udc.dao.dataset.DatasetChangeLogRegisteredRepository;
+import com.paypal.udc.dao.cluster.ClusterRepository;
+//** TODO: Remove Commented Code **
+//import com.paypal.udc.dao.dataset.DatasetChangeLogRegisteredRepository;
 import com.paypal.udc.dao.dataset.DatasetRepository;
 import com.paypal.udc.dao.dataset.DatasetStorageSystemRepository;
+import com.paypal.udc.dao.objectschema.ObjectSchemaAttributeCustomKeyValueRepository;
 import com.paypal.udc.dao.objectschema.ObjectSchemaAttributeValueRepository;
 import com.paypal.udc.dao.objectschema.ObjectSchemaMapRepository;
 import com.paypal.udc.dao.objectschema.PageableObjectSchemaMapRepository;
 import com.paypal.udc.dao.storagesystem.StorageSystemRepository;
 import com.paypal.udc.dao.storagetype.StorageTypeAttributeKeyRepository;
-import com.paypal.udc.entity.Cluster;
+import com.paypal.udc.entity.cluster.Cluster;
 import com.paypal.udc.entity.dataset.Dataset;
+import com.paypal.udc.entity.objectschema.ObjectAttributeKeyValue;
 import com.paypal.udc.entity.objectschema.ObjectSchemaMap;
 import com.paypal.udc.entity.storagesystem.StorageSystem;
-import com.paypal.udc.interceptor.UDCInterceptor;
 import com.paypal.udc.util.ClusterUtil;
 import com.paypal.udc.util.DatasetUtil;
 import com.paypal.udc.util.ObjectSchemaMapUtil;
@@ -43,23 +62,18 @@ import com.paypal.udc.util.UserUtil;
 @RunWith(SpringRunner.class)
 public class ObjectSchemaMapServiceTest {
 
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
-
     @Mock
     private ObjectSchemaMapRepository schemaMapRepository;
 
-    @Mock
-    private ObjectSchemaMapCache schemaMapCache;
-
-    @Mock
-    private DatasetChangeLogRegisteredRepository changeLogRegisteredRepository;
+    // ** TODO: Remove Commented Code **
+    // @Mock
+    // private DatasetChangeLogRegisteredRepository changeLogRegisteredRepository;
 
     @Mock
     private ObjectSchemaAttributeValueRepository objectAttributeRepository;
+
+    @Mock
+    private ObjectSchemaAttributeCustomKeyValueRepository sackvr;
 
     @Mock
     private StorageSystemUtil storageSystemUtil;
@@ -115,6 +129,10 @@ public class ObjectSchemaMapServiceTest {
     private Long clusterId;
     private Cluster cluster;
     private List<Cluster> clusterList;
+    private ObjectAttributeKeyValue attributeKeyValue;
+    private List<ObjectAttributeKeyValue> attributeValues;
+    private List<Long> systemIds;
+    private String systemList;
 
     @Before
     public void setup() {
@@ -128,6 +146,9 @@ public class ObjectSchemaMapServiceTest {
         this.storageSystem = new StorageSystem();
         this.storageSystem.setStorageSystemId(this.storageSystemId);
         this.objectId = 1L;
+        this.attributeKeyValue = new ObjectAttributeKeyValue(this.objectId, "abcd", "efgh", this.storageSystemId, "Y",
+                "", "", "", "");
+        this.attributeValues = Arrays.asList(this.attributeKeyValue);
         this.objectSchemaMap = new ObjectSchemaMap();
         this.objectSchemaMap.setObjectId(this.objectId);
         this.storageSystemName = "All";
@@ -135,6 +156,8 @@ public class ObjectSchemaMapServiceTest {
         this.clusterId = 2L;
         this.cluster.setClusterId(this.clusterId);
         this.clusterList = Arrays.asList(this.cluster);
+        this.systemList = "All";
+        this.systemIds = Arrays.asList(1L);
     }
 
     @Test
@@ -155,6 +178,17 @@ public class ObjectSchemaMapServiceTest {
                 .thenReturn(this.containerNames);
 
         final List<String> result = this.objectSchemaMapService.getDistinctContainerNames();
+        assertEquals(this.containerNames.size(), result.size());
+
+        verify(this.schemaMapRepository).findAllContainerNames();
+    }
+
+    @Test
+    public void verifyValidGetDistinctContainerNamesBySystemNames() throws Exception {
+        when(this.schemaMapRepository.findAllContainerNames())
+                .thenReturn(this.containerNames);
+
+        final List<String> result = this.objectSchemaMapService.getDistinctContainerNamesBySystems(this.systemList);
         assertEquals(this.containerNames.size(), result.size());
 
         verify(this.schemaMapRepository).findAllContainerNames();
@@ -203,4 +237,26 @@ public class ObjectSchemaMapServiceTest {
         verify(this.pageableSchemaMapRepository).findByStorageSystemIdIn(storageSystemIds, this.pageable);
     }
 
+    @Test
+    public void verifyValidGetObjectAttributeByObjectId() throws Exception {
+        when(this.sackvr.findByObjectId(this.objectId)).thenReturn(this.attributeValues);
+        final List<ObjectAttributeKeyValue> result = this.objectSchemaMapService
+                .getCustomAttributesByObject(this.objectId);
+        assertEquals(this.attributeValues, result);
+    }
+
+    @Test
+    public void verifyValidGetObjectsByStorageSystem() throws Exception {
+        final List<Long> storageSystemIds = new ArrayList<Long>();
+        when(this.clusterRepository.findAll()).thenReturn(this.clusterList);
+        when(this.pageableSchemaMapRepository.findAll(this.pageable)).thenReturn(this.page);
+        when(this.pageableSchemaMapRepository.findByStorageSystemIdIn(storageSystemIds, this.pageable))
+                .thenReturn(this.page);
+        final String objectStr = "All";
+        final Page<ObjectSchemaMap> result = this.objectSchemaMapService
+                .getObjectsByStorageSystem(objectStr, this.storageSystemName, this.pageable);
+        assertEquals(this.page, result);
+
+        verify(this.pageableSchemaMapRepository).findByStorageSystemIdIn(storageSystemIds, this.pageable);
+    }
 }

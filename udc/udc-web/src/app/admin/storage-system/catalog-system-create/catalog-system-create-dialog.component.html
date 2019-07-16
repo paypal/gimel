@@ -1,131 +1,167 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
 <form [formGroup]="createForm" (ngSubmit)="onSubmit()">
   <div>
 
-    <md-input-container class="full-width">
-      <input mdInput #storageSystemName placeholder="System Name"
-             formControlName="storageSystemName">
-      <md-hint *ngIf="formErrors.storageSystemName" class="alert-danger">
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <mat-form-field [floatLabel]="'never'">
+          <mat-select *ngIf="!entityLoading" required placeholder="Assigned Entity"
+                      formControlName="entity">
+            <mat-option *ngFor="let entity of entityList" [value]="entity">
+              {{ entity['entityName'] }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-progress-bar mode="indeterminate" *ngIf="entityLoading"></mat-progress-bar>
+      </div>
+      <div fxFlex="100" fxFlexAlign="center">
+        <mat-form-field [floatLabel]="'never'">
+          <mat-select *ngIf="!dbLoading" required placeholder="Storage Type"
+                      formControlName="storageType" (selectionChange)="onStorageTypeChange()">
+            <mat-option *ngFor="let storageType of storageTypes" [value]="storageType">
+             {{ storageType['storageTypeName'] }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
+      </div>
+    </div>
+    <mat-form-field class="full-width">
+      <input matInput #storageSystemName placeholder="System Name" style="padding-left: 10px;"
+             formControlName= "storageSystemName">
+      <span matPrefix style="padding-bottom: 2px">
+        <mat-chip-list>
+          <span *ngIf="selectedStorageType">
+            <mat-chip selected [color]="availableColor.color">
+              <span *ngIf="selectedStorageType" style="padding-left: 3px;">
+                {{ selectedStorageType + "."}}
+              </span>
+            </mat-chip>
+          </span>
+      </mat-chip-list>
+      </span>
+      <mat-hint *ngIf="formErrors.storageSystemName" class="alert-danger">
         {{formErrors.storageSystemName}}
-      </md-hint>
-      <md-hint align="end">{{storageSystemName.value.length}} / {{maxCharsForName}}</md-hint>
-    </md-input-container>
-
-    <md-input-container class="full-width">
-    <textarea mdInput #storageSystemDescription rows="3" placeholder="System Description"
+      </mat-hint>
+      <mat-hint align="end">{{storageSystemName.value.length}} / {{maxCharsForName}}</mat-hint>
+    </mat-form-field>
+    <mat-form-field class="full-width">
+    <textarea matInput #storageSystemDescription rows="3" placeholder="System Description"
               formControlName="storageSystemDescription">
     </textarea>
-      <md-hint *ngIf="formErrors.storageSystemDescription" class="alert-danger">
+      <mat-hint *ngIf="formErrors.storageSystemDescription" class="alert-danger">
         {{formErrors.storageSystemDescription}}
-      </md-hint>
-      <md-hint align="end">{{storageSystemDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
-    </md-input-container>
-
+      </mat-hint>
+      <mat-hint align="end">{{storageSystemDescription.value.length}} / {{maxCharsForDescName}}</mat-hint>
+    </mat-form-field>
     <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
       <div fxFlex="100" fxFlexAlign="center">
-        <md-select required placeholder="Is Gimel Supported" [floatPlaceholder]="'never'"
-                   formControlName="isGimelCompatible">
-          <md-option *ngFor="let isGimelCompatible of compatibilityList" [value]="isGimelCompatible">
-            {{isGimelCompatible}}
-          </md-option>
-        </md-select>
+      <mat-form-field>
+        <input matInput #containers required="true" placeholder="Containers" formControlName="containers">
+        <mat-hint *ngIf="formErrors.containers" class="alert-danger">
+          {{formErrors.containers}}
+        </mat-hint>
+        <mat-hint align="end">{{containers.value.length}} / {{maxCharsForUserName}}</mat-hint>
+      </mat-form-field>
       </div>
+      <div fxFlex="100" fxFlexAlign="center">
+        <mat-form-field [floatLabel]="'never'">
+          <mat-select required placeholder="Run Frequency" formControlName="discoverySla">
+            <mat-option *ngFor="let discoverySla of frequencyList" [value]="discoverySla">
+              {{discoverySla}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div fxFlex="100" fxFlexAlign="center">
+        <mat-form-field class="half-width">
+          <input matInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
+          <mat-hint *ngIf="formErrors.createdUser" class="alert-danger">
+            {{formErrors.createdUser}}
+          </mat-hint>
+          <mat-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</mat-hint>
+        </mat-form-field>
+      </div>
+    </div>
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <mat-form-field [floatLabel]="'never'">
+          <mat-select required placeholder="Is Read Supported" formControlName="isReadCompatible">
+            <mat-option *ngFor="let isReadCompatible of compatibilityList" [value]="isReadCompatible">
+              {{isReadCompatible}}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+      </div>
+      <div fxFlex="100" fxFlexAlign="center">
+        <mat-form-field [floatLabel]="'never'">
+          <mat-select *ngIf="!zoneLoading" required placeholder="Assigned Zone"
+                      formControlName="zone">
+            <mat-option *ngFor="let zone of zoneList" [value]="zone">
+              {{ zone['zoneName'] }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-progress-bar mode="indeterminate" *ngIf="zoneLoading"></mat-progress-bar>
+      </div>
+    </div>
+    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
+      <div fxFlex="100" fxFlexAlign="center">
+        <mat-form-field [floatLabel]="'never'">
+          <mat-select *ngIf="!userLoading" required placeholder="Admin User"
+                      formControlName="adminUser">
+            <mat-option *ngFor="let adminUser of userList" [value]="adminUser">
+              {{ adminUser['userName'] }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-progress-bar mode="indeterminate" *ngIf="userLoading"></mat-progress-bar>
+      </div>
+      <div fxFlex="100" fxFlexAlign="center">
+        <mat-form-field [floatLabel]="'never'">
+          <mat-select *ngIf="!clusterLoading" required placeholder="Cluster For the Discovery"
+                      formControlName="cluster">
+            <mat-option *ngFor="let cluster of clusterList" [value]="cluster">
+              {{ cluster['clusterName'] }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-progress-bar mode="indeterminate" *ngIf="clusterLoading"></mat-progress-bar>
+      </div>
+      <div fxFlex="100" fxFlexAlign="center">
+        <mat-form-field [floatLabel]="'never'">
+          <mat-select *ngIf="!clusterLoading" required placeholder="Cluster For invoking queries"
+                      formControlName="runningCluster">
+            <mat-option *ngFor="let runningCluster of clusterList" [value]="runningCluster">
+              {{ runningCluster['clusterName'] }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
+        <mat-progress-bar mode="indeterminate" *ngIf="clusterLoading"></mat-progress-bar>
+      </div>
+      <br>
     </div>
     <br>
-
-    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
-      <div fxFlex="100" fxFlexAlign="center">
-        <md-select required placeholder="Is Read Supported" [floatPlaceholder]="'never'"
-                   formControlName="isReadCompatible">
-          <md-option *ngFor="let isReadCompatible of compatibilityList" [value]="isReadCompatible">
-            {{isReadCompatible}}
-          </md-option>
-        </md-select>
-      </div>
-    </div>
     <br>
-    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
-      <div fxFlex="100" fxFlexAlign="center">
-        <md-select *ngIf="!zoneLoading" required placeholder="Assigned Zone" [floatPlaceholder]="'never'"
-                   formControlName="zone">
-          <md-option *ngFor="let zone of zoneList" [value]="zone">
-            {{ zone['zoneName'] }}
-          </md-option>
-        </md-select>
-        <md-progress-bar mode="indeterminate" *ngIf="zoneLoading"></md-progress-bar>
-      </div>
-    </div>
-    <br>
-
-    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
-      <div fxFlex="100" fxFlexAlign="center">
-        <md-select *ngIf="!dbLoading" required placeholder="Storage Type" [floatPlaceholder]="'never'"
-                   formControlName="storageType" (change)="onStorageTypeChange()">
-          <md-option *ngFor="let storageType of storageTypes" [value]="storageType">
-            {{ storageType['storageTypeName'] }}
-          </md-option>
-        </md-select>
-        <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
-      </div>
-    </div>
-    <br>
-
-    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
-      <div fxFlex="100" fxFlexAlign="center">
-        <md-select *ngIf="!clusterLoading" required placeholder="Assigned Cluster-For the Discovery Service"
-                   [floatPlaceholder]="'never'"
-                   formControlName="cluster">
-          <md-option *ngFor="let cluster of clusterList" [value]="cluster">
-            {{ cluster['clusterName'] }}
-          </md-option>
-        </md-select>
-        <md-progress-bar mode="indeterminate" *ngIf="clusterLoading"></md-progress-bar>
-      </div>
-    </div>
-    <br>
-
-    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
-      <div fxFlex="100" fxFlexAlign="center">
-        <md-select *ngIf="!clusterLoading" required placeholder="Running Cluster-For invoking queries"
-                   [floatPlaceholder]="'never'"
-                   formControlName="runningCluster">
-          <md-option *ngFor="let runningCluster of clusterList" [value]="runningCluster">
-            {{ runningCluster['clusterName'] }}
-          </md-option>
-        </md-select>
-        <md-progress-bar mode="indeterminate" *ngIf="clusterLoading"></md-progress-bar>
-      </div>
-    </div>
-    <br>
-
-    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
-      <div fxFlex="100" fxFlexAlign="center">
-        <md-select *ngIf="!userLoading" required placeholder="Admin User" [floatPlaceholder]="'never'"
-                   formControlName="adminUser">
-          <md-option *ngFor="let adminUser of userList" [value]="adminUser">
-            {{ adminUser['userName'] }}
-          </md-option>
-        </md-select>
-        <md-progress-bar mode="indeterminate" *ngIf="userLoading"></md-progress-bar>
-      </div>
-    </div>
-
-    <md-input-container class="full-width">
-      <input mdInput #containers required="true" placeholder="Containers" formControlName="containers">
-      <md-hint *ngIf="formErrors.containers" class="alert-danger">
-        {{formErrors.containers}}
-      </md-hint>
-      <md-hint align="end">{{containers.value.length}} / {{maxCharsForUserName}}</md-hint>
-    </md-input-container>
-
-    <md-input-container class="full-width">
-      <input mdInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
-      <md-hint *ngIf="formErrors.createdUser" class="alert-danger">
-        {{formErrors.createdUser}}
-      </md-hint>
-      <md-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</md-hint>
-    </md-input-container>
-
     <div>
       <h4>System Attributes</h4>
     </div>
@@ -150,17 +186,17 @@
         </ng-template>
       </ngx-datatable-column>
       <ngx-datatable-column name="Attribute Value">
-        <ng-template ngx-datatable-cell-template let-row="row">
+        <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
             <span
               title="Double click to edit"
-              (dblclick)="editing[row.$$index + '-storageTypeAttributeValue'] = true"
-              *ngIf="!editing[row.$$index + '-storageTypeAttributeValue']">
+              (dblclick)="editing[rowIndex + '-storageTypeAttributeValue'] = true"
+              *ngIf="!editing[rowIndex + '-storageTypeAttributeValue']">
               {{row.storageTypeAttributeValue}}
             </span>
           <input
             autofocus
-            (blur)="updateValue($event, 'storageTypeAttributeValue', row)"
-            *ngIf="editing[row.$$index + '-storageTypeAttributeValue']"
+            (blur)="updateValue($event, 'storageTypeAttributeValue', rowIndex)"
+            *ngIf="editing[rowIndex + '-storageTypeAttributeValue']"
             type="text"
             [value]="row.storageTypeAttributeValue"
           />
@@ -170,8 +206,8 @@
     <br>
 
     <div class="dialog-footer">
-      <button md-button type="button" (click)="cancel()">Cancel</button>
-      <button md-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
     </div>
 
   </div>

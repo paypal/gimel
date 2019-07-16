@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.service.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -8,6 +27,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -18,25 +38,22 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.junit4.SpringRunner;
-import com.paypal.udc.cache.DatasetCache;
-import com.paypal.udc.cache.ObjectSchemaMapCache;
-import com.paypal.udc.config.UDCInterceptorConfig;
-import com.paypal.udc.dao.ClusterRepository;
-import com.paypal.udc.dao.dataset.DatasetChangeLogRegisteredRepository;
+import com.paypal.udc.dao.cluster.ClusterRepository;
+import com.paypal.udc.dao.dataset.DatasetChangeLogRepository;
+//** TODO: Remove Commented Code **
+//import com.paypal.udc.dao.dataset.DatasetChangeLogRegisteredRepository;
 import com.paypal.udc.dao.dataset.DatasetRepository;
 import com.paypal.udc.dao.dataset.DatasetStorageSystemRepository;
 import com.paypal.udc.dao.objectschema.ObjectSchemaAttributeValueRepository;
 import com.paypal.udc.dao.objectschema.ObjectSchemaMapRepository;
-//import com.paypal.gimel.dao.objectschema.ObjectSchemaRegistrationMapRepository;
 import com.paypal.udc.dao.storagesystem.StorageSystemAttributeValueRepository;
 import com.paypal.udc.dao.storagesystem.StorageSystemRepository;
 import com.paypal.udc.dao.storagetype.StorageTypeRepository;
-import com.paypal.udc.entity.Cluster;
+import com.paypal.udc.entity.cluster.Cluster;
 import com.paypal.udc.entity.dataset.Dataset;
-import com.paypal.udc.entity.dataset.DatasetChangeLogRegistered;
+import com.paypal.udc.entity.dataset.DatasetChangeLog;
 import com.paypal.udc.entity.storagesystem.StorageSystem;
 import com.paypal.udc.entity.storagetype.StorageType;
-import com.paypal.udc.interceptor.UDCInterceptor;
 import com.paypal.udc.util.ClusterUtil;
 import com.paypal.udc.util.DatasetUtil;
 import com.paypal.udc.util.ObjectSchemaMapUtil;
@@ -50,12 +67,6 @@ import com.paypal.udc.validator.dataset.DatasetNameValidator;
 
 @RunWith(SpringRunner.class)
 public class DatasetServiceTest {
-
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
 
     @Mock
     private StorageSystemUtil systemUtil;
@@ -88,9 +99,6 @@ public class DatasetServiceTest {
     private StorageTypeRepository storageTypeRepository;
 
     @Mock
-    private DatasetCache dataSetCache;
-
-    @Mock
     private DatasetNameValidator s1;
 
     @Mock
@@ -99,14 +107,16 @@ public class DatasetServiceTest {
     @Mock
     private DatasetAliasValidator s4;
 
+    // ** TODO: Remove Commented Code **
+    // @Mock
+    // private DatasetChangeLogRegisteredRepository changeLogRegisteredRepository;
+
+    // ** Change **
     @Mock
-    private DatasetChangeLogRegisteredRepository changeLogRegisteredRepository;
+    private DatasetChangeLogRepository changeLogRepository;
 
     @Mock
     private ObjectSchemaMapRepository objectSchemaMapRepository;
-
-    @Mock
-    private ObjectSchemaMapCache objectSchemaMapCache;
 
     @Mock
     private ObjectSchemaAttributeValueRepository objectSchemaAttributeRepository;
@@ -125,6 +135,7 @@ public class DatasetServiceTest {
 
     private String datasetSubstring;
     private String storageTypeName;
+    private String zoneName;
     private StorageType storageType;
     private StorageSystem storageSystem;
     private List<StorageSystem> storageSystems;
@@ -137,8 +148,11 @@ public class DatasetServiceTest {
     private List<Cluster> clusterList = new ArrayList<Cluster>();
     private Cluster cluster = new Cluster();
     private Long storageClusterId;
-    private DatasetChangeLogRegistered changeLog;
-    private List<DatasetChangeLogRegistered> changeLogs;
+    private DatasetChangeLog changeLogByDataset;
+    private List<DatasetChangeLog> changeLogsByDataset;
+    private DatasetChangeLog changeLogByDatasetAndChangeColumn;
+    private List<DatasetChangeLog> changeLogsByDatasetAndChangeColumn;
+    private String changeType;
 
     @Before
     public void setup() {
@@ -152,14 +166,22 @@ public class DatasetServiceTest {
         this.storageSystem.setStorageSystemId(0L);
         this.storageSystems = Arrays.asList(this.storageSystem);
         this.storageSystemName = "All";
+        this.zoneName = "All";
         this.cluster.setClusterId(5L);
         this.clusterList.add(this.cluster);
         this.dataSet.setStorageSystemId(4L);
         this.dataSet.setStorageSystemName(this.storageSystemName);
         this.systemMappings.put(4L, this.storageSystem);
         this.storageClusterId = 6L;
-        this.changeLog = new DatasetChangeLogRegistered();
-        this.changeLogs = Arrays.asList(this.changeLog);
+        this.changeType = "DATASET";
+        this.changeLogByDataset = new DatasetChangeLog(this.dataSetId, "C", "DATASET", "{}",
+                "{\"value\": \"test1.udc1.testingOld\", \"username\": \"nighosh\"}", "2019-04-02 10:33:21");
+        this.changeLogsByDataset = Arrays.asList(this.changeLogByDataset);
+        this.changeLogByDatasetAndChangeColumn = new DatasetChangeLog(this.dataSetId, "M", "DATASET",
+                "{\"value\": \"test1.udc1.testingOld\", \"username\": \"nighosh\"}",
+                "{\"value\": \"test1.udc1.testingNew\", \"username\": \"nighosh\"}", "2019-04-02 10:33:25");
+        this.changeLogsByDatasetAndChangeColumn = Arrays.asList(this.changeLogByDatasetAndChangeColumn);
+
     }
 
     @Test
@@ -168,7 +190,7 @@ public class DatasetServiceTest {
                 .thenReturn(this.pageDataset);
 
         final Page<Dataset> result = this.datasetService.getAllDatasetsByTypeAndSystem(this.datasetSubstring,
-                this.storageTypeName, this.storageSystemName, this.pageable);
+                this.storageTypeName, this.storageSystemName, this.zoneName, this.pageable);
         assertEquals(this.pageDataset, result);
 
         verify(this.dataSetUtil).getDatasetsForAllTypesAndSystems(this.datasetSubstring, this.pageable);
@@ -200,7 +222,7 @@ public class DatasetServiceTest {
 
     @Test
     public void verifyValidGetDataSetById() throws Exception {
-        when(this.dataSetRepository.findOne(this.dataSetId)).thenReturn(this.dataSet);
+        when(this.dataSetRepository.findById(this.dataSetId)).thenReturn(Optional.of(this.dataSet));
         when(this.systemUtil.getStorageSystems()).thenReturn(this.systemMappings);
         when(this.clusterRepository.findAll()).thenReturn(this.clusterList);
         when(this.dataSetUtil.getDataSet(this.dataSet)).thenReturn(this.dataSet);
@@ -212,14 +234,27 @@ public class DatasetServiceTest {
     }
 
     @Test
-    public void verifyValidGetDatasetChangeLogs() throws Exception {
-        when(this.changeLogRegisteredRepository.findChanges(this.storageClusterId))
-                .thenReturn(this.changeLogs);
+    public void verifyValidGetAllChangeLogsByDataSetId() throws Exception {
+        when(this.changeLogRepository.findByStorageDataSetId(this.dataSetId))
+                .thenReturn(this.changeLogsByDataset);
 
-        final List<DatasetChangeLogRegistered> result = this.datasetService.getDatasetChangeLogs(this.storageClusterId);
-        assertEquals(this.changeLogs, result);
+        final List<DatasetChangeLog> result = this.datasetService.getChangeLogsByDataSetId(this.dataSetId);
+        assertEquals(this.changeLogsByDataset, result);
 
-        verify(this.changeLogRegisteredRepository).findChanges(this.storageClusterId);
+        verify(this.changeLogRepository).findByStorageDataSetId(this.dataSetId);
+    }
+
+    @Test
+    public void verifyValidGetAllChangeLogsByDataSetIdAndChangeColumnType() throws Exception {
+        when(this.changeLogRepository.findByStorageDataSetIdAndChangeColumnType(this.dataSetId, this.changeType))
+                .thenReturn(this.changeLogsByDatasetAndChangeColumn);
+
+        final List<DatasetChangeLog> result = this.datasetService.getChangeLogsByDataSetIdAndChangeColumnType(
+                this.dataSetId,
+                this.changeType);
+        assertEquals(this.changeLogsByDatasetAndChangeColumn, result);
+
+        verify(this.changeLogRepository).findByStorageDataSetIdAndChangeColumnType(this.dataSetId, this.changeType);
     }
 
 }

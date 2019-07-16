@@ -1,59 +1,26 @@
-import {Component, OnInit} from '@angular/core';
-import {CatalogService} from '../../udc/catalog/services/catalog.service';
-import {Zone} from '../models/catalog-zone';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-udc-admin-zone',
-  templateUrl: './zone.component.html',
-  styleUrls: ['./zone.component.scss'],
+  selector: 'app-udc-admin-zone', templateUrl: './zone.component.html', styleUrls: ['./zone.component.scss'],
 })
 export class ZoneComponent {
-  projectList = [];
-  displayList = [];
-  loaded = true;
-  projectName: string;
-  projectLoaded = false;
-  refresh = false;
-  defaultZone: Zone = new Zone();
-
-  constructor(private catalogService: CatalogService) {
-  }
-
-  ngOnInit() {
-    this.projectLoaded = false;
-
-    this.defaultZone.zoneId = 0;
-    this.defaultZone.zoneName = 'All';
-    this.defaultZone.zoneDescription = 'All';
-    this.projectList.push(this.defaultZone);
-    this.catalogService.getZonesList().subscribe(data => {
-      data.map(element => {
-        this.projectList.push(element);
-      });
-    }, error => {
-      this.displayList = this.projectList = [];
-      this.projectLoaded = true;
-    }, () => {
-      this.displayList = this.projectList.sort((a, b): number => {
-        return a.zoneName > b.zoneName ? 1 : -1;
-      });
-      this.projectName = this.defaultZone.zoneName;
-      this.projectLoaded = true;
-    });
-  }
-
-  disableDropDown() {
-    // this.projectLoaded = false;
-    this.loaded = false;
-  }
-
-  enableDropDown() {
-    this.loaded = true;
-  }
-
-  refreshProject() {
-    this.refresh = !this.refresh;
-    this.loaded = false;
-  }
-
 }

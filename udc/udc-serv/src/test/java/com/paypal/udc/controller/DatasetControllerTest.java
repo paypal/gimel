@@ -1,8 +1,27 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -28,13 +47,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import com.google.gson.Gson;
-import com.paypal.udc.cache.DatasetCache;
-import com.paypal.udc.config.UDCInterceptorConfig;
 import com.paypal.udc.entity.dataset.CumulativeDataset;
 import com.paypal.udc.entity.dataset.Dataset;
-import com.paypal.udc.entity.dataset.DatasetChangeLogRegistered;
+import com.paypal.udc.entity.dataset.DatasetChangeLog;
 import com.paypal.udc.entity.dataset.DatasetWithAttributes;
-import com.paypal.udc.interceptor.UDCInterceptor;
 import com.paypal.udc.service.IDatasetService;
 
 
@@ -46,15 +62,6 @@ public class DatasetControllerTest {
 
     @MockBean
     private IDatasetService dataSetService;
-
-    @MockBean
-    private DatasetCache dataSetCache;
-
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -69,17 +76,20 @@ public class DatasetControllerTest {
     private Long storageSystemId;
     private String dataSetName;
     private Long clusterId;
-    private DatasetChangeLogRegistered changeLog;
-    private List<DatasetChangeLogRegistered> changeLogs;
+    private DatasetChangeLog changeLogByDataset;
+    private List<DatasetChangeLog> changeLogsByDataset;
+    private DatasetChangeLog changeLogByDatasetAndChangeColumn;
+    private List<DatasetChangeLog> changeLogsByDatasetAndChangeColumn;
+    private String changeType;
     private CumulativeDataset cumulativeDataset;
     private List<CumulativeDataset> cumulativeDatasetList;
     private String dataSetSubString;
     private String jsonDataSet;
 
-    class AnyDataset extends ArgumentMatcher<Dataset> {
+    class AnyDataset implements ArgumentMatcher<Dataset> {
         @Override
-        public boolean matches(final Object object) {
-            return object instanceof Dataset;
+        public boolean matches(final Dataset dataset) {
+            return dataset instanceof Dataset;
         }
     }
 
@@ -101,9 +111,15 @@ public class DatasetControllerTest {
                 "updTime", this.storageSystemId, "query", "Y", "storageSystemName", "", "");
         this.dataSetName = "dataSetName";
         this.clusterId = 4L;
-        this.changeLog = new DatasetChangeLogRegistered();
-        this.changeLogs = Arrays.asList(this.changeLog);
+        this.changeLogByDataset = new DatasetChangeLog(this.storageDataSetId, "C", "DATASET", "{}",
+                "{\"value\": \"test1.udc1.testingOld\", \"username\": \"nighosh\"}", "2019-04-02 10:33:21");
+        this.changeLogsByDataset = Arrays.asList(this.changeLogByDataset);
+        this.changeLogByDatasetAndChangeColumn = new DatasetChangeLog(this.storageDataSetId, "M", "DATASET",
+                "{\"value\": \"test1.udc1.testingOld\", \"username\": \"nighosh\"}",
+                "{\"value\": \"test1.udc1.testingNew\", \"username\": \"nighosh\"}", "2019-04-02 10:33:25");
+        this.changeLogsByDatasetAndChangeColumn = Arrays.asList(this.changeLogByDatasetAndChangeColumn);
         this.dataSetSubString = "dataSetSubString";
+        this.changeType = "DATASET";
         this.cumulativeDatasetList = Arrays.asList(this.cumulativeDataset);
         this.jsonDataSet = "{ " +
                 "\"attributesPresent\": true, " +
@@ -134,7 +150,7 @@ public class DatasetControllerTest {
 
     @Test
     public void verifyValidGetDataSetById() throws Exception {
-        when(this.dataSetCache.getDataSet(this.storageDataSetId))
+        when(this.dataSetService.getDataSetById(this.storageDataSetId))
                 .thenReturn(this.dataset);
 
         this.mockMvc.perform(get("/dataSet/dataSet/{id}", this.storageDataSetId)
@@ -142,7 +158,7 @@ public class DatasetControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.storageDataSetName").value(this.storageDataSetName));
 
-        verify(this.dataSetCache).getDataSet(this.storageDataSetId);
+        verify(this.dataSetService).getDataSetById(this.storageDataSetId);
     }
 
     @Test
@@ -172,16 +188,29 @@ public class DatasetControllerTest {
     }
 
     @Test
-    public void verifyValidGetLogs() throws Exception {
-        when(this.dataSetService.getDatasetChangeLogs(this.clusterId))
-                .thenReturn(this.changeLogs);
+    public void verifyValidChangeLogsByDataSetId() throws Exception {
+        when(this.dataSetService.getChangeLogsByDataSetId(this.storageDataSetId))
+                .thenReturn(this.changeLogsByDataset);
 
-        this.mockMvc.perform(get("/dataSet/changeLogs/{clusterId}", this.clusterId)
+        this.mockMvc.perform(get("/dataSet/changeLogs/{datasetId}", this.storageDataSetId)
                 .accept(MediaType.APPLICATION_JSON_UTF8))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(this.changeLogs.size())));
+                .andExpect(jsonPath("$", hasSize(this.changeLogsByDataset.size())));
 
-        verify(this.dataSetService).getDatasetChangeLogs(this.clusterId);
+        verify(this.dataSetService).getChangeLogsByDataSetId(this.storageDataSetId);
+    }
+
+    @Test
+    public void verifyValidChangeLogsByDataSetIdAndChangeColumnType() throws Exception {
+        when(this.dataSetService.getChangeLogsByDataSetIdAndChangeColumnType(this.storageDataSetId, this.changeType))
+                .thenReturn(this.changeLogsByDatasetAndChangeColumn);
+
+        this.mockMvc.perform(get("/dataSet/changeLogs/{datasetId}/{changeType}", this.storageDataSetId, this.changeType)
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(this.changeLogsByDatasetAndChangeColumn.size())));
+
+        verify(this.dataSetService).getChangeLogsByDataSetIdAndChangeColumnType(this.storageDataSetId, this.changeType);
     }
 
     @Test

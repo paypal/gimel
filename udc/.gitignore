@@ -1,0 +1,90 @@
+*.ipr
+*.iml
+*.iws
+*.pyc
+*.pyo
+.idea/
+.idea_modules/
+.settings
+.cache
+.DS_Store
+.project
+.classpath
+.scala_dependencies
+lib_managed/
+src_managed/
+target/
+reports/
+metastore_db/
+derby.log
+dependency-reduced-pom.xml
+api/
+client-common/
+rsc/bin/
+rsc/.cache-main
+project/
+*.sc
+.sw*
+**/*.eml
+*.log
+*.gimel_logs
+tmp
+__MACOSX
+gimel-dataapi/gimel-quickstart/flights/
+gimel-dataapi/gimel-standalone/lib/
+
+# compiled output
+/dist
+/tmp
+
+# dependencies
+/node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+
+# IDE - VSCode
+/.vscode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# misc
+/.sass-cache
+/connect.lock
+/coverage/*
+/libpeerconnection.log
+npm-debug.log
+testem.log
+/typings
+
+# e2e
+/e2e/*.js
+/e2e/*.map
+
+#System Files
+.DS_Store
+Thumbs.db
+
+# docker-files
+package-lock.json
+
+/target/
+.classpath
+.project
+.settings/
+logs/
+.DS_Store
+src/.DS_Store
+.idea/
+*.iml
+.vscode/
+udc/udc-web/dist/
+udc/udc-web/node_modules/

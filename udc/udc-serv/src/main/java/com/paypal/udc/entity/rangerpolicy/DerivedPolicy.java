@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.entity.rangerpolicy;
 
 import java.io.Serializable;
@@ -54,8 +73,25 @@ public class DerivedPolicy implements Serializable {
     @Column(name = "policy_locations")
     private String policyLocations;
 
-    @Transient
-    private List<DerivedPolicyItem> policyItems;
+    @ApiModelProperty(notes = "Policy on Column")
+    @Column(name = "`column`")
+    private String column;
+
+    @ApiModelProperty(notes = "Policy on column family")
+    @Column(name = "column_family")
+    private String columnFamily;
+
+    @ApiModelProperty(notes = "Policy on database")
+    @Column(name = "`database`")
+    private String database;
+
+    @ApiModelProperty(notes = "Policy on table")
+    @Column(name = "`table`")
+    private String table;
+
+    @ApiModelProperty(notes = "Policy on queue")
+    @Column(name = "`queue`")
+    private String queue;
 
     @ApiModelProperty(notes = "Is the Storage Category active ?")
     @Column(name = "is_active_y_n")
@@ -78,6 +114,9 @@ public class DerivedPolicy implements Serializable {
     @Column(name = "upd_ts")
     @JsonIgnore
     private String updatedTimestamp;
+
+    @Transient
+    private List<DerivedPolicyItem> policyItems;
 
     public long getClusterId() {
         return this.clusterId;
@@ -160,7 +199,7 @@ public class DerivedPolicy implements Serializable {
     }
 
     public String getPolicyLocations() {
-        return this.policyLocations;
+        return this.policyLocations == null ? "" : this.policyLocations;
     }
 
     public void setPolicyLocations(final String policyLocations) {
@@ -175,19 +214,66 @@ public class DerivedPolicy implements Serializable {
         this.policyItems = policyItems;
     }
 
+    public String getColumn() {
+        return this.column == null ? "" : this.column;
+    }
+
+    public void setColumn(final String column) {
+        this.column = column;
+    }
+
+    public String getColumnFamily() {
+        return this.columnFamily == null ? "" : this.columnFamily;
+    }
+
+    public void setColumnFamily(final String columnFamily) {
+        this.columnFamily = columnFamily;
+    }
+
+    public String getDatabase() {
+        return this.database == null ? "" : this.database;
+    }
+
+    public void setDatabase(final String database) {
+        this.database = database;
+    }
+
+    public String getTable() {
+        return this.table == null ? "" : this.table;
+    }
+
+    public void setTable(final String table) {
+        this.table = table;
+    }
+
+    public String getQueue() {
+        return this.queue == null ? "" : this.queue;
+    }
+
+    public void setQueue(final String queue) {
+        this.queue = queue;
+    }
+
     public DerivedPolicy() {
 
     }
 
     public DerivedPolicy(final long derivedPolicyId, final int policyId, final long clusterId, final String policyName,
-            final String typeName, final String policyLocations, final String isActiveYN, final String createdUser,
-            final String createdTimestamp, final String updatedUser, final String updatedTimestamp) {
+            final String typeName, final String policyLocations, final String column, final String columnFamily,
+            final String database, final String table, final String queue, final String isActiveYN,
+            final String createdUser, final String createdTimestamp, final String updatedUser,
+            final String updatedTimestamp) {
         this.derivedPolicyId = derivedPolicyId;
         this.policyId = policyId;
         this.clusterId = clusterId;
         this.policyName = policyName;
         this.typeName = typeName;
         this.policyLocations = policyLocations;
+        this.column = column;
+        this.columnFamily = columnFamily;
+        this.database = database;
+        this.table = table;
+        this.queue = queue;
         this.isActiveYN = isActiveYN;
         this.createdUser = createdUser;
         this.createdTimestamp = createdTimestamp;
@@ -196,13 +282,20 @@ public class DerivedPolicy implements Serializable {
     }
 
     public DerivedPolicy(final int policyId, final long clusterId, final String policyName, final String typeName,
-            final String policyLocations, final String isActiveYN, final String createdUser,
-            final String createdTimestamp, final String updatedUser, final String updatedTimestamp) {
+            final String policyLocations, final String column, final String columnFamily,
+            final String database, final String table, final String queue, final String isActiveYN,
+            final String createdUser, final String createdTimestamp, final String updatedUser,
+            final String updatedTimestamp) {
         this.policyId = policyId;
         this.clusterId = clusterId;
         this.policyName = policyName;
         this.typeName = typeName;
         this.policyLocations = policyLocations;
+        this.column = column;
+        this.columnFamily = columnFamily;
+        this.database = database;
+        this.table = table;
+        this.queue = queue;
         this.isActiveYN = isActiveYN;
         this.createdUser = createdUser;
         this.createdTimestamp = createdTimestamp;

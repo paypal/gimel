@@ -1,62 +1,81 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
 <form [formGroup]="editForm" (ngSubmit)="onSubmit()">
 
-  <md-input-container class="full-width">
-    <input mdInput required="true" placeholder="Dataset ID" value="{{storageDataSetId}}" disabled>
-  </md-input-container>
+  <mat-form-field class="full-width">
+    <input matInput required="true" placeholder="Dataset ID" value="{{storageDataSetId}}" disabled>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <input mdInput #modifiedDataSetName placeholder="Dataset" value="{{storageDataSetName}}"
+  <mat-form-field class="full-width">
+    <input matInput #modifiedDataSetName placeholder="Dataset" value="{{storageDataSetName}}"
            formControlName="modifiedDataSetName">
-    <md-hint *ngIf="formErrors.modifiedDataSetName" class="alert-danger">
+    <mat-hint *ngIf="formErrors.modifiedDataSetName" class="alert-danger">
       {{formErrors.modifiedDataSetName}}
-    </md-hint>
-    <md-hint align="end">{{modifiedDataSetName.value.length}} / {{maxCharsForName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{modifiedDataSetName.value.length}} / {{maxCharsForName}}</mat-hint>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <input mdInput #modifiedDataSetAliasName placeholder="Dataset Alias"
+  <mat-form-field class="full-width">
+    <input matInput #modifiedDataSetAliasName placeholder="Dataset Alias"
            value="{{storageDataSetAliasName}}" formControlName="modifiedDataSetAliasName">
-    <md-hint *ngIf="formErrors.modifiedDataSetAliasName" class="alert-danger">
+    <mat-hint *ngIf="formErrors.modifiedDataSetAliasName" class="alert-danger">
       {{formErrors.modifiedDataSetAliasName}}
-    </md-hint>
-    <md-hint align="end">{{modifiedDataSetAliasName.value.length}} / {{maxCharsForAliasName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{modifiedDataSetAliasName.value.length}} / {{maxCharsForAliasName}}</mat-hint>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <textarea mdInput #modifiedDataSetDescription rows="5" placeholder="Description"
+  <mat-form-field class="full-width">
+    <textarea matInput #modifiedDataSetDescription rows="5" placeholder="Description"
               value="{{storageDataSetDescription}}" formControlName="modifiedDataSetDescription">
     </textarea>
-    <md-hint *ngIf="formErrors.modifiedDataSetDescription" class="alert-danger">
+    <mat-hint *ngIf="formErrors.modifiedDataSetDescription" class="alert-danger">
       {{formErrors.modifiedDataSetDescription}}
-    </md-hint>
-    <md-hint align="end">{{modifiedDataSetDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{modifiedDataSetDescription.value.length}} / {{maxCharsForDescName}}</mat-hint>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
-  </md-input-container>
+  <mat-form-field class="full-width">
+    <input matInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
-    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+  <mat-form-field class="full-width">
+    <input matInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <mat-hint *ngIf="formErrors.updatedUser" class="alert-danger">
       {{formErrors.updatedUser}}
-    </md-hint>
-    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
 
 
   <br><br>
 
 
   <div class="dialog-footer">
-    <button md-button type="button" (click)="cancel()">Cancel</button>
-    <button md-button type="submit" color="primary" [disabled]="!editForm.valid">Update</button>
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-button type="submit" color="primary" [disabled]="!editForm.valid">Update</button>
   </div>
 
 

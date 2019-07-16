@@ -1,97 +1,141 @@
-<div class="app-container">
-  <div>
-    <div class="detail-content-container">
-      <md-input-container class="table-search">
-        <input #searchDB mdInput [(ngModel)]="searchString">
-        <md-placeholder>
-          <md-icon class="icon-16">search</md-icon>
-          Search Datasets
-        </md-placeholder>
-      </md-input-container>
-      <div *ngIf="systemName">
-        <button md-raised-button md-tooltip="Refresh Datasets" (click)="searchDatasets()"
-                class="app-details-btn">
-          Search
-        </button>
-      </div>
-      <div *ngIf="!systemName">
-        <button md-raised-button md-tooltip="Refresh Datasets" (click)="searchDatasets()"
-                class="app-details-btn" disabled>
-          Search
-        </button>
-      </div>
-    </div>
-  </div>
-  <ngx-datatable
-    #catalogDatasetsTable
-    class="material favorites-datatable"
-    [rows]="displayList"
-    [columnMode]="'force'"
-    [headerHeight]="50"
-    [footerHeight]="50"
-    [rowHeight]="'auto'"
-    [externalPaging]="true"
-    [loadingIndicator]="loading"
-    [count]="page.totalElements"
-    [offset]="page.pageNumber"
-    [limit]="page.size"
-    [scrollbarH]="true"
-    (page)='loadDatasetsFromCatalog($event)'
-  >
-    <ngx-datatable-row-detail [rowHeight]="400">
-      <ng-template let-row="row" ngx-datatable-row-detail-template>
-        <div style="padding-left:35px;">
-          <app-catalog-dataset-detail [dataset]="row.storageDataSetId"
-                                      [datasetName]="row.storageDataSetName"></app-catalog-dataset-detail>
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div>
+  <ngx-spinner
+    bdColor="rgba(51, 51, 51, 0.8)"
+    size="large"
+    color="#448aff"
+    type="ball-elastic-dots">
+  </ngx-spinner>
+</div>
+<div class="app-container advance-search" style="padding: 0px;">
+  <mat-grid-list cols="2" rowHeight="150px">
+    <mat-grid-tile style="color: darkslategray" *ngFor="let element of datasetDisplayList">
+      <mat-card class="search-card" style="background-color: white">
+        <div class="search-logo">
+          <span *ngIf="element.storageSystemName.toLowerCase().includes('kafka')">
+                  <div class="watermark-kafka">
+                  </div>
+          </span>
+          <span *ngIf="element.storageSystemName.toLowerCase().includes('elastic')">
+                  <div class="watermark-elastic">
+                  </div>
+          </span>
+          <span *ngIf="element.storageSystemName.toLowerCase().includes('hive')">
+                  <div class="watermark-hive">
+                  </div>
+          </span>
+          <span *ngIf="element.storageSystemName.toLowerCase().includes('teradata')">
+                  <div class="watermark-teradata">
+                  </div>
+          </span>
+          <span *ngIf="element.storageSystemName.toLowerCase().includes('hbase')">
+                  <div class="watermark-hbase">
+                  </div>
+          </span>
+          <span *ngIf="element.storageSystemName.toLowerCase().includes('s3')">
+                  <div class="watermark-s3">
+                  </div>
+          </span>
+          <span *ngIf="element.storageSystemName.toLowerCase().includes('oracle')">
+                  <div class="watermark-oracle">
+                  </div>
+          </span>
+          <span *ngIf="(!element.storageSystemName || element.storageSystemName == '')
+                  || (!element.storageSystemName.toLowerCase().includes('kafka') && !element.storageSystemName.toLowerCase().includes('elastic')
+                  && !element.storageSystemName.toLowerCase().includes('hive') && !element.storageSystemName.toLowerCase().includes('teradata')
+                  && !element.storageSystemName.toLowerCase().includes('hbase') && !element.storageSystemName.toLowerCase().includes('s3')
+                  && !element.storageSystemName.toLowerCase().includes('oracle'))">
+                  <div class="watermark-noimage">
+                  </div>
+               </span>
         </div>
-      </ng-template>
-    </ngx-datatable-row-detail>
-    <ngx-datatable-column
-      [width]="20"
-      [resizeable]="false"
-      [draggable]="false"
-      [canAutoResize]="false">
-      <ng-template let-row="row" ngx-datatable-cell-template>
-        <button md-icon-button class="action-btn"
-                (click)="toggleExpandRow(row)">
-          <md-icon *ngIf="!row.$$expanded" md-tooltip="Show dataset Details">keyboard_arrow_down</md-icon>
-          <md-icon *ngIf="row.$$expanded" md-tooltip="Hide dataset Details">keyboard_arrow_up</md-icon>
-        </button>
-      </ng-template>
-    </ngx-datatable-column>
-    <!--<ngx-datatable-column name="Dataset ID" [width]="35" [sortable]="false">-->
-      <!--<ng-template let-row="row" ngx-datatable-cell-template>-->
-        <!--{{ row.storageDataSetId }}-->
-      <!--</ng-template>-->
-    <!--</ngx-datatable-column>-->
-    <ngx-datatable-column name="Dataset Name" [width]="250" [sortable]="false">
-      <ng-template let-row="row" ngx-datatable-cell-template>
-        {{ row.storageDataSetName }}
-      </ng-template>
-    </ngx-datatable-column>
-    <ngx-datatable-column name="Datastore" [width]="50" [sortable]="false">
-      <ng-template let-row="row" ngx-datatable-cell-template>
-        {{ row.storageSystemName}}
-      </ng-template>
-    </ngx-datatable-column>
-    <ngx-datatable-column name="Actions" [width]="100" [sortable]="false">
-      <ng-template let-row="row" ngx-datatable-cell-template>
-        <app-catalog-dataset-action [project]="row.project"
-                                    [storageDataSetId]="row.storageDataSetId"
-                                    [storageDataSetName]="row.storageDataSetName"
-                                    [storageDataSetAliasName]="row.storageDataSetAliasName"
-                                    [storageDataSetDescription]="row.storageDataSetDescription"
-                                    [isGimelCompatible]="row.isGimelCompatible"
-                                    [isReadCompatible]="row.isReadCompatible"
-                                    [objectId]="row.objectSchemaMapId"
-                                    [zoneName]="row.zoneName"
-                                    [isAccessControlled]="row.isAccessControlled"
-                                    [createdUser]="row.createdUser"
-                                    [teradataPolicies]="row.teradataPolicies"
-                                    [derivedPolicies]="row.derivedPolicies"
-                                    (refresh)=refreshRow($event)>
-        </app-catalog-dataset-action>
-      </ng-template>
-    </ngx-datatable-column>
-  </ngx-datatable>
+        <div class="search-content">
+          <mat-card-header>
+            <mat-card-title>
+              <p style="white-space: nowrap;overflow: hidden;text-overflow: ellipsis;width: 500px;">
+                <a [routerLink]="['/standalone', 'dataset', element.storageDataSetName]" target="_blank"
+                   matTooltip="{{ element.storageDataSetName.toLowerCase() }}"
+                   style="font-size: 18px; font-weight: bolder;word-break: break-all">
+                  {{ element.storageDataSetName.replace(element.storageSystemName + '.', "").toLowerCase()}}
+                </a>
+              </p>
+            </mat-card-title>
+            <mat-card-subtitle matTooltip="Datastore Name">
+              <p>{{element.storageSystemName}}</p>
+            </mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-actions class="lefticon-list">
+            <span *ngIf="element.zoneName!=undefined && element.zoneName.includes('corp')">
+                  <button style="width: 60px;vertical-align: middle;" mat-icon-button class="action-btn grey-btn"
+                          matTooltip="This dataset can be accessed in Corp">
+                  <img style="height: 15px;display: block;line-height:0;padding-top:3px;"
+                       src="assets/images/corp.png"
+                       alt="Bookmark">
+                  </button>
+                  </span>
+          </mat-card-actions>
+          <mat-card-actions class="righticon-list" layout="row" layout-align="space-between center">
+            <button mat-raised-button class="action-btn grey-btn" (onmouseout)="removeCopyText()"
+                    (click)="copyText('udc.' + element.storageDataSetName, 'copy')"
+                    matTooltip="{{ copiedDataset == 'udc.'+element.storageDataSetName ? 'Copied' : 'Copy'}} dataset name">
+              <mat-icon style="vertical-align: middle;opacity: 1;height: 18px;font-size: 16px;" alt="Copy">
+                content_copy
+              </mat-icon>
+            </button>
+            <button mat-raised-button class="action-btn grey-btn" (onmouseout)="removeCopyText()"
+                    (click)="copyUrl(element.storageDataSetName, 'share')"
+                    matTooltip="{{ copiedDataset == element.storageDataSetName ? 'Copied' : 'Copy'}} dataset URL">
+              <mat-icon style="vertical-align: middle;opacity: 1;height: 18px;font-size: 16px;" alt="Share">share
+              </mat-icon>
+            </button>
+            <app-catalog-dataset-action class="app-icon-list" [project]="element.project"
+                                        [storageDataSetId]="element.storageDataSetId"
+                                        [storageDataSetName]="element.storageDataSetName"
+                                        [storageDataSetAliasName]="element.storageDataSetAliasName"
+                                        [storageDataSetDescription]="element.storageDataSetDescription"
+                                        [isActiveYN]="element.isActiveYN"
+                                        [isReadCompatible]="element.isReadCompatible"
+                                        [objectId]="element.objectSchemaMapId"
+                                        [zoneName]="element.zoneName"
+                                        [entityName]="element.entityName"
+                                        [isAccessControlled]="element.isAccessControlled"
+                                        [createdUser]="element.createdUser"
+                                        [teradataPolicies]="element.teradataPolicies"
+                                        [derivedPolicies]="element.derivedPolicies"
+                                        [admin]="admin"
+                                        [storageSystemName]="element.storageSystemName"
+                                        (refresh)=refreshRow($event)>
+            </app-catalog-dataset-action>
+            <button mat-raised-button class="action-btn grey-btn"
+                    matTooltip="Details"
+                    (click)="openDialogDetails(element.storageDataSetId, element.storageDataSetName)">
+              <mat-icon style="vertical-align: middle;opacity: 1;" alt="Bookmark">info_outline</mat-icon>
+            </button>
+          </mat-card-actions>
+        </div>
+      </mat-card>
+    </mat-grid-tile>
+  </mat-grid-list>
+  <div>
+    <mat-paginator [length]="length" [pageSizeOptions]="[10, 50, 100, 1000]" [pageSize]="pageSize"
+                   (page)="loadDatasetsFromCatalog($event)"></mat-paginator>
+  </div>
 </div>

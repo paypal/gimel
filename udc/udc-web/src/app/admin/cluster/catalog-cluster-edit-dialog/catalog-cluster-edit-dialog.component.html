@@ -1,68 +1,69 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
 <form [formGroup]="editClusterForm" (ngSubmit)="onSubmit()">
 
-  <md-input-container class="full-width">
-    <input mdInput required="true" placeholder="Cluster ID" value="{{clusterId}}" disabled>
-  </md-input-container>
+  <mat-form-field class="full-width">
+    <input matInput required="true" placeholder="Cluster ID" value="{{clusterId}}" disabled>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <input mdInput #modifiedClusterName placeholder="Cluster Name" value="{{clusterName}}"
+  <mat-form-field class="full-width">
+    <input matInput #modifiedClusterName placeholder="Cluster Name" value="{{clusterName}}"
            formControlName="modifiedClusterName">
-    <md-hint *ngIf="formErrors.modifiedClusterName" class="alert-danger">
+    <mat-hint *ngIf="formErrors.modifiedClusterName" class="alert-danger">
       {{formErrors.modifiedClusterName}}
-    </md-hint>
-    <md-hint align="end">{{modifiedClusterName.value.length}} / {{maxCharsForName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{modifiedClusterName.value.length}} / {{maxCharsForName}}</mat-hint>
+  </mat-form-field>
 
-  <md-input-container class="full-width">
-    <textarea mdInput #modifiedClusterDescription rows="5" placeholder="Description"
+  <mat-form-field class="full-width">
+    <textarea matInput #modifiedClusterDescription rows="5" placeholder="Description"
               value="{{clusterDescription}}" formControlName="modifiedClusterDescription">
     </textarea>
-    <md-hint *ngIf="formErrors.modifiedClusterDescription" class="alert-danger">
+    <mat-hint *ngIf="formErrors.modifiedClusterDescription" class="alert-danger">
       {{formErrors.modifiedClusterDescription}}
-    </md-hint>
-    <md-hint align="end">{{modifiedClusterDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{modifiedClusterDescription.value.length}} / {{maxCharsForDescName}}</mat-hint>
+  </mat-form-field>
 
-  <md-input-container class="full-width">
-    <input mdInput #modifiedLivyEndPoint placeholder="Livy End Point" value="{{livyEndPoint}}"
-           formControlName="modifiedLivyEndPoint">
-    <md-hint *ngIf="formErrors.modifiedLivyEndPoint" class="alert-danger">
-      {{formErrors.modifiedLivyEndPoint}}
-    </md-hint>
-    <md-hint align="end">{{modifiedLivyEndPoint.value.length}} / {{maxCharsForDescName}}</md-hint>
-  </md-input-container>
-
-  <md-input-container class="full-width">
-    <input mdInput #modifiedLivyPort placeholder="Livy Port" value="{{livyPort}}"
-           formControlName="modifiedLivyPort">
-    <md-hint *ngIf="formErrors.modifiedLivyPort" class="alert-danger">
-      {{formErrors.modifiedLivyPort}}
-    </md-hint>
-    <md-hint align="end">{{modifiedLivyPort.value.length}} / {{maxCharsForName}}</md-hint>
-  </md-input-container>
-
-  <md-input-container class="full-width">
-    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
-  </md-input-container>
+  <mat-form-field class="full-width">
+    <input matInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
-    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+  <mat-form-field class="full-width">
+    <input matInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <mat-hint *ngIf="formErrors.updatedUser" class="alert-danger">
       {{formErrors.updatedUser}}
-    </md-hint>
-    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
 
 
   <br><br>
 
 
   <div class="dialog-footer">
-    <button md-button type="button" (click)="cancel()">Cancel</button>
-    <button md-button type="submit" color="primary" [disabled]="!editClusterForm.valid">Update</button>
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+    <button mat-button type="submit" color="primary" [disabled]="!editClusterForm.valid">Update</button>
   </div>
 
 

@@ -26,7 +26,7 @@
     ],
     "curly": true,
     "eofline": true,
-    "import-blacklist": [true, "rxjs"],
+    "import-blacklist": [true],
     "import-spacing": true,
     "indent": [
       true,
@@ -36,10 +36,6 @@
     "interface-over-type-literal": true,
     "label-position": true,
     "max-classes-per-file": [true, 1],
-    "max-line-length": [
-      true,
-      100
-    ],
     "member-access": false,
     "no-arg": true,
     "no-bitwise": true,
@@ -69,7 +65,6 @@
     "no-trailing-whitespace": true,
     "no-unnecessary-type-assertion": true,
     "no-unused-expression": true,
-    "no-unused-variable": true,
     "no-use-before-declare": true,
     "no-var-keyword": true,
     "object-literal-sort-keys": false,
@@ -118,7 +113,6 @@
         "variable-declaration": "nospace"
       }
     ],
-    "typeof-compare": true,
     "unified-signatures": true,
     "variable-name": [
       true,

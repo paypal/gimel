@@ -1,12 +1,30 @@
-import {Component, OnInit} from '@angular/core';
-import {FormGroup, FormBuilder, Validators} from '@angular/forms';
-import {MdDialogRef} from '@angular/material';
-import {CustomValidators, onValueChanged} from '../../../shared/utils';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {Cluster} from '../../models/catalog-cluster';
-import {Category} from '../../models/catalog-category';
-import {MdDialog, MdOptionSelectionChange, MdSnackBar} from '@angular/material';
-import {Type} from '../../models/catalog-type';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { MatDialogRef } from '@angular/material';
+import { CustomValidators, onValueChanged } from '../../../shared/utils';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { Type } from '../../models/catalog-type';
+import { environment } from '../../../../environments/environment';
+import {SessionService} from '../../../core/services/session.service';
 
 @Component({
   selector: 'app-catalog-type-create-dialog',
@@ -50,7 +68,7 @@ export class CatalogCreateTypeDialogComponent implements OnInit {
     },
   };
 
-  constructor(public dialogRef: MdDialogRef<CatalogCreateTypeDialogComponent>, private fb: FormBuilder, private catalogService: CatalogService) {
+  constructor(public dialogRef: MatDialogRef<CatalogCreateTypeDialogComponent>, private fb: FormBuilder, private catalogService: CatalogService, private sessionService: SessionService) {
   }
 
   ngOnInit() {
@@ -125,19 +143,17 @@ export class CatalogCreateTypeDialogComponent implements OnInit {
   }
 
   addToAttributes() {
-    this.typeAttributes.push({
+    const newElement = {
       storageDsAttributeKeyName: this.createForm.value.attributeKey,
       storageDsAttributeKeyDesc: this.createForm.value.attributeDesc,
       isStorageSystemLevel: this.createForm.value.isStorageSystemLevel,
-    });
+    };
+    this.typeAttributes = [...this.typeAttributes, newElement];
     this.createForm.reset({
       ...this.createForm.value,
       attributeKey: '',
       attributeDesc: '',
       isStorageSystemLevel: '',
     });
-    // this.createForm.value.attributeKey = '';
-    // this.createForm.value.attributeDesc = '';
-    // this.createForm.value.isStorageSystemLevel = '';
   }
 }

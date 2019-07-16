@@ -1,16 +1,35 @@
-import {Component, Input, Output, EventEmitter} from '@angular/core';
-import {MdSnackBar} from '@angular/material';
-import {MdDialog, MdDialogRef, MdDialogConfig} from '@angular/material';
-import {forkJoin} from 'rxjs/observable/forkJoin';
-import {ConfigService} from '../../../core/services/config.service';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {CatalogSystemViewAttributesDialogComponent} from '../catalog-system-view-attributes-dialog/catalog-system-view-attributes-dialog.component';
-import {CatalogSystemEditDialogComponent} from '../catalog-system-edit-dialog/catalog-system-edit-dialog.component';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { MatSnackBar } from '@angular/material';
+import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material';
+import { forkJoin } from 'rxjs/observable/forkJoin';
+import { ConfigService } from '../../../core/services/config.service';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { CatalogSystemViewAttributesDialogComponent } from '../catalog-system-view-attributes-dialog/catalog-system-view-attributes-dialog.component';
+import { CatalogSystemEditDialogComponent } from '../catalog-system-edit-dialog/catalog-system-edit-dialog.component';
+import { environment } from '../../../../environments/environment';
+import {SessionService} from '../../../core/services/session.service';
 
 @Component({
-  selector: 'app-catalog-system-action',
-  templateUrl: './catalog-system-action.component.html',
-  styleUrls: ['./catalog-system-action.component.scss'],
+  selector: 'app-catalog-system-action', templateUrl: './catalog-system-action.component.html', styleUrls: ['./catalog-system-action.component.scss'],
 })
 
 export class CatalogSystemActionComponent {
@@ -21,23 +40,25 @@ export class CatalogSystemActionComponent {
   @Input() isActiveYN: string;
   @Input() containers: string;
   @Input() adminUserId: number;
-  @Input() isGimelCompatible: string;
   @Input() public errorStatus: boolean;
+  @Input() discoverySla: string;
   public inProgress = false;
   public actionMsg: string;
   systemAttributes: Array<any>;
 
-  dialogEditConfig: MdDialogConfig = {width: '600px', height: '90vh'};
-  dialogViewConfig: MdDialogConfig = {width: '800px', height: '60vh'};
+  dialogEditConfig: MatDialogConfig = {width: '600px', height: '90vh'};
+  dialogViewConfig: MatDialogConfig = {width: '800px', height: '60vh'};
 
-  @Output() refresh1: EventEmitter<string> = new EventEmitter();
+  @Output() refreshType: EventEmitter<string> = new EventEmitter();
+  @Output() refreshEntity: EventEmitter<string> = new EventEmitter();
+  @Output() refreshZone: EventEmitter<string> = new EventEmitter();
 
-  constructor(private catalogService: CatalogService, private snackbar: MdSnackBar, private config: ConfigService, private dialog: MdDialog) {
+  constructor(private catalogService: CatalogService, private snackbar: MatSnackBar, private config: ConfigService, private dialog: MatDialog, private sessionService: SessionService) {
   }
 
   private finishAction(result: boolean, refresh: boolean, message: string) {
     if (refresh) {
-      this.refresh1.emit(this.storageSystemId.toString());
+      this.refreshType.emit(this.storageSystemId.toString());
     }
     this.inProgress = false;
     this.actionMsg = '';
@@ -72,10 +93,13 @@ export class CatalogSystemActionComponent {
   }
 
   openAttributesDialog() {
+    this.actionMsg = 'Viewing Attributes';
+    this.inProgress = true;
     const systemAttributes = this.catalogService.getSystemAttributes(this.storageSystemName);
     forkJoin([systemAttributes]).subscribe(results => {
       this.systemAttributes = results[0];
-      let dialogRef: MdDialogRef<CatalogSystemViewAttributesDialogComponent>;
+      this.inProgress = false;
+      let dialogRef: MatDialogRef<CatalogSystemViewAttributesDialogComponent>;
       dialogRef = this.dialog.open(CatalogSystemViewAttributesDialogComponent, this.dialogViewConfig);
       dialogRef.componentInstance.storageSystemId = this.storageSystemId;
       dialogRef.componentInstance.systemAttributes = this.systemAttributes;
@@ -89,20 +113,25 @@ export class CatalogSystemActionComponent {
             } else if (result.status === 'fail') {
               const description = result.error.errorDescription || 'Unknown Error';
               this.snackbar.open(description + '.Failed to update System', 'Dismiss', this.config.snackBarConfig);
+              // this.inProgress = false;
             } else if (result.status === 'user fail') {
               const description = 'Invalid Username';
               this.snackbar.open(description + '.Failed to update System', 'Dismiss', this.config.snackBarConfig);
+              // this.inProgress = false;
             }
           }
         });
+    }, error => {
     });
   }
 
   openEditSystemDialog() {
-    const systemAttributes =  this.catalogService.getSystemAttributes(this.storageSystemName);
+    this.actionMsg = 'Editing Datastore';
+    this.inProgress = true;
+    const systemAttributes = this.catalogService.getSystemAttributes(this.storageSystemName);
     forkJoin([systemAttributes]).subscribe(results => {
       this.systemAttributes = results[0];
-      let dialogRef: MdDialogRef<CatalogSystemEditDialogComponent>;
+      let dialogRef: MatDialogRef<CatalogSystemEditDialogComponent>;
       dialogRef = this.dialog.open(CatalogSystemEditDialogComponent, this.dialogEditConfig);
       dialogRef.componentInstance.storageSystemName = this.storageSystemName;
       dialogRef.componentInstance.storageSystemId = this.storageSystemId;
@@ -111,6 +140,8 @@ export class CatalogSystemActionComponent {
       dialogRef.componentInstance.systemAttributes = this.systemAttributes;
       dialogRef.componentInstance.containers = this.containers;
       dialogRef.componentInstance.adminUserId = this.adminUserId;
+      dialogRef.componentInstance.discoverySla = this.discoverySla;
+      this.inProgress = false;
       dialogRef.afterClosed()
         .subscribe(result => {
           if (result) {
@@ -126,6 +157,7 @@ export class CatalogSystemActionComponent {
             }
           }
         });
+    }, error => {
     });
 
   }

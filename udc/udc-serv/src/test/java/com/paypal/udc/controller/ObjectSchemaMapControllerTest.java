@@ -1,8 +1,27 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -13,6 +32,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import org.junit.Before;
@@ -33,14 +53,12 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import com.google.gson.Gson;
-import com.paypal.udc.cache.DatasetCache;
-import com.paypal.udc.config.UDCInterceptorConfig;
 import com.paypal.udc.entity.dataset.Dataset;
 import com.paypal.udc.entity.objectschema.CollectiveObjectAttributeValue;
 import com.paypal.udc.entity.objectschema.CollectiveObjectSchemaMap;
+import com.paypal.udc.entity.objectschema.ObjectAttributeKeyValue;
 import com.paypal.udc.entity.objectschema.ObjectSchemaMap;
 import com.paypal.udc.entity.objectschema.Schema;
-import com.paypal.udc.interceptor.UDCInterceptor;
 import com.paypal.udc.service.IObjectSchemaMapService;
 
 
@@ -52,15 +70,6 @@ public class ObjectSchemaMapControllerTest {
 
     @MockBean
     private IObjectSchemaMapService objectSchemaMapService;
-
-    @MockBean
-    private DatasetCache dataSetCache;
-
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -77,21 +86,38 @@ public class ObjectSchemaMapControllerTest {
     private List<CollectiveObjectSchemaMap> schemaList;
     private Long topicId;
     private ObjectSchemaMap topic;
+    private ObjectAttributeKeyValue attributeKeyValue;
     private Long storageSystemId;
     private List<String> objectNamesList;
     private List<String> containersList;
+    private List<ObjectAttributeKeyValue> attributeValues;
     private List<ObjectSchemaMap> schemaMapList;
     private String jsonObjectSchema;
+    private String jsonObjectAttribute;
     private Long objectId;
     private Page<CollectiveObjectSchemaMap> pages;
     private Pageable pageable;
     private int page;
     private int size;
 
-    class AnyObjectSchemaMap extends ArgumentMatcher<ObjectSchemaMap> {
+    class AnyObjectSchemaMap implements ArgumentMatcher<ObjectSchemaMap> {
         @Override
-        public boolean matches(final Object object) {
-            return object instanceof ObjectSchemaMap;
+        public boolean matches(final ObjectSchemaMap objectSchemaMap) {
+            return objectSchemaMap instanceof ObjectSchemaMap;
+        }
+    }
+
+    class AnyObjectAttributeKeyValue implements ArgumentMatcher<ObjectAttributeKeyValue> {
+        @Override
+        public boolean matches(final ObjectAttributeKeyValue objectAttributeKeyValue) {
+            return objectAttributeKeyValue instanceof ObjectAttributeKeyValue;
+        }
+    }
+
+    class AnyObjectAttributeKeyValues implements ArgumentMatcher<List<ObjectAttributeKeyValue>> {
+        @Override
+        public boolean matches(final List<ObjectAttributeKeyValue> objectAttributeKeyValueList) {
+            return objectAttributeKeyValueList instanceof Collection<?>;
         }
     }
 
@@ -112,7 +138,7 @@ public class ObjectSchemaMapControllerTest {
         this.topicsList = Arrays.asList(this.dataset);
         this.schema = new CollectiveObjectSchemaMap(3L, this.objectName, this.containerName, 2L,
                 Collections.<Long> emptyList(), "query", Collections.<Schema> emptyList(),
-                Collections.<CollectiveObjectAttributeValue> emptyList(), "Y", "", "");
+                Collections.<CollectiveObjectAttributeValue> emptyList(), "Y", "", "", "Y");
         this.schemaList = Arrays.asList(this.schema);
         this.page = 0;
         this.size = 3;
@@ -122,12 +148,16 @@ public class ObjectSchemaMapControllerTest {
                 this.schemaList, this.pageable, 1);
         this.topicId = 5L;
         this.topic = new ObjectSchemaMap();
-        this.topic.setObjectName(this.objectName);
         this.storageSystemId = 6L;
+        this.objectId = 7L;
+        this.attributeKeyValue = new ObjectAttributeKeyValue(this.objectId, "abcd", "efgh", this.storageSystemId, "Y",
+                "", "", "", "");
+        this.topic.setObjectName(this.objectName);
         this.objectNamesList = Arrays.asList(this.objectName);
         this.containersList = Arrays.asList(this.containerName);
         this.schemaMapList = Arrays.asList(this.topic);
-        this.objectId = 7L;
+        this.jsonObjectAttribute = "{\"objectId\":7,\"objectAttributeKey\": \"abcd\",\"objectAttributeValue\":\"efgh\"}";
+        this.attributeValues = Arrays.asList(this.attributeKeyValue);
         this.jsonObjectSchema = "{ " +
                 "\"clusters\": [ " +
                 "0 " +
@@ -202,6 +232,20 @@ public class ObjectSchemaMapControllerTest {
     }
 
     @Test
+    public void verifyValidGetDatasetsByObject() throws Exception {
+        when(this.objectSchemaMapService.getDatasetByObject(this.objectName))
+                .thenReturn(this.topicsList);
+
+        this.mockMvc
+                .perform(get("/objectschema/dataset/{objectName:.+}", this.objectName)
+                        .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(this.topicsList.size())));
+
+        verify(this.objectSchemaMapService).getDatasetByObject(this.objectName);
+    }
+
+    @Test
     public void verifyValidGetSchema() throws Exception {
         when(this.objectSchemaMapService.getSchemaBySystemContainerAndObject(this.systemId, this.containerName,
                 this.objectName))
@@ -247,6 +291,20 @@ public class ObjectSchemaMapControllerTest {
     }
 
     @Test
+    public void verifyGetAttributesByObjectId() throws Exception {
+        when(this.objectSchemaMapService.getCustomAttributesByObject(this.objectId))
+                .thenReturn(this.attributeValues);
+
+        this.mockMvc
+                .perform(get("/objectschema/customAttribute/{objectId}", this.objectId)
+                        .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(this.attributeValues.size())));
+
+        verify(this.objectSchemaMapService).getCustomAttributesByObject(this.objectId);
+    }
+
+    @Test
     public void verifyValidGetAllContainersByStorageSystemId() throws Exception {
         when(this.objectSchemaMapService.getDistinctContainerNamesByStorageSystemId(this.storageSystemId))
                 .thenReturn(this.containersList);
@@ -274,19 +332,19 @@ public class ObjectSchemaMapControllerTest {
         verify(this.objectSchemaMapService).getDistinctContainerNames();
     }
 
-    // @Test
-    // public void verifyValidGetAllObjectSchemas() throws Exception {
-    // when(this.objectSchemaMapService.getAllObjectMappings(this.storageSystemId))
-    // .thenReturn(this.schemaList);
-    //
-    // this.mockMvc
-    // .perform(get("/objectschema/schemas/{systemId}", this.storageSystemId)
-    // .accept(MediaType.APPLICATION_JSON_UTF8))
-    // .andExpect(status().isOk())
-    // .andExpect(jsonPath("$", hasSize(this.schemaList.size())));
-    //
-    // verify(this.objectSchemaMapService).getAllObjectMappings(this.storageSystemId);
-    // }
+    @Test
+    public void verifyValidGetAllContainersBySystem() throws Exception {
+        when(this.objectSchemaMapService.getDistinctContainerNamesBySystems("All"))
+                .thenReturn(this.containersList);
+
+        this.mockMvc
+                .perform(get("/objectschema/containersBySystems/{systemList}", "All")
+                        .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(this.containersList.size())));
+
+        verify(this.objectSchemaMapService).getDistinctContainerNamesBySystems("All");
+    }
 
     @Test
     public void verifyValidGetObjectSchemaMapsBySystemIds() throws Exception {
@@ -315,6 +373,37 @@ public class ObjectSchemaMapControllerTest {
                 .andExpect(jsonPath("$").exists());
 
         verify(this.objectSchemaMapService).getPagedUnRegisteredObjects(2L, this.pageable);
+    }
+
+    @Test
+    public void verifyValidUpdateSchemaForObjectAttribute() throws Exception {
+        when(this.objectSchemaMapService.updateObjectAttributeKeyValue(
+                (argThat(new AnyObjectAttributeKeyValue()))))
+                        .thenReturn(this.attributeKeyValue);
+        this.mockMvc.perform(put("/objectschema/customAttribute")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(this.jsonObjectAttribute)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").exists());
+
+        verify(this.objectSchemaMapService).updateObjectAttributeKeyValue(
+                (argThat(new AnyObjectAttributeKeyValue())));
+    }
+
+    @Test
+    public void verifyValidAddObjectAttributeKeyValue() throws Exception {
+        when(this.objectSchemaMapService.addObjectAttributeKeyValue(argThat(new AnyObjectAttributeKeyValue())))
+                .thenReturn(this.attributeKeyValue);
+
+        this.mockMvc.perform(post("/objectschema/customAttribute")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(this.jsonObjectAttribute)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$").exists());
+
+        verify(this.objectSchemaMapService).addObjectAttributeKeyValue(argThat(new AnyObjectAttributeKeyValue()));
     }
 
     @Test

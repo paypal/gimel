@@ -1,0 +1,58 @@
+version: '2'
+services:
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.6.5
+    container_name: elasticsearch
+    environment:
+      - xpack.security.enabled=false
+      - xpack.monitoring.enabled=false
+      - xpack.ml.enabled=false
+      - xpack.graph.enabled=false
+      - xpack.watcher.enabled=false
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms750m -Xmx750m"
+      - discovery.zen.minimum_master_nodes=1
+      - discovery.type=single-node
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    networks:
+      - udc-net
+    ports:
+      - 9200:9200
+      - 9300:9300
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:5.6.0
+    container_name: kibana
+    depends_on:
+      - elasticsearch
+    ports:
+      - "5601:5601"
+    networks:
+      - udc-net
+    environment:
+        ELASTICSEARCH_URL: http://elasticsearch:9200
+
+  mysql:
+    container_name: mysql
+    image: mysql/mysql-server
+    restart: always
+    ports:
+      - "3309:3306"
+    networks:
+      - udc-net
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+#
+#  adminer:
+#    image: adminer
+#    restart: always
+#    networks:
+#      - udc-net
+#    ports:
+#      - 8082:8080
+
+networks:
+  udc-net:

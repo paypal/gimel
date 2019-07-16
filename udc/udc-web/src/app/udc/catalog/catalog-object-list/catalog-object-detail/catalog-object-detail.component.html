@@ -1,12 +1,31 @@
-<md-tab-group>
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<mat-tab-group>
 
 
-  <md-tab label="Overview">
+  <mat-tab label="Overview">
     <div class="app-container" *ngIf="!detailsLoading">
-      <md-grid-list cols="2" rowHeight="300">
-        <md-grid-tile>
-          <md-list dense>
-            <md-list-item>
+      <mat-grid-list cols="2" rowHeight="300">
+        <mat-grid-tile>
+          <mat-list dense>
+            <mat-list-item>
               <table>
                 <tr>
                   <td><h4>Object ID</h4></td>
@@ -25,12 +44,12 @@
                   <td>{{isSelfDiscovered}}</td>
                 </tr>
               </table>
-            </md-list-item>
-          </md-list>
-        </md-grid-tile>
-        <md-grid-tile>
-          <md-list dense>
-            <md-list-item>
+            </mat-list-item>
+          </mat-list>
+        </mat-grid-tile>
+        <mat-grid-tile>
+          <mat-list dense>
+            <mat-list-item>
               <table>
                 <tr>
                   <td><h4>Created By</h4></td>
@@ -49,16 +68,16 @@
                   <td>{{statusData.updatedTimestamp}}</td>
                 </tr>
               </table>
-            </md-list-item>
-          </md-list>
-        </md-grid-tile>
-      </md-grid-list>
+            </mat-list-item>
+          </mat-list>
+        </mat-grid-tile>
+      </mat-grid-list>
     </div>
     <div class="app-container" *ngIf="detailsLoading">
-      <md-progress-bar mode="indeterminate"></md-progress-bar>
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
     </div>
-  </md-tab>
-  <md-tab label="Schema Details">
+  </mat-tab>
+  <mat-tab label="Schema Details">
     <div class="app-container" *ngIf="!detailsLoading">
       <ngx-datatable
         #datasetColumnsTable
@@ -94,10 +113,10 @@
       </ngx-datatable>
     </div>
     <div class="app-container" *ngIf="detailsLoading">
-      <md-progress-bar mode="indeterminate"></md-progress-bar>
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
     </div>
-  </md-tab>
-  <md-tab label="Object Attributes">
+  </mat-tab>
+  <mat-tab label="Object Attributes">
     <div class="app-container" *ngIf="!detailsLoading">
       <ngx-datatable
         #datasetObjectAttributesTable
@@ -110,23 +129,35 @@
         [scrollbarH]="true"
         [limit]="5"
         [rowHeight]="50">
-
+        <!--<ngx-datatable-column name="Type Attribute ID" [width]="5">-->
+          <!--<ng-template let-row="row" ngx-datatable-cell-template>-->
+            <!--{{row.storageDsAttributeKeyId}}-->
+          <!--</ng-template>-->
+        <!--</ngx-datatable-column>-->
         <ngx-datatable-column name="Type Attribute Value" [width]="20">
           <ng-template let-row="row" ngx-datatable-cell-template>
             {{row.storageDsAttributeKeyName}}
           </ng-template>
         </ngx-datatable-column>
-
+        <!--<ngx-datatable-column name="Object Attribute ID" [width]="5">-->
+          <!--<ng-template let-row="row" ngx-datatable-cell-template>-->
+            <!--{{row.objectAttributeValueId}}-->
+          <!--</ng-template>-->
+        <!--</ngx-datatable-column>-->
         <ngx-datatable-column name="Object Attribute Value" [width]="50">
           <ng-template let-row="row" ngx-datatable-cell-template>
             {{row.objectAttributeValue}}
           </ng-template>
         </ngx-datatable-column>
-
+        <!--<ngx-datatable-column name="Object ID" [width]="5">-->
+          <!--<ng-template let-row="row" ngx-datatable-cell-template>-->
+            <!--{{row.objectId}}-->
+          <!--</ng-template>-->
+        <!--</ngx-datatable-column>-->
       </ngx-datatable>
     </div>
     <div class="app-container" *ngIf="detailsLoading">
-      <md-progress-bar mode="indeterminate"></md-progress-bar>
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
     </div>
-  </md-tab>
-</md-tab-group>
+  </mat-tab>
+</mat-tab-group>

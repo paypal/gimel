@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.entity.dataset;
 
 import java.io.Serializable;
@@ -13,6 +32,12 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.paypal.udc.entity.integration.common.Tag;
+import com.paypal.udc.entity.integration.description.SourceProviderDatasetMap;
+import com.paypal.udc.entity.objectschema.ObjectAttributeKeyValue;
+import com.paypal.udc.entity.objectschema.ObjectAttributeValue;
+import com.paypal.udc.entity.objectschema.Schema;
+import com.paypal.udc.entity.ownership.DatasetOwnershipMap;
 import com.paypal.udc.entity.rangerpolicy.DerivedPolicy;
 import com.paypal.udc.entity.teradatapolicy.TeradataPolicy;
 import io.swagger.annotations.ApiModelProperty;
@@ -111,9 +136,6 @@ public class Dataset implements Serializable {
     private boolean isAttributesPresent;
 
     @Transient
-    private String isGimelCompatible;
-
-    @Transient
     private String zoneName;
 
     @Transient
@@ -127,6 +149,72 @@ public class Dataset implements Serializable {
 
     @Transient
     private String isReadCompatible;
+
+    @Transient
+    private List<Schema> objectSchema;
+
+    @Transient
+    private List<ObjectAttributeValue> objectAttributeValues;
+
+    @Transient
+    private List<ObjectAttributeKeyValue> customAttributeValues;
+
+    @Transient
+    private List<Tag> tags;
+
+    @Transient
+    private List<DatasetOwnershipMap> ownerships;
+
+    @Transient
+    private List<SourceProviderDatasetMap> objectDescriptions;
+
+    public List<DatasetOwnershipMap> getOwnerships() {
+        return this.ownerships;
+    }
+
+    public void setOwnerships(final List<DatasetOwnershipMap> ownerships) {
+        this.ownerships = ownerships;
+    }
+
+    public List<SourceProviderDatasetMap> getObjectDescriptions() {
+        return this.objectDescriptions;
+    }
+
+    public void setObjectDescriptions(final List<SourceProviderDatasetMap> objectDescriptions) {
+        this.objectDescriptions = objectDescriptions;
+    }
+
+    public List<Tag> getTags() {
+        return this.tags;
+    }
+
+    public void setTags(final List<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public List<ObjectAttributeKeyValue> getCustomAttributeValues() {
+        return this.customAttributeValues;
+    }
+
+    public void setCustomAttributeValues(final List<ObjectAttributeKeyValue> customAttributeValues) {
+        this.customAttributeValues = customAttributeValues;
+    }
+
+    public List<ObjectAttributeValue> getObjectAttributeValues() {
+        return this.objectAttributeValues;
+    }
+
+    public void setObjectAttributeValues(final List<ObjectAttributeValue> objectAttributeValues) {
+        this.objectAttributeValues = objectAttributeValues;
+    }
+
+    public List<Schema> getObjectSchema() {
+        return this.objectSchema;
+    }
+
+    public void setObjectSchema(final List<Schema> objectSchema) {
+        this.objectSchema = objectSchema;
+    }
 
     public String getIsReadCompatible() {
         return this.isReadCompatible;
@@ -167,15 +255,7 @@ public class Dataset implements Serializable {
     public void setZoneName(final String zoneName) {
         this.zoneName = zoneName;
     }
-
-    public String getIsGimelCompatible() {
-        return this.isGimelCompatible;
-    }
-
-    public void setIsGimelCompatible(final String isGimelCompatible) {
-        this.isGimelCompatible = isGimelCompatible;
-    }
-
+    
     public boolean isAttributesPresent() {
         return this.isAttributesPresent;
     }

@@ -1,17 +1,34 @@
+
 ### <a name="run-app"></a> How to Run the App in docker?
 * Fork and clone this repo
 
 * Invoke the following command for fetching the dependencies and building the jar
 
   ```shell
-  build/udc 
+  ./build/udc 
   ```
 
-* Invoke the following command for setting up docker containers for udc-services and Mysql metastore
+* Invoke the following command for setting up docker containers for Elastic Search, Kibana and mysql
 
   ```shell
-  quickstart/setup-udc-containers
+  quickstart/start-udc-serv-prereq
   ```
+
+* Add User pcatalog in mysql and grant all privilages
+
+  ```shell
+  docker exec -it mysql bash mysql -uroot -ppassword
+  
+  mysql> CREATE USER 'pcatalog'@'%' IDENTIFIED BY 'password';
+  Query OK, 0 rows affected (0.00 sec)
+  
+  mysql> GRANT ALL PRIVILEGES ON * . * TO 'pcatalog'@'%';
+  Query OK, 0 rows affected (0.00 sec)
+  
+  mysql> quit
+
+  ```
+
 
 * Invoke the following command for bootstrapping Mysql data in the Mysql docker container
 
@@ -22,7 +39,7 @@
 * Invoke the following command for starting udc-services
 
   ```shell
-  quickstart/bootstrap-udc-serv
+  quickstart/start-udc-serv
   ```
 
 * Navigate to ``localhost:8080/swagger-ui.html``. The app will let you see all the available webservices

@@ -1,63 +1,81 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
 <form [formGroup]="createForm" (ngSubmit)="onSubmit()">
   <div>
 
-    <md-input-container class="full-width">
-      <input mdInput #objectName placeholder="Object Name"
+    <mat-form-field class="full-width">
+      <input matInput #objectName placeholder="Object Name"
              formControlName="objectName">
-      <md-hint *ngIf="formErrors.objectName" class="alert-danger">
+      <mat-hint *ngIf="formErrors.objectName" class="alert-danger">
         {{formErrors.objectName}}
-      </md-hint>
-      <md-hint align="end">{{objectName.value.length}} / {{maxCharsForName}}</md-hint>
-    </md-input-container>
+      </mat-hint>
+      <mat-hint align="end">{{objectName.value.length}} / {{maxCharsForName}}</mat-hint>
+    </mat-form-field>
 
-    <md-input-container class="full-width">
-      <input mdInput #containerName placeholder="Container Name"
+    <mat-form-field class="full-width">
+      <input matInput #containerName placeholder="Container Name"
              formControlName="containerName">
-      <md-hint *ngIf="formErrors.containerName" class="alert-danger">
+      <mat-hint *ngIf="formErrors.containerName" class="alert-danger">
         {{formErrors.containerName}}
-      </md-hint>
-      <md-hint align="end">{{containerName.value.length}} / {{maxCharsForName}}</md-hint>
-    </md-input-container>
+      </mat-hint>
+      <mat-hint align="end">{{containerName.value.length}} / {{maxCharsForName}}</mat-hint>
+    </mat-form-field>
 
-    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
-      <div fxFlex="100" fxFlexAlign="center">
-        <md-select *ngIf="!dbLoading" required placeholder="Storage System" [floatPlaceholder]="'never'"
-                   formControlName="storageSystem" (change)="onStorageTypeChange()">
-          <md-option *ngFor="let storageSystem of storageSystems" [value]="storageSystem">
-            {{ storageSystem['storageSystemName'] }}
-          </md-option>
-        </md-select>
-        <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
-      </div>
-    </div>
+    <mat-form-field [floatLabel]="'never'">
+      <mat-select required placeholder="Storage System"
+                  formControlName="storageSystem" (selectionChange)="onStorageSystemChange()">
+        <mat-option *ngFor="let storageSystem of storageSystems" [value]="storageSystem">
+          {{ storageSystem['storageSystemName'] }}
+        </mat-option>
+      </mat-select>
+    </mat-form-field>
+    <mat-progress-bar style="width: 175px !important;" mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
     <br>
 
     <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
       <div fxFlex="100" fxFlexAlign="center">
-        <md-select placeholder="Do you want the object to be Registered" [floatPlaceholder]="'never'"
-                   formControlName="wantToRegister" (change)="captureRegistrationRequest()">
-          <md-option *ngFor="let option of options" [value]="option">
-            {{ option }}
-          </md-option>
-        </md-select>
+        <mat-form-field [floatLabel]="'never'">
+          <mat-select placeholder="Do you want the object to be Registered"
+                      formControlName="wantToRegister" (selectionChange)="captureRegistrationRequest()">
+            <mat-option *ngFor="let option of options" [value]="option">
+              {{ option }}
+            </mat-option>
+          </mat-select>
+        </mat-form-field>
       </div>
     </div>
     <br>
-    <md-input-container class="full-width">
-      <input mdInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
-      <md-hint *ngIf="formErrors.createdUser" class="alert-danger">
+    <mat-form-field class="full-width">
+      <input matInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
+      <mat-hint *ngIf="formErrors.createdUser" class="alert-danger">
         {{formErrors.createdUser}}
-      </md-hint>
-      <md-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</md-hint>
-    </md-input-container>
+      </mat-hint>
+      <mat-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</mat-hint>
+    </mat-form-field>
 
     <div>
       <h4>Object Attributes</h4>
     </div>
 
     <ngx-datatable
-      #typeAttributesTable
       class="material"
       [headerHeight]="50"
       [limit]="5"
@@ -76,17 +94,17 @@
         </ng-template>
       </ngx-datatable-column>
       <ngx-datatable-column name="Attribute Value">
-        <ng-template ngx-datatable-cell-template let-row="row">
+        <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
             <span
               title="Double click to edit"
-              (dblclick)="editing[row.$$index + '-storageTypeAttributeValue'] = true"
-              *ngIf="!editing[row.$$index + '-storageTypeAttributeValue']">
+              (dblclick)="editing[rowIndex + '-storageTypeAttributeValue'] = true"
+              *ngIf="!editing[rowIndex + '-storageTypeAttributeValue']">
               {{row.storageTypeAttributeValue}}
             </span>
           <input
             autofocus
-            (blur)="updateValue($event, 'storageTypeAttributeValue', row)"
-            *ngIf="editing[row.$$index + '-storageTypeAttributeValue']"
+            (blur)="updateValue($event, 'storageTypeAttributeValue', rowIndex)"
+            *ngIf="editing[rowIndex + '-storageTypeAttributeValue']"
             type="text"
             [value]="row.storageTypeAttributeValue"
           />
@@ -96,8 +114,8 @@
     <br>
 
     <div class="dialog-footer">
-      <button md-button type="button" (click)="cancel()">Cancel</button>
-      <button md-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
     </div>
 
   </div>

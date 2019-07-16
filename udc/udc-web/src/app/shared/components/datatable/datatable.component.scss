@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 .ngx-datatable.material .datatable-footer {
   font-size: 13px;
   border-top: none;
@@ -6,17 +25,17 @@
 .ngx-datatable.material .datatable-body .datatable-body-row {
   .action-btn {
     width: 32px;
-    height: 32px;
+    height: 50px;
     position: relative;
     vertical-align: middle;
-    md-icon {
+    mat-icon {
       font-size: 18px;
       position: relative;
       top: -5px;
     }
   }
 
-  md-slide-toggle.action-btn {
+  mat-slide-toggle.action-btn {
     width: auto;
     height: auto;
   }
@@ -26,6 +45,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  height: auto !important;
 }
 
 .ngx-datatable.material .datatable-body .progress-linear .container{
@@ -48,32 +68,40 @@
   font-size: 13px;
   display: flex;
   align-items: center;
+  // text-align: center !important;
 }
 
 .ngx-datatable.material .datatable-body .datatable-body-row .datatable-body-cell .datatable-body-cell-label {
   width: 100%;
   position: relative;
+
 }
 
 .ngx-datatable.material .datatable-header .datatable-header-cell {
   color: rgba(0,0,0,.87);
+  // text-align: center !important;
+
 }
 
 .datatable.fixed-header .datatable-header .datatable-header-inner .datatable-header-cell {
   font-weight: 500;
+  // text-align: center !important;
+
 }
 
 .datatable.fixed-header .datatable-header .datatable-header-inner .datatable-header-cell .datatable-header-cell-label {
   display: inline-block;
   width: 100%;
   height: 100%;
+  // text-align: center !important;
+
 }
 
 .datatable-search-header {
   position: relative;
 }
 
-.mat-input-container.datatable-search-input {
+.mat-form-field.datatable-search-input {
   position: absolute;
   top: -45px;
   right: 0;

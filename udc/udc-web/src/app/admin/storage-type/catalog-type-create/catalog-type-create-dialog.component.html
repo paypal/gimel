@@ -1,62 +1,81 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
 <form [formGroup]="createForm" (ngSubmit)="onSubmit()">
   <div>
 
-    <md-input-container class="full-width">
-      <input mdInput #storageTypeName placeholder="Type Name"
+    <mat-form-field class="full-width">
+      <input matInput #storageTypeName placeholder="Type Name"
              formControlName="storageTypeName">
-      <md-hint *ngIf="formErrors.storageTypeName" class="alert-danger">
+      <mat-hint *ngIf="formErrors.storageTypeName" class="alert-danger">
         {{formErrors.storageTypeName}}
-      </md-hint>
-      <md-hint align="end">{{storageTypeName.value.length}} / {{maxCharsForName}}</md-hint>
-    </md-input-container>
+      </mat-hint>
+      <mat-hint align="end">{{storageTypeName.value.length}} / {{maxCharsForName}}</mat-hint>
+    </mat-form-field>
 
-    <md-input-container class="full-width">
-    <textarea mdInput #storageTypeDescription rows="3" placeholder="Type Description"
+    <mat-form-field class="full-width">
+    <textarea matInput #storageTypeDescription rows="3" placeholder="Type Description"
               formControlName="storageTypeDescription">
     </textarea>
-      <md-hint *ngIf="formErrors.storageTypeDescription" class="alert-danger">
+      <mat-hint *ngIf="formErrors.storageTypeDescription" class="alert-danger">
         {{formErrors.storageTypeDescription}}
-      </md-hint>
-      <md-hint align="end">{{storageTypeDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
-    </md-input-container>
+      </mat-hint>
+      <mat-hint align="end">{{storageTypeDescription.value.length}} / {{maxCharsForDescName}}</mat-hint>
+    </mat-form-field>
 
     <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
       <div fxFlex="100" fxFlexAlign="center">
-        <md-select required placeholder="Storage Category" [floatPlaceholder]="'never'"
+        <mat-form-field [floatLabel]="'never'"><mat-select required placeholder="Storage Category"
                    formControlName="storageCategory">
-          <md-option *ngFor="let storageCategory of storageCategories" [value]="storageCategory">
+          <mat-option *ngFor="let storageCategory of storageCategories" [value]="storageCategory">
             {{ storageCategory['storageName'] }}
-          </md-option>
-        </md-select>
-        <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+          </mat-option>
+        </mat-select></mat-form-field>
+        <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
       </div>
     </div>
 
-    <md-input-container class="full-width">
-      <input mdInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
-      <md-hint *ngIf="formErrors.createdUser" class="alert-danger">
+    <mat-form-field class="full-width">
+      <input matInput #createdUser required="true" placeholder="Created User" formControlName="createdUser">
+      <mat-hint *ngIf="formErrors.createdUser" class="alert-danger">
         {{formErrors.createdUser}}
-      </md-hint>
-      <md-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</md-hint>
-    </md-input-container>
+      </mat-hint>
+      <mat-hint align="end">{{createdUser.value.length}} / {{maxCharsForUserName}}</mat-hint>
+    </mat-form-field>
 
-    <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
-      <md-input-container class="m-md">
-        <input mdInput  placeholder="Attribute Key" formControlName="attributeKey">
-      </md-input-container>
-      <md-input-container class="m-md">
-        <input mdInput  placeholder="Description" formControlName="attributeDesc">
-      </md-input-container>
-      <div fxFlex="55" fxFlexAlign="center" class="m-md">
-        <md-select placeholder="Storage System Level" [floatPlaceholder]="'never'"
+    <div fxLayout="row" fxLayoutAlign="start start" class="appname-row">
+      <mat-form-field class="m-mat">
+        <input matInput  placeholder="Attribute Key" formControlName="attributeKey">
+      </mat-form-field>
+      <mat-form-field class="m-mat">
+        <input matInput  placeholder="Description" formControlName="attributeDesc">
+      </mat-form-field>
+      <div fxFlex="55" fxFlexAlign="center" class="m-mat">
+        <mat-form-field [floatLabel]="'never'"><mat-select placeholder="Storage System Level"
                    formControlName="isStorageSystemLevel">
-          <md-option value="Y">Yes</md-option>
-          <md-option value="N">No</md-option>
-        </md-select>
+          <mat-option value="Y">Yes</mat-option>
+          <mat-option value="N">No</mat-option>
+        </mat-select></mat-form-field>
       </div>
       <div class="m-lg">
-        <button md-raised-button class="app-details-btn" type="button" [disabled]="!createForm.valid"
+        <button mat-raised-button class="app-details-btn" type="button" [disabled]="!createForm.valid"
                 (click)="addToAttributes()">Add
         </button>
       </div>
@@ -66,7 +85,6 @@
       <h4>Type Attributes</h4>
     </div>
     <ngx-datatable
-      #typeAttributesTable
       class="material favorites-datatable"
       [rows]="typeAttributes"
       [columnMode]="'force'"
@@ -94,8 +112,8 @@
     <br>
 
     <div class="dialog-footer">
-      <button md-button type="button" (click)="cancel()">Cancel</button>
-      <button md-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
+      <button mat-button type="button" (click)="cancel()">Cancel</button>
+      <button mat-button type="submit" color="primary" [disabled]="!createForm.valid">Create</button>
     </div>
 
   </div>

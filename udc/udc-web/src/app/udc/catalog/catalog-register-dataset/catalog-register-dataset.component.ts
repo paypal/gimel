@@ -1,15 +1,39 @@
-import {Component, OnInit} from '@angular/core';
-import {FormGroup, FormBuilder, Validators} from '@angular/forms';
-import {MdDialog, MdOptionSelectionChange, MdSnackBar} from '@angular/material';
-import {ActivatedRoute, Router} from '@angular/router';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { MatDialog, MatOptionSelectionChange, MatSnackBar } from '@angular/material';
+import { ActivatedRoute, Router } from '@angular/router';
 import 'rxjs/add/operator/startWith';
 import 'rxjs/add/operator/map';
-import {ConfigService} from '../../../core/services';
-import {CustomValidators, onValueChanged} from '../../../shared/utils';
-import {CatalogService} from '../services/catalog.service';
-import {Dataset} from '../models/catalog-dataset';
-import {StorageTypeAttribute} from '../models/catalog-dataset-storagetype-attribute';
-import {DatasetAttributeValue} from '../models/catalog-dataset-attribute-value';
+import { ConfigService } from '../../../core/services';
+import { CustomValidators, onValueChanged } from '../../../shared/utils';
+import { CatalogService } from '../services/catalog.service';
+import { Dataset } from '../models/catalog-dataset';
+import { StorageTypeAttribute } from '../models/catalog-dataset-storagetype-attribute';
+import { DatasetAttributeValue } from '../models/catalog-dataset-attribute-value';
+import { environment } from '../../../../environments/environment';
+import { CloseSideNavAction } from '../../../core/store/sidenav/sidenav.actions';
+import { Store } from '@ngrx/store';
+import * as fromRoot from '../../../core/store';
+import {SessionService} from '../../../core/services/session.service';
 
 @Component({
   selector: 'app-register-dataset', templateUrl: './catalog-register-dataset.component.html', styleUrls: ['./catalog-register-dataset.component.scss'],
@@ -46,6 +70,7 @@ export class CatalogRegisterDatasetComponent implements OnInit {
   public formErrors = {
     'clusterName': '', 'description': '', 'fileFormat': '', 'dataset': '', 'hdfspath': '', 'schemaPath': '', 'rowTerminator': '', 'fieldTerminator': '',
   };
+
   private validationMessages = {
     'description': {
       'required': 'Description for this dataset registration is required.',
@@ -64,8 +89,12 @@ export class CatalogRegisterDatasetComponent implements OnInit {
     },
   };
 
-  constructor(private config: ConfigService, private catalogService: CatalogService, private formBuilder: FormBuilder, private activatedRoute: ActivatedRoute, private router: Router, private snackbar: MdSnackBar, private dialog: MdDialog) {
-    this.username = 'udcdev';
+  constructor(private sessionService: SessionService, private store: Store<fromRoot.State>, private config: ConfigService, private catalogService: CatalogService, private formBuilder: FormBuilder, private activatedRoute: ActivatedRoute, private router: Router, private snackbar: MatSnackBar, private dialog: MatDialog) {
+    this.store.dispatch(new CloseSideNavAction());
+    this.config.getUserNameEmitter().subscribe(data => {
+      this.username = data;
+    });
+    this.username = this.config.userName;
   }
 
   ngOnInit() {
@@ -281,7 +310,7 @@ export class CatalogRegisterDatasetComponent implements OnInit {
   }
 
   populateDataset() {
-    const data: Dataset = new Dataset(this.datasetForm.controls.dataset.value, 0, '', null, 0, '', '', '', '', '', '', '', [], [], '');
+    const data: Dataset = new Dataset(this.datasetForm.controls.dataset.value, 0, '', null, 0, '', '', '', '', '', '', [], [], '', '', '');
     data.createdUser = this.username;
     data.storageDataSetName = this.datasetForm.controls.dataset.value;
     data.storageSystemId = this.datasetForm.controls.storageSystem.value.storageSystemId;
@@ -319,7 +348,7 @@ export class CatalogRegisterDatasetComponent implements OnInit {
     return `Dataset name should not be empty`;
   }
 
-  containerSelect(event: MdOptionSelectionChange, val: string) {
+  containerSelect(event: MatOptionSelectionChange, val: string) {
     if (event.source.selected) {
       const containerName = val;
       const storageSystem = this.datasetForm.controls.storageSystem.value;
@@ -355,7 +384,7 @@ export class CatalogRegisterDatasetComponent implements OnInit {
     }
   }
 
-  objectSelect(event: MdOptionSelectionChange, val: string) {
+  objectSelect(event: MatOptionSelectionChange, val: string) {
     if (event.source.selected) {
       this.objectName = val;
     }

@@ -1,24 +1,46 @@
-import {Component, Input, Output, EventEmitter, ViewChild, OnInit} from '@angular/core';
-import {
-  MdDialog, MdDialogConfig, MdDialogRef, MdSnackBar,
-  MdSnackBarConfig
-} from '@angular/material';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {ConfigService} from '../../../core/services/config.service';
-import {CatalogCreateUserDialogComponent} from '../catalog-user-create/catalog-user-create-dialog.component';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, Input, Output, EventEmitter, ViewChild, OnInit } from '@angular/core';
+import { MatDialog, MatDialogConfig, MatDialogRef, MatSnackBar } from '@angular/material';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { ConfigService } from '../../../core/services/config.service';
+import { CatalogCreateUserDialogComponent } from '../catalog-user-create/catalog-user-create-dialog.component';
+import { environment } from '../../../../environments/environment';
+import { CloseSideNavAction } from '../../../core/store/sidenav/sidenav.actions';
+import { Store } from '@ngrx/store';
+import * as fromRoot from '../../../core/store';
+import { NgxSpinnerService } from 'ngx-spinner';
+import {SessionService} from '../../../core/services/session.service';
 
 @Component({
   selector: 'app-catalog-user-list', templateUrl: './catalog-user-list.component.html',
 })
 export class CatalogUserListComponent implements OnInit {
-  public loading = false;
   public displayList = [];
   private userList = [];
   public userId = '';
   public inProgress = false;
   public actionMsg: string;
+  public admin: boolean;
 
-  dialogConfig: MdDialogConfig = {width: '600px'};
+  dialogConfig: MatDialogConfig = {width: '600px'};
   @ViewChild('catalogClustersTable') table: any;
 
   @Input() project: string;
@@ -26,7 +48,12 @@ export class CatalogUserListComponent implements OnInit {
   @Output() loaded: EventEmitter<boolean> = new EventEmitter();
   @Output() refresh: EventEmitter<string> = new EventEmitter();
 
-  constructor(private catalogService: CatalogService, private snackbar: MdSnackBar, private config: ConfigService, private dialog: MdDialog) {
+  constructor(private spinner: NgxSpinnerService, private store: Store<fromRoot.State>, private catalogService: CatalogService, private snackbar: MatSnackBar, private config: ConfigService, private dialog: MatDialog, private sessionService: SessionService) {
+    this.store.dispatch(new CloseSideNavAction());
+    this.config.getAdminEmitter().subscribe(data => {
+      this.admin = data;
+    });
+    this.admin = this.config.admin;
   }
 
   ngOnInit() {
@@ -34,7 +61,7 @@ export class CatalogUserListComponent implements OnInit {
   }
 
   loadUsersFromCatalog() {
-    this.loading = true;
+    this.spinner.show();
     this.userList = [];
     this.catalogService.getUsersList().subscribe(data => {
       data.map(element => {
@@ -44,9 +71,11 @@ export class CatalogUserListComponent implements OnInit {
       this.userList = [];
     }, () => {
       this.displayList = this.userList.sort((a, b): number => {
-        return a.userId > b.userId ? 1 : -1;
+        return a.userName > b.userName ? 1 : -1;
       });
-      this.loading = false;
+      setTimeout(() => {
+        this.spinner.hide();
+      }, 0);
       this.loaded.emit(true);
     });
   }
@@ -71,7 +100,7 @@ export class CatalogUserListComponent implements OnInit {
   }
 
   createUserDialag() {
-    let dialogRef: MdDialogRef<CatalogCreateUserDialogComponent>;
+    let dialogRef: MatDialogRef<CatalogCreateUserDialogComponent>;
     dialogRef = this.dialog.open(CatalogCreateUserDialogComponent, this.dialogConfig);
     dialogRef.afterClosed()
       .subscribe(result => {

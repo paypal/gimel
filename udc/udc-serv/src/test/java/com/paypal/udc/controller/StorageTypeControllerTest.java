@@ -1,8 +1,27 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -28,12 +47,9 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import com.google.gson.Gson;
-import com.paypal.udc.cache.StorageTypeCache;
-import com.paypal.udc.config.UDCInterceptorConfig;
 import com.paypal.udc.entity.storagetype.CollectiveStorageTypeAttributeKey;
 import com.paypal.udc.entity.storagetype.StorageType;
 import com.paypal.udc.entity.storagetype.StorageTypeAttributeKey;
-import com.paypal.udc.interceptor.UDCInterceptor;
 import com.paypal.udc.service.IStorageTypeService;
 
 
@@ -45,15 +61,6 @@ public class StorageTypeControllerTest {
 
     @MockBean
     private IStorageTypeService storageTypeService;
-
-    @MockBean
-    private StorageTypeCache storageTypeCache;
-
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -71,17 +78,17 @@ public class StorageTypeControllerTest {
     private String jsonStorageType;
     private String jsonStak;
 
-    class AnyStorageType extends ArgumentMatcher<StorageType> {
+    class AnyStorageType implements ArgumentMatcher<StorageType> {
         @Override
-        public boolean matches(final Object object) {
-            return object instanceof StorageType;
+        public boolean matches(final StorageType storageType) {
+            return storageType instanceof StorageType;
         }
     }
 
-    class AnyCollectiveStorageTypeAttributeKey extends ArgumentMatcher<CollectiveStorageTypeAttributeKey> {
+    class AnyCollectiveStorageTypeAttributeKey implements ArgumentMatcher<CollectiveStorageTypeAttributeKey> {
         @Override
-        public boolean matches(final Object object) {
-            return object instanceof CollectiveStorageTypeAttributeKey;
+        public boolean matches(final CollectiveStorageTypeAttributeKey collectiveStorageTypeAttributeKey) {
+            return collectiveStorageTypeAttributeKey instanceof CollectiveStorageTypeAttributeKey;
         }
     }
 
@@ -145,7 +152,7 @@ public class StorageTypeControllerTest {
 
     @Test
     public void verifyValidGetStorageTypeById() throws Exception {
-        when(this.storageTypeCache.getStorageType(this.storageTypeId))
+        when(this.storageTypeService.getStorageTypeById(this.storageTypeId))
                 .thenReturn(this.storageType);
 
         this.mockMvc.perform(get("/storageType/storageType/{id}", this.storageTypeId)
@@ -153,7 +160,7 @@ public class StorageTypeControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.storageTypeName").value(this.storageTypeName));
 
-        verify(this.storageTypeCache).getStorageType(this.storageTypeId);
+        verify(this.storageTypeService).getStorageTypeById(this.storageTypeId);
     }
 
     @Test

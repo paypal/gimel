@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.service.impl;
 
 import static org.junit.Assert.assertEquals;
@@ -15,15 +34,11 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
-import com.paypal.udc.cache.StorageCache;
-import com.paypal.udc.cache.StorageTypeCache;
-import com.paypal.udc.config.UDCInterceptorConfig;
-import com.paypal.udc.dao.StorageRepository;
+import com.paypal.udc.dao.storagecategory.StorageRepository;
 import com.paypal.udc.dao.storagetype.StorageTypeAttributeKeyRepository;
 import com.paypal.udc.dao.storagetype.StorageTypeRepository;
-import com.paypal.udc.entity.Storage;
+import com.paypal.udc.entity.storagecategory.Storage;
 import com.paypal.udc.entity.storagetype.StorageType;
-import com.paypal.udc.interceptor.UDCInterceptor;
 import com.paypal.udc.util.StorageTypeUtil;
 import com.paypal.udc.util.enumeration.ActiveEnumeration;
 import com.paypal.udc.validator.storagetype.StorageIDValidator;
@@ -34,20 +49,11 @@ import com.paypal.udc.validator.storagetype.StorageTypeNameValidator;
 @RunWith(SpringRunner.class)
 public class StorageTypeServiceTest {
 
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
-
     @Mock
     private StorageTypeRepository storageTypeRepository;
 
     @Mock
     private StorageTypeAttributeKeyRepository storageAttributeRepository;
-
-    @Mock
-    private StorageCache storageCache;
 
     @Mock
     private StorageTypeUtil storageTypeUtil;
@@ -60,9 +66,6 @@ public class StorageTypeServiceTest {
 
     @Mock
     private StorageTypeDescValidator s2;
-
-    @Mock
-    private StorageTypeCache storageTypeCache;
 
     @Mock
     private StorageRepository storageRepository;
@@ -107,13 +110,13 @@ public class StorageTypeServiceTest {
     @Test
     public void verifyValidGetStorageTypeById() throws Exception {
         when(this.storageTypeUtil.getStorages()).thenReturn(this.storageMap);
-        when(this.storageTypeRepository.findOne(this.storageId)).thenReturn(this.storageType);
+        when(this.storageTypeUtil.validateStorageTypeId(this.storageId)).thenReturn(this.storageType);
         when(this.storageMap.get(0L)).thenReturn(this.storage);
 
         final StorageType result = this.storageTypeService.getStorageTypeById(this.storageTypeId);
         assertEquals(this.storageType, result);
 
-        verify(this.storageTypeRepository).findOne(this.storageId);
+        verify(this.storageTypeUtil).validateStorageTypeId(this.storageId);
     }
 
     @Test
@@ -140,7 +143,7 @@ public class StorageTypeServiceTest {
 
     @Test
     public void verifyValidEnableStorageType() throws Exception {
-        when(this.storageTypeCache.getStorageType(this.storageTypeId)).thenReturn(this.storageType);
+        when(this.storageTypeUtil.validateStorageTypeId(this.storageId)).thenReturn(this.storageType);
         when(this.storageTypeRepository.save(this.storageType)).thenReturn(this.storageType);
 
         final StorageType result = this.storageTypeService.enableStorageType(this.storageTypeId);

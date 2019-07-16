@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.entity.storagesystem;
 
 import java.io.Serializable;
@@ -44,6 +63,10 @@ public class StorageSystem implements Serializable {
     @Column(name = "is_active_y_n")
     private String isActiveYN;
 
+    @ApiModelProperty(notes = "Discovery Status SLA")
+    @Column(name = "discovery_sla")
+    private String discoverySla;
+
     @ApiModelProperty(notes = "Admin User FK")
     @Column(name = "admin_user")
     private long adminUserId;
@@ -51,10 +74,10 @@ public class StorageSystem implements Serializable {
     @ApiModelProperty(notes = "Zone Id FK")
     @Column(name = "zone_id")
     private long zoneId;
-
-    @ApiModelProperty(notes = "Is it Data API compatible ?")
-    @Column(name = "is_gimel_compatible")
-    private String isGimelCompatible;
+    
+    @ApiModelProperty(notes = "Entity Id FK")
+    @Column(name = "entity_id")
+    private long entityId;
 
     @ApiModelProperty(notes = "Is it Data API Read compatible ?")
     @Column(name = "is_read_compatible")
@@ -102,6 +125,17 @@ public class StorageSystem implements Serializable {
 
     @Transient
     private String zoneName;
+    
+    @Transient 
+    private String entityName;
+
+    public String getDiscoverySla() {
+        return this.discoverySla;
+    }
+
+    public void setDiscoverySla(final String discoverySla) {
+        this.discoverySla = discoverySla;
+    }
 
     public String getIsReadCompatible() {
         return this.isReadCompatible;
@@ -109,14 +143,6 @@ public class StorageSystem implements Serializable {
 
     public void setIsReadCompatible(final String isReadCompatible) {
         this.isReadCompatible = isReadCompatible;
-    }
-
-    public String getIsGimelCompatible() {
-        return this.isGimelCompatible;
-    }
-
-    public void setIsGimelCompatible(final String isGimelCompatible) {
-        this.isGimelCompatible = isGimelCompatible;
     }
 
     public String getZoneName() {
@@ -127,6 +153,13 @@ public class StorageSystem implements Serializable {
         this.zoneName = zoneName;
     }
 
+    public String getEntityName() {
+        return this.entityName;
+    }
+
+    public void setEntityName(final String entityName) {
+        this.entityName = entityName;
+    }
     public long getAssignedClusterId() {
         return this.assignedClusterId;
     }
@@ -261,16 +294,22 @@ public class StorageSystem implements Serializable {
         this.zoneId = zoneId;
     }
 
+    public long getEntityId() {
+        return this.entityId;
+    }
+
+    public void setEntityId(final long entityId) {
+        this.entityId = entityId;
+    }
     public StorageSystem() {
 
     }
 
     public StorageSystem(final long storageSystemId, final String storageSystemName,
-            final String storageSystemDescription,
-            final String createdUser, final String createdTimestamp, final String updatedUser,
-            final String updatedTimestamp,
-            final long storageTypeId, final long runningClusterId, final long zoneId, final String isGimelCompatible,
-            final String isReadCompatible) {
+            final String storageSystemDescription, final String createdUser, final String createdTimestamp,
+            final String updatedUser, final String updatedTimestamp, final long storageTypeId,
+            final long runningClusterId, final long zoneId, final long entityId,
+            final String isReadCompatible, final String discoverySla) {
         super();
         this.storageSystemId = storageSystemId;
         this.storageSystemName = storageSystemName;
@@ -282,8 +321,9 @@ public class StorageSystem implements Serializable {
         this.storageTypeId = storageTypeId;
         this.runningClusterId = runningClusterId;
         this.zoneId = zoneId;
-        this.isGimelCompatible = isGimelCompatible;
+        this.entityId = entityId;
         this.isReadCompatible = isReadCompatible;
+        this.discoverySla = discoverySla;
     }
 
     @Override

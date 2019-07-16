@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.service.impl;
 
 import java.sql.Timestamp;
@@ -7,7 +26,6 @@ import java.util.List;
 import javax.validation.ConstraintViolationException;
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -32,8 +50,7 @@ public class TeradataService implements ITeradataService {
     private StorageSystemUtil storageSystemUtil;
 
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
-    @Value("${application.defaultuser}")
-    private String user;
+    private static final String user = "udc_admin";
 
     @Override
     public List<TeradataPolicy> getAllPolicies() {
@@ -68,7 +85,7 @@ public class TeradataService implements ITeradataService {
         try {
             this.storageSystemUtil.validateStorageSystem(policy.getStorageSystemId());
             tempPolicy = new TeradataPolicy(policy.getTeradataPolicyId(), policy.getStorageSystemId(),
-                    policy.getDatabaseName(), policy.getIamRoleName(), this.user, time, this.user,
+                    policy.getDatabaseName(), policy.getIamRoleName(), policy.getRoleFor(), user, time, user,
                     time, ActiveEnumeration.YES.getFlag());
             tempPolicy = this.teradataPolicyRepository.save(tempPolicy);
         }
@@ -94,7 +111,7 @@ public class TeradataService implements ITeradataService {
         try {
             this.storageSystemUtil.validateStorageSystem(policy.getStorageSystemId());
             tempPolicy = new TeradataPolicy(policy.getStorageSystemId(),
-                    policy.getDatabaseName(), policy.getIamRoleName(), this.user, time, this.user,
+                    policy.getDatabaseName(), policy.getIamRoleName(), policy.getRoleFor(), user, time, user,
                     time, ActiveEnumeration.YES.getFlag());
             tempPolicy = this.teradataPolicyRepository.save(tempPolicy);
         }
@@ -103,11 +120,6 @@ public class TeradataService implements ITeradataService {
             v.setErrorDescription("System ID, policy name and database name  are duplicated");
             throw v;
         }
-        // catch (final ConstraintViolationException e) {
-        // v.setErrorCode(HttpStatus.BAD_REQUEST);
-        // v.setErrorDescription("Policy name is empty");
-        // throw v;
-        // }
         return tempPolicy;
     }
 
@@ -116,14 +128,15 @@ public class TeradataService implements ITeradataService {
         final ValidationError v = new ValidationError();
         final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         final String time = sdf.format(timestamp);
-        final TeradataPolicy derivedPolicy = this.teradataPolicyRepository.findOne(derivedPolicyId);
+        final TeradataPolicy derivedPolicy = this.teradataPolicyRepository.findById(derivedPolicyId)
+                .orElse(null);
         if (derivedPolicy == null) {
             v.setErrorCode(HttpStatus.BAD_REQUEST);
             v.setErrorDescription("Teradata Policy ID not found");
             throw v;
         }
         derivedPolicy.setUpdatedTimestamp(time);
-        derivedPolicy.setUpdatedUser(this.user);
+        derivedPolicy.setUpdatedUser(user);
         derivedPolicy.setIsActiveYN(ActiveEnumeration.NO.getFlag());
         this.teradataPolicyRepository.save(derivedPolicy);
 

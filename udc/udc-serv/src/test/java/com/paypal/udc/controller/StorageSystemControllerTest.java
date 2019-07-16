@@ -1,8 +1,27 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -12,6 +31,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import org.junit.Before;
@@ -28,13 +48,13 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import com.google.gson.Gson;
-import com.paypal.udc.cache.StorageSystemCache;
-import com.paypal.udc.config.UDCInterceptorConfig;
+import com.paypal.udc.dao.storagesystem.StorageSystemDiscoveryRepository;
 import com.paypal.udc.entity.storagesystem.StorageSystem;
 import com.paypal.udc.entity.storagesystem.StorageSystemAttributeValue;
-import com.paypal.udc.interceptor.UDCInterceptor;
+import com.paypal.udc.entity.storagesystem.StorageSystemDiscovery;
 import com.paypal.udc.service.IStorageSystemService;
 import com.paypal.udc.util.StorageSystemUtil;
+import com.paypal.udc.util.enumeration.RunFrequencyEnumeration;
 
 
 @RunWith(SpringRunner.class)
@@ -47,16 +67,10 @@ public class StorageSystemControllerTest {
     private IStorageSystemService storageSystemService;
 
     @MockBean
-    private StorageSystemCache storageSystemCache;
+    private StorageSystemDiscoveryRepository ssdr;
 
     @MockBean
     private StorageSystemUtil storageSystemUtil;
-
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
 
     @Autowired
     private WebApplicationContext webApplicationContext;
@@ -64,13 +78,17 @@ public class StorageSystemControllerTest {
     final Gson gson = new Gson();
 
     private StorageSystem storageSystem;
-
+    private StorageSystemDiscovery storageSystemDiscovery;
     private Long storageSystemId;
+    private long systemId;
+    private String systemIds;
+    private Long storageSystemDiscoveryId;
     private String storageSystemName;
     private Long storageTypeId;
     private Long clusterId;
     private Long zoneId;
-
+    private Long entityId;
+    private List<StorageSystemDiscovery> discoveryList;
     private StorageSystemAttributeValue storageAttribute;
     private List<StorageSystemAttributeValue> storageAttributesList;
 
@@ -79,11 +97,19 @@ public class StorageSystemControllerTest {
     private String storageTypeName;
 
     private String jsonStorageSystem;
+    private String jsonStorageSystemDiscovery;
 
-    class AnyStorageSystem extends ArgumentMatcher<StorageSystem> {
+    class AnyStorageSystem implements ArgumentMatcher<StorageSystem> {
         @Override
-        public boolean matches(final Object object) {
-            return object instanceof StorageSystem;
+        public boolean matches(final StorageSystem storageSystem) {
+            return storageSystem instanceof StorageSystem;
+        }
+    }
+
+    class AnyStorageSystemDiscovery implements ArgumentMatcher<StorageSystemDiscovery> {
+        @Override
+        public boolean matches(final StorageSystemDiscovery storageSystemDiscovery) {
+            return storageSystemDiscovery instanceof StorageSystemDiscovery;
         }
     }
 
@@ -91,18 +117,37 @@ public class StorageSystemControllerTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         this.mockMvc = MockMvcBuilders.webAppContextSetup(this.webApplicationContext).build();
-
+        this.discoveryList = new ArrayList<StorageSystemDiscovery>();
+        this.storageSystemDiscoveryId = 0L;
         this.storageSystemId = 1L;
+        this.systemId = 1;
         this.storageSystemName = "storageSystemName";
         this.storageTypeId = 2L;
         this.clusterId = 1L;
         this.zoneId = 1L;
+        this.entityId = 1L;
+        this.systemIds = Long.toString(this.systemId);
         this.storageSystem = new StorageSystem(this.storageSystemId, this.storageSystemName, "storageSystemDescription",
-                "crUser", "crTime", "updUser", "updTime", this.storageTypeId, this.clusterId, this.zoneId, "Y", "Y");
+                "crUser", "crTime", "updUser", "updTime", this.storageTypeId, this.clusterId, this.zoneId,
+                this.entityId, "Y",
+                RunFrequencyEnumeration.SIXTY.getFlag());
+        this.storageSystemDiscovery = new StorageSystemDiscovery(this.storageSystemId, "2019-01-02 22:38:20",
+                "2019-01-02 22:48:20", 2, 5, 20, "SUCCESS", "", "udc_admin");
+        this.discoveryList.add(this.storageSystemDiscovery);
         this.storageAttribute = new StorageSystemAttributeValue();
         this.storageAttributesList = Arrays.asList(this.storageAttribute);
         this.storageSystemsList = Arrays.asList(this.storageSystem);
         this.storageTypeName = "storageTypeName";
+        this.jsonStorageSystemDiscovery = "{"
+                + "\"storageSystemDiscoveryId\": 0,"
+                + "\"storageSystemId\": 1,"
+                + "\"startTime\": \"2019-01-02 22:38:20.0\","
+                + "\"endTime\": \"2019-01-02 22:48:20.0\","
+                + "\"totalUpserts\": 5,\"totalInserts\": 20,"
+                + "\"discoveryStatus\": \"SUCCESS\","
+                + "\"errorLog\": \"\","
+                + "\"runningUser\": \"udc_admin\""
+                + "}";
         this.jsonStorageSystem = "{ " +
                 "\"adminUserId\": 0, " +
                 "\"containers\": \"string\", " +
@@ -166,7 +211,7 @@ public class StorageSystemControllerTest {
 
     @Test
     public void verifyValidGetStorageSystemById() throws Exception {
-        when(this.storageSystemCache.getStorageSystem(this.storageSystemId))
+        when(this.storageSystemService.getStorageSystemById(this.storageSystemId))
                 .thenReturn(this.storageSystem);
 
         this.mockMvc.perform(get("/storageSystem/storageSystem/{id}", this.storageSystemId)
@@ -174,12 +219,25 @@ public class StorageSystemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.storageSystemId").value(this.storageSystemId));
 
-        verify(this.storageSystemCache).getStorageSystem(this.storageSystemId);
+        verify(this.storageSystemService).getStorageSystemById(this.storageSystemId);
+    }
+
+    @Test
+    public void verifyValidGetStorageSystemDiscoveryById() throws Exception {
+        when(this.storageSystemService.getDiscoveryStatusForStorageSystemId(this.systemIds))
+                .thenReturn(this.discoveryList);
+
+        this.mockMvc.perform(get("/storageSystem/storageSystemDiscovery/{id}", this.systemId)
+                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(this.discoveryList.size())));
+
+        verify(this.storageSystemService).getDiscoveryStatusForStorageSystemId(this.systemIds);
     }
 
     @Test
     public void verifyValidGetStorageAttributesById() throws Exception {
-        when(this.storageSystemCache.getAttributeValues(this.storageSystemId))
+        when(this.storageSystemService.getStorageSystemAttributes(this.storageSystemId))
                 .thenReturn(this.storageAttributesList);
 
         this.mockMvc.perform(get("/storageSystem/storageSystemAttributes/{id}", this.storageSystemId)
@@ -187,7 +245,7 @@ public class StorageSystemControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(this.storageAttributesList.size())));
 
-        verify(this.storageSystemCache).getAttributeValues(this.storageSystemId);
+        verify(this.storageSystemService).getStorageSystemAttributes(this.storageSystemId);
     }
 
     @Test
@@ -254,11 +312,28 @@ public class StorageSystemControllerTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(this.jsonStorageSystem)
                 .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.storageSystemId").exists())
                 .andExpect(jsonPath("$.storageSystemId").value(this.storageSystemId));
 
         verify(this.storageSystemService).addStorageSystem(argThat(new AnyStorageSystem()));
+    }
+
+    @Test
+    public void verifyValidAddStorageSystemDiscovery() throws Exception {
+        when(this.storageSystemService.addStorageSystemDiscovery(argThat(new AnyStorageSystemDiscovery())))
+                .thenReturn(this.storageSystemDiscovery);
+
+        this.mockMvc.perform(post("/storageSystem/storageSystemDiscovery")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(this.jsonStorageSystemDiscovery)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.storageSystemDiscoveryId").exists())
+                .andExpect(jsonPath("$.storageSystemDiscoveryId").value(this.storageSystemDiscoveryId));
+
+        verify(this.storageSystemService).addStorageSystemDiscovery(argThat(new AnyStorageSystemDiscovery()));
+
     }
 
     @Test

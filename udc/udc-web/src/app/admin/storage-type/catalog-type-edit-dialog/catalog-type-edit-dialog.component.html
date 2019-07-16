@@ -1,61 +1,78 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div [ngClass]="'dialog-heading-margin-bottom'">{{heading}}</div>
 <form [formGroup]="editTypeForm" (ngSubmit)="onSubmit()">
 
-  <md-input-container class="full-width">
-    <input mdInput required="true" placeholder="Type ID" value="{{storageTypeId}}" disabled>
-  </md-input-container>
+  <mat-form-field class="full-width">
+    <input matInput required="true" placeholder="Type ID" value="{{storageTypeId}}" disabled>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <input mdInput #modifiedStorageTypeName placeholder="Type" value="{{storageTypeName}}"
+  <mat-form-field class="full-width">
+    <input matInput #modifiedStorageTypeName placeholder="Type" value="{{storageTypeName}}"
            formControlName="modifiedStorageTypeName">
-    <md-hint *ngIf="formErrors.modifiedStorageTypeName" class="alert-danger">
+    <mat-hint *ngIf="formErrors.modifiedStorageTypeName" class="alert-danger">
       {{formErrors.modifiedStorageTypeName}}
-    </md-hint>
-    <md-hint align="end">{{modifiedStorageTypeName.value.length}} / {{maxCharsForName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{modifiedStorageTypeName.value.length}} / {{maxCharsForName}}</mat-hint>
+  </mat-form-field>
 
-  <md-input-container class="full-width">
-    <textarea mdInput #modifiedStorageTypeDescription rows="5" placeholder="Description"
+  <mat-form-field class="full-width">
+    <textarea matInput #modifiedStorageTypeDescription rows="5" placeholder="Description"
               value="{{storageTypeDescription}}" formControlName="modifiedStorageTypeDescription">
     </textarea>
-    <md-hint *ngIf="formErrors.modifiedStorageTypeDescription" class="alert-danger">
+    <mat-hint *ngIf="formErrors.modifiedStorageTypeDescription" class="alert-danger">
       {{formErrors.modifiedStorageTypeDescription}}
-    </md-hint>
-    <md-hint align="end">{{modifiedStorageTypeDescription.value.length}} / {{maxCharsForDescName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{modifiedStorageTypeDescription.value.length}} / {{maxCharsForDescName}}</mat-hint>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <input mdInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
-  </md-input-container>
+  <mat-form-field class="full-width">
+    <input matInput required="true" placeholder="Created User" value="{{createdUser}}" disabled>
+  </mat-form-field>
 
 
-  <md-input-container class="full-width">
-    <input mdInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
-    <md-hint *ngIf="formErrors.updatedUser" class="alert-danger">
+  <mat-form-field class="full-width">
+    <input matInput #updatedUser required="true" placeholder="Updated User" value="" formControlName="updatedUser">
+    <mat-hint *ngIf="formErrors.updatedUser" class="alert-danger">
       {{formErrors.updatedUser}}
-    </md-hint>
-    <md-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</md-hint>
-  </md-input-container>
+    </mat-hint>
+    <mat-hint align="end">{{updatedUser.value.length}} / {{maxCharsForUserName}}</mat-hint>
+  </mat-form-field>
 
-  <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
-    <md-input-container class="m-md">
-      <input mdInput placeholder="Attribute Key" formControlName="attributeKey">
-    </md-input-container>
-    <md-input-container class="m-md">
-      <input mdInput placeholder="Description" formControlName="attributeDesc">
-    </md-input-container>
-    <div fxFlex="55" fxFlexAlign="center" class="m-md">
-      <md-select placeholder="Storage System Level"
-                 [floatPlaceholder]="'never'"
-                 formControlName="isStorageSystemLevel">
-        <md-option value="Y">Yes</md-option>
-        <md-option value="N">No</md-option>
-      </md-select>
-    </div>
+  <div fxLayout="row" fxLayoutAlign="start start" class="appname-row">
+    <mat-form-field class="m-mat">
+      <input matInput placeholder="Attribute Key" formControlName="attributeKey">
+    </mat-form-field>
+    <mat-form-field class="m-mat">
+      <input matInput placeholder="Description" formControlName="attributeDesc">
+    </mat-form-field>
+    <mat-form-field class="m-mat" [floatLabel]="'never'">
+      <mat-select placeholder="Storage System Level"
+                  formControlName="isStorageSystemLevel">
+        <mat-option value="Y">Yes</mat-option>
+      </mat-select>
+    </mat-form-field>
     <div class="m-lg">
-      <button md-raised-button class="app-details-btn" type="button" [disabled]="!editTypeForm.valid"
+      <button mat-raised-button class="app-details-btn" type="button" [disabled]="!editTypeForm.valid"
               (click)="addToAttributes()">Add
       </button>
     </div>
@@ -71,57 +88,39 @@
     [rowHeight]="'auto'"
     [rows]="typeAttributes">
     <ngx-datatable-column name="Attribute Name">
-      <ng-template ngx-datatable-cell-template let-row="row">
+      <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
             <span
               title="Double click to edit"
-              (dblclick)="editing[row.$$index + '-storageDsAttributeKeyName'] = true"
-              *ngIf="!editing[row.$$index + '-storageDsAttributeKeyName']">
+              (dblclick)="editing[rowIndex + '-storageDsAttributeKeyName'] = true"
+              *ngIf="!editing[rowIndex + '-storageDsAttributeKeyName']">
               {{row.storageDsAttributeKeyName}}
             </span>
         <input
           autofocus
-          (blur)="updateValue($event, 'storageDsAttributeKeyName', row)"
-          *ngIf="editing[row.$$index + '-storageDsAttributeKeyName']"
+          (blur)="updateValue($event, 'storageDsAttributeKeyName', rowIndex)"
+          *ngIf="editing[rowIndex + '-storageDsAttributeKeyName']"
           type="text"
           [value]="row.storageDsAttributeKeyName"
         />
       </ng-template>
     </ngx-datatable-column>
-    <!--<ngx-datatable-column name="Is Storage System Level">-->
-    <!--<ng-template ngx-datatable-cell-template let-row="row">-->
-    <!--<span-->
-    <!--title="Double click to edit"-->
-    <!--(dblclick)="editing[row.$$index + '-isStorageSystemLevel'] = true"-->
-    <!--*ngIf="!editing[row.$$index + '-isStorageSystemLevel']">-->
-    <!--{{row.isStorageSystemLevel}}-->
-    <!--</span>-->
-    <!--<select-->
-    <!--*ngIf="editing[row.$$index + '-isStorageSystemLevel']"-->
-    <!--(blur)="editing[row.$$index + '-isStorageSystemLevel'] = false"-->
-    <!--(change)="updateValue($event, 'isStorageSystemLevel', row)"-->
-    <!--[value]="row.isStorageSystemLevel">-->
-    <!--<option value="Y">Yes</option>-->
-    <!--<option value="N">No</option>-->
-    <!--</select>-->
-    <!--</ng-template>-->
-    <!--</ngx-datatable-column>-->
     <ngx-datatable-column name="Is Storage System Level" [width]="150">
       <ng-template let-row="row" ngx-datatable-cell-template>
         {{ row.isStorageSystemLevel }}
       </ng-template>
     </ngx-datatable-column>
     <ngx-datatable-column name="Status">
-      <ng-template ngx-datatable-cell-template let-row="row">
+      <ng-template ngx-datatable-cell-template let-row="row" let-rowIndex="rowIndex">
          <span
            title="Double click to edit"
-           (dblclick)="editing[row.$$index + '-isActiveYN'] = true"
-           *ngIf="!editing[row.$$index + '-isActiveYN']">
+           (dblclick)="editing[rowIndex + '-isActiveYN'] = true"
+           *ngIf="!editing[rowIndex + '-isActiveYN']">
           {{row.isActiveYN}}
         </span>
         <select
-          *ngIf="editing[row.$$index + '-isActiveYN']"
-          (blur)="editing[row.$$index + '-isActiveYN'] = false"
-          (change)="updateValue($event, 'isActiveYN', row)"
+          *ngIf="editing[rowIndex + '-isActiveYN']"
+          (blur)="editing[rowIndex + '-isActiveYN'] = false"
+          (change)="updateValue($event, 'isActiveYN', rowIndex)"
           [value]="row.isActiveYN">
           <option value="Y">Yes</option>
           <option value="N">No</option>
@@ -160,8 +159,9 @@
   <br>
 
   <div class="dialog-footer">
-    <button md-button type="button" (click)="cancel()">Cancel</button>
-    <button md-button type="submit" color="primary" [disabled]="!editTypeForm.valid">Update</button>
+    <button mat-button type="button" (click)="cancel()">Cancel</button>
+
+    <button mat-button type="submit" color="primary" [disabled]="!editTypeForm.valid || inProgress">Update</button>
   </div>
 
 

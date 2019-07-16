@@ -1,6 +1,26 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.controller;
 
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +38,7 @@ import com.google.gson.Gson;
 import com.paypal.udc.entity.teradatapolicy.TeradataPolicy;
 import com.paypal.udc.exception.ValidationError;
 import com.paypal.udc.service.ITeradataService;
+import com.paypal.udc.util.enumeration.UserAttributeEnumeration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -32,8 +53,16 @@ public class TeradataPolicyController {
     final static Logger logger = LoggerFactory.getLogger(TeradataPolicyController.class);
 
     final Gson gson = new Gson();
+    private final ITeradataService teradataService;
+    private final HttpServletRequest request;
+    private final String userType;
+
     @Autowired
-    private ITeradataService teradataService;
+    private TeradataPolicyController(final ITeradataService teradataService, final HttpServletRequest request) {
+        this.teradataService = teradataService;
+        this.request = request;
+        this.userType = UserAttributeEnumeration.SUCCESS.getFlag();
+    }
 
     @ApiOperation(value = "View a list of available Teradata policies", response = Iterable.class)
     @ApiResponses(value = {
@@ -41,10 +70,11 @@ public class TeradataPolicyController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("policies")
-    public ResponseEntity<List<TeradataPolicy>> getAllPolicies() {
-        final List<TeradataPolicy> list = this.teradataService.getAllPolicies();
-        return new ResponseEntity<List<TeradataPolicy>>(list, HttpStatus.OK);
-    }
+	public ResponseEntity<?> getAllPolicies() {
+
+		final List<TeradataPolicy> list = this.teradataService.getAllPolicies();
+		return new ResponseEntity<List<TeradataPolicy>>(list, HttpStatus.OK);
+	}
 
     @ApiOperation(value = "View Teradata Policy based on Storage System ID, Mapped Role, Database Name and Role Name", response = TeradataPolicy.class)
     @ApiResponses(value = {
@@ -52,12 +82,12 @@ public class TeradataPolicyController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("policy/{storageSystemId}/{databaseName}/{roleName}")
-    public ResponseEntity<TeradataPolicy> getPolicy(final long storageSystemId,
-            final String databaseName, final String roleName) {
-        final TeradataPolicy policy = this.teradataService.getPolicyBySystemRuleAndDatabase(storageSystemId,
-                databaseName, roleName);
-        return new ResponseEntity<TeradataPolicy>(policy, HttpStatus.OK);
-    }
+	public ResponseEntity<?> getPolicy(@PathVariable("storageSystemId") final long storageSystemId,
+			@PathVariable("databaseName") final String databaseName, @PathVariable("roleName") final String roleName) {
+		final TeradataPolicy policy = this.teradataService.getPolicyBySystemRuleAndDatabase(storageSystemId,
+				databaseName, roleName);
+		return new ResponseEntity<TeradataPolicy>(policy, HttpStatus.OK);
+	}
 
     @ApiOperation(value = "View Teradata Policy based on Storage System ID, Mapped Role, Database Name and Role Name", response = TeradataPolicy.class)
     @ApiResponses(value = {
@@ -65,13 +95,14 @@ public class TeradataPolicyController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("policy/{storageSystemId}/{databaseName:.+}")
-    public ResponseEntity<List<TeradataPolicy>> getPoliciesByDatabaseAndSystem(
-            @PathVariable("storageSystemId") final long storageSystemId,
-            @PathVariable("databaseName") final String databaseName) {
-        final List<TeradataPolicy> list = this.teradataService.getPoliciesByDatabaseAndSystem(storageSystemId,
-                databaseName);
-        return new ResponseEntity<List<TeradataPolicy>>(list, HttpStatus.OK);
-    }
+	public ResponseEntity<?> getPoliciesByDatabaseAndSystem(@PathVariable("storageSystemId") final long storageSystemId,
+			@PathVariable("databaseName") final String databaseName) {
+
+		final List<TeradataPolicy> list = this.teradataService.getPoliciesByDatabaseAndSystem(storageSystemId,
+				databaseName);
+		return new ResponseEntity<List<TeradataPolicy>>(list, HttpStatus.OK);
+
+	}
 
     @ApiOperation(value = "Insert a Teradata policy", response = TeradataPolicy.class)
     @ApiResponses(value = {

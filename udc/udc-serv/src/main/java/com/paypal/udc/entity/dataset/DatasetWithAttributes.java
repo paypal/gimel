@@ -1,8 +1,31 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.entity.dataset;
 
 import java.util.List;
+import com.paypal.udc.entity.integration.common.DatasetDescription;
+import com.paypal.udc.entity.integration.common.Tag;
+import com.paypal.udc.entity.objectschema.ObjectAttributeKeyValue;
 import com.paypal.udc.entity.objectschema.ObjectAttributeValue;
 import com.paypal.udc.entity.objectschema.Schema;
+import com.paypal.udc.entity.ownership.DatasetOwnershipMap;
 import com.paypal.udc.entity.storagesystem.StorageSystemAttributeValue;
 import com.paypal.udc.entity.storagetype.StorageTypeAttributeKey;
 
@@ -26,8 +49,12 @@ public class DatasetWithAttributes {
     private List<StorageSystemAttributeValue> systemAttributes;
     private List<ObjectAttributeValue> objectAttributes;
     private List<StorageTypeAttributeKey> pendingTypeAttributes;
+    private List<ObjectAttributeKeyValue> customAttributes;
     private String createdTimestampOnStore;
     private String createdUserOnStore;
+    private DatasetDescription schemaDescription;
+    private List<Tag> tags;
+    private List<DatasetOwnershipMap> owners;
 
     public DatasetWithAttributes(final long storageDataSetId, final String storageDataSetName,
             final long objectSchemaMapId, final String storageDataSetAliasName, final String isAutoRegistered,
@@ -54,6 +81,38 @@ public class DatasetWithAttributes {
 
     public DatasetWithAttributes() {
 
+    }
+
+    public List<DatasetOwnershipMap> getOwners() {
+        return this.owners;
+    }
+
+    public void setOwners(final List<DatasetOwnershipMap> owners) {
+        this.owners = owners;
+    }
+
+    public DatasetDescription getSchemaDescription() {
+        return this.schemaDescription;
+    }
+
+    public void setSchemaDescription(final DatasetDescription schemaDescription) {
+        this.schemaDescription = schemaDescription;
+    }
+
+    public List<Tag> getTags() {
+        return this.tags;
+    }
+
+    public void setTags(final List<Tag> tags) {
+        this.tags = tags;
+    }
+
+    public List<ObjectAttributeKeyValue> getCustomAttributes() {
+        return this.customAttributes;
+    }
+
+    public void setCustomAttributes(final List<ObjectAttributeKeyValue> customAttributes) {
+        this.customAttributes = customAttributes;
     }
 
     public String getCreatedTimestampOnStore() {

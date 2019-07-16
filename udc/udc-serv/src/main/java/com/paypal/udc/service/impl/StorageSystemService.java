@@ -1,46 +1,74 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.service.impl;
 
+import java.io.IOException;
 import java.sql.Timestamp;
+import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import com.paypal.udc.cache.StorageSystemCache;
-import com.paypal.udc.cache.StorageTypeCache;
 import com.paypal.udc.dao.storagesystem.StorageSystemAttributeValueRepository;
 import com.paypal.udc.dao.storagesystem.StorageSystemContainerRepository;
+import com.paypal.udc.dao.storagesystem.StorageSystemDiscoveryRepository;
 import com.paypal.udc.dao.storagesystem.StorageSystemRepository;
 import com.paypal.udc.dao.storagetype.StorageTypeAttributeKeyRepository;
 import com.paypal.udc.dao.storagetype.StorageTypeRepository;
-import com.paypal.udc.entity.Zone;
+import com.paypal.udc.entity.entity.Entity;
 import com.paypal.udc.entity.storagesystem.StorageSystem;
 import com.paypal.udc.entity.storagesystem.StorageSystemAttributeValue;
 import com.paypal.udc.entity.storagesystem.StorageSystemContainer;
+import com.paypal.udc.entity.storagesystem.StorageSystemDiscovery;
 import com.paypal.udc.entity.storagetype.StorageType;
 import com.paypal.udc.entity.storagetype.StorageTypeAttributeKey;
+import com.paypal.udc.entity.zone.Zone;
 import com.paypal.udc.exception.ValidationError;
 import com.paypal.udc.service.IStorageSystemService;
 import com.paypal.udc.util.ClusterUtil;
+import com.paypal.udc.util.EntityUtil;
 import com.paypal.udc.util.StorageSystemUtil;
 import com.paypal.udc.util.StorageTypeUtil;
-import com.paypal.udc.util.UserUtil;
 import com.paypal.udc.util.ZoneUtil;
 import com.paypal.udc.util.enumeration.ActiveEnumeration;
+import com.paypal.udc.util.enumeration.RunFrequencyEnumeration;
 import com.paypal.udc.validator.storagesystem.StorageSystemDescValidator;
+import com.paypal.udc.validator.storagesystem.StorageSystemFrequencyValidator;
 import com.paypal.udc.validator.storagesystem.StorageSystemNameValidator;
 import com.paypal.udc.validator.storagesystem.StorageSystemTypeIDValidator;
 
@@ -56,28 +84,22 @@ public class StorageSystemService implements IStorageSystemService {
     private StorageSystemContainerRepository storageSystemContainerRepository;
 
     @Autowired
-    private StorageTypeCache storageTypeCache;
-
-    @Autowired
     private ClusterUtil clusterUtil;
 
     @Autowired
     private ZoneUtil zoneUtil;
 
     @Autowired
-    private StorageTypeRepository storageTypeRepository;
+    private EntityUtil entityUtil;
 
     @Autowired
-    private StorageSystemCache storageSystemCache;
+    private StorageTypeRepository storageTypeRepository;
 
     @Autowired
     private StorageSystemAttributeValueRepository systemAttributeValueRepository;
 
     @Autowired
     private StorageTypeAttributeKeyRepository typeAttributeKeyRepository;
-
-    @Autowired
-    private UserUtil userUtil;
 
     @Autowired
     private StorageSystemContainerRepository systemContainerRepository;
@@ -87,6 +109,9 @@ public class StorageSystemService implements IStorageSystemService {
 
     @Autowired
     private StorageSystemUtil storageSystemUtil;
+
+    @Autowired
+    private StorageSystemFrequencyValidator s4;
 
     @Autowired
     private StorageSystemTypeIDValidator s3;
@@ -100,6 +125,21 @@ public class StorageSystemService implements IStorageSystemService {
     @Autowired
     private StorageSystemAttributeValueRepository ssavr;
 
+    @Autowired
+    private StorageSystemDiscoveryRepository ssdr;
+
+    @Value("${elasticsearch.type.name}")
+    private String esType;
+
+    @Value("${udc.es.write.enabled}")
+    private String isEsWriteEnabled;
+
+    @Value("${elasticsearch.system.index.name}")
+    private String esSystemIndex;
+
+    @Autowired
+    private ElasticsearchTemplate esTemplate;
+
     final static Logger logger = LoggerFactory.getLogger(StorageSystemService.class);
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 
@@ -107,6 +147,7 @@ public class StorageSystemService implements IStorageSystemService {
     public List<StorageSystem> getAllStorageSystems() {
 
         final Map<Long, Zone> zones = this.zoneUtil.getZones();
+        final Map<Long, Entity> entities = this.entityUtil.getEntities();
         final Map<Long, StorageType> storageTypes = this.storageTypeUtil.getStorageTypes();
         final List<StorageSystem> storageSystems = new ArrayList<StorageSystem>();
         this.storageSystemRepository.findAll().forEach(storageSystem -> {
@@ -119,6 +160,7 @@ public class StorageSystemService implements IStorageSystemService {
                         .map(systemContainer -> systemContainer.getContainerName()).collect(Collectors.joining(","));
                 storageSystem.setContainers(containers.equals(",") ? "" : containers);
                 storageSystem.setZoneName(zones.get(storageSystem.getZoneId()).getZoneName());
+                storageSystem.setEntityName(entities.get(storageSystem.getEntityId()).getEntityName());
                 storageSystems.add(storageSystem);
             }
         });
@@ -126,31 +168,48 @@ public class StorageSystemService implements IStorageSystemService {
     }
 
     @Override
-    public StorageSystem getStorageSystemById(final long storageSystemId) {
-        final StorageSystem storageSystem = this.storageSystemRepository.findOne(storageSystemId);
-        final StorageType storageType = this.storageTypeCache.getStorageType(storageSystem.getStorageTypeId());
+    public StorageSystem getStorageSystemById(final long storageSystemId) throws ValidationError {
+        final StorageSystem storageSystem = this.storageSystemUtil.validateStorageSystem(storageSystemId);
+        final StorageType storageType = this.storageSystemUtil.getStorageType(storageSystemId);
         storageSystem.setStorageType(storageType);
         return storageSystem;
     }
 
     @Override
+    public StorageSystemDiscovery addStorageSystemDiscovery(final StorageSystemDiscovery storageSystemDiscovery)
+            throws ValidationError, ParseException {
+
+        this.storageSystemUtil.validateStorageSystem(storageSystemDiscovery.getStorageSystemId());
+        this.storageSystemUtil.validateDiscoveryStatus(storageSystemDiscovery.getDiscoveryStatus());
+        this.storageSystemUtil.validateDates(storageSystemDiscovery.getStartTime(),
+                storageSystemDiscovery.getEndTime(), sdf);
+        return this.ssdr.save(storageSystemDiscovery);
+    }
+
+    @Override
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = { ValidationError.class,
-            ConstraintViolationException.class, DataIntegrityViolationException.class })
-    public StorageSystem addStorageSystem(final StorageSystem storageSystem) throws ValidationError {
+            ConstraintViolationException.class, DataIntegrityViolationException.class,
+            TransactionSystemException.class, IOException.class, InterruptedException.class, ExecutionException.class })
+    public StorageSystem addStorageSystem(final StorageSystem storageSystem)
+            throws ValidationError, IOException, InterruptedException, ExecutionException {
         final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         final String time = sdf.format(timestamp);
         StorageSystem insertedStorageSystem = new StorageSystem();
         final String createdUser = storageSystem.getCreatedUser();
+        final String runFrequency = storageSystem.getDiscoverySla() == null ? RunFrequencyEnumeration.SIXTY.getFlag()
+                : storageSystem.getDiscoverySla();
         final List<StorageSystemAttributeValue> attributeValues = storageSystem.getSystemAttributeValues();
         final ValidationError v = new ValidationError();
         long storageSystemId;
         // insert into pc_storage_system table
         try {
-            this.userUtil.validateUser(createdUser);
+            this.storageSystemUtil.validateRunFrequency(runFrequency);
+            // this.userUtil.validateUser(createdUser);
             this.clusterUtil.validateCluster(storageSystem.getAssignedClusterId());
             this.clusterUtil.validateCluster(storageSystem.getRunningClusterId());
             this.storageTypeUtil.validateStorageTypeId(storageSystem.getStorageTypeId());
             this.zoneUtil.validateZone(storageSystem.getZoneId());
+            this.entityUtil.validateEntity(storageSystem.getEntityId());
             storageSystem.setUpdatedUser(createdUser);
             storageSystem.setCreatedTimestamp(time);
             storageSystem.setUpdatedTimestamp(time);
@@ -166,7 +225,7 @@ public class StorageSystemService implements IStorageSystemService {
         catch (final DataIntegrityViolationException e) {
             v.setErrorCode(HttpStatus.CONFLICT);
             v.setErrorDescription(
-                    "Storage System name is duplicated or Invalid Cluster ID or Invalid zone id or Invalid user Id");
+                    "Storage System name is duplicated or Invalid Cluster ID or Invalid zone id or Invalid user Id or Invalid entity id");
             throw v;
         }
 
@@ -182,7 +241,7 @@ public class StorageSystemService implements IStorageSystemService {
                     attributeValue.setStorageSystemID(storageSystemId);
                 });
                 final List<StorageSystemAttributeValue> insertedValues = new ArrayList<StorageSystemAttributeValue>();
-                this.ssavr.save(attributeValues).forEach(insertedValues::add);
+                this.ssavr.saveAll(attributeValues).forEach(insertedValues::add);
                 insertedStorageSystem.setSystemAttributeValues(insertedValues);
             }
             catch (final ConstraintViolationException e) {
@@ -196,7 +255,7 @@ public class StorageSystemService implements IStorageSystemService {
                 throw v;
             }
         }
-        final StorageType storageType = this.storageTypeCache.getStorageType(storageSystem.getStorageTypeId());
+        final StorageType storageType = this.storageTypeUtil.validateStorageTypeId(storageSystem.getStorageTypeId());
         final String storageTypeName = storageType.getStorageTypeName();
         final String storageSystemName = storageSystem.getStorageSystemName();
         final long clusterId = storageTypeName.equalsIgnoreCase("Hbase")
@@ -233,7 +292,12 @@ public class StorageSystemService implements IStorageSystemService {
                 ssc.setUpdatedUser(createdUser);
                 sscs.add(ssc);
             });
-            this.storageSystemContainerRepository.save(sscs);
+            this.storageSystemContainerRepository.saveAll(sscs);
+        }
+
+        if (this.isEsWriteEnabled.equals("true")) {
+            this.storageSystemUtil.upsertStorageSystem(this.esSystemIndex, this.esType, insertedStorageSystem,
+                    this.esTemplate);
         }
         return insertedStorageSystem;
 
@@ -242,157 +306,156 @@ public class StorageSystemService implements IStorageSystemService {
     @Override
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = { ValidationError.class,
             ConstraintViolationException.class, DataIntegrityViolationException.class,
-            TransactionSystemException.class })
-    public StorageSystem updateStorageSystem(final StorageSystem storageSystem) throws ValidationError {
+            TransactionSystemException.class, IOException.class, InterruptedException.class, ExecutionException.class })
+    public StorageSystem updateStorageSystem(final StorageSystem storageSystem)
+            throws ValidationError, IOException, InterruptedException, ExecutionException {
         final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         final ValidationError v = new ValidationError();
-        StorageSystem tempStorageSystem = this.storageSystemRepository.findOne(storageSystem.getStorageSystemId());
-        if (tempStorageSystem != null) {
-            try {
-                tempStorageSystem.setUpdatedUser(storageSystem.getCreatedUser());
-                tempStorageSystem.setUpdatedTimestamp(sdf.format(timestamp));
-                this.s1.setNextChain(this.s2);
-                this.s2.setNextChain(this.s3);
-                this.s1.validate(storageSystem, tempStorageSystem);
-                tempStorageSystem.setIsGimelCompatible(storageSystem.getIsGimelCompatible());
-                tempStorageSystem.setIsReadCompatible(storageSystem.getIsReadCompatible());
-                tempStorageSystem = this.storageSystemRepository.save(tempStorageSystem);
-            }
-            catch (final TransactionSystemException e) {
-                v.setErrorCode(HttpStatus.BAD_REQUEST);
-                v.setErrorDescription("Storage System name is empty");
-                throw v;
-            }
-            catch (final DataIntegrityViolationException e) {
-                v.setErrorCode(HttpStatus.CONFLICT);
-                v.setErrorDescription("Storage System is duplicated");
-                throw v;
-            }
-
-            final StorageType storageType = this.storageTypeCache
-                    .getStorageType(tempStorageSystem.getStorageTypeId());
-            final String storageTypeName = storageType.getStorageTypeName();
-            final String storageSystemName = storageSystem.getStorageSystemName();
-            final List<StorageSystemContainer> systemContainers = this.storageSystemContainerRepository
-                    .findByStorageSystemId(storageSystem.getStorageSystemId());
-            final long clusterId = storageTypeName.equalsIgnoreCase("Hbase")
-                    ? this.storageSystemUtil.getClusterId(storageSystemName)
-                    : systemContainers.get(0).getClusterId();
-
-            final List<StorageSystemAttributeValue> attributeValues = storageSystem.getSystemAttributeValues();
-            if (attributeValues != null && attributeValues.size() > 0) {
-                attributeValues.forEach(attr -> {
-                    attr.setUpdatedTimestamp(sdf.format(timestamp));
-                    attr.setUpdatedUser(storageSystem.getUpdatedUser());
-                    attr.setIsActiveYN(ActiveEnumeration.YES.getFlag());
-                    this.systemAttributeValueRepository.save(attr);
-                });
-            }
-
-            final String containers = storageSystem.getContainers();
-            if (containers != null && containers.length() > 0) {
-                if (systemContainers != null) {
-                    systemContainers.forEach(systemContainer -> {
-                        this.storageSystemContainerRepository.delete(systemContainer);
-                    });
-                }
-                final List<StorageSystemContainer> newSystemContainers = new ArrayList<StorageSystemContainer>();
-                final List<String> containerList = Arrays.asList(containers.split(","));
-                containerList.forEach(container -> {
-                    final StorageSystemContainer systemContainer = new StorageSystemContainer();
-                    systemContainer.setStorageSystemId(storageSystem.getStorageSystemId());
-                    systemContainer.setContainerName(container);
-                    systemContainer.setClusterId(clusterId);
-                    systemContainer.setIsActiveYN(ActiveEnumeration.YES.getFlag());
-                    systemContainer.setCreatedUser(storageSystem.getUpdatedUser());
-                    systemContainer.setUpdatedUser(storageSystem.getUpdatedUser());
-                    systemContainer.setCreatedTimestamp(sdf.format(timestamp));
-                    systemContainer.setUpdatedTimestamp(sdf.format(timestamp));
-                    newSystemContainers.add(systemContainer);
-                });
-                this.storageSystemContainerRepository.save(newSystemContainers);
-            }
-            return tempStorageSystem;
+        StorageSystem tempStorageSystem = this.storageSystemUtil
+                .validateStorageSystem(storageSystem.getStorageSystemId());
+        try {
+            tempStorageSystem.setUpdatedUser(storageSystem.getCreatedUser());
+            tempStorageSystem.setUpdatedTimestamp(sdf.format(timestamp));
+            this.s1.setNextChain(this.s2);
+            this.s2.setNextChain(this.s3);
+            this.s3.setNextChain(this.s4);
+            this.s1.validate(storageSystem, tempStorageSystem);
+            tempStorageSystem.setIsReadCompatible(storageSystem.getIsReadCompatible());
+            tempStorageSystem = this.storageSystemRepository.save(tempStorageSystem);
         }
-        else {
+        catch (final TransactionSystemException e) {
             v.setErrorCode(HttpStatus.BAD_REQUEST);
-            v.setErrorDescription("Storage System ID is invalid");
+            v.setErrorDescription("Storage System name is empty");
             throw v;
         }
+        catch (final DataIntegrityViolationException e) {
+            v.setErrorCode(HttpStatus.CONFLICT);
+            v.setErrorDescription("Storage System is duplicated");
+            throw v;
+        }
+        final StorageType storageType = this.storageTypeUtil
+                .validateStorageTypeId(tempStorageSystem.getStorageTypeId());
+
+        final String storageTypeName = storageType.getStorageTypeName();
+        final String storageSystemName = storageSystem.getStorageSystemName();
+        final List<StorageSystemContainer> systemContainers = this.storageSystemContainerRepository
+                .findByStorageSystemId(storageSystem.getStorageSystemId());
+        final long clusterId = storageTypeName.equalsIgnoreCase("Hbase")
+                ? this.storageSystemUtil.getClusterId(storageSystemName)
+                : systemContainers.get(0).getClusterId();
+
+        final List<StorageSystemAttributeValue> attributeValues = storageSystem.getSystemAttributeValues();
+        if (attributeValues != null && attributeValues.size() > 0) {
+            attributeValues.forEach(attr -> {
+                attr.setUpdatedTimestamp(sdf.format(timestamp));
+                attr.setUpdatedUser(storageSystem.getUpdatedUser());
+                attr.setIsActiveYN(ActiveEnumeration.YES.getFlag());
+                this.systemAttributeValueRepository.save(attr);
+            });
+        }
+
+        final String containers = storageSystem.getContainers();
+        if (containers != null && containers.length() > 0) {
+            if (systemContainers != null) {
+                systemContainers.forEach(systemContainer -> {
+                    this.storageSystemContainerRepository.delete(systemContainer);
+                });
+            }
+            final List<StorageSystemContainer> newSystemContainers = new ArrayList<StorageSystemContainer>();
+            final List<String> containerList = Arrays.asList(containers.split(","));
+            containerList.forEach(container -> {
+                final StorageSystemContainer systemContainer = new StorageSystemContainer();
+                systemContainer.setStorageSystemId(storageSystem.getStorageSystemId());
+                systemContainer.setContainerName(container);
+                systemContainer.setClusterId(clusterId);
+                systemContainer.setIsActiveYN(ActiveEnumeration.YES.getFlag());
+                systemContainer.setCreatedUser(storageSystem.getUpdatedUser());
+                systemContainer.setUpdatedUser(storageSystem.getUpdatedUser());
+                systemContainer.setCreatedTimestamp(sdf.format(timestamp));
+                systemContainer.setUpdatedTimestamp(sdf.format(timestamp));
+                newSystemContainers.add(systemContainer);
+            });
+            this.storageSystemContainerRepository.saveAll(newSystemContainers);
+        }
+
+        final List<StorageSystemAttributeValue> systemAttributeValues = this.systemAttributeValueRepository
+                .findByStorageSystemIdAndIsActiveYN(tempStorageSystem.getStorageSystemId(),
+                        tempStorageSystem.getIsActiveYN());
+        tempStorageSystem.setSystemAttributeValues(systemAttributeValues);
+        if (this.isEsWriteEnabled.equals("true")) {
+            this.storageSystemUtil.upsertStorageSystem(this.esSystemIndex, this.esType, tempStorageSystem,
+                    this.esTemplate);
+        }
+        return tempStorageSystem;
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = { ValidationError.class,
-            ConstraintViolationException.class, DataIntegrityViolationException.class })
-    public StorageSystem enableStorageSystem(final long storageSystemId) throws ValidationError {
-        final ValidationError v = new ValidationError();
+            ConstraintViolationException.class, DataIntegrityViolationException.class,
+            TransactionSystemException.class, IOException.class, InterruptedException.class, ExecutionException.class })
+    public StorageSystem enableStorageSystem(final long storageSystemId)
+            throws ValidationError, IOException, InterruptedException, ExecutionException {
         final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        StorageSystem storageSystem = this.storageSystemCache.getStorageSystem(storageSystemId);
-        if (storageSystem != null) {
-            storageSystem.setUpdatedTimestamp(sdf.format(timestamp));
-            storageSystem.setIsActiveYN(ActiveEnumeration.YES.getFlag());
-            storageSystem = this.storageSystemRepository.save(storageSystem);
-            final List<StorageSystemAttributeValue> attributeValues = this.ssavr
-                    .findByStorageSystemIdAndIsActiveYN(storageSystemId, ActiveEnumeration.NO.getFlag());
-            attributeValues.forEach(attributeValue -> {
-                attributeValue.setUpdatedTimestamp(sdf.format(timestamp));
-                attributeValue.setIsActiveYN(ActiveEnumeration.YES.getFlag());
-            });
-            final List<StorageSystemAttributeValue> deactivatedValues = new ArrayList<StorageSystemAttributeValue>();
-            this.ssavr.save(attributeValues).forEach(deactivatedValues::add);
-            storageSystem.setSystemAttributeValues(deactivatedValues);
-            final List<StorageSystemContainer> sscs = this.storageSystemContainerRepository
-                    .findByStorageSystemId(storageSystemId);
-            sscs.forEach(ssc -> {
-                ssc.setIsActiveYN(ActiveEnumeration.YES.getFlag());
-                ssc.setUpdatedTimestamp(sdf.format(timestamp));
-                this.storageSystemContainerRepository.save(ssc);
-            });
-            return storageSystem;
+        StorageSystem storageSystem = this.storageSystemUtil.validateStorageSystem(storageSystemId);
+
+        storageSystem.setUpdatedTimestamp(sdf.format(timestamp));
+        storageSystem.setIsActiveYN(ActiveEnumeration.YES.getFlag());
+        storageSystem = this.storageSystemRepository.save(storageSystem);
+        final List<StorageSystemAttributeValue> attributeValues = this.ssavr
+                .findByStorageSystemIdAndIsActiveYN(storageSystemId, ActiveEnumeration.NO.getFlag());
+        attributeValues.forEach(attributeValue -> {
+            attributeValue.setUpdatedTimestamp(sdf.format(timestamp));
+            attributeValue.setIsActiveYN(ActiveEnumeration.YES.getFlag());
+        });
+        final List<StorageSystemAttributeValue> deactivatedValues = new ArrayList<StorageSystemAttributeValue>();
+        this.ssavr.saveAll(attributeValues).forEach(deactivatedValues::add);
+        storageSystem.setSystemAttributeValues(deactivatedValues);
+        final List<StorageSystemContainer> sscs = this.storageSystemContainerRepository
+                .findByStorageSystemId(storageSystemId);
+        sscs.forEach(ssc -> {
+            ssc.setIsActiveYN(ActiveEnumeration.YES.getFlag());
+            ssc.setUpdatedTimestamp(sdf.format(timestamp));
+            this.storageSystemContainerRepository.save(ssc);
+        });
+
+        if (this.isEsWriteEnabled.equals("true")) {
+            this.storageSystemUtil.upsertStorageSystem(this.esSystemIndex, this.esType, storageSystem, this.esTemplate);
         }
-        else {
-            v.setErrorCode(HttpStatus.BAD_REQUEST);
-            v.setErrorDescription("Storage System ID is invalid");
-            throw v;
-        }
+        return storageSystem;
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = { ValidationError.class,
-            ConstraintViolationException.class, DataIntegrityViolationException.class })
-    public StorageSystem deleteStorageSystem(final long storageSystemId) throws ValidationError {
-        final ValidationError v = new ValidationError();
+            ConstraintViolationException.class, DataIntegrityViolationException.class,
+            TransactionSystemException.class, IOException.class, InterruptedException.class, ExecutionException.class })
+    public StorageSystem deleteStorageSystem(final long storageSystemId)
+            throws ValidationError, IOException, InterruptedException, ExecutionException {
         final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        StorageSystem storageSystem = this.storageSystemCache.getStorageSystem(storageSystemId);
-        if (storageSystem != null) {
-            storageSystem.setUpdatedTimestamp(sdf.format(timestamp));
-            storageSystem.setIsActiveYN(ActiveEnumeration.NO.getFlag());
-            storageSystem = this.storageSystemRepository.save(storageSystem);
-            final List<StorageSystemAttributeValue> attributeValues = this.ssavr
-                    .findByStorageSystemIdAndIsActiveYN(storageSystemId, ActiveEnumeration.YES.getFlag());
-            attributeValues.forEach(attributeValue -> {
-                attributeValue.setUpdatedTimestamp(sdf.format(timestamp));
-                attributeValue.setIsActiveYN(ActiveEnumeration.NO.getFlag());
-            });
-            final List<StorageSystemAttributeValue> deactivatedValues = new ArrayList<StorageSystemAttributeValue>();
-            this.ssavr.save(attributeValues).forEach(deactivatedValues::add);
-            storageSystem.setSystemAttributeValues(deactivatedValues);
+        StorageSystem storageSystem = this.storageSystemUtil.validateStorageSystem(storageSystemId);
+        storageSystem.setUpdatedTimestamp(sdf.format(timestamp));
+        storageSystem.setIsActiveYN(ActiveEnumeration.NO.getFlag());
+        storageSystem = this.storageSystemRepository.save(storageSystem);
+        final List<StorageSystemAttributeValue> attributeValues = this.ssavr
+                .findByStorageSystemIdAndIsActiveYN(storageSystemId, ActiveEnumeration.YES.getFlag());
+        attributeValues.forEach(attributeValue -> {
+            attributeValue.setUpdatedTimestamp(sdf.format(timestamp));
+            attributeValue.setIsActiveYN(ActiveEnumeration.NO.getFlag());
+        });
+        final List<StorageSystemAttributeValue> deactivatedValues = new ArrayList<StorageSystemAttributeValue>();
+        this.ssavr.saveAll(attributeValues).forEach(deactivatedValues::add);
+        storageSystem.setSystemAttributeValues(deactivatedValues);
 
-            final List<StorageSystemContainer> sscs = this.storageSystemContainerRepository
-                    .findByStorageSystemId(storageSystemId);
-            sscs.forEach(ssc -> {
-                ssc.setIsActiveYN(ActiveEnumeration.NO.getFlag());
-                ssc.setUpdatedTimestamp(sdf.format(timestamp));
-                this.storageSystemContainerRepository.save(ssc);
-            });
-            return storageSystem;
+        final List<StorageSystemContainer> sscs = this.storageSystemContainerRepository
+                .findByStorageSystemId(storageSystemId);
+        sscs.forEach(ssc -> {
+            ssc.setIsActiveYN(ActiveEnumeration.NO.getFlag());
+            ssc.setUpdatedTimestamp(sdf.format(timestamp));
+            this.storageSystemContainerRepository.save(ssc);
+        });
+        if (this.isEsWriteEnabled.equals("true")) {
+            this.storageSystemUtil.upsertStorageSystem(this.esSystemIndex, this.esType, storageSystem, this.esTemplate);
         }
-        else {
-            v.setErrorCode(HttpStatus.BAD_REQUEST);
-            v.setErrorDescription("Storage System ID is invalid");
-            throw v;
-        }
-
+        return storageSystem;
     }
 
     @Override
@@ -409,9 +472,16 @@ public class StorageSystemService implements IStorageSystemService {
     }
 
     @Override
-    public List<StorageSystemAttributeValue> getAttributeValuesByName(final String storageSystemName) {
+    public List<StorageSystemAttributeValue> getAttributeValuesByName(final String storageSystemName)
+            throws ValidationError {
         final Map<Long, StorageTypeAttributeKey> typeAttributesMap = this.storageTypeUtil.getStorageTypeAttributes();
         final StorageSystem storageSystem = this.storageSystemRepository.findByStorageSystemName(storageSystemName);
+        if (storageSystem == null) {
+            final ValidationError v = new ValidationError();
+            v.setErrorCode(HttpStatus.BAD_REQUEST);
+            v.setErrorDescription("Invalid StorageSystem");
+            throw v;
+        }
         final List<StorageSystemAttributeValue> systemAttributes = this.systemAttributeValueRepository
                 .findByStorageSystemIdAndIsActiveYN(storageSystem.getStorageSystemId(),
                         ActiveEnumeration.YES.getFlag());
@@ -420,7 +490,7 @@ public class StorageSystemService implements IStorageSystemService {
                     typeAttributesMap.get(sysAttr.getStorageDataSetAttributeKeyId()).getStorageDsAttributeKeyName());
         });
 
-        final StorageType storageType = this.storageTypeCache.getStorageType(storageSystem.getStorageTypeId());
+        final StorageType storageType = this.storageTypeUtil.validateStorageTypeId(storageSystem.getStorageTypeId());
         final List<StorageTypeAttributeKey> typeAttributesAtSystemLevel = this.typeAttributeKeyRepository
                 .findByStorageTypeIdAndIsStorageSystemLevelAndIsActiveYN(storageType.getStorageTypeId(),
                         ActiveEnumeration.YES.getFlag(), ActiveEnumeration.YES.getFlag());
@@ -460,6 +530,7 @@ public class StorageSystemService implements IStorageSystemService {
     public List<StorageSystem> getStorageSystemByType(final String storageTypeName) throws ValidationError {
 
         final Map<Long, Zone> zones = this.zoneUtil.getZones();
+        final Map<Long, Entity> entities = this.entityUtil.getEntities();
         if (storageTypeName.equals("All")) {
             final List<StorageSystem> systems = new ArrayList<StorageSystem>();
             this.storageSystemRepository.findAll().forEach(system -> {
@@ -469,6 +540,7 @@ public class StorageSystemService implements IStorageSystemService {
                         .map(systemContainer -> systemContainer.getContainerName()).collect(Collectors.joining(","));
                 system.setContainers(containers.equals(",") ? "" : containers);
                 system.setZoneName(zones.get(system.getZoneId()).getZoneName());
+                system.setEntityName(entities.get(system.getEntityId()).getEntityName());
                 systems.add(system);
 
             });
@@ -491,6 +563,7 @@ public class StorageSystemService implements IStorageSystemService {
                         .map(systemContainer -> systemContainer.getContainerName()).collect(Collectors.joining(","));
                 storageSystem.setContainers(containers.equals(",") ? "" : containers);
                 storageSystem.setZoneName(zones.get(storageSystem.getZoneId()).getZoneName());
+                storageSystem.setEntityName(entities.get(storageSystem.getEntityId()).getEntityName());
             });
 
             return storageSystems;
@@ -498,4 +571,81 @@ public class StorageSystemService implements IStorageSystemService {
 
     }
 
+    @Override
+    public List<StorageSystem> getStorageSystemByZoneAndType(final String zoneName, final String typeName)
+            throws ValidationError {
+
+        final Map<Long, Zone> zones = this.zoneUtil.getZones();
+        final List<StorageSystem> systems = new ArrayList<StorageSystem>();
+
+        switch (typeName) {
+            case "All": {
+                switch (zoneName) {
+                    case "All": {
+                        this.storageSystemRepository.findAll().forEach(system -> {
+                            system.setZoneName(zones.get(system.getZoneId()).getZoneName());
+                            systems.add(system);
+                        });
+                        break;
+                    }
+                    default: {
+                        final Zone zone = zones.entrySet().stream()
+                                .filter(map -> zoneName.equals(map.getValue().getZoneName()))
+                                .map(map -> map.getValue()).findFirst().get();
+                        systems.addAll(this.storageSystemRepository
+                                .findByZoneId(zone.getZoneId()));
+                        systems.forEach(storageSystem -> {
+                            storageSystem.setZoneName(zone.getZoneName());
+                        });
+                    }
+                }
+                break;
+            }
+            default: {
+                final StorageType storageType = this.storageTypeRepository.findByStorageTypeName(typeName);
+                switch (zoneName) {
+                    case "All": {
+                        this.storageSystemRepository.findByStorageTypeId(storageType.getStorageTypeId())
+                                .forEach(system -> {
+                                    system.setZoneName(zones.get(system.getZoneId()).getZoneName());
+                                    systems.add(system);
+                                });
+                        break;
+                    }
+                    default: {
+                        final Zone zone = zones.entrySet().stream()
+                                .filter(map -> zoneName.equals(map.getValue().getZoneName()))
+                                .map(map -> map.getValue()).findFirst().get();
+                        systems.addAll(this.storageSystemRepository
+                                .findByZoneIdAndStorageTypeId(zone.getZoneId(), storageType.getStorageTypeId()));
+                        systems.forEach(storageSystem -> {
+                            storageSystem.setZoneName(zone.getZoneName());
+                        });
+                    }
+                }
+            }
+        }
+
+        return systems;
+
+    }
+
+    @Override
+    public List<StorageSystemDiscovery> getDiscoveryStatusForStorageSystemId(final String storageSystemList) {
+        final List<String> systemIds = Arrays.asList(storageSystemList.split(","));
+        final List<StorageSystemDiscovery> discoveryList = systemIds.stream().map(systemId -> {
+            final List<StorageSystemDiscovery> discoveryStatusList = this.ssdr
+                    .findByStorageSystemId(Long.parseLong(systemId));
+            if (discoveryStatusList.size() > 0) {
+                final StorageSystemDiscovery discoveryStatus = discoveryStatusList.stream()
+                        .max(Comparator.comparing(StorageSystemDiscovery::getStorageSystemDiscoveryId))
+                        .get();
+                return discoveryStatus;
+            }
+            else {
+                return null;
+            }
+        }).filter(status -> status != null).collect(Collectors.toList());
+        return discoveryList;
+    }
 }

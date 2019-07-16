@@ -1,12 +1,29 @@
-import {Component, OnInit} from '@angular/core';
-import {FormGroup, FormBuilder, Validators} from '@angular/forms';
-import {MdDialogRef} from '@angular/material';
-import {CustomValidators, onValueChanged} from '../../../shared/utils';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {Type} from '../../models/catalog-type';
-import {StorageSystem} from '../../../udc/catalog/models/catalog-storagesystem';
-import {error} from 'util';
-import {StorageTypeAttribute} from '../../../udc/catalog/models/catalog-dataset-storagetype-attribute';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { MatDialogRef } from '@angular/material';
+import { CustomValidators, onValueChanged } from '../../../shared/utils';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { Type } from '../../models/catalog-type';
+import { StorageTypeAttribute } from '../../../udc/catalog/models/catalog-dataset-storagetype-attribute';
 
 @Component({
   selector: 'app-catalog-type-edit-dialog',
@@ -17,6 +34,7 @@ import {StorageTypeAttribute} from '../../../udc/catalog/models/catalog-dataset-
 export class CatalogTypeEditDialogComponent implements OnInit {
   heading = 'Edit Type';
   editTypeForm: FormGroup;
+  inProgress: boolean;
   maxCharsForName = 100;
   maxCharsForUserName = 20;
   maxCharsForAliasName = 100;
@@ -29,7 +47,6 @@ export class CatalogTypeEditDialogComponent implements OnInit {
   createdUser: string;
   typeAttributes: Array<any>;
   newTypeAttributes: Array<any>;
-  selectedSystemLevel: string;
   editing = {};
   public readonly nameHint = 'Valid characters are a-z,0-9 and -. Names should not start with -.';
   public readonly usernameHint = 'Valid characters are a-z.';
@@ -55,7 +72,7 @@ export class CatalogTypeEditDialogComponent implements OnInit {
     },
   };
 
-  constructor(public dialogRef: MdDialogRef<CatalogTypeEditDialogComponent>, private fb: FormBuilder, private catalogService: CatalogService) {
+  constructor(public dialogRef: MatDialogRef<CatalogTypeEditDialogComponent>, private fb: FormBuilder, private catalogService: CatalogService) {
     this.newTypeAttributes = new Array<any>();
   }
 
@@ -96,6 +113,7 @@ export class CatalogTypeEditDialogComponent implements OnInit {
   }
 
   onSubmit() {
+    this.inProgress = true;
     const submitValue = Object.assign({}, this.editTypeForm.value);
     const type: Type = this.populateType(submitValue);
     this.catalogService.getUserByName(type.updatedUser)
@@ -110,40 +128,42 @@ export class CatalogTypeEditDialogComponent implements OnInit {
               tempTypeAttribute.storageDsAttributeKeyName = typeAttribute.storageDsAttributeKeyName;
               tempTypeAttribute.isStorageSystemLevel = typeAttribute.isStorageSystemLevel;
               this.catalogService.insertTypeAttribute(tempTypeAttribute)
-                .subscribe(attributeResult => {
-                }, error => {
-                  if (error.status === 500) {
+                .subscribe(null, insertError => {
+                  if (insertError.status === 500) {
                     this.dialogRef.close({status: 'fail', error: ''});
                   } else {
-                    this.dialogRef.close({status: 'fail', error: error});
+                    this.dialogRef.close({status: 'fail', error: insertError});
                   }
                 });
             });
+            this.inProgress = false;
             this.dialogRef.close({status: 'success', typeId: result.storageTypeId});
-          }, error => {
-            if (error.status === 500) {
+          }, updateError => {
+            if (updateError.status === 500) {
               this.dialogRef.close({status: 'fail', error: ''});
             } else {
-              this.dialogRef.close({status: 'fail', error: error});
+              this.dialogRef.close({status: 'fail', error: updateError});
             }
           });
-      }, error => {
+      }, userError => {
         this.dialogRef.close({status: 'user fail', error: 'Invalid Username'});
       });
 
   }
 
-  updateValue(event, cell, row) {
-    this.editing[row.$$index + '-' + cell] = false;
-    this.typeAttributes[row.$$index][cell] = event.target.value;
+  updateValue(event, cell, rowIndex) {
+    this.editing[rowIndex + '-' + cell] = false;
+    this.typeAttributes[rowIndex][cell] = event.target.value;
+    this.typeAttributes = [...this.typeAttributes];
   }
 
   addToAttributes() {
-    this.newTypeAttributes.push({
+    const newElement = {
       storageDsAttributeKeyName: this.editTypeForm.value.attributeKey,
       storageDsAttributeKeyDesc: this.editTypeForm.value.attributeDesc,
       isStorageSystemLevel: this.editTypeForm.value.isStorageSystemLevel,
-    });
+    };
+    this.newTypeAttributes = [...this.newTypeAttributes, newElement];
     if (!this.editTypeForm.controls.modifiedStorageTypeName.value) {
       this.tempStorageTypeName = this.storageTypeName;
     } else {

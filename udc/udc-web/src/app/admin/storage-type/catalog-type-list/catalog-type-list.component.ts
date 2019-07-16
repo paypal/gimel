@@ -1,18 +1,43 @@
-import {Component, Input, Output, OnChanges, EventEmitter, ViewChild} from '@angular/core';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, Input, Output, OnChanges, EventEmitter, ViewChild } from '@angular/core';
 import {
-  MdDialog, MdDialogConfig, MdDialogRef, MdSnackBar, MdSnackBarConfig
+  MatDialog, MatDialogConfig, MatDialogRef, MatSnackBar, MatSnackBarConfig
 } from '@angular/material';
 
-import {ConfigService} from '../../../core/services';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {CatalogCreateTypeDialogComponent} from '../catalog-type-create/catalog-type-create-dialog.component';
-import {ApiService} from '../../../core/services/api.service';
+import { ConfigService } from '../../../core/services';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { CatalogCreateTypeDialogComponent } from '../catalog-type-create/catalog-type-create-dialog.component';
+import { ApiService } from '../../../core/services/api.service';
+import { environment } from '../../../../environments/environment';
+import { CloseSideNavAction } from '../../../core/store/sidenav/sidenav.actions';
+import { Store } from '@ngrx/store';
+import * as fromRoot from '../../../core/store';
+import { NgxSpinnerService } from 'ngx-spinner';
+import {SessionService} from '../../../core/services/session.service';
+
 
 @Component({
   selector: 'app-catalog-type-list', templateUrl: './catalog-type-list.component.html',
 })
 export class CatalogTypeListComponent implements OnChanges {
-  public loading = false;
   public displayList = [];
   private categoriesList = [];
   public storageName = '';
@@ -20,16 +45,22 @@ export class CatalogTypeListComponent implements OnChanges {
   public storageTypeId = '';
   public inProgress = false;
   public actionMsg: string;
+  public admin: boolean;
   @ViewChild('catalogTypesTable') table: any;
 
   @Input() project: string;
   @Input() refresh: boolean;
-  dialogConfig: MdDialogConfig = {width: '1000px', height: '90vh'};
+  dialogConfig: MatDialogConfig = {width: '1000px', height: '90vh'};
 
   @Output() loaded: EventEmitter<boolean> = new EventEmitter();
   @Output() refresh1: EventEmitter<string> = new EventEmitter();
 
-  constructor(private catalogService: CatalogService, private api: ApiService, private snackbar: MdSnackBar, private config: ConfigService, private dialog: MdDialog) {
+  constructor(private spinner: NgxSpinnerService, private store: Store<fromRoot.State>, private catalogService: CatalogService, private api: ApiService, private snackbar: MatSnackBar, private config: ConfigService, private dialog: MatDialog, private sessionService: SessionService) {
+    this.store.dispatch(new CloseSideNavAction());
+    this.config.getAdminEmitter().subscribe(data => {
+      this.admin = data;
+    });
+    this.admin = this.config.admin;
   }
 
   ngOnChanges(changes) {
@@ -48,11 +79,12 @@ export class CatalogTypeListComponent implements OnChanges {
   }
 
   loadTypesForCategory() {
-    this.loading = true;
+    this.spinner.show();
     this.categoriesList = [];
     this.catalogService.getTypeList(this.storageName).subscribe(data => {
       data.map(element => {
         this.categoriesList.push(element);
+
       });
     }, error => {
       this.categoriesList = [];
@@ -60,7 +92,9 @@ export class CatalogTypeListComponent implements OnChanges {
       this.displayList = this.categoriesList.sort((a, b): number => {
         return a.storageTypeId > b.storageTypeId ? 1 : -1;
       });
-      this.loading = false;
+      setTimeout(() => {
+        this.spinner.hide();
+      }, 0);
       this.loaded.emit(true);
     });
   }
@@ -89,7 +123,7 @@ export class CatalogTypeListComponent implements OnChanges {
   }
 
   createTypeDialog() {
-    let dialogRef: MdDialogRef<CatalogCreateTypeDialogComponent>;
+    let dialogRef: MatDialogRef<CatalogCreateTypeDialogComponent>;
     dialogRef = this.dialog.open(CatalogCreateTypeDialogComponent, this.dialogConfig);
     dialogRef.afterClosed()
       .subscribe(result => {

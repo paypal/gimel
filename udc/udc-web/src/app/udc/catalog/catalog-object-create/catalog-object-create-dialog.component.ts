@@ -1,13 +1,35 @@
-import {Component, OnInit} from '@angular/core';
-import {FormGroup, FormBuilder, Validators} from '@angular/forms';
-import {MdDialogRef} from '@angular/material';
-import {CustomValidators, onValueChanged} from '../../../shared/utils';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {MdDialog, MdSnackBar} from '@angular/material';
-import {ConfigService} from '../../../core/services/config.service';
-import {ObjectSchemaMap} from '../models/catalog-objectschema';
-import {Dataset} from '../models/catalog-dataset';
-import {StorageSystem} from '../models/catalog-storagesystem';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { MatDialogRef } from '@angular/material';
+import { CustomValidators, onValueChanged } from '../../../shared/utils';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { MatDialog, MatOptionSelectionChange, MatSnackBar } from '@angular/material';
+import { System } from '../../../admin/models/catalog-system';
+import { ConfigService } from '../../../core/services/config.service';
+import { ObjectSchemaMap } from '../models/catalog-objectschema';
+import { Dataset } from '../models/catalog-dataset';
+import { StorageSystem } from '../models/catalog-storagesystem';
+import { environment } from '../../../../environments/environment';
+import {SessionService} from '../../../core/services/session.service';
 
 @Component({
   selector: 'app-catalog-object-create-dialog', templateUrl: './catalog-object-create-dialog.component.html', styleUrls: ['./catalog-object-create-dialog.component.scss'],
@@ -51,7 +73,7 @@ export class CatalogCreateObjectDialogComponent implements OnInit {
     },
   };
 
-  constructor(private config: ConfigService, public dialogRef: MdDialogRef<CatalogCreateObjectDialogComponent>, private snackbar: MdSnackBar, private dialog: MdDialog, private fb: FormBuilder, private catalogService: CatalogService) {
+  constructor(private sessionService: SessionService, private config: ConfigService, public dialogRef: MatDialogRef<CatalogCreateObjectDialogComponent>, private snackbar: MatSnackBar, private dialog: MatDialog, private fb: FormBuilder, private catalogService: CatalogService) {
     this.options.push('Yes');
     this.options.push('No');
   }
@@ -142,7 +164,7 @@ export class CatalogCreateObjectDialogComponent implements OnInit {
 
   populateDataset(result: any) {
     const datasetName = this.systemName + '.' + result.containerName + '.' + result.objectName;
-    const dataset: Dataset = new Dataset(datasetName, 0, this.systemName, true, result.objectId, datasetName, '', this.userName, this.userName, 'Y', '', 'N', [], [], 'Y');
+    const dataset: Dataset = new Dataset(datasetName, 0, this.systemName, true, result.objectId, datasetName, '', this.userName, this.userName, '', 'N', [], [], 'Y', 'Y', '');
     dataset.createdUser = this.userName;
     dataset.updatedUser = this.userName;
     dataset.storageDataSetName = datasetName;
@@ -172,7 +194,7 @@ export class CatalogCreateObjectDialogComponent implements OnInit {
     return objectSchema;
   }
 
-  onStorageTypeChange() {
+  onStorageSystemChange() {
     this.storageSystem = Object.assign({}, this.createForm.value).storageSystem;
     this.systemId = this.storageSystem.storageSystemId;
     this.typeAttributes = [];
@@ -181,6 +203,7 @@ export class CatalogCreateObjectDialogComponent implements OnInit {
         data.forEach(element => {
           this.typeAttributes.push(element);
         });
+        this.typeAttributes = [...this.typeAttributes];
       }, error => {
         this.typeAttributes = [];
         this.snackbar.open('Invalid Storage Type', 'Dismiss', this.config.snackBarConfig);
@@ -205,9 +228,9 @@ export class CatalogCreateObjectDialogComponent implements OnInit {
     }
   }
 
-  updateValue(event, cell, row) {
-    this.editing[row.$$index + '-' + cell] = false;
-    this.typeAttributes[row.$$index][cell] = event.target.value;
+  updateValue(event, cell, rowIndex) {
+    this.editing[rowIndex + '-' + cell] = false;
+    this.typeAttributes[rowIndex][cell] = event.target.value;
+    this.typeAttributes = [...this.typeAttributes];
   }
 }
-

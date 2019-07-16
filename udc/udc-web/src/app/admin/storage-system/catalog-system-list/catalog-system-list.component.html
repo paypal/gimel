@@ -1,16 +1,45 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div>
+  <ngx-spinner
+    bdColor="rgba(51, 51, 51, 0.8)"
+    size="large"
+    color="#448aff"
+    type="ball-elastic-dots">
+  </ngx-spinner>
+</div>
+
 <div class="app-container">
+
 
   <div>
     <div class="detail-content-container">
-      <md-input-container class="table-search">
-        <input #searchDB mdInput (keyup)='search(searchDB.value)'>
-        <md-placeholder>
-          <md-icon class="icon-16">search</md-icon>
+      <mat-form-field class="table-search">
+        <input #searchDB matInput (keyup)='search(searchDB.value)'>
+        <mat-placeholder>
+          <mat-icon class="icon-16">search</mat-icon>
           Search
-        </md-placeholder>
-      </md-input-container>
-      <div>
-        <button md-raised-button routerLink="." (click)="createSystemDialog()" class="app-details-btn">
+        </mat-placeholder>
+      </mat-form-field>
+      <div *ngIf="admin">
+        <button mat-raised-button routerLink="." (click)="createSystemDialog()" class="app-details-btn">
           Create Store
         </button>
       </div>
@@ -19,20 +48,14 @@
   <ngx-datatable
     #catalogSystemsTable
     class="material favorites-datatable"
-    [loadingIndicator]="loading"
     [rows]="displayList"
     [columnMode]="'force'"
     [headerHeight]="35"
     [footerHeight]="true"
     [scrollbarH]="true"
-    [limit]="30"
+    [limit]="20"
     [rowHeight]="50"
     [sorts]="[{prop: 'storageSystemId', dir: 'asc'}]">
-    <ngx-datatable-column name="System ID" [width]="50">
-      <ng-template let-row="row" ngx-datatable-cell-template>
-        {{ row.storageSystemId }}
-      </ng-template>
-    </ngx-datatable-column>
     <ngx-datatable-column name="System Name" [width]="100">
       <ng-template let-row="row" ngx-datatable-cell-template>
         {{ row.storageSystemName }}
@@ -43,23 +66,34 @@
         {{ row.zoneName}}
       </ng-template>
     </ngx-datatable-column>
-    <ngx-datatable-column name="Created Admin" [width]="100" [sortable]="false">
+    <ngx-datatable-column name="Entity" [width]="50" [sortable]="false">
       <ng-template let-row="row" ngx-datatable-cell-template>
-        {{ row.createdUser }}
       </ng-template>
     </ngx-datatable-column>
-    <ngx-datatable-column name="Discovery Status" [width]="75" [sortable]="false">
+    <ngx-datatable-column name="Discovery Status" [width]="30" [sortable]="false">
       <ng-template let-row="row" ngx-datatable-cell-template>
-        <span [ngSwitch]="row.isActiveYN">
-          <md-icon class="favorite-success" *ngSwitchCase="'Y'" style="color:yellowgreen;">airplanemode_active</md-icon>
-          <md-icon class="favorite-danger" *ngSwitchCase="'N'" style="color:red;">airplanemode_inactive</md-icon>
+        <span *ngIf="row.runStatus=='STALE'">
+          <button mat-icon-button class="action-btn grey-btn"
+                  matTooltip="Datesets are stale with regards to the time interval" (click)="openDiscoveryStatistics(row)">
+            <mat-icon style="color:red;">warning</mat-icon>
+          </button>
         </span>
-        <span *ngIf="row.isActiveYN == 'Y'">Active</span>
-        <span *ngIf="row.isActiveYN == 'N'">In-Active</span>
+        <span *ngIf="row.runStatus=='OUTDATED'">
+          <button mat-icon-button class="action-btn grey-btn"
+                  matTooltip="Datesets are stale with regards to the time interval" (click)="openDiscoveryStatistics(row)">
+            <mat-icon style="color:red;">warning</mat-icon>
+          </button>
+        </span>
+        <span *ngIf="row.runStatus=='LATEST'">
+          <button mat-icon-button class="action-btn grey-btn" matTooltip="Datesets are up-to-date"
+                  (click)="openDiscoveryStatistics(row)">
+            <mat-icon style="color:green;">verified_user</mat-icon>
+          </button>
+        </span>
       </ng-template>
     </ngx-datatable-column>
-    <span>
-      <ngx-datatable-column name="Actions" [width]="150" [sortable]="false">
+    <span *ngIf="admin">
+      <ngx-datatable-column name="Actions" [width]="50" [sortable]="false">
       <ng-template let-row="row" ngx-datatable-cell-template>
         <app-catalog-system-action
           [storageSystemId]="row.storageSystemId"
@@ -68,9 +102,11 @@
           [createdUser]="row.createdUser"
           [adminUserId]="row.adminUserId"
           [isActiveYN]="row.isActiveYN"
-          [isGimelCompatible]="row.isGimelCompatible"
           [containers]="row.containers"
-          (refresh1)=refreshRow($event)>
+          [discoverySla]="row.discoverySla"
+          (refreshType)=refreshRowType($event)
+          (refreshEntity)=refreshRowEntity($event)
+          (refreshZone)=refreshRowZone($event)>
         </app-catalog-system-action>
       </ng-template>
     </ngx-datatable-column>

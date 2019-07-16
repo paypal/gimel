@@ -1,23 +1,48 @@
-import {Component, Input, Output, EventEmitter, ViewChild, OnInit} from '@angular/core';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, Input, Output, EventEmitter, ViewChild, OnInit } from '@angular/core';
 import {
-  MdDialog, MdDialogConfig, MdDialogRef, MdSnackBar, MdSnackBarConfig
+  MatDialog, MatDialogConfig, MatDialogRef, MatSnackBar
 } from '@angular/material';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {ConfigService} from '../../../core/services/config.service';
-import {CatalogCreateZoneDialogComponent} from '../catalog-zone-create/catalog-zone-create-dialog.component';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { ConfigService } from '../../../core/services/config.service';
+import { CatalogCreateZoneDialogComponent } from '../catalog-zone-create/catalog-zone-create-dialog.component';
+import { environment } from '../../../../environments/environment';
+import { CloseSideNavAction } from '../../../core/store/sidenav/sidenav.actions';
+import { Store } from '@ngrx/store';
+import * as fromRoot from '../../../core/store';
+import { NgxSpinnerService } from 'ngx-spinner';
+import {SessionService} from '../../../core/services/session.service';
 
 @Component({
   selector: 'app-catalog-zone-list', templateUrl: './catalog-zone-list.component.html',
 })
 export class CatalogZoneListComponent implements OnInit {
-  public loading = false;
   public displayList = [];
-  private datasetList = [];
+  private zoneList = [];
   public systemName = '';
   public zoneId = '';
   public inProgress = false;
   public actionMsg: string;
-  dialogConfig: MdDialogConfig = {width: '600px'};
+  public admin: boolean;
+  dialogConfig: MatDialogConfig = {width: '600px'};
   @ViewChild('catalogZonesTable') table: any;
 
   @Input() project: string;
@@ -25,7 +50,12 @@ export class CatalogZoneListComponent implements OnInit {
   @Output() loaded: EventEmitter<boolean> = new EventEmitter();
   @Output() refresh: EventEmitter<string> = new EventEmitter();
 
-  constructor(private catalogService: CatalogService, private snackbar: MdSnackBar, private config: ConfigService, private dialog: MdDialog) {
+  constructor(private spinner: NgxSpinnerService, private store: Store<fromRoot.State>, private catalogService: CatalogService, private snackbar: MatSnackBar, private config: ConfigService, private dialog: MatDialog, private sessionService: SessionService) {
+    this.store.dispatch(new CloseSideNavAction());
+    this.config.getAdminEmitter().subscribe(data => {
+      this.admin = data;
+    });
+    this.admin = this.config.admin;
   }
 
   ngOnInit() {
@@ -33,25 +63,27 @@ export class CatalogZoneListComponent implements OnInit {
   }
 
   loadZonesFromCatalog() {
-    this.loading = true;
-    this.datasetList = [];
+    this.spinner.show();
+    this.zoneList = [];
     this.catalogService.getZonesList().subscribe(data => {
       data.map(element => {
-        this.datasetList.push(element);
+        this.zoneList.push(element);
       });
     }, error => {
-      this.datasetList = [];
+      this.zoneList = [];
     }, () => {
-      this.displayList = this.datasetList.sort((a, b): number => {
-        return a.storageId > b.storageId ? 1 : -1;
+      this.displayList = this.zoneList.sort((a, b): number => {
+        return a.zoneName > b.zoneName ? 1 : -1;
       });
-      this.loading = false;
+      setTimeout(() => {
+        this.spinner.hide();
+      }, 0);
       this.loaded.emit(true);
     });
   }
 
   search(searchText: string) {
-    this.displayList = this.datasetList.filter((item, index, array) => {
+    this.displayList = this.zoneList.filter((item, index, array) => {
       return item['zoneName'].toLowerCase().search(searchText.toLowerCase()) !== -1 || item['zoneDescription'].toLowerCase().search(searchText.toLowerCase()) !== -1;
     });
   }
@@ -70,7 +102,7 @@ export class CatalogZoneListComponent implements OnInit {
   }
 
   createZoneDialog() {
-    let dialogRef: MdDialogRef<CatalogCreateZoneDialogComponent>;
+    let dialogRef: MatDialogRef<CatalogCreateZoneDialogComponent>;
     dialogRef = this.dialog.open(CatalogCreateZoneDialogComponent, this.dialogConfig);
     dialogRef.afterClosed()
       .subscribe(result => {

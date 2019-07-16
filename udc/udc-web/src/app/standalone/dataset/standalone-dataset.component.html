@@ -1,222 +1,379 @@
-<div class="app-container">
-  <div class="app-container" *ngIf="detailsLoading">
-    <md-progress-bar mode="indeterminate"></md-progress-bar>
-  </div>
-  <div class="app-container" *ngIf="!detailsLoading">
-    <md-tab-group>
-      <md-tab label="Overview">
-        <md-grid-list cols="2" rowHeight="300">
-          <md-grid-tile>
-            <md-list dense>
-              <md-list-item>
-                <table>
-                  <tr>
-                    <td><h4>Dataset ID</h4></td>
-                    <td>{{dataset.storageDataSetId}}</td>
-                  </tr>
-                  <tr>
-                    <td><h4>Dataset</h4></td>
-                    <td>{{dataset.storageDataSetName}}</td>
-                  </tr>
-                  <tr>
-                    <td><h4>Object ID</h4></td>
-                    <td>{{dataset.objectSchemaMapId}}</td>
-                  </tr>
-                  <tr>
-                    <td><h4>Is Auto Registered ?</h4></td>
-                    <td>{{dataset.isAutoRegistered}}</td>
-                  </tr>
-                  <tr>
-                    <td><h4>Datastore</h4></td>
-                    <td>{{dataset.storageSystemName}}</td>
-                  </tr>
-                </table>
-              </md-list-item>
-            </md-list>
-          </md-grid-tile>
-          <md-grid-tile>
-            <md-list dense>
-              <md-list-item>
-                <table>
-                  <tr>
-                    <td><h4>Alias Name</h4></td>
-                    <td>{{dataset.storageDataSetAliasName}}</td>
-                  </tr>
-                  <tr>
-                    <td><h4>Created By</h4></td>
-                    <td>{{dataset.createdUserOnStore}}</td>
-                  </tr>
-                  <tr>
-                    <td><h4>Created Timestamp</h4></td>
-                    <td>{{dataset.createdTimestampOnStore}}</td>
-                  </tr>
-                  <tr>
-                    <td><h4>Last Updated By</h4></td>
-                    <td>{{dataset.updatedUser}}</td>
-                  </tr>
-                  <tr>
-                    <td><h4>Updated Timestamp</h4></td>
-                    <td>{{dataset.updatedTimestamp}}</td>
-                  </tr>
-                </table>
-              </md-list-item>
-            </md-list>
-          </md-grid-tile>
-        </md-grid-list>
-      </md-tab>
-      <md-tab label="Schema Details">
-        <div class="app-container" *ngIf="!detailsLoading">
-          <ngx-datatable
-            #datasetColumnsTable
-            class="material favorites-datatable"
-            [loadingIndicator]="loading"
-            [rows]="columnList"
-            [columnMode]="'force'"
-            [headerHeight]="35"
-            [footerHeight]="true"
-            [scrollbarH]="true"
-            [limit]="20"
-            [rowHeight]="'auto'">
-            <ngx-datatable-column name="Column Name" [width]="20">
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                {{row.columnName}}
-              </ng-template>
-            </ngx-datatable-column>
-            <ngx-datatable-column name="Column Type" [width]="20">
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                {{row.columnType}}
-              </ng-template>
-            </ngx-datatable-column>
-            <ngx-datatable-column name="Partition Status" [width]="20">
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                <span *ngIf="row.partitionStatus">{{row.partitionStatus}}</span>
-                <span *ngIf="!row.partitionStatus"><div>N/A</div></span>
-              </ng-template>
-            </ngx-datatable-column>
-            <ngx-datatable-column name="Column Family" [width]="20">
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                <span *ngIf="row.columnFamily">{{row.columnFamily}}</span>
-                <span *ngIf="!row.columnFamily"><div>N/A</div></span>
-              </ng-template>
-            </ngx-datatable-column>
-            <ngx-datatable-column name="Column Classification" [width]="20">
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                <span *ngIf="row.columnClass">{{row.columnClass}}</span>
-                <span *ngIf="!row.columnClass"><div>N/A</div></span>
-                <span>
-                   <button md-icon-button class="action-btn grey-btn"
-                           mdTooltip="Classification is not vetted by the dataset owner">
-                     <md-icon style="color:gray;">error</md-icon>
-                   </button>
-                </span>
-              </ng-template>
-            </ngx-datatable-column>
-            <ngx-datatable-column name="Is Restricted" [width]="20">
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                <span *ngIf="row.restrictionStatus">{{row.restrictionStatus}}</span>
-                <span *ngIf="!row.restrictionStatus"><div>false</div></span>
-              </ng-template>
-            </ngx-datatable-column>
-            <br>
-            <!--<ngx-datatable-footer>-->
-            <!--<ng-template ngx-datatable-footer-template>-->
-            <!--<div>-->
-            <!--<div>-->
-            <!--<button md-icon-button class="action-btn grey-btn">-->
-            <!--<md-icon style="color:gray;">error</md-icon>-->
-            <!--</button>-->
-            <!--<strong> Column Classification is based on column name and not vetted by the dataset owner</strong>-->
-            <!--</div>-->
-            <!--</div>-->
-            <!--</ng-template>-->
-            <!--</ngx-datatable-footer>-->
-          </ngx-datatable>
-        </div>
-        <div class="app-container" *ngIf="detailsLoading">
-          <md-progress-bar mode="indeterminate"></md-progress-bar>
-        </div>
-      </md-tab>
-      <md-tab label="System Attributes">
-        <div class="app-container" *ngIf="!detailsLoading">
-          <ngx-datatable
-            #datasetSystemAttributesTable
-            class="material favorites-datatable"
-            [loadingIndicator]="loading"
-            [rows]="systemAttributesList"
-            [columnMode]="'force'"
-            [headerHeight]="35"
-            [footerHeight]="true"
-            [scrollbarH]="true"
-            [limit]="20"
-            [rowHeight]="'auto'">
-            <ngx-datatable-column name="Type Attribute Value" [width]="40">
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                {{row.storageDsAttributeKeyName}}
-              </ng-template>
-            </ngx-datatable-column>
-            <ngx-datatable-column name="System Attribute Value" [width]="40">
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                {{row.storageSystemAttributeValue}}
-              </ng-template>
-            </ngx-datatable-column>
-          </ngx-datatable>
-        </div>
-        <div class="app-container" *ngIf="detailsLoading">
-          <md-progress-bar mode="indeterminate"></md-progress-bar>
-        </div>
-      </md-tab>
-      <md-tab label="Object Attributes">
-        <div class="app-container" *ngIf="!detailsLoading">
-          <ngx-datatable
-            #datasetObjectAttributesTable
-            class="material favorites-datatable"
-            [loadingIndicator]="loading"
-            [rows]="objectAttributesList"
-            [columnMode]="'force'"
-            [headerHeight]="35"
-            [footerHeight]="true"
-            [scrollbarH]="true"
-            [limit]="20"
-            [rowHeight]="'auto'">
-            <ngx-datatable-column name="Type Attribute Value" [width]="40">
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                {{row.storageDsAttributeKeyName}}
-              </ng-template>
-            </ngx-datatable-column>
+<!--
+Copyright 2019 PayPal Inc.
 
-            <ngx-datatable-column name="Object Attribute Value" [width]="40">
-              <ng-template let-row="row" ngx-datatable-cell-template>
-                {{row.objectAttributeValue}}
-              </ng-template>
-            </ngx-datatable-column>
-          </ngx-datatable>
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div class="app-container-dataset">
+  <div class="app-container-dataset" *ngIf="detailsLoading">
+    <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+  </div>
+
+
+  <div class="app-container-dataset-deleted" *ngIf="!detailsLoading && dataset.isActiveYN=='N'">
+    This dataset is no longer present on the store. It was cataloged as deleted on {{dataset.updatedTimestamp}}
+  </div>
+
+  <div class="app-container-dataset" *ngIf="!detailsLoading">
+    <mat-accordion>
+      <mat-expansion-panel [expanded]="panelOpenState == true" (opened)="panelOpenState == true"
+                           (closed)="panelOpenState == false">
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Overview
+          </mat-panel-title>
+
+        </mat-expansion-panel-header>
+        <mat-grid-list cols="4" rowHeight="200">
+          <mat-grid-tile
+            *ngFor="let tile of tiles"
+            [colspan]="tile.cols"
+            [rowspan]="tile.rows">
+
+            <mat-card class="square_board" *ngIf="tile.text=='Four'">
+              <div class="flex-container dataset-title" fxLayout="row" fxLayoutAlign="start start">
+                <mat-card-title class="card-title-standalone card-header">Tags</mat-card-title>
+              </div>
+
+              <div class="flex-container dataset-button" fxLayout="row" fxLayoutAlign="end end">
+                <mat-card-actions>
+                  <button mat-raised-button class="action-btn tag-btn grey-btn"
+                          matTooltip="Add Tags"
+                          (click)="saveTags()" routerLinkActive="active">
+                    <img style="height: 15px;line-height:0;padding-left: 4px;padding-bottom: 1px;"
+                         src="assets/images/save-logo.png" alt="Bookmark">
+                  </button>
+                </mat-card-actions>
+              </div>
+
+              <div class="clearfix"></div>
+
+              <mat-form-field class="example-chip-list">
+                <mat-chip-list #chipList>
+                  <mat-chip *ngFor="let tag of tags" [selectable]="selectable"
+                            [removable]="removable" (removed)="remove(tag)"
+                            matTooltip="Provided by {{tag.createdUser}} @ {{tag.createdTimestamp}}">
+                    {{tag.name}}
+                    <mat-icon matChipRemove *ngIf="removable">cancel</mat-icon>
+                  </mat-chip>
+                  <input [matChipInputFor]="chipList"
+                         [matChipInputSeparatorKeyCodes]="separatorKeysCodes"
+                         [matChipInputAddOnBlur]="addOnBlur"
+                         (matChipInputTokenEnd)="add($event)">
+                </mat-chip-list>
+              </mat-form-field>
+              <div class="flex-container" fxLayout="row" fxLayoutAlign="start start" *ngIf="inProgress">
+                <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+              </div>
+            </mat-card>
+
+            <mat-card class="square_board" *ngIf="tile.text=='Two'">
+              <div class="flex-container dataset-title " fxLayout="row" fxLayoutAlign="start start">
+                <mat-card-title class="card-title-standalone card-header">Dataset Description</mat-card-title>
+              </div>
+
+              <div class="flex-container dataset-button" fxLayout="row" fxLayoutAlign="end end">
+                <mat-card-actions>
+                  <button mat-raised-button class="action-btn grey-btn"
+                          matTooltip="Edit Dataset Description" (click)="editObjectDescription()">
+                    <img style="height: 15px;line-height:0;padding-left: 4px;padding-bottom: 1px;"
+                         src="assets/images/edit-text.png" alt="Bookmark">
+                  </button>
+                  <button mat-raised-button class="action-btn tag-btn grey-btn" (click)="openFullView()"
+                          matTooltip="More info">
+                    <img src="assets/information.png"
+                         style="height: 15px;line-height:0;padding-left: 4px;padding-bottom: 1px;" alt="Bookmark">
+                  </button>
+                  <button mat-raised-button class="action-btn grey-btn" (click)="copyText(completeObjectDescription)"
+                          matTooltip="Copy to clipboard">
+                    <img style="height: 15px;line-height:0;padding-left: 4px;padding-bottom: 1px;"
+                         src="assets/images/copy-to-clipboard.png" alt="Bookmark">
+                  </button>
+                </mat-card-actions>
+              </div>
+
+              <div class="clearfix"></div>
+
+              <div class="flex-container dataset-title" fxLayout="row" fxLayoutAlign="center center">
+                <p fxFlex="50%" class="udc_tagline1" style="word-wrap: break-word;">
+                  {{objectDescription.substring(0, 100) + '...'}}
+                </p>
+              </div>
+
+            </mat-card>
+
+            <mat-card class="square_board" *ngIf="tile.text=='One'">
+              <div class="flex-container dataset-title header-dataset" fxLayout="row" fxLayoutAlign="start start">
+                <mat-card-title class="card-title-standalone inline-title">Dataset Name</mat-card-title>
+                <p fxFlex="25%" class="udc_dataset_name inline-title" style=" word-wrap: break-word;">
+                  {{dataset.storageDataSetName}}
+                </p>
+              </div>
+
+              <div class="flex-container dataset-button" fxLayout="row" fxLayoutAlign="end end">
+                <mat-card-actions>
+                  <button mat-raised-button class="action-btn grey-btn" (click)="copyUrl()" matTooltip="Share URL">
+                    <img style="height: 15px;line-height:0;padding-left: 4px;padding-bottom: 1px;"
+                         src="assets/images/share-url.png" alt="Bookmark">
+                  </button>
+                  <button mat-raised-button class="action-btn grey-btn" (click)="copyText(dataset.storageDataSetName)"
+                          matTooltip="Copy to clipboard">
+                    <img style="height: 15px;line-height:0;padding-left: 4px;padding-bottom: 1px;"
+                         src="assets/images/copy-to-clipboard.png" alt="Bookmark">
+                  </button>
+                </mat-card-actions>
+              </div>
+
+              <div class="clearfix"></div>
+
+              <div class="flex-container dataset-title header-dataset" fxLayout="row" fxLayoutAlign="start start">
+                <mat-card-title class="card-title-standalone inline-title">Datastore</mat-card-title>
+                <p fxFlex="50%" class="udc_dataset_name inline-title">
+                  {{dataset.storageSystemName}}
+                </p>
+              </div>
+
+              <div class="flex-container dataset-button" fxLayout="row" fxLayoutAlign="end end">
+                <mat-card-actions>
+                  <button mat-raised-button class="action-btn grey-btn" style="margin-right:8px;"
+                          matTooltip="Navigate to Datastore Page"
+                          routerLink="/admin/system" routerLinkActive="active">
+                    <img style="height: 15px;line-height:0;padding-left: 4px;padding-bottom: 1px;"
+                         src="assets/images/search-property.png" alt="Bookmark">
+                  </button>
+                </mat-card-actions>
+              </div>
+
+              <div class="clearfix"></div>
+            </mat-card>
+
+            <mat-card class="square_board" *ngIf="tile.text=='Three'">
+              <div class="flex-container" fxLayout="row" fxLayoutAlign="start start">
+                <mat-card-title class="card-title-standalone inline-content">Owner name</mat-card-title>
+              </div>
+              <div class="flex-container dataset-button" fxLayout="row" fxLayoutAlign="end end">
+                <mat-card-actions>
+                  <button mat-raised-button class="action-btn tag-btn grey-btn"
+                          matTooltip="Claim Ownership"
+                          (click)="claimOwnership()" routerLinkActive="active">
+                    <img style="height: 15px;line-height:0;padding-left: 4px;padding-bottom: 1px;"
+                         src="assets/images/owner.png" alt="Bookmark">
+                  </button>
+                </mat-card-actions>
+              </div>
+              <div class="flex-container" fxLayout="row" fxLayoutAlign="center center" *ngIf="existingOwners!=''">
+                <p fxFlex="50%" class="udc_tagline inline-content">
+                  {{existingOwners}}
+                </p>
+              </div>
+              <div class="flex-container" fxLayout="row" fxLayoutAlign="center center" *ngIf="existingOwners==''">
+                <p fxFlex="50%" class="udc_tagline inline-content">
+                  Unknown
+                </p>
+              </div>
+
+              <div class="flex-container card-row" fxLayout="row" fxLayoutAlign="start start">
+                <mat-card-title class="card-title-standalone inline-content">Cataloged By</mat-card-title>
+                <mat-card-title class="card-title-standalone inline-content">Cataloged Time</mat-card-title>
+              </div>
+              <div class="flex-container" fxLayout="row" fxLayoutAlign="center center">
+                <p fxFlex="50%" class="udc_tagline inline-content">
+                  {{dataset.updatedUser}}
+                </p>
+                <p fxFlex="50%" class="udc_tagline inline-content">
+                  {{dataset.updatedTimestamp}}
+                </p>
+              </div>
+            </mat-card>
+          </mat-grid-tile>
+        </mat-grid-list>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Schema Details
+          </mat-panel-title>
+          <span class="dataset-info"><b>Schema details</b> : {{dataSourceList.data?.length}} columns</span>
+        </mat-expansion-panel-header>
+        <div class="app-container-dataset">
+
+          <div class="form-header">
+            <mat-form-field>
+              <input matInput (keyup)="applyFilter($event.target.value)" placeholder="Filter">
+            </mat-form-field>
+          </div>
+
+          <div class="clearfix"></div>
+
+          <div class="example-container mat-elevation-z8">
+            <mat-table #table [dataSource]="dataSourceList">
+
+              <ng-container matColumnDef="columnName">
+                <mat-header-cell *matHeaderCellDef> Column Name</mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.columnName}}</mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="columnType">
+                <mat-header-cell *matHeaderCellDef> Column Type</mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.columnType}}</mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="partitionStatus">
+                <mat-header-cell *matHeaderCellDef> Partition Status</mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.partitionStatus}}</mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="columnClassification">
+                <mat-header-cell *matHeaderCellDef> Column Classification</mat-header-cell>
+                <mat-cell *matCellDef="let element" matTooltipPosition="left" matTooltip="">
+                  {{element.columnClass}}
+                </mat-cell>
+                <span>
+                    <button mat-raised-button class="action-btn grey-btn"
+                            matTooltip="Classification is not vetted by the dataset owner">
+                      <mat-icon style="color:gray;">error</mat-icon>
+                    </button>
+                  </span>
+              </ng-container>
+
+              <ng-container matColumnDef="columnDescription">
+                <mat-header-cell *matHeaderCellDef> Column Description(Click on Description to edit/view)
+                </mat-header-cell>
+                <mat-cell *matCellDef="let element" [satPopoverAnchorFor]="p" matTooltipPosition="left"
+                          matTooltip=" Provided by {{descriptionProviderName}} @ {{element.updatedTimestamp}}">
+
+                  <ng-container *ngIf="element.businessDescription">
+                    {{element.businessDescription.substring(0, 100) + '...'}}
+                  </ng-container>
+                  <span class="add-comment" *ngIf="!element.businessDescription">Add a comment</span>
+                  <img (click)="p.open()"
+                       style="height: 15px;line-height:0;padding-left: 4px;cursor:pointer;padding-bottom: 1px;"
+                       src="assets/images/edit-text.png" alt="Bookmark">
+                  <sat-popover #p
+                               hasBackdrop
+                               xAlign="start"
+                               yAlign="start"
+                               (closed)="update(element, $event)">
+                    <inline-edit [systemName]="dataset.storageSystemName" [systemId]="dataset.storageSystemId"
+                                 [datasetId]="dataset.storageDataSetId" [columnName]="element.columnName"
+                                 [objectId]="dataset.objectSchemaMapId" [columnDataType]="element.columnType"
+                                 [value]="element.businessDescription"></inline-edit>
+                  </sat-popover>
+                </mat-cell>
+              </ng-container>
+              <mat-header-row *matHeaderRowDef="schemaColumns"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: schemaColumns;"></mat-row>
+            </mat-table>
+
+          </div>
+        </div>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            System Attributes
+          </mat-panel-title>
+          <span class="dataset-info"><b>System Attributes</b> : {{systemAttributesList.data?.length}} Attributes</span>
+        </mat-expansion-panel-header>
+        <div class="app-container-dataset" *ngIf="!detailsLoading">
+
+          <div class="form-header">
+            <mat-form-field>
+              <input matInput (keyup)="sysAttributeFilter($event.target.value)" placeholder="Filter">
+            </mat-form-field>
+          </div>
+
+          <div class="clearfix"></div>
+
+          <div class="example-container mat-elevation-z8">
+            <mat-table #table [dataSource]="systemAttributesList">
+
+              <ng-container matColumnDef="storageDsAttributeKeyName">
+                <mat-header-cell *matHeaderCellDef> Type Attribute Value</mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.storageDsAttributeKeyName}}</mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="storageSystemAttributeValue">
+                <mat-header-cell *matHeaderCellDef> System Attribute Value</mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.storageSystemAttributeValue}}</mat-cell>
+              </ng-container>
+
+              <mat-header-row *matHeaderRowDef="systemAttrColumns"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: systemAttrColumns;"></mat-row>
+            </mat-table>
+          </div>
+        </div>
+
+        <div class="app-container" *ngIf="detailsLoading">
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
+        </div>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Object Attributes
+          </mat-panel-title>
+          <span
+            class="dataset-info"><b>Object Attributes</b> : {{objectAttributesListTable.data?.length}} Attributes</span>
+        </mat-expansion-panel-header>
+        <div class="app-container-dataset" *ngIf="!detailsLoading">
+
+          <div class="form-header">
+            <mat-form-field>
+              <input matInput (keyup)="objAttributeFilter($event.target.value)" placeholder="Filter">
+            </mat-form-field>
+          </div>
+
+          <div class="clearfix"></div>
+
+          <div class="example-container mat-elevation-z8">
+
+            <mat-table #table [dataSource]="objectAttributesListTable">
+
+              <ng-container matColumnDef="storageDsAttributeKeyName">
+                <mat-header-cell *matHeaderCellDef> Type Attribute Value</mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.storageDsAttributeKeyName}}</mat-cell>
+              </ng-container>
+
+              <ng-container matColumnDef="objectAttributeValue">
+                <mat-header-cell *matHeaderCellDef> Object Attribute Value</mat-header-cell>
+                <mat-cell *matCellDef="let element"> {{element.objectAttributeValue}}</mat-cell>
+              </ng-container>
+
+              <mat-header-row *matHeaderRowDef="objectAttrColumns"></mat-header-row>
+              <mat-row *matRowDef="let row; columns: objectAttrColumns;"></mat-row>
+            </mat-table>
+          </div>
         </div>
         <div class="app-container" *ngIf="detailsLoading">
-          <md-progress-bar mode="indeterminate"></md-progress-bar>
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         </div>
-      </md-tab>
-      <md-tab label="Sample Data">
-        <div class="app-container" *ngIf="!dataLoading">
-          <ngx-datatable
-            #datasetObjectAttributesTable
-            class="material favorites-datatable"
-            [loadingIndicator]="loading"
-            [columns]='headersList'
-            [rows]="rowsList"
-            [columnMode]="'force'"
-            [headerHeight]="35"
-            [footerHeight]="true"
-            [scrollbarH]="true"
-            [limit]="5"
-            [messages]="emptySampleData"
-            [rowHeight]="'auto'">
-          </ngx-datatable>
-        </div>
-        <div class="app-container" *ngIf="dataLoading">
-          <md-progress-bar mode="indeterminate"></md-progress-bar>
-        </div>
-      </md-tab>
-      <md-tab label="Access Control">
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Access Control
+          </mat-panel-title>
+          <span
+            class="dataset-info"><b>Access Control</b> : {{accessControlList.length? "Available" : "Unavailable"}} </span>
+        </mat-expansion-panel-header>
         <div class="app-container" *ngIf="!detailsLoading">
           <div *ngIf="type!='Hive' && type!='Hbase' && type!='Teradata'">
             <ngx-datatable
@@ -228,7 +385,7 @@
               [headerHeight]="35"
               [footerHeight]="true"
               [scrollbarH]="true"
-              [limit]="5"
+              [limit]="15"
               [messages]="kafkaMessages"
               [rowHeight]="'auto'">
               <ngx-datatable-footer>
@@ -248,7 +405,7 @@
               [headerHeight]="35"
               [footerHeight]="true"
               [scrollbarH]="true"
-              [limit]="5"
+              [limit]="15"
               [messages]="messages"
               [rowHeight]="'auto'">
               <ngx-datatable-column name="Access Types" [width]="5">
@@ -286,18 +443,36 @@
                   {{row.databaseName}}
                 </ng-template>
               </ngx-datatable-column>
-              <ngx-datatable-column name="Role Name" [width]="80" [sortable]="false">
+              <ngx-datatable-column name="IAM Role Name" [width]="80" [sortable]="false">
                 <ng-template let-row="row" ngx-datatable-cell-template>
                   {{row.iamRoleName}}
+                </ng-template>
+              </ngx-datatable-column>
+              <ngx-datatable-column name="Role For" [width]="80" [sortable]="false">
+                <ng-template let-row="row" ngx-datatable-cell-template>
+                  {{row.roleFor}}
                 </ng-template>
               </ngx-datatable-column>
             </ngx-datatable>
           </div>
         </div>
         <div class="app-container" *ngIf="detailsLoading">
-          <md-progress-bar mode="indeterminate"></md-progress-bar>
+          <mat-progress-bar mode="indeterminate"></mat-progress-bar>
         </div>
-      </md-tab>
-    </md-tab-group>
+      </mat-expansion-panel>
+
+      <mat-expansion-panel>
+        <mat-expansion-panel-header>
+          <mat-panel-title>
+            Timeline
+          </mat-panel-title>
+          <span class="dataset-info"><b>Events</b> : {{eventInfo? eventInfo + " events" : "Unavailable"}} </span>
+        </mat-expansion-panel-header>
+        <div class="app-container" *ngIf="!detailsLoading">
+          <app-catalog-dataset-timeline (eventCount)="eventCountHandler($event)"
+                                        [datasetId]="dataset.storageDataSetId"></app-catalog-dataset-timeline>
+        </div>
+      </mat-expansion-panel>
+
+    </mat-accordion>
   </div>
-</div>

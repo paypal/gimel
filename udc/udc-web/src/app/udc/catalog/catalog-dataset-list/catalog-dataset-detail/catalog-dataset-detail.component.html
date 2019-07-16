@@ -1,71 +1,91 @@
-<md-tab-group>
+<!--
+Copyright 2019 PayPal Inc.
 
-  <md-tab label="Overview">
-    <div class="app-container" *ngIf="!detailsLoading">
-      <md-grid-list cols="2" rowHeight="300">
-        <md-grid-tile>
-          <md-list dense>
-            <md-list-item>
-              <table>
-                <tr>
-                  <td><h4>Dataset ID</h4></td>
-                  <td>{{statusData.storageDataSetId}}</td>
-                </tr>
-                <tr>
-                  <td><h4>Dataset</h4></td>
-                  <td>{{statusData.storageDataSetName}}</td>
-                </tr>
-                <tr>
-                  <td><h4>Object ID</h4></td>
-                  <td>{{statusData.objectSchemaMapId}}</td>
-                </tr>
-                <tr>
-                  <td><h4>Is Auto Registered ?</h4></td>
-                  <td>{{statusData.isAutoRegistered}}</td>
-                </tr>
-                <tr>
-                  <td><h4>Datastore</h4></td>
-                  <td>{{statusData.storageSystemName}}</td>
-                </tr>
-              </table>
-            </md-list-item>
-          </md-list>
-        </md-grid-tile>
-        <md-grid-tile>
-          <md-list dense>
-            <md-list-item>
-              <table>
-                <tr>
-                  <td><h4>Alias Name</h4></td>
-                  <td>{{statusData.storageDataSetAliasName}}</td>
-                </tr>
-                <tr>
-                  <td><h4>Created By</h4></td>
-                  <td>{{statusData.createdUserOnStore}}</td>
-                </tr>
-                <tr>
-                  <td><h4>Created Timestamp</h4></td>
-                  <td>{{statusData.createdTimestampOnStore}}</td>
-                </tr>
-                <tr>
-                  <td><h4>Last Updated By</h4></td>
-                  <td>{{statusData.updatedUser}}</td>
-                </tr>
-                <tr>
-                  <td><h4>Updated Timestamp</h4></td>
-                  <td>{{statusData.updatedTimestamp}}</td>
-                </tr>
-              </table>
-            </md-list-item>
-          </md-list>
-        </md-grid-tile>
-      </md-grid-list>
-    </div>
-    <div class="app-container" *ngIf="detailsLoading">
-      <md-progress-bar mode="indeterminate"></md-progress-bar>
-    </div>
-  </md-tab>
-  <md-tab label="Schema Details">
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<mat-tab-group>
+
+
+  <!--<mat-tab label="Overview">-->
+    <!--<div class="app-container" *ngIf="!detailsLoading">-->
+      <!--<mat-grid-list cols="2" rowHeight="300">-->
+        <!--<mat-grid-tile>-->
+          <!--<mat-list dense>-->
+            <!--<mat-list-item>-->
+              <!--<table>-->
+                <!--<tr>-->
+                  <!--<td><h4>Dataset ID</h4></td>-->
+                  <!--<td>{{statusData.storageDataSetId}}</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td><h4>Dataset</h4></td>-->
+                  <!--<td>{{statusData.storageDataSetName}}</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td><h4>Object ID</h4></td>-->
+                  <!--<td>{{statusData.objectSchemaMapId}}</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td><h4>Is Auto Registered ?</h4></td>-->
+                  <!--<td>{{statusData.isAutoRegistered}}</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td><h4>Datastore</h4></td>-->
+                  <!--<td>{{statusData.storageSystemName}}</td>-->
+                <!--</tr>-->
+              <!--</table>-->
+            <!--</mat-list-item>-->
+          <!--</mat-list>-->
+        <!--</mat-grid-tile>-->
+        <!--<mat-grid-tile>-->
+          <!--<mat-list dense>-->
+            <!--<mat-list-item>-->
+              <!--<table>-->
+                <!--<tr>-->
+                  <!--<td><h4>Alias Name</h4></td>-->
+                  <!--<td>{{statusData.storageDataSetAliasName}}</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td><h4>Created By</h4></td>-->
+                  <!--<td>{{statusData.createdUserOnStore}}</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td><h4>Created Timestamp</h4></td>-->
+                  <!--<td>{{statusData.createdTimestampOnStore}}</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td><h4>Last Updated By</h4></td>-->
+                  <!--<td>{{statusData.updatedUser}}</td>-->
+                <!--</tr>-->
+                <!--<tr>-->
+                  <!--<td><h4>Updated Timestamp</h4></td>-->
+                  <!--<td>{{statusData.updatedTimestamp}}</td>-->
+                <!--</tr>-->
+              <!--</table>-->
+            <!--</mat-list-item>-->
+          <!--</mat-list>-->
+        <!--</mat-grid-tile>-->
+      <!--</mat-grid-list>-->
+    <!--</div>-->
+    <!--<div class="app-container" *ngIf="detailsLoading">-->
+      <!--<mat-progress-bar mode="indeterminate"></mat-progress-bar>-->
+    <!--</div>-->
+  <!--</mat-tab>-->
+  <mat-tab label="Schema Details">
     <div class="app-container" *ngIf="!detailsLoading">
       <ngx-datatable
         #datasetColumnsTable
@@ -77,7 +97,7 @@
         [footerHeight]="true"
         [scrollbarH]="true"
         [limit]="5"
-        [rowHeight]="50">
+        [rowHeight]="auto">
         <ngx-datatable-column name="Column Name" [width]="20">
           <ng-template let-row="row" ngx-datatable-cell-template>
             {{row.columnName}}
@@ -109,9 +129,9 @@
             <span *ngIf="row.columnClass">{{row.columnClass}}</span>
             <span *ngIf="!row.columnClass"><div>N/A</div></span>
             <span>
-              <button md-icon-button class="action-btn grey-btn"
-                           mdTooltip="Classification is not vetted by the dataset owner">
-                     <md-icon style="color:gray;">error</md-icon>
+              <button mat-icon-button class="action-btn grey-btn"
+                           matTooltip="Classification is not vetted by the dataset owner">
+                     <mat-icon style="color:gray;">error</mat-icon>
               </button>
             </span>
           </ng-template>
@@ -125,10 +145,10 @@
       </ngx-datatable>
     </div>
     <div class="app-container" *ngIf="detailsLoading">
-      <md-progress-bar mode="indeterminate"></md-progress-bar>
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
     </div>
-  </md-tab>
-  <md-tab label="System Attributes">
+  </mat-tab>
+  <mat-tab label="System Attributes">
     <div class="app-container" *ngIf="!detailsLoading">
       <ngx-datatable
         #datasetSystemAttributesTable
@@ -137,10 +157,9 @@
         [rows]="systemAttributesList"
         [columnMode]="'force'"
         [headerHeight]="35"
-        [footerHeight]="true"
-        [scrollbarH]="true"
+        [footerHeight]="50"
         [limit]="5"
-        [rowHeight]="50">
+        [rowHeight]="auto">
         <ngx-datatable-column name="Type Attribute Value" [width]="40">
           <ng-template let-row="row" ngx-datatable-cell-template>
             {{row.storageDsAttributeKeyName}}
@@ -151,25 +170,25 @@
             {{row.storageSystemAttributeValue}}
           </ng-template>
         </ngx-datatable-column>
+
       </ngx-datatable>
     </div>
     <div class="app-container" *ngIf="detailsLoading">
-      <md-progress-bar mode="indeterminate"></md-progress-bar>
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
     </div>
-  </md-tab>
-  <md-tab label="Object Attributes">
+  </mat-tab>
+  <mat-tab label="Object Attributes">
     <div class="app-container" *ngIf="!detailsLoading">
       <ngx-datatable
         #datasetObjectAttributesTable
-        class="material favorites-datatable"
-        [loadingIndicator]="loading"
-        [rows]="objectAttributesList"
-        [columnMode]="'force'"
         [headerHeight]="35"
-        [footerHeight]="true"
-        [scrollbarH]="true"
+        class="material favorites-datatable"
         [limit]="5"
-        [rowHeight]="50">
+        [columnMode]="'force'"
+        [footerHeight]="50"
+        [scrollbarH]="true"
+        [rowHeight]="auto"
+        [rows]="objectAttributesList">
         <ngx-datatable-column name="Type Attribute Value" [width]="20">
           <ng-template let-row="row" ngx-datatable-cell-template>
             {{row.storageDsAttributeKeyName}}
@@ -183,7 +202,7 @@
       </ngx-datatable>
     </div>
     <div class="app-container" *ngIf="detailsLoading">
-      <md-progress-bar mode="indeterminate"></md-progress-bar>
+      <mat-progress-bar mode="indeterminate"></mat-progress-bar>
     </div>
-  </md-tab>
-</md-tab-group>
+  </mat-tab>
+</mat-tab-group>

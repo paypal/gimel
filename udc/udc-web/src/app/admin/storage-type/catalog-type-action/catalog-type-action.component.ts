@@ -1,16 +1,35 @@
-import {Component, Input, Output, EventEmitter} from '@angular/core';
-import {MdSnackBar} from '@angular/material';
-import {MdDialog, MdDialogRef, MdDialogConfig} from '@angular/material';
-import {forkJoin} from 'rxjs/observable/forkJoin';
-import {ConfigService} from '../../../core/services/config.service';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {CatalogTypeEditDialogComponent} from '../catalog-type-edit-dialog/catalog-type-edit-dialog.component';
-import {CatalogTypeViewAttributesDialogComponent} from '../catalog-type-view-attributes-dialog/catalog-type-view-attributes-dialog.component';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { MatSnackBar } from '@angular/material';
+import { MatDialog, MatDialogRef, MatDialogConfig } from '@angular/material';
+import { forkJoin } from 'rxjs/observable/forkJoin';
+import { ConfigService } from '../../../core/services/config.service';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { CatalogTypeEditDialogComponent } from '../catalog-type-edit-dialog/catalog-type-edit-dialog.component';
+import { CatalogTypeViewAttributesDialogComponent } from '../catalog-type-view-attributes-dialog/catalog-type-view-attributes-dialog.component';
+import { environment } from '../../../../environments/environment';
+import {SessionService} from '../../../core/services/session.service';
 
 @Component({
-  selector: 'app-catalog-type-action',
-  templateUrl: './catalog-type-action.component.html',
-  styleUrls: ['./catalog-type-action.component.scss'],
+  selector: 'app-catalog-type-action', templateUrl: './catalog-type-action.component.html', styleUrls: ['./catalog-type-action.component.scss'],
 })
 
 export class CatalogTypeActionComponent {
@@ -24,12 +43,12 @@ export class CatalogTypeActionComponent {
   public actionMsg: string;
   typeAttributes: Array<any>;
 
-  dialogEditConfig: MdDialogConfig = {width: '1000px', height: '90vh'};
-  dialogViewConfig: MdDialogConfig = {width: '1000px', height: '60vh'};
+  dialogEditConfig: MatDialogConfig = {width: '1000px', height: '90vh'};
+  dialogViewConfig: MatDialogConfig = {width: '1000px', height: '60vh'};
 
   @Output() refresh1: EventEmitter<string> = new EventEmitter();
 
-  constructor(private catalogService: CatalogService, private snackbar: MdSnackBar, private config: ConfigService, private dialog: MdDialog) {
+  constructor(private catalogService: CatalogService, private snackbar: MatSnackBar, private config: ConfigService, private dialog: MatDialog, private sessionService: SessionService) {
   }
 
   private finishAction(result: boolean, refresh: boolean, message: string) {
@@ -41,10 +60,13 @@ export class CatalogTypeActionComponent {
   }
 
   openAttributesDialog() {
+    this.actionMsg = 'Viewing Datastore Type Attributes';
+    this.inProgress = true;
     const typeAttributes = this.catalogService.getTypeAttributes(this.storageTypeId.toString());
     forkJoin([typeAttributes]).subscribe(results => {
+      this.inProgress = false;
       this.typeAttributes = results[0];
-      let dialogRef: MdDialogRef<CatalogTypeViewAttributesDialogComponent>;
+      let dialogRef: MatDialogRef<CatalogTypeViewAttributesDialogComponent>;
       dialogRef = this.dialog.open(CatalogTypeViewAttributesDialogComponent, this.dialogViewConfig);
       dialogRef.componentInstance.storageTypeId = this.storageTypeId;
       dialogRef.componentInstance.typeAttributes = this.typeAttributes;
@@ -64,14 +86,18 @@ export class CatalogTypeActionComponent {
             }
           }
         });
+    }, error => {
     });
   }
 
   openEditTypeDialog() {
+    this.actionMsg = 'Editing Datastore Type';
+    this.inProgress = true;
     const typeAttributes = this.catalogService.getTypeAttributes(this.storageTypeId.toString());
     forkJoin([typeAttributes]).subscribe(results => {
       this.typeAttributes = results[0];
-      let dialogRef: MdDialogRef<CatalogTypeEditDialogComponent>;
+      this.inProgress = false;
+      let dialogRef: MatDialogRef<CatalogTypeEditDialogComponent>;
       dialogRef = this.dialog.open(CatalogTypeEditDialogComponent, this.dialogEditConfig);
       dialogRef.componentInstance.storageTypeName = this.storageTypeName;
       dialogRef.componentInstance.storageTypeId = this.storageTypeId;
@@ -93,6 +119,7 @@ export class CatalogTypeActionComponent {
             }
           }
         });
+    }, error => {
     });
   }
 

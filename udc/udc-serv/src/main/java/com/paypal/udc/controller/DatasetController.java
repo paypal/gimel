@@ -1,8 +1,32 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.controller;
 
+import java.io.IOException;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ExecutionException;
+import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,13 +46,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.google.gson.Gson;
-import com.paypal.udc.cache.DatasetCache;
 import com.paypal.udc.entity.dataset.CumulativeDataset;
 import com.paypal.udc.entity.dataset.Dataset;
-import com.paypal.udc.entity.dataset.DatasetChangeLogRegistered;
+import com.paypal.udc.entity.dataset.DatasetChangeLog;
 import com.paypal.udc.entity.dataset.DatasetWithAttributes;
+import com.paypal.udc.entity.dataset.ElasticSearchDataset;
 import com.paypal.udc.exception.ValidationError;
 import com.paypal.udc.service.IDatasetService;
+import com.paypal.udc.util.enumeration.UserAttributeEnumeration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -43,23 +68,39 @@ public class DatasetController {
     final static Logger logger = LoggerFactory.getLogger(DatasetController.class);
 
     final Gson gson = new Gson();
-    @Value("${application.livy.env}")
-    private String isProd;
-    @Autowired
-    private IDatasetService dataSetService;
-    @Autowired
-    private DatasetCache dataSetCache;
+    private final IDatasetService dataSetService;
+    private final HttpServletRequest request;
+    private final String userType;
 
-    @ApiOperation(value = "View the Total Datasets Count", response = String.class)
+    @Autowired
+    private DatasetController(final IDatasetService dataSetService,
+            final HttpServletRequest request) {
+        this.dataSetService = dataSetService;
+        this.request = request;
+        this.userType = UserAttributeEnumeration.SUCCESS.getFlag();
+    }
+
+    @ApiOperation(value = "View the Total Datasets Count", response = Long.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully retrieved Dataset count"),
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("totalUniqueCount")
-    public ResponseEntity<Long> getDatasetCount() {
-        final long datasetCount = this.dataSetService.getDatasetCount();
-        return new ResponseEntity<Long>(datasetCount, HttpStatus.OK);
-    }
+    public ResponseEntity<?> getDatasetCount() {
+		final long datasetCount = this.dataSetService.getDatasetCount();
+		return new ResponseEntity<Long>(datasetCount, HttpStatus.OK);
+	}
+
+    @ApiOperation(value = "View a timelineList ", response = Iterable.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully retrieved list"),
+            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
+    })
+    @GetMapping("timelineList/")
+	public ResponseEntity<?> getTimelineDimension() {
+		final Map<String, List<String>> list = this.dataSetService.getTimelineDimensions();
+		return new ResponseEntity<>(list, HttpStatus.OK);
+	}
 
     @ApiOperation(value = "View the basic dataset details based on ID", response = Dataset.class)
     @ApiResponses(value = {
@@ -67,10 +108,10 @@ public class DatasetController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("dataSet/{id}")
-    public ResponseEntity<Dataset> getDataSetById(@PathVariable("id") final Long id) {
-        final Dataset dataSet = this.dataSetCache.getDataSet(id);
-        return new ResponseEntity<Dataset>(dataSet, HttpStatus.OK);
-    }
+	public ResponseEntity<?> getDataSetById(@PathVariable("id") final Long id) throws ValidationError {
+		final Dataset dataSet = this.dataSetService.getDataSetById(id);
+		return new ResponseEntity<Dataset>(dataSet, HttpStatus.OK);
+	}
 
     @ApiOperation(value = "View the Dataset with system, schema and object attributes given a dataset ID", response = DatasetWithAttributes.class)
     @ApiResponses(value = {
@@ -78,17 +119,15 @@ public class DatasetController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("dataSetPending/{id}")
-    public ResponseEntity<?> getPendingDataSetById(@PathVariable("id") final Long id) {
-        DatasetWithAttributes dataSet;
-        try {
-            dataSet = this.dataSetService.getPendingDataset(id);
-            return new ResponseEntity<DatasetWithAttributes>(dataSet, HttpStatus.OK);
-        }
-        catch (final ValidationError e) {
-            return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
-        }
-
-    }
+	public ResponseEntity<?> getPendingDataSetById(@PathVariable("id") final Long id) {
+		DatasetWithAttributes dataSet;
+		try {
+			dataSet = this.dataSetService.getPendingDataset(id);
+			return new ResponseEntity<DatasetWithAttributes>(dataSet, HttpStatus.OK);
+		} catch (final ValidationError e) {
+			return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
+		}
+	}
 
     @ApiOperation(value = "View the Dataset with system, schema and object attributes based on dataset name", response = DatasetWithAttributes.class)
     @ApiResponses(value = {
@@ -96,27 +135,38 @@ public class DatasetController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("dataSetByName/{dataSetName:.+}")
-    public ResponseEntity<?> getDataSetByName(@PathVariable("dataSetName") final String dataSetName) {
-        try {
-            final DatasetWithAttributes dataSet = this.dataSetService.getDataSetByName(dataSetName);
-            return new ResponseEntity<DatasetWithAttributes>(dataSet, HttpStatus.OK);
-        }
-        catch (final ValidationError e) {
-            return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
-        }
-
+    public ResponseEntity<?> getDataSetByName(@PathVariable("dataSetName") final String dataSetName) {    
+		try {
+			final DatasetWithAttributes dataSet = this.dataSetService.getDataSetByName(dataSetName);
+			return new ResponseEntity<DatasetWithAttributes>(dataSet, HttpStatus.OK);
+		} catch (final ValidationError e) {
+			return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
+		}
     }
 
-    @ApiOperation(value = "View the Change Log based on cluster ID", response = Iterable.class)
+    @ApiOperation(value = "View the Change Log based on dataset ID", response = Iterable.class)
     @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Successfully retrieved Change Log"),
+            @ApiResponse(code = 200, message = "Successfully retrieved Dataset"),
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
-    @GetMapping("changeLogs/{clusterId}")
-    public ResponseEntity<List<DatasetChangeLogRegistered>> getLogs(@PathVariable("clusterId") final long clusterId) {
-        final List<DatasetChangeLogRegistered> changeLogs = this.dataSetService.getDatasetChangeLogs(clusterId);
-        return new ResponseEntity<List<DatasetChangeLogRegistered>>(changeLogs, HttpStatus.OK);
-    }
+	@GetMapping("changeLogs/{datasetId}")
+	public ResponseEntity<?> getChangeLogsByDataSetId(@PathVariable("datasetId") final Long datasetId) {
+		final List<DatasetChangeLog> changeLogs = this.dataSetService.getChangeLogsByDataSetId(datasetId);
+		return new ResponseEntity<List<DatasetChangeLog>>(changeLogs, HttpStatus.OK);
+	}
+
+    @ApiOperation(value = "View the Change Log based on dataset ID and change column type", response = Iterable.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully retrieved Dataset"),
+            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
+    })
+    @GetMapping("changeLogs/{datasetId}/{changeType}")
+	public ResponseEntity<?> getChangeLogsByDataSetIdAndChangeColumnType(
+			@PathVariable("datasetId") final Long datasetId, @PathVariable("changeType") final String changeType) {
+		final List<DatasetChangeLog> changeLogs = this.dataSetService
+				.getChangeLogsByDataSetIdAndChangeColumnType(datasetId, changeType);
+		return new ResponseEntity<List<DatasetChangeLog>>(changeLogs, HttpStatus.OK);
+	}
 
     @ApiOperation(value = "View a list of available datasets based on the prefix ", response = Iterable.class)
     @ApiResponses(value = {
@@ -124,11 +174,35 @@ public class DatasetController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("dataSets/")
-    public ResponseEntity<List<CumulativeDataset>> getAllDataSets(
-            @RequestParam(value = "prefix") final String dataSetSubString) {
-        final List<CumulativeDataset> list = this.dataSetService.getAllDatasets(dataSetSubString);
-        return new ResponseEntity<List<CumulativeDataset>>(list, HttpStatus.OK);
-    }
+	public ResponseEntity<?> getAllDataSets(@RequestParam(value = "prefix") final String dataSetSubString) {
+		final List<CumulativeDataset> list = this.dataSetService.getAllDatasets(dataSetSubString);
+		return new ResponseEntity<List<CumulativeDataset>>(list, HttpStatus.OK);
+	}
+
+    @ApiOperation(value = "View a list of available datasets based on the prefix ", response = Iterable.class)
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Successfully retrieved list"),
+            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
+    })
+    @GetMapping("dataSets/v2/")
+	public ResponseEntity<?> getAllDataSetsFromElasticSearchBySystemIds(
+			@RequestParam(value = "prefix", defaultValue = "All") final String dataSetSubString,
+			@RequestParam(defaultValue = "0") final int page, @RequestParam(defaultValue = "3") final int size,
+			@RequestParam(defaultValue = "DATASET") final String searchType,
+			@RequestParam(defaultValue = "All") final String container,
+			@RequestParam(defaultValue = "All") final String storageSystemList) {
+
+		final Pageable pageable = new PageRequest(page, size);
+		Page<ElasticSearchDataset> list;
+		try {
+			list = this.dataSetService.getAllDatasetsFromESByType(dataSetSubString, pageable, searchType,
+					storageSystemList, container);
+			return new ResponseEntity<Page<ElasticSearchDataset>>(list, HttpStatus.OK);
+
+		} catch (final ValidationError e) {
+			return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
+		}
+	}
 
     @ApiOperation(value = "View a list of available detailed datasets based on the prefix ", response = Iterable.class)
     @ApiResponses(value = {
@@ -136,10 +210,10 @@ public class DatasetController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("detailedDataSets/")
-    public ResponseEntity<List<CumulativeDataset>> getAllDetailedDataSets(
-            @RequestParam(value = "prefixString") final String dataSetSubString) {
-        final List<CumulativeDataset> list = this.dataSetService.getAllDetailedDatasets(dataSetSubString);
-        return new ResponseEntity<List<CumulativeDataset>>(list, HttpStatus.OK);
+    public ResponseEntity<?> getAllDetailedDataSets(
+			@RequestParam(value = "prefixString") final String dataSetSubString) {
+		final List<CumulativeDataset> list = this.dataSetService.getAllDetailedDatasets(dataSetSubString);
+		return new ResponseEntity<List<CumulativeDataset>>(list, HttpStatus.OK);
     }
 
     @ApiOperation(value = "View a list of Pending datasets based on storage system Name and type name", response = Iterable.class)
@@ -148,35 +222,46 @@ public class DatasetController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("dataSetsBySystemPending/{storageTypeName:.+}/{storageSystemName:.+}")
-    public ResponseEntity<Page<Dataset>> getAllPendingDataSetsBySystemName(
+    public ResponseEntity<?> getAllPendingDataSetsBySystemName(
             @PathVariable("storageSystemName") final String storageSystemName,
             @PathVariable("storageTypeName") final String storageTypeName,
             @RequestParam(defaultValue = "All") final String datasetStr,
             @RequestParam(defaultValue = "0") final int page,
             @RequestParam(defaultValue = "3") final int size) {
-        final Pageable pageable = new PageRequest(page, size);
-        final Page<Dataset> list = this.dataSetService.getPendingDatasets(datasetStr, storageTypeName,
-                storageSystemName, pageable);
-        return new ResponseEntity<Page<Dataset>>(list, HttpStatus.OK);
+		final Pageable pageable = new PageRequest(page, size);
+		Page<Dataset> list;
+		try {
+			list = this.dataSetService.getPendingDatasets(datasetStr, storageTypeName, storageSystemName, pageable);
+			return new ResponseEntity<Page<Dataset>>(list, HttpStatus.OK);
+		} catch (final ValidationError e) {
+			return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
+		}
     }
 
     @ApiOperation(value = "View a list of available datasets based on storage system Name and type name", response = Iterable.class)
     @ApiResponses(value = {
+
             @ApiResponse(code = 200, message = "Successfully retrieved list"),
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("dataSetsBySystem/{storageTypeName:.+}/{storageSystemName:.+}")
-    public ResponseEntity<Page<Dataset>> getAllDataSetsBySystemName(
+    public ResponseEntity<?> getAllDataSetsBySystemName(
             @PathVariable("storageTypeName") final String storageTypeName,
             @PathVariable("storageSystemName") final String storageSystemName,
             @RequestParam(defaultValue = "All") final String datasetStr,
+            @RequestParam(defaultValue = "All") final String zoneName,
             @RequestParam(defaultValue = "0") final int page,
             @RequestParam(defaultValue = "3") final int size) {
+		final Pageable pageable = new PageRequest(page, size);
 
-        final Pageable pageable = new PageRequest(page, size);
-        final Page<Dataset> list = this.dataSetService.getAllDatasetsByTypeAndSystem(datasetStr, storageTypeName,
-                storageSystemName, pageable);
-        return new ResponseEntity<Page<Dataset>>(list, HttpStatus.OK);
+		Page<Dataset> list;
+		try {
+			list = this.dataSetService.getAllDatasetsByTypeAndSystem(datasetStr, storageTypeName, storageSystemName,
+					zoneName, pageable);
+			return new ResponseEntity<Page<Dataset>>(list, HttpStatus.OK);
+		} catch (final ValidationError e) {
+			return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
+		}
     }
 
     @ApiOperation(value = "View a list of deactivated datasets based on storage system Name and type name", response = Iterable.class)
@@ -185,17 +270,16 @@ public class DatasetController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("dataSetsBySystemDeleted/{storageTypeName:.+}/{storageSystemName:.+}")
-    public ResponseEntity<Page<Dataset>> getAllDeactivatedDataSetsBySystemName(
+    public ResponseEntity<?> getAllDeactivatedDataSetsBySystemName(
             @PathVariable("storageTypeName") final String storageTypeName,
             @PathVariable("storageSystemName") final String storageSystemName,
             @RequestParam(defaultValue = "All") final String datasetStr,
             @RequestParam(defaultValue = "0") final int page,
-            @RequestParam(defaultValue = "3") final int size) {
-
-        final Pageable pageable = new PageRequest(page, size);
-        final Page<Dataset> list = this.dataSetService.getAllDeletedDatasetsByTypeAndSystem(datasetStr, storageTypeName,
-                storageSystemName, pageable);
-        return new ResponseEntity<Page<Dataset>>(list, HttpStatus.OK);
+            @RequestParam(defaultValue = "3") final int size) throws ValidationError {
+		final Pageable pageable = new PageRequest(page, size);
+		final Page<Dataset> list = this.dataSetService.getAllDeletedDatasetsByTypeAndSystem(datasetStr, storageTypeName,
+				storageSystemName, pageable);
+		return new ResponseEntity<Page<Dataset>>(list, HttpStatus.OK);
     }
 
     @ApiOperation(value = "Insert a dataset via UDC", response = String.class)
@@ -206,38 +290,15 @@ public class DatasetController {
     @PostMapping("addDataSet")
     public ResponseEntity<?> addDatasetViaUDC(@RequestBody final Dataset dataSet) {
         try {
-            final Dataset insertedDataset = this.dataSetService.addDataset(dataSet);
+            Dataset insertedDataset;
+            insertedDataset = this.dataSetService.addDataset(dataSet);
             return new ResponseEntity<String>(this.gson.toJson(insertedDataset.getStorageDataSetId()), HttpStatus.OK);
         }
         catch (final ValidationError e) {
             return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
         }
-    }
-
-    @ApiOperation(value = "Get Sample Data from dataset", response = String.class)
-    @ApiResponses(value = {
-            @ApiResponse(code = 200, message = "Successfully retrieved data"),
-            @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
-    })
-    @GetMapping("/sampleData/{datasetName:.+}/{objectId}")
-    public ResponseEntity<?> getSampleData(@PathVariable("datasetName") final String datasetName,
-            @PathVariable("objectId") final long objectId) {
-
-        if (this.isProd.equals("false")) {
-            final List<List<String>> tempOutput = new ArrayList<List<String>>();
-            tempOutput.add(new ArrayList<String>(Arrays.asList("c1", "c2", "c3", "c4", "c5")));
-            tempOutput.add(new ArrayList<String>(Arrays.asList("a", "b", "c", "d", "e")));
-            tempOutput.add(new ArrayList<String>(Arrays.asList("m", "n", "o", "p", "q")));
-            return new ResponseEntity<List<List<String>>>(tempOutput, HttpStatus.OK);
-        }
-
-        try {
-            final List<List<String>> outputs = this.dataSetService.getSampleData(datasetName, objectId);
-            return new ResponseEntity<List<List<String>>>(outputs, HttpStatus.OK);
-
-        }
-        catch (final ValidationError e) {
-            return new ResponseEntity<ValidationError>(e, HttpStatus.OK);
+        catch (IOException | InterruptedException | ExecutionException e) {
+            return new ResponseEntity<String>(this.gson.toJson(e), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -249,11 +310,15 @@ public class DatasetController {
     @PostMapping("dataSet")
     public ResponseEntity<?> addDataSet(@RequestBody final Dataset dataSet) {
         try {
-            final Dataset insertedDataset = this.dataSetService.addDataset(dataSet);
+            Dataset insertedDataset;
+            insertedDataset = this.dataSetService.addDataset(dataSet);
             return new ResponseEntity<String>(this.gson.toJson(insertedDataset.getStorageDataSetId()), HttpStatus.OK);
         }
         catch (final ValidationError e) {
             return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
+        }
+        catch (IOException | InterruptedException | ExecutionException e) {
+            return new ResponseEntity<String>(this.gson.toJson(e), HttpStatus.INTERNAL_SERVER_ERROR);
         }
     }
 
@@ -271,6 +336,10 @@ public class DatasetController {
         }
         catch (final ValidationError e) {
             return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
+        }
+        catch (IOException | InterruptedException | ExecutionException e) {
+            return new ResponseEntity<String>(this.gson.toJson(e), HttpStatus.INTERNAL_SERVER_ERROR);
+
         }
     }
 
@@ -299,46 +368,16 @@ public class DatasetController {
     @DeleteMapping("dataSet/{id}")
     public ResponseEntity<String> deleteDataSet(@PathVariable("id") final long id) {
         try {
-            final Dataset dataset = this.dataSetService.deleteDataSet(id);
+            Dataset dataset;
+            dataset = this.dataSetService.deleteDataSet(id);
             return new ResponseEntity<String>(this.gson.toJson("Deleted " + dataset.getStorageDataSetId()),
                     HttpStatus.OK);
         }
         catch (final ValidationError e) {
             return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
         }
+        catch (IOException | InterruptedException | ExecutionException e) {
+            return new ResponseEntity<String>(this.gson.toJson(e), HttpStatus.INTERNAL_SERVER_ERROR);
+        }
     }
-
-    // @ApiOperation(value = "Update Dataset Deployment Status upon success", response = String.class)
-    // @ApiResponses(value = {
-    // @ApiResponse(code = 200, message = "Successfully updated dataset"),
-    // @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
-    // })
-    // @PostMapping("datasetDeployment/{datasetChangeLogId}")
-    // public ResponseEntity<String> updateDatasetAfterDeployment(
-    // @PathVariable("datasetChangeLogId") final long datasetChangeLogId) {
-    // try {
-    // final long datasetId = this.dataSetService.updateDatasetChangeLogs(datasetChangeLogId);
-    // return new ResponseEntity<String>(this.gson.toJson("Updated Dataset " + datasetId), HttpStatus.OK);
-    // }
-    // catch (final ValidationError e) {
-    // return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
-    // }
-    // }
-
-    // @ApiOperation(value = "Update Dataset Deployment Status upon failure", response = String.class)
-    // @ApiResponses(value = {
-    // @ApiResponse(code = 200, message = "Successfully updated dataset"),
-    // @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
-    // })
-    // @PostMapping("datasetDeploymentFailure/{datasetChangeLogId}")
-    // public ResponseEntity<String> updateDatasetAfterDeploymentForFailure(
-    // @PathVariable("datasetChangeLogId") final long datasetChangeLogId) {
-    // try {
-    // final long datasetId = this.dataSetService.updateDatasetChangeLogOnFailure(datasetChangeLogId);
-    // return new ResponseEntity<String>(this.gson.toJson("Updated Dataset " + datasetId), HttpStatus.OK);
-    // }
-    // catch (final ValidationError e) {
-    // return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
-    // }
-    // }
 }

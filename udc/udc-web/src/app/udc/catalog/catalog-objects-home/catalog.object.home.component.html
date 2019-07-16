@@ -1,54 +1,41 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div class="app-top-container">
   <div class="app-container">
     <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
       <div fxFlex="100" class="main-container">
-        <md-card>
+        <mat-card>
           <div>
             <div fxLayout="row" fxLayoutAlign="start center">
               <div fxFlex="50%" *ngIf="!systemsLoaded">
-                <md-select class="long_dropdown" placeholder="Loading..." disabled></md-select>
+                <mat-form-field [floatLabel]="'never'"><mat-select class="long_dropdown" placeholder="Loading..." disabled></mat-select></mat-form-field>
               </div>
               <div fxFlex="50%" *ngIf="sloaded && systemsLoaded">
-                <md-select [(ngModel)]="systemName" (ngModelChange)="disableDropDownSystem()" placeholder="Datastores"
-                           class="long_dropdown" (change)="onStorageSystemChange()">
-                  <md-option *ngFor="let row of displaySystemList" [value]="row.storageSystemName">
-                    {{ row.storageSystemName }}
-                  </md-option>
-                </md-select>
-              </div>
-
-
-              <div fxFlex="50%" *ngIf="!containersLoaded">
-                <md-select class="long_dropdown" placeholder="Loading..." disabled></md-select>
-                <button md-icon-button class="action-btn grey-btn" disabled>
-                  <md-icon>refresh</md-icon>
-                </button>
-              </div>
-              <div fxFlex="50%" *ngIf="cloaded && containersLoaded">
-                <md-select [(ngModel)]="containerName" (ngModelChange)="disableDropDownContainer()"
-                           placeholder="Containers"
-                           class="long_dropdown">
-                  <md-option *ngFor="let row of displayContainerList" [value]="row">
-                    {{ row }}
-                  </md-option>
-                </md-select>
-                <span *ngIf="containerName">
-                  <button md-icon-button class="action-btn grey-btn" md-tooltip="Refresh Containers"
-                          (click)="refreshProject()">
-                    <md-icon>refresh</md-icon>
-                  </button>
-                </span>
-                <span *ngIf="!containerName">
-                  <button md-icon-button class="action-btn grey-btn" disabled>
-                    <md-icon>refresh</md-icon>
-                  </button>
-                </span>
-              </div>
-              <div fxFlex="50%" *ngIf="!cloaded && containersLoaded">
-                <md-select class="long_dropdown" placeholder={{containerName}} disabled></md-select>
-                <button md-icon-button class="action-btn grey-btn" disabled>
-                  <md-icon>refresh</md-icon>
-                </button>
+                <mat-form-field [floatLabel]="'never'">
+                  <mat-select [(ngModel)]="systemName" (ngModelChange)="disableDropDownSystem()" placeholder="Datastores"
+                           class="long_dropdown" (selectionChange)="onStorageSystemChange()">
+                    <mat-option *ngFor="let row of displaySystemList" [value]="row.storageSystemName">
+                      {{ row.storageSystemName }}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
               </div>
               <div fxFlex="100%">
                 <img class="udc_logo pull-right" src="assets/images/udc-logo.png">
@@ -56,15 +43,15 @@
             </div>
           </div>
           <br/>
-          <md-tab-group>
-            <md-tab label="Containers">
+          <mat-tab-group>
+            <mat-tab label="Containers">
               <app-catalog-object-list [projectType]="systemName" [refresh]="refreshContainer"
-                                       [project]="containerName" [systemMap]="systemMapById"
-                                       (loaded)=enableDropDownContainer()>
+                                       [systemMap]="systemMapById"
+                                       (loaded)=enableDropDownSystem()>
               </app-catalog-object-list>
-            </md-tab>
-          </md-tab-group>
-        </md-card>
+            </mat-tab>
+          </mat-tab-group>
+        </mat-card>
       </div>
     </div>
   </div>

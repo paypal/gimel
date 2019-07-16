@@ -1,75 +1,208 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div class="app-top-container">
-  <div class="app-container">
+  <div class="app-container app-container-searchbox">
     <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
-      <div fxFlex="100" class="main-container">
-        <md-card>
-          <div fxLayout="row" fxLayoutAlign="start center">
+      <div fxFlex="50" class="main-container">
+        <app-recursive-searchbox [previousSearchTerm]="searchString"></app-recursive-searchbox>
+      </div>
+    </div>
+  </div>
 
-            <div fxFlex="50%" *ngIf="!typesLoaded">
-              <md-select class="long_dropdown" placeholder="Loading..." disabled></md-select>
+  <div class="app-container">
+    <div fxLayout="row" fxLayoutAlign="start start">
+      <div class="filter-container">
+        <mat-card style="max-width: 80%" class="filter-card" style="background-color: #80808014">
+          <div fxLayout="row" fxLayoutAlign="start start">
+            <div fxFlex="35%" *ngIf="!typesLoaded">
+              <h4>Datastore Types</h4>
+              <mat-form-field>
+                <mat-select placeholder="Loading..." disabled></mat-select>
+              </mat-form-field>
             </div>
-            <div fxFlex="50%" *ngIf="tloaded && typesLoaded">
-              <md-select [(ngModel)]="typeName" (ngModelChange)="disableDropDownType()" placeholder="Datastore Types"
-                         class="long_dropdown" (change)="onStorageTypeChange()">
-                <md-option *ngFor="let row of displayTypeList" [value]="row.storageTypeName">{{ row.storageTypeName
-                  }}
-                </md-option>
-              </md-select>
+            <div fxFlex="50%" *ngIf="typesLoaded">
+              <h4>Datastore Types</h4>
+              <p>
+                <mat-form-field>
+                  <mat-select [formControl]="storageTypesCtrl" [(value)]="typeName"
+                              (selectionChange)="onStorageTypeChange()" #singleSelect>
+                    <mat-option>
+                      <ngx-mat-select-search [placeholderLabel]='searchKeyword'
+                                             [formControl]="storageTypeFilterCtrl"></ngx-mat-select-search>
+                    </mat-option>
+
+                    <mat-option *ngFor="let storageType of filteredStorageTypes | async" [value]="storageType">
+                      {{storageType.storageTypeName}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </p>
             </div>
+          </div>
+          <div fxLayout="row" fxLayoutAlign="start start">
+            <div fxFlex="50%" *ngIf="!zonesLoaded">
+              <h4>Zones</h4>
+              <mat-form-field>
+                <mat-select placeholder="Loading..." disabled></mat-select>
+              </mat-form-field>
+            </div>
+            <div fxFlex="50%" *ngIf="zonesLoaded">
+              <h4>Zones</h4>
+              <p>
+                <mat-form-field>
+                  <mat-select [formControl]="zonesCtrl" [(value)]="zoneName" (selectionChange)="onZoneChange()"
+                              #singleSelect>
+                    <mat-option>
+                      <ngx-mat-select-search [placeholderLabel]='searchKeyword'
+                                             [formControl]="zoneFilterCtrl"></ngx-mat-select-search>
+                    </mat-option>
 
-
+                    <mat-option *ngFor="let zone of filteredZones | async" [value]="zone">
+                      {{zone.zoneName}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </p>
+            </div>
+          </div>
+          <div fxLayout="row" fxLayoutAlign="start start">
             <div fxFlex="50%" *ngIf="!systemsLoaded">
-              <md-select class="long_dropdown" placeholder="Loading..." disabled></md-select>
-              <button md-icon-button class="action-btn grey-btn" disabled>
-                <md-icon>refresh</md-icon>
-              </button>
+              <h4>Datastores</h4>
+              <mat-form-field>
+                <mat-select placeholder="Loading..." disabled></mat-select>
+              </mat-form-field>
             </div>
-            <div fxFlex="50%" *ngIf="sloaded && systemsLoaded">
-              <md-select [(ngModel)]="systemName" (ngModelChange)="disableDropDownSystem()" placeholder="Datastores"
-                         class="long_dropdown">
-                <md-option *ngFor="let row of displayList" [value]="row.storageSystemName">{{ row.storageSystemName }}
-                </md-option>
-              </md-select>
-              <span *ngIf="systemName">
-                  <button md-icon-button class="action-btn grey-btn" md-tooltip="Refresh Datasets"
-                          (click)="refreshProject()">
-                    <md-icon>refresh</md-icon>
-                  </button>
-              </span>
-              <span *ngIf="!systemName">
-                  <button md-icon-button class="action-btn grey-btn" disabled>
-                    <md-icon>refresh</md-icon>
-                  </button>
-              </span>
-            </div>
-            <div fxFlex="50%" *ngIf="!sloaded && systemsLoaded">
-              <md-select class="long_dropdown" placeholder={{systemName}} disabled></md-select>
-              <button md-icon-button class="action-btn grey-btn" disabled>
-                <md-icon>refresh</md-icon>
-              </button>
+            <div fxFlex="50%" *ngIf="systemsLoaded">
+              <h4>Datastores</h4>
+              <p>
+                <mat-form-field>
+                  <mat-select [formControl]="systemsCtrl" [(value)]="systemName" (selectionChange)="onSystemChange()"
+                              #singleSelect>
+                    <mat-option>
+                      <ngx-mat-select-search [placeholderLabel]='searchKeyword'
+                                             [formControl]="systemFilterCtrl"></ngx-mat-select-search>
+                    </mat-option>
+
+                    <mat-option *ngFor="let system of filteredSystems | async" [value]="system">
+                      {{system.storageSystemName}}
+                    </mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </p>
             </div>
           </div>
 
+          <!--<div fxLayout="row" fxLayoutAlign="start start">-->
+            <!--<div fxFlex="50%" *ngIf="!containersLoaded">-->
+              <!--<h4>Containers</h4>-->
+              <!--<mat-form-field>-->
+                <!--<mat-select placeholder="Loading..." disabled></mat-select>-->
+              <!--</mat-form-field>-->
+            <!--</div>-->
+            <!--<div fxFlex="50%" *ngIf="containersLoaded">-->
+              <!--<h4>Containers</h4>-->
+              <!--<p>-->
+                <!--<mat-form-field>-->
+                  <!--<mat-select [formControl]="containersCtrl" [(value)]="containerName"-->
+                              <!--(selectionChange)="onContainerChange()"-->
+                              <!--#singleSelect>-->
+                    <!--<mat-option>-->
+                      <!--<ngx-mat-select-search [placeholderLabel]='searchKeyword'-->
+                                             <!--[formControl]="containerFilterCtrl"></ngx-mat-select-search>-->
+                    <!--</mat-option>-->
 
-          <br/>
-          <md-tab-group>
-            <md-tab label="Registered Datasets">
-              <app-catalog-dataset-list-registered [project]="systemName" [refresh]="refreshSystem"
-                                                   [projectType]="typeName"
-                                                   (loaded)=enableDropDownSystem()></app-catalog-dataset-list-registered>
-            </md-tab>
-            <md-tab label="Pending Datasets">
-              <app-catalog-dataset-list-pending [project]="systemName" [refresh]="refreshSystem"
-                                                [projectType]="typeName"
-                                                (loaded)=enableDropDownSystem()></app-catalog-dataset-list-pending>
-            </md-tab>
-            <md-tab label="Deleted Datasets">
-              <app-catalog-dataset-list-deleted [project]="systemName" [refresh]="refreshSystem"
-                                                [projectType]="typeName"
-                                                (loaded)=enableDropDownSystem()></app-catalog-dataset-list-deleted>
-            </md-tab>
-          </md-tab-group>
-        </md-card>
+                    <!--<mat-option *ngFor="let container of filteredContainers | async" [value]="container">-->
+                      <!--{{container}}-->
+                    <!--</mat-option>-->
+                  <!--</mat-select>-->
+                <!--</mat-form-field>-->
+              <!--</p>-->
+            <!--</div>-->
+          <!--</div>-->
+
+
+        </mat-card>
+      </div>
+      <div fxFlex="100" class="main-container">
+        <mat-card style="background-color: #80808014">
+          <span *ngIf="isESEnabled">
+            <mat-tab-group *ngIf="searchString!==''">
+            <mat-tab label="Datasets ({{datasetSize}})">
+              <app-catalog-dataset-list-registered (datasetSize)="receivedataSetSize($event)"
+                                                   [searchString]="searchString" [project]="selectedSystem"
+                                                   [projectType]="selectedType" [searchType]="datasetFilter"
+                                                   [allProjects]="allSystems" [projectContainer]="selectedContainer"
+                                                   [projectZone]="selectedZone"></app-catalog-dataset-list-registered>
+            </mat-tab>
+            <mat-tab label="Schemas ({{datasetsBySchemaSize}})">
+              <app-catalog-dataset-list-registered (datasetsBySchemaSize)="receivedatasetsBySchemaSize($event)"
+                                                   [searchString]="searchString" [project]="selectedSystem"
+                                                   [projectType]="selectedType" [searchType]="schemaFilter"
+                                                   [allProjects]="allSystems" [projectContainer]="selectedContainer"
+                                                   [projectZone]="selectedZone"></app-catalog-dataset-list-registered>
+            </mat-tab>
+              <mat-tab label="Attributes ({{datasetsByAttributesSize}})">
+              <app-catalog-dataset-list-registered (datasetsByAttributesSize)="receivedatasetsByAttributesSize($event)"
+                                                   [searchString]="searchString" [project]="selectedSystem"
+                                                   [projectType]="selectedType" [searchType]="attributesFilter"
+                                                   [allProjects]="allSystems" [projectContainer]="selectedContainer"
+                                                   [projectZone]="selectedZone"></app-catalog-dataset-list-registered>
+            </mat-tab>
+              <mat-tab label="Tags ({{datasetsByTagSize}})">
+              <app-catalog-dataset-list-registered (datasetsByTagSize)="receivedatasetsByTagSize($event)"
+                                                   [searchString]="searchString" [project]="selectedSystem"
+                                                   [projectType]="selectedType" [searchType]="tagFilter"
+                                                   [allProjects]="allSystems" [projectContainer]="selectedContainer"
+                                                   [projectZone]="selectedZone"></app-catalog-dataset-list-registered>
+            </mat-tab>
+               <mat-tab label="Object Metadata ({{datasetsByDescriptionSize}})">
+              <app-catalog-dataset-list-registered
+                (datasetsByDescriptionSize)="receivedatasetsByDescriptionSize($event)"
+                [searchString]="searchString" [project]="selectedSystem"
+                [projectType]="selectedType" [searchType]="descriptionFilter"
+                [allProjects]="allSystems" [projectContainer]="selectedContainer"
+                [projectZone]="selectedZone"></app-catalog-dataset-list-registered>
+            </mat-tab>
+          </mat-tab-group>
+          <mat-tab-group *ngIf="searchString==''">
+            <mat-tab label="Datasets ({{datasetSize}})">
+              <app-catalog-dataset-list-registered (datasetSize)="receivedataSetSize($event)"
+                                                   [searchString]="searchString" [project]="selectedSystem"
+                                                   [projectType]="selectedType" [searchType]="datasetFilter"
+                                                   [allProjects]="allSystems" [projectZone]="selectedZone"
+                                                   [projectContainer]="selectedContainer"></app-catalog-dataset-list-registered>
+            </mat-tab>
+          </mat-tab-group>
+          </span>
+          <span *ngIf="!isESEnabled">
+             <mat-tab-group>
+            <mat-tab label="Datasets ({{datasetSize}})">
+              <app-catalog-dataset-list-registered (datasetSize)="receivedataSetSize($event)"
+                                                   [searchString]="searchString" [project]="selectedSystem"
+                                                   [projectType]="selectedType" [searchType]="datasetFilter"
+                                                   [allProjects]="allSystems"
+                                                   [projectZone]="selectedZone"></app-catalog-dataset-list-registered>
+            </mat-tab>
+          </mat-tab-group>
+          </span>
+        </mat-card>
       </div>
     </div>
   </div>

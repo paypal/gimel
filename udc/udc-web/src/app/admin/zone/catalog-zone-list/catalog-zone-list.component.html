@@ -1,15 +1,43 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<div>
+  <ngx-spinner
+    bdColor="rgba(51, 51, 51, 0.8)"
+    size="large"
+    color="#448aff"
+    type="ball-elastic-dots">
+  </ngx-spinner>
+</div>
+
 <div class="app-container">
 
   <div>
     <div class="detail-content-container">
-      <md-input-container class="table-search">
-        <input #searchDB mdInput (keyup)='search(searchDB.value)'>
-        <md-placeholder>
-          <md-icon class="icon-16">search</md-icon>
+      <mat-form-field class="table-search">
+        <input #searchDB matInput (keyup)='search(searchDB.value)'>
+        <mat-placeholder>
+          <mat-icon class="icon-16">search</mat-icon>
           Search
-        </md-placeholder>
-      </md-input-container>
-      <button md-raised-button routerLink="." (click)="createZoneDialog()" class="app-details-btn">
+        </mat-placeholder>
+      </mat-form-field>
+      <button mat-raised-button routerLink="." (click)="createZoneDialog()" class="app-details-btn">
         Create Zone
       </button>
     </div>
@@ -17,7 +45,6 @@
   <ngx-datatable
     #catalogZonesTable
     class="material favorites-datatable"
-    [loadingIndicator]="loading"
     [rows]="displayList"
     [columnMode]="'force'"
     [headerHeight]="35"
@@ -26,11 +53,11 @@
     [limit]="20"
     [rowHeight]="50"
     [sorts]="[{prop: 'zoneId', dir: 'asc'}]">
-    <ngx-datatable-column name="Zone ID" [width]="100">
-      <ng-template let-row="row" ngx-datatable-cell-template>
-        {{ row.zoneId }}
-      </ng-template>
-    </ngx-datatable-column>
+    <!--<ngx-datatable-column name="Zone ID" [width]="100">-->
+      <!--<ng-template let-row="row" ngx-datatable-cell-template>-->
+        <!--{{ row.zoneId }}-->
+      <!--</ng-template>-->
+    <!--</ngx-datatable-column>-->
     <ngx-datatable-column name="Zone Name" [width]="100">
       <ng-template let-row="row" ngx-datatable-cell-template>
         {{ row.zoneName }}
@@ -44,15 +71,15 @@
     <ngx-datatable-column name="Status" [width]="150" [sortable]="false">
       <ng-template let-row="row" ngx-datatable-cell-template>
         <span [ngSwitch]="row.isActiveYN">
-          <md-icon class="favorite-success" *ngSwitchCase="'Y'" style="color:yellowgreen;">airplanemode_active</md-icon>
-          <md-icon class="favorite-danger" *ngSwitchCase="'N'" style="color:red;">airplanemode_inactive</md-icon>
+          <mat-icon class="favorite-success" *ngSwitchCase="'Y'" style="color:yellowgreen;">airplanemode_active</mat-icon>
+          <mat-icon class="favorite-danger" *ngSwitchCase="'N'" style="color:red;">airplanemode_inactive</mat-icon>
         </span>
         <span *ngIf="row.isActiveYN == 'Y'">Active</span>
         <span *ngIf="row.isActiveYN == 'N'">In-Active</span>
       </ng-template>
     </ngx-datatable-column>
 
-    <span>
+    <span *ngIf="admin">
       <ngx-datatable-column name="Actions" [width]="150" [sortable]="false">
         <ng-template let-row="row" ngx-datatable-cell-template>
           <app-catalog-zone-action

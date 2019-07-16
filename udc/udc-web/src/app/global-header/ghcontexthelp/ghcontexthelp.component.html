@@ -1,15 +1,28 @@
-<md-card @fadeInOutAnimation>
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
+<mat-card @fadeInOutAnimation>
   <div class="list-content">
     <div *rxContext="let routeData on routeData$">
-      <md-nav-list [ngSwitch]="routeData.page">
-        <div md-subheader>
-          <a href="http://try.gimel.io" target="_blank"
-             class="external-link">Help</a>
-        </div>
+      <mat-nav-list [ngSwitch]="routeData.page">
         <app-ghcontexthelp-item title="Clusters">
-          UDC supports the following Clusters. Please open a
-          <strong><a href="https://github.com/paypal/gimel/issues">Github issue</a></strong> for onboarding
-          UDC to other Hadoop Clusters.
+          Please contact the admin for onboarding other Hadoop Clusters.
           <ul>
             <li *ngFor="let cluster of clusterList">
               <strong>{{cluster.clusterName}}</strong>
@@ -17,11 +30,9 @@
           </ul>
         </app-ghcontexthelp-item>
         <app-ghcontexthelp-item title="Storages">
-          <md-nav-list>
+          <mat-nav-list>
             <app-ghcontexthelp-item title="Datastore Categories">
-              UDC supports the following Datastore Categories. Please open a
-              <strong><a href="https://github.com/paypal/gimel/issues">Github issue</a></strong> for
-              onboarding UDC to other Categories.
+              Please contact the admin for onboarding other Categories.
               <ul>
                 <li *ngFor="let category of categoryList">
                   <strong>{{category.storageName}}</strong>
@@ -29,9 +40,7 @@
               </ul>
             </app-ghcontexthelp-item>
             <app-ghcontexthelp-item title="Datastore Types">
-              UDC supports the following Datastore Types. Please open a
-              <strong><a href="https://github.com/paypal/gimel/issues">Github issue</a></strong> for
-              onboarding UDC to other Types.
+              Please contact the admin for onboarding other Types.
               <ul>
                 <li *ngFor="let type of typeList">
                   <strong>{{type.storageTypeName}}</strong>
@@ -40,9 +49,7 @@
 
             </app-ghcontexthelp-item>
             <app-ghcontexthelp-item title="Datastores" [lastcontent]="true">
-              UDC supports the following Datastores. Please open a
-              <strong><a href="https://github.com/paypal/gimel/issues">Github issue</a></strong> for
-              onboarding UDC to other Systems.
+              Please contact the admin for onboarding other Systems.
               <ul>
                 <li *ngFor="let system of systemList">
                   <strong>{{system.storageSystemName}}</strong>
@@ -50,13 +57,13 @@
               </ul>
 
             </app-ghcontexthelp-item>
-          </md-nav-list>
+          </mat-nav-list>
         </app-ghcontexthelp-item>
 
         <app-ghcontexthelp-item title="General">
-          <md-nav-list>
+          <mat-nav-list>
             <app-ghcontexthelp-item title="Top Toolbar">
-              As a unified header, this toolbar provides quick access to Gimel
+              As a unified header, this toolbar provides quick access to UDC
               <ul>
                 <li><strong>Menu</strong> icon displays the Navigation Panel. With one-click, you can access data for a
                   specific app. You can also access monitoring and other tools.
@@ -65,26 +72,21 @@
                 <li><strong>Question Mark</strong> icon displays online Help.</li>
               </ul>
             </app-ghcontexthelp-item>
-            <app-ghcontexthelp-item title="Home">
-              This page explains the usecases UDC would solve and how to search for all the datasets available. For more information, please visit our documentation page
-              <strong><a target="_blank" href="http://try.gimel.io">Gimel</a>.</strong>
-            </app-ghcontexthelp-item>
             <app-ghcontexthelp-item title="Registering a Dataset">
               <ul>
                 <li>Click <strong>Register.</strong></li>
                 <li>Enter username, dataset name and description.</li>
                 <li>Select the Storage Category, Type, System</li>
                 <li>Select the Container and Object</li>
-                <li> If you do not see a desired Container/Object. Please file a
-                  <strong><a href="https://github.com/paypal/gimel/issues"> Github issue</a></strong></li>
+                <li> If you do not see a desired Container/Object. Please contact the admin.</li>
               </ul>
             </app-ghcontexthelp-item>
             <app-ghcontexthelp-item title="Search Datasets" [lastcontent]="true">
               Based on the selected Cluster, you can search/edit/delete datasets
             </app-ghcontexthelp-item>
-          </md-nav-list>
+          </mat-nav-list>
         </app-ghcontexthelp-item>
-      </md-nav-list>
+      </mat-nav-list>
     </div>
   </div>
-</md-card>
+</mat-card>

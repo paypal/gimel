@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 /* You can add global styles to this file, and also import other style files */
 @import '~@angular/material/theming';
 @import '~@swimlane/ngx-datatable/release/assets/icons.css';
@@ -123,6 +142,10 @@ label, .label {
   width: 100%;
 }
 
+.half-width {
+  width: 55%;
+}
+
 .select-spacing {
   margin: 40px 0 0 0;
 }
@@ -157,7 +180,7 @@ hide {
   box-shadow: 0px 1px 1px rgba(0, 0, 0, .2);
 }
 
-.md-option-sm.mat-option {
+.mat-option-sm.mat-option {
   display: block;
   line-height: 30px;
   height: 30px;
@@ -198,7 +221,7 @@ hide {
   max-height: 240px !important;
 }
 
-md-option {
+mat-option {
   overflow: visible !important;
   text-overflow: inherit !important;
   white-space: nowrap !important;
@@ -289,8 +312,14 @@ md-option {
   vertical-align: middle;
 }
 
-md-progress-spinner.medium-spinner {
+mat-progress-spinner.medium-spinner {
   width: 50px;
   height: 50px;
   margin: auto;
+}
+
+.app-container {
+  .ngx-datatable.favorites-datatable .empty-row {
+    height: auto;
+  }
 }

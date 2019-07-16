@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.service.impl;
 
 import java.sql.Timestamp;
@@ -14,7 +33,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionSystemException;
-import com.paypal.udc.cache.UserCache;
 import com.paypal.udc.dao.storagesystem.StorageSystemContainerRepository;
 import com.paypal.udc.dao.storagetype.StorageTypeAttributeKeyRepository;
 import com.paypal.udc.entity.storagesystem.CollectiveStorageSystemContainerObject;
@@ -22,9 +40,11 @@ import com.paypal.udc.entity.storagesystem.StorageSystem;
 import com.paypal.udc.entity.storagesystem.StorageSystemAttributeValue;
 import com.paypal.udc.entity.storagesystem.StorageSystemContainer;
 import com.paypal.udc.entity.storagetype.StorageTypeAttributeKey;
+import com.paypal.udc.entity.user.User;
 import com.paypal.udc.exception.ValidationError;
 import com.paypal.udc.service.IStorageSystemContainerService;
 import com.paypal.udc.util.StorageSystemUtil;
+import com.paypal.udc.util.UserUtil;
 import com.paypal.udc.util.enumeration.ActiveEnumeration;
 
 
@@ -41,18 +61,32 @@ public class StorageSystemContainerService implements IStorageSystemContainerSer
     private StorageTypeAttributeKeyRepository stakr;
 
     @Autowired
-    private UserCache userCache;
+    private UserUtil userUtil;
 
     final static Logger logger = LoggerFactory.getLogger(StorageSystemContainerService.class);
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 
     @Override
-    public StorageSystemContainer getStorageSystemContainerById(final long storageSystemContainerId) {
-        return this.storageSystemContainerRepository.findOne(storageSystemContainerId);
+    public StorageSystemContainer getStorageSystemContainerById(final long storageSystemContainerId)
+            throws ValidationError {
+        final ValidationError v = new ValidationError();
+        final StorageSystemContainer storageSystemContainer = this.storageSystemContainerRepository
+                .findById(storageSystemContainerId)
+                .orElse(null);
+        if (storageSystemContainer != null) {
+            return storageSystemContainer;
+        }
+        else {
+            v.setErrorCode(HttpStatus.BAD_REQUEST);
+            v.setErrorDescription("storageSystemContainer ID is invalid");
+            throw v;
+        }
+
     }
 
     @Override
-    public List<CollectiveStorageSystemContainerObject> getAllStorageSystemContainers(final long clusterId) {
+    public List<CollectiveStorageSystemContainerObject> getAllStorageSystemContainers(final long clusterId)
+            throws ValidationError {
 
         final List<CollectiveStorageSystemContainerObject> storageSystemContainersWithAttributes = new ArrayList<CollectiveStorageSystemContainerObject>();
         final Map<Long, StorageSystem> storageSystemMap = this.storageSystemUtil.getStorageSystems();
@@ -60,18 +94,21 @@ public class StorageSystemContainerService implements IStorageSystemContainerSer
         final Map<Long, CollectiveStorageSystemContainerObject> storageSystemPropertyMap = new HashMap<Long, CollectiveStorageSystemContainerObject>();
 
         final List<StorageSystemContainer> storageSystemContainers = new ArrayList<StorageSystemContainer>();
-        this.storageSystemContainerRepository.findByClusterId(clusterId).forEach(storageSystemContainer -> {
+
+        final List<StorageSystemContainer> storageSystemContainersList = this.storageSystemContainerRepository
+                .findByClusterId(clusterId);
+
+        for (final StorageSystemContainer storageSystemContainer : storageSystemContainersList) {
             if (storageSystemContainer.getIsActiveYN().equals(ActiveEnumeration.YES.getFlag())) {
                 storageSystemContainers.add(storageSystemContainer);
             }
-        });
-
-        storageSystemContainers.forEach(storageSystemContainer -> {
+        }
+        for (final StorageSystemContainer storageSystemContainer : storageSystemContainers) {
             final CollectiveStorageSystemContainerObject object = new CollectiveStorageSystemContainerObject();
-
             final long storageSystemId = storageSystemContainer.getStorageSystemId();
             final StorageSystem storageSystem = storageSystemMap.get(storageSystemId);
-            final String userName = this.userCache.getUser(storageSystem.getAdminUserId()).getUserName();
+            final User user = this.userUtil.validateUser(storageSystem.getAdminUserId());
+            final String userName = user.getUserName();
             object.setUserName(userName);
             object.setStorageSystemId(storageSystemId);
             object.setContainerName(storageSystemContainer.getContainerName());
@@ -94,8 +131,7 @@ public class StorageSystemContainerService implements IStorageSystemContainerSer
                 storageSystemPropertyMap.put(storageSystemId, object);
             }
             storageSystemContainersWithAttributes.add(object);
-        });
-
+        }
         return storageSystemContainersWithAttributes;
     }
 
@@ -118,7 +154,8 @@ public class StorageSystemContainerService implements IStorageSystemContainerSer
 
         final ValidationError v = new ValidationError();
         final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
-        StorageSystemContainer tempCluster = this.storageSystemContainerRepository.findOne(storageSystemContainerId);
+        StorageSystemContainer tempCluster = this.storageSystemContainerRepository.findById(storageSystemContainerId)
+                .orElse(null);
         if (tempCluster != null) {
             tempCluster.setUpdatedTimestamp(sdf.format(timestamp));
             tempCluster.setIsActiveYN(ActiveEnumeration.NO.getFlag());
@@ -127,7 +164,7 @@ public class StorageSystemContainerService implements IStorageSystemContainerSer
         }
         else {
             v.setErrorCode(HttpStatus.BAD_REQUEST);
-            v.setErrorDescription("Cluster ID is invalid");
+            v.setErrorDescription("storageSystemContainer ID is invalid");
             throw v;
         }
     }
@@ -165,7 +202,7 @@ public class StorageSystemContainerService implements IStorageSystemContainerSer
         final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         final ValidationError v = new ValidationError();
         StorageSystemContainer tempStorageSystemContainer = this.storageSystemContainerRepository
-                .findOne(storageSystemContainer.getStorageSystemContainerId());
+                .findById(storageSystemContainer.getStorageSystemContainerId()).orElse(null);
         if (tempStorageSystemContainer != null) {
             try {
                 tempStorageSystemContainer.setStorageSystemId(storageSystemContainer.getStorageSystemId());

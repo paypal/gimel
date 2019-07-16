@@ -1,9 +1,29 @@
-import {Component, OnInit} from '@angular/core';
-import {FormGroup, FormBuilder, Validators} from '@angular/forms';
-import {MdDialogRef} from '@angular/material';
-import {CustomValidators, onValueChanged} from '../../../shared/utils';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {Cluster} from '../../models/catalog-cluster';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { MatDialogRef } from '@angular/material';
+import { CustomValidators, onValueChanged } from '../../../shared/utils';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { Cluster } from '../../models/catalog-cluster';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-catalog-cluster-edit-dialog',
@@ -21,8 +41,6 @@ export class CatalogClusterEditDialogComponent implements OnInit {
   clusterId: number;
   clusterName: string;
   clusterDescription: string;
-  livyPort: number;
-  livyEndPoint: string;
   createdUser: string;
   public readonly nameHint = 'Valid characters are a-z,0-9 and -. Names should not start with -.';
   public readonly usernameHint = 'Valid characters are a-z.';
@@ -32,8 +50,6 @@ export class CatalogClusterEditDialogComponent implements OnInit {
     'modifiedClusterName': '',
     'updatedUser': '',
     'modifiedClusterDescription': '',
-    'modifiedLivyPort': '',
-    'modifiedLivyEndPoint': '',
   };
 
   validationMessages = {
@@ -49,26 +65,16 @@ export class CatalogClusterEditDialogComponent implements OnInit {
       'required': 'Cluster description is required.',
       'maxlength': `name cannot be more than ${ this.maxCharsForDescName } characters long.`,
       'pattern': this.nameHint,
-    }, 'modifiedLivyEndPoint': {
-      'required': 'Livy Endpoint is required.',
-      'maxlength': `name cannot be more than ${ this.maxCharsForDescName } characters long.`,
-      'pattern': this.nameHint,
-    }, 'modifiedLivyPort': {
-      'required': 'Livy port is required.',
-      'maxlength': `name cannot be more than ${ this.maxCharsForName } characters long.`,
-      'pattern': this.nameHint,
     },
   };
 
-  constructor(public dialogRef: MdDialogRef<CatalogClusterEditDialogComponent>, private fb: FormBuilder, private catalogService: CatalogService) {
+  constructor(public dialogRef: MatDialogRef<CatalogClusterEditDialogComponent>, private fb: FormBuilder, private catalogService: CatalogService) {
   }
 
   ngOnInit() {
     this.editClusterForm = this.fb.group({
       'modifiedClusterName': ['', [Validators.maxLength(this.maxCharsForName)]],
       'modifiedClusterDescription': ['', [Validators.maxLength(this.maxCharsForDescName)]],
-      'modifiedLivyEndPoint': ['', [Validators.maxLength(this.maxCharsForDescName)]],
-      'modifiedLivyPort': ['', [Validators.maxLength(this.maxCharsForName)]],
       'updatedUser': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForUserName), Validators.pattern(this.regex)]],
     });
 
@@ -93,16 +99,6 @@ export class CatalogClusterEditDialogComponent implements OnInit {
       data.clusterDescription = submitValue.modifiedClusterDescription;
     } else {
       data.clusterDescription = this.clusterDescription;
-    }
-    if (submitValue.modifiedLivyPort) {
-      data.livyPort = submitValue.modifiedLivyPort;
-    } else {
-      data.livyPort = this.livyPort;
-    }
-    if (submitValue.modifiedLivyEndPoint.length > 0) {
-      data.livyEndPoint = submitValue.modifiedLivyEndPoint;
-    } else {
-      data.livyEndPoint = this.livyEndPoint;
     }
     return data;
   }

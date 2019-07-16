@@ -1,7 +1,26 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.service.impl;
 
 import static org.junit.Assert.assertEquals;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import java.util.Arrays;
@@ -15,11 +34,9 @@ import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
-import com.paypal.udc.config.UDCInterceptorConfig;
 import com.paypal.udc.dao.rangerpolicy.RangerPolicyRepository;
 import com.paypal.udc.dao.rangerpolicy.RangerPolicyUserGroupRepository;
 import com.paypal.udc.entity.rangerpolicy.DerivedPolicy;
-import com.paypal.udc.interceptor.UDCInterceptor;
 import com.paypal.udc.util.ClusterUtil;
 import com.paypal.udc.util.RangerPolicyUtil;
 import com.paypal.udc.util.enumeration.ActiveEnumeration;
@@ -28,11 +45,8 @@ import com.paypal.udc.util.enumeration.ActiveEnumeration;
 @RunWith(SpringRunner.class)
 public class RangerServiceTest {
 
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
+    @Mock
+    private RangerPolicyUtil rangerPolicyUtil;
 
     @Mock
     private RangerPolicyRepository rangerPolicyRepository;
@@ -42,9 +56,6 @@ public class RangerServiceTest {
 
     @Mock
     private ClusterUtil clusterUtil;
-
-    @Mock
-    private RangerPolicyUtil rangerPolicyUtil;
 
     @InjectMocks
     private RangerService rangerService;
@@ -57,10 +68,10 @@ public class RangerServiceTest {
     private String location;
     private String type;
 
-    class AnyPolicy extends ArgumentMatcher<DerivedPolicy> {
+    class AnyPolicy implements ArgumentMatcher<DerivedPolicy> {
         @Override
-        public boolean matches(final Object object) {
-            return object instanceof DerivedPolicy;
+        public boolean matches(final DerivedPolicy derivedPolicy) {
+            return derivedPolicy instanceof DerivedPolicy;
         }
     }
 
@@ -93,16 +104,14 @@ public class RangerServiceTest {
 
     @Test
     public void verifyValidGetPolicyByPolicyLocations() throws Exception {
-        when(this.rangerPolicyRepository.findByPolicyLocationsContainingAndTypeNameAndClusterId(this.location,
-                this.type, this.clusterId))
-                        .thenReturn(this.policies);
-
+        when(this.rangerPolicyRepository.findByPolicyLocationsAndTypeNameAndClusterIdAndIsActiveYN(this.location,
+                this.type, this.clusterId, ActiveEnumeration.YES.getFlag())).thenReturn(this.policies);
+        when(this.rangerPolicyUtil.computePoliciesByLocation(this.location, this.type, this.clusterId, "", ""))
+                .thenReturn(this.policies);
         final List<DerivedPolicy> result = this.rangerService.getPolicyByPolicyLocations(this.location, this.type,
-                this.clusterId);
+                this.clusterId, "", "");
         assertEquals(this.policies, result);
 
-        verify(this.rangerPolicyRepository).findByPolicyLocationsContainingAndTypeNameAndClusterId(this.location,
-                this.type, this.clusterId);
     }
 
     @Test

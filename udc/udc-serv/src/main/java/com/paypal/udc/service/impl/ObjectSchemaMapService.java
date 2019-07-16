@@ -1,11 +1,33 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.service.impl;
 
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 import javax.validation.ConstraintViolationException;
 import org.slf4j.Logger;
@@ -16,29 +38,33 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.paypal.udc.cache.ObjectSchemaMapCache;
-import com.paypal.udc.dao.ClusterRepository;
-import com.paypal.udc.dao.dataset.DatasetChangeLogRegisteredRepository;
+import com.paypal.udc.dao.cluster.ClusterRepository;
+import com.paypal.udc.dao.dataset.DatasetChangeLogRepository;
 import com.paypal.udc.dao.dataset.DatasetRepository;
 import com.paypal.udc.dao.dataset.DatasetStorageSystemRepository;
+import com.paypal.udc.dao.objectschema.ObjectSchemaAttributeCustomKeyValueRepository;
 import com.paypal.udc.dao.objectschema.ObjectSchemaAttributeValueRepository;
 import com.paypal.udc.dao.objectschema.ObjectSchemaMapRepository;
 import com.paypal.udc.dao.objectschema.PageableObjectSchemaMapRepository;
 import com.paypal.udc.dao.storagesystem.StorageSystemRepository;
 import com.paypal.udc.dao.storagetype.StorageTypeAttributeKeyRepository;
-import com.paypal.udc.entity.Cluster;
+import com.paypal.udc.entity.cluster.Cluster;
 import com.paypal.udc.entity.dataset.Dataset;
-import com.paypal.udc.entity.dataset.DatasetChangeLogRegistered;
+import com.paypal.udc.entity.dataset.DatasetChangeLog;
 import com.paypal.udc.entity.dataset.DatasetStorageSystem;
 import com.paypal.udc.entity.objectschema.CollectiveObjectAttributeValue;
 import com.paypal.udc.entity.objectschema.CollectiveObjectSchemaMap;
+import com.paypal.udc.entity.objectschema.ObjectAttributeKeyValue;
 import com.paypal.udc.entity.objectschema.ObjectAttributeValue;
 import com.paypal.udc.entity.objectschema.ObjectSchemaMap;
 import com.paypal.udc.entity.objectschema.Schema;
@@ -54,7 +80,7 @@ import com.paypal.udc.util.StorageSystemUtil;
 import com.paypal.udc.util.StorageTypeUtil;
 import com.paypal.udc.util.UserUtil;
 import com.paypal.udc.util.enumeration.ActiveEnumeration;
-import com.paypal.udc.util.enumeration.ChangeEnumration;
+import com.paypal.udc.util.enumeration.TimelineEnumeration;
 
 
 @Service
@@ -63,10 +89,6 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
 
     @Autowired
     private ObjectSchemaMapRepository schemaMapRepository;
-    @Autowired
-    private ObjectSchemaMapCache schemaMapCache;
-    @Autowired
-    private DatasetChangeLogRegisteredRepository changeLogRegisteredRepository;
     @Autowired
     private ObjectSchemaAttributeValueRepository objectAttributeRepository;
     @Autowired
@@ -93,12 +115,24 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
     private PageableObjectSchemaMapRepository pageableSchemaMapRepository;
     @Autowired
     private StorageTypeAttributeKeyRepository stakr;
+    @Autowired
+    private ObjectSchemaAttributeCustomKeyValueRepository sackvr;
+    @Autowired
+    private DatasetChangeLogRepository changeLogRepository;
+    @Value("${elasticsearch.dataset.name}")
+    private String esDatasetIndex;
+    @Value("${elasticsearch.type.name}")
+    private String esType;
+    @Value("${udc.es.write.enabled}")
+    private String isEsWriteEnabled;
+    @Autowired
+    private ElasticsearchTemplate esTemplate;
+    @Autowired
+    private DatasetUtil dataSetUtil;
 
     final static Logger logger = LoggerFactory.getLogger(ObjectSchemaMapService.class);
     private static final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
 
-    @Value("${application.defaultuser}")
-    private String defaultUser;
     private final String unknownString = "Unknown";
 
     @Override
@@ -154,12 +188,12 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
     }
 
     @Override
-    public ObjectSchemaMap getDatasetById(final long topicId) {
+    public ObjectSchemaMap getDatasetById(final long topicId) throws ValidationError {
 
         final Gson gson = new Gson();
         final Map<Long, StorageTypeAttributeKey> storageTypeAttributeMap = this.storageTypeUtil
                 .getStorageTypeAttributes();
-        final ObjectSchemaMap topic = this.schemaMapRepository.findOne(topicId);
+        final ObjectSchemaMap topic = this.schemaMapUtil.validateObjectSchemaMapId(topicId);
         final StorageType storageType = this.schemaMapUtil.getTypeFromObject(topic);
         final List<Long> clusters = this.clusterUtil.getAllClusters().stream().map(cluster -> cluster.getClusterId())
                 .collect(Collectors.toList());
@@ -215,14 +249,104 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
     }
 
     @Override
+    public ObjectAttributeKeyValue updateObjectAttributeKeyValue(final ObjectAttributeKeyValue topic)
+            throws ValidationError, IOException, InterruptedException, ExecutionException {
+
+        final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        final ValidationError v = new ValidationError();
+        final String time = sdf.format(timestamp);
+        final String user = topic.getUpdatedUser() == null ? "udc_admin" : topic.getUpdatedUser();
+        ObjectAttributeKeyValue updatedAttributeKeyValue;
+        try {
+            final ObjectAttributeKeyValue attributeKeyValue = this.sackvr
+                    .findById(topic.getObjectAttributeKeyValueId()).orElse(null);
+            final ObjectSchemaMap osm = this.schemaMapUtil.validateObjectSchemaMapId(topic.getObjectId());
+            this.schemaMapUtil.validateObjectAttributeKey(topic.getObjectAttributeKey(), osm);
+
+            if (attributeKeyValue == null) {
+                v.setErrorCode(HttpStatus.BAD_REQUEST);
+                v.setErrorDescription("Object Attribute Key value is invalid");
+                throw v;
+            }
+            attributeKeyValue.setUpdatedTimestamp(time);
+            attributeKeyValue.setUpdatedUser(user);
+            attributeKeyValue.setObjectAttributeKey(topic.getObjectAttributeKey());
+            attributeKeyValue.setObjectAttributeValue(topic.getObjectAttributeValue());
+            updatedAttributeKeyValue = this.sackvr.save(attributeKeyValue);
+
+        }
+        catch (final ConstraintViolationException e) {
+            v.setErrorCode(HttpStatus.BAD_REQUEST);
+            v.setErrorDescription("Object Attribute Key is empty");
+            throw v;
+        }
+
+        if (this.isEsWriteEnabled.equals("true")) {
+            final List<Dataset> datasets = this.datasetRepository.findByObjectSchemaMapId(topic.getObjectId());
+            if (datasets != null && datasets.size() > 0) {
+                for (final Dataset dataset : datasets) {
+                    this.dataSetUtil.upsertDataset(this.esDatasetIndex, this.esType, dataset, this.esTemplate);
+                }
+
+            }
+        }
+        return updatedAttributeKeyValue;
+    }
+
+    @Override
+    public ObjectAttributeKeyValue addObjectAttributeKeyValue(final ObjectAttributeKeyValue topic)
+            throws ValidationError, IOException, InterruptedException, ExecutionException {
+
+        final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
+        final ValidationError v = new ValidationError();
+        final String time = sdf.format(timestamp);
+        final String user = topic.getCreatedUser() == null ? "udc_admin" : topic.getCreatedUser();
+        ObjectAttributeKeyValue insertedTopic;
+        try {
+            final ObjectSchemaMap osm = this.schemaMapUtil.validateObjectSchemaMapId(topic.getObjectId());
+            this.schemaMapUtil.validateObjectAttributeKey(topic.getObjectAttributeKey(), osm);
+            // this.userUtil.validateUser(user);
+            topic.setCreatedTimestamp(time);
+            topic.setUpdatedTimestamp(time);
+            topic.setCreatedUser(user);
+            topic.setUpdatedUser(user);
+            topic.setIsActiveYN(ActiveEnumeration.YES.getFlag());
+            insertedTopic = this.sackvr.save(topic);
+        }
+        catch (final ConstraintViolationException e) {
+            v.setErrorCode(HttpStatus.BAD_REQUEST);
+            v.setErrorDescription("Object Attribute Key is empty");
+            throw v;
+        }
+        catch (final DataIntegrityViolationException e) {
+            v.setErrorCode(HttpStatus.CONFLICT);
+            v.setErrorDescription("Object Attribute Key and Object ID are duplicated");
+            throw v;
+        }
+
+        if (this.isEsWriteEnabled.equals("true")) {
+            final List<Dataset> datasets = this.datasetRepository.findByObjectSchemaMapId(topic.getObjectId());
+            if (datasets != null && datasets.size() > 0) {
+                for (final Dataset dataset : datasets) {
+                    this.dataSetUtil.upsertDataset(this.esDatasetIndex, this.esType, dataset, this.esTemplate);
+                }
+
+            }
+        }
+        return insertedTopic;
+    }
+
+    @Override
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = { ValidationError.class,
-            ConstraintViolationException.class, DataIntegrityViolationException.class })
-    public ObjectSchemaMap addObjectSchema(final ObjectSchemaMap schemaMap) throws ValidationError {
+            ConstraintViolationException.class, DataIntegrityViolationException.class, ValidationError.class,
+            IOException.class, InterruptedException.class, ExecutionException.class })
+    public ObjectSchemaMap addObjectSchema(final ObjectSchemaMap schemaMap)
+            throws ValidationError, IOException, InterruptedException, ExecutionException {
         final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         final ValidationError v = new ValidationError();
         final Gson gson = new Gson();
         final String time = sdf.format(timestamp);
-        final String user = schemaMap.getCreatedUser() == null ? this.defaultUser : schemaMap.getCreatedUser();
+        final String user = schemaMap.getCreatedUser() == null ? "udc_admin" : schemaMap.getCreatedUser();
         final long storageSystemId = schemaMap.getStorageSystemId();
         final List<Long> clusters = schemaMap.getClusters();
         final Map<Long, Cluster> clusterMap = new HashMap<Long, Cluster>();
@@ -232,8 +356,7 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
         StorageType storageType = null;
         String storageTypeName = "";
         try {
-            // validate user by username
-            this.userUtil.validateUser(user);
+            // this.userUtil.validateUser(user);
             // validate Storage System ID
             this.storageSystemUtil.validateStorageSystem(storageSystemId);
             // validate clusters
@@ -243,7 +366,7 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
             storageType = this.storageSystemUtil.getStorageType(storageSystemId);
             storageTypeName = storageType.getStorageTypeName();
             if (storageTypeName.equalsIgnoreCase("Hbase")) {
-                final StorageSystem storageSystem = this.storageSystemRepository.findOne(storageSystemId);
+                final StorageSystem storageSystem = this.storageSystemUtil.validateStorageSystem(storageSystemId);
                 final String storageSystemName = storageSystem.getStorageSystemName();
                 clusterMap.forEach((clusterId, cluster) -> {
                     if (storageSystemName.toLowerCase().contains(cluster.getClusterName().toLowerCase())) {
@@ -311,7 +434,7 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
                         : attributeValue.getIsCustomized());
                 attributeValue.setIsActiveYN(ActiveEnumeration.YES.getFlag());
             });
-            this.objectAttributeRepository.save(attributeValues);
+            this.objectAttributeRepository.saveAll(attributeValues);
         }
         catch (final ConstraintViolationException e) {
             v.setErrorCode(HttpStatus.BAD_REQUEST);
@@ -324,6 +447,15 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
             throw v;
         }
 
+        if (this.isEsWriteEnabled.equals("true")) {
+            final List<Dataset> datasets = this.datasetRepository.findByObjectSchemaMapId(schemaMap.getObjectId());
+            if (datasets != null && datasets.size() > 0) {
+                for (final Dataset dataset : datasets) {
+                    this.dataSetUtil.upsertDataset(this.esDatasetIndex, this.esType, dataset, this.esTemplate);
+                }
+
+            }
+        }
         return schemaMap;
     }
 
@@ -338,6 +470,29 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
     public List<String> getDistinctContainerNames() {
         final List<String> containerNames = this.schemaMapRepository.findAllContainerNames();
         return containerNames;
+    }
+
+    @Override
+    public List<String> getDistinctContainerNamesBySystems(final String systemList) {
+        if (systemList.equals("All")) {
+            final List<String> containerNames = this.schemaMapRepository.findAllContainerNames();
+            return containerNames;
+        }
+        else {
+            final List<Long> systemIds = this.storageSystemRepository
+                    .findByStorageSystemNameIn(Arrays.asList(systemList.split(","))).stream()
+                    .map(system -> system.getStorageSystemId()).collect(Collectors.toList());
+
+            if (systemIds != null && systemIds.size() > 0) {
+                final List<String> containerNames = this.schemaMapRepository
+                        .findAllContainerNamesBySystemIdIn(systemIds);
+                return containerNames;
+            }
+            else {
+                return new ArrayList<String>();
+            }
+
+        }
     }
 
     @Override
@@ -403,45 +558,59 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
 
     @Override
     @Transactional(propagation = Propagation.REQUIRED, readOnly = false, rollbackFor = {
-            TransactionSystemException.class, DataIntegrityViolationException.class, ValidationError.class })
-    public ObjectSchemaMap updateObjectSchemaMap(final ObjectSchemaMap schemaMap) throws ValidationError {
+            TransactionSystemException.class, DataIntegrityViolationException.class, ValidationError.class,
+            IOException.class, InterruptedException.class, ExecutionException.class })
+    public ObjectSchemaMap updateObjectSchemaMap(final ObjectSchemaMap schemaMap)
+            throws ValidationError, IOException, InterruptedException, ExecutionException {
 
         final Gson gson = new Gson();
         final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         final String time = sdf.format(timestamp);
         // final String hiveType = "Hive";
-        final String databaseName = "udc";
-        final ObjectSchemaMap actualSchemaMap = this.schemaMapRepository.findOne(schemaMap.getObjectId());
-        if (actualSchemaMap == null) {
-            final ValidationError v = new ValidationError();
-            v.setErrorCode(HttpStatus.BAD_REQUEST);
-            v.setErrorDescription("Invalid ObjectSchemaMap ID");
-            throw v;
-        }
+        final String defaultUser = "udc_admin";
+        final ObjectSchemaMap actualSchemaMap = this.schemaMapUtil
+                .validateObjectSchemaMapId(schemaMap.getObjectId());
         if (schemaMap.getObjectSchema() == null) {
             final ValidationError v = new ValidationError();
             v.setErrorCode(HttpStatus.BAD_REQUEST);
             v.setErrorDescription("Please Supply ObjectSchema");
             throw v;
         }
+        // Get the previous object schema
+        final String prev = "{\"value\": " + actualSchemaMap.getObjectSchemaInString()
+                + ", \"username\": \""
+                + actualSchemaMap.getUpdatedUser()
+                + "\"}";
+        final String previousSchema = actualSchemaMap.getObjectSchemaInString();
+        // get all the Datasets for the given Object
+        final List<Dataset> datasetList = this.datasetRepository
+                .findByObjectSchemaMapId(actualSchemaMap.getObjectId());
+
+        final boolean datasetExists = datasetList.size() > 0 ? true : false;
+
         final String previousIsActiveFlag = actualSchemaMap.getIsActiveYN();
         final String isSelfDiscovered = actualSchemaMap.getIsSelfDiscovered() == null
                 || actualSchemaMap.getIsSelfDiscovered().equals(ActiveEnumeration.NO.getFlag())
-                        ? ActiveEnumeration.NO.getFlag() : ActiveEnumeration.YES.getFlag();
+                        ? ActiveEnumeration.NO.getFlag()
+                        : ActiveEnumeration.YES.getFlag();
 
         final String createdUserOnStore = (schemaMap.getCreatedUserOnStore() == null
                 || schemaMap.getCreatedUserOnStore().length() == 0)
                 && (actualSchemaMap.getCreatedUserOnStore() == null
                         || actualSchemaMap.getCreatedUserOnStore().length() == 0)
-                                ? this.unknownString : schemaMap.getCreatedUserOnStore();
+                                ? this.unknownString
+                                : schemaMap.getCreatedUserOnStore();
         final String createdTimestampOnStore = (schemaMap.getCreatedTimestampOnStore() == null
                 || schemaMap.getCreatedTimestampOnStore().length() == 0)
                 && (actualSchemaMap.getCreatedTimestampOnStore() == null
                         || actualSchemaMap.getCreatedTimestampOnStore().length() == 0)
-                                ? this.unknownString : schemaMap.getCreatedTimestampOnStore();
+                                ? this.unknownString
+                                : schemaMap.getCreatedTimestampOnStore();
 
         final String retrievedQuery = schemaMap.getQuery() == null ? "" : schemaMap.getQuery();
-        final String updatedUser = schemaMap.getUpdatedUser() == null ? this.defaultUser : schemaMap.getUpdatedUser();
+        final String updatedUser = schemaMap.getUpdatedUser() == null
+                ? schemaMap.getCreatedUser() == null ? defaultUser : schemaMap.getCreatedUser()
+                : schemaMap.getUpdatedUser();
 
         final ObjectSchemaMap retreivedSchemaMap = new ObjectSchemaMap(actualSchemaMap.getObjectId(),
                 schemaMap.getObjectName(), schemaMap.getContainerName(), isSelfDiscovered,
@@ -451,11 +620,36 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
                 actualSchemaMap.getCreatedTimestamp(), updatedUser, time);
         this.schemaMapRepository.save(retreivedSchemaMap);
 
+        // Updated value for the ObjectSchema
+        final String curr = "{\"value\": " + retreivedSchemaMap.getObjectSchemaInString()
+                + ", \"username\": \""
+                + retreivedSchemaMap.getUpdatedUser()
+                + "\"}";
+
+        final ObjectMapper mapper = new ObjectMapper();
+        final JsonNode old = mapper.readTree(previousSchema);
+        final JsonNode newSchema = mapper.readTree(retreivedSchemaMap.getObjectSchemaInString());
+        // Update the ObjectSchema for all the datasets related to given object
+        for (int i = 0; i < datasetList.size(); i++) {
+            if (prev.isEmpty()) {
+                final DatasetChangeLog dcl = new DatasetChangeLog(datasetList.get(i).getStorageDataSetId(), "M",
+                        TimelineEnumeration.SCHEMA.getFlag(), prev, curr,
+                        time);
+                this.changeLogRepository.save(dcl);
+            }
+            if (!old.equals(newSchema)) {
+                final DatasetChangeLog dcl = new DatasetChangeLog(datasetList.get(i).getStorageDataSetId(), "M",
+                        TimelineEnumeration.SCHEMA.getFlag(), prev, curr,
+                        time);
+                this.changeLogRepository.save(dcl);
+            }
+        }
         // update pc_storage_object_attribute_value table
         final List<ObjectAttributeValue> attributes = schemaMap.getObjectAttributes();
         /*
          * if objectAttributes are supplied we would be executing the following else blob
          */
+
         if (attributes != null && attributes.size() > 0) {
             /*
              * first we will check to see if there are any exisiting object attribute values
@@ -467,21 +661,25 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
              */
             if (retrievedAttributeValues == null || retrievedAttributeValues.size() == 0) {
                 attributes.forEach(attribute -> {
-                    final ObjectAttributeValue actualAttribute = new ObjectAttributeValue();
-                    actualAttribute.setCreatedTimestamp(time);
-                    actualAttribute.setUpdatedTimestamp(time);
-                    actualAttribute.setCreatedUser(updatedUser);
-                    actualAttribute.setUpdatedUser(updatedUser);
-                    actualAttribute.setIsCustomized((attribute.getIsCustomized() == null
+                    final String isCustomized = (attribute.getIsCustomized() == null
                             || attribute.getIsCustomized().equals(ActiveEnumeration.NO.getFlag()))
                                     ? ActiveEnumeration.NO.getFlag()
-                                    : attribute.getIsCustomized());
-                    actualAttribute.setObjectAttributeValue(attribute.getObjectAttributeValue());
-                    actualAttribute.setStorageDsAttributeKeyId(attribute.getStorageDsAttributeKeyId());
-                    actualAttribute.setObjectId(schemaMap.getObjectId());
+                                    : attribute.getIsCustomized();
+                    final ObjectAttributeValue actualAttribute = new ObjectAttributeValue(
+                            attribute.getStorageDsAttributeKeyId(), schemaMap.getObjectId(),
+                            attribute.getObjectAttributeValue(), isCustomized, ActiveEnumeration.YES.getFlag(),
+                            updatedUser, time, updatedUser, time);
                     this.objectAttributeRepository.save(actualAttribute);
+
+                    if (datasetExists) {
+                        this.schemaMapUtil.insertChangeLogForObjectAttribute(null,
+                                actualAttribute, datasetList, "C");
+                    }
+
                 });
+
             }
+
             /*
              * if there are object attributes they we need to update the existing ones
              */
@@ -490,28 +688,42 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
                     final ObjectAttributeValue retrievedObj = this.objectAttributeRepository
                             .findByStorageDsAttributeKeyIdAndObjectId(attr.getStorageDsAttributeKeyId(),
                                     attr.getObjectId());
+
                     /*
                      * if an object attribute value exists then we update the record
                      */
                     if (retrievedObj != null) {
+                        final String previousObjectAttributeValueName = retrievedObj.getObjectAttributeValue();
+                        // if the attribute is not customizable
                         if (retrievedObj.getIsCustomized().equals(ActiveEnumeration.NO.getFlag())
                                 || (attr.getIsCustomized() != null
                                         && attr.getIsCustomized().equals(ActiveEnumeration.NO.getFlag()))) {
-                            final List<ObjectAttributeValue> currentToBeUpdated = retrievedAttributeValues.stream()
+                            final ObjectAttributeValue currentToBeUpdated = retrievedAttributeValues.stream()
                                     .filter(rAttr -> retrievedObj.getObjectAttributeValueId() == rAttr
                                             .getObjectAttributeValueId())
-                                    .collect(Collectors.toList());
+                                    .collect(Collectors.toList()).get(0);
 
-                            currentToBeUpdated.get(0).setUpdatedUser(updatedUser);
-                            currentToBeUpdated.get(0).setUpdatedTimestamp(time);
-                            currentToBeUpdated.get(0)
-                                    .setIsCustomized((attr.getIsCustomized() == null
-                                            || attr.getIsCustomized().equals(ActiveEnumeration.NO.getFlag()))
-                                                    ? ActiveEnumeration.NO.getFlag()
-                                                    : attr.getIsCustomized());
-                            currentToBeUpdated.get(0).setIsActiveYN(ActiveEnumeration.YES.getFlag());
-                            currentToBeUpdated.get(0).setObjectAttributeValue(attr.getObjectAttributeValue());
-                            this.objectAttributeRepository.save(currentToBeUpdated.get(0));
+                            currentToBeUpdated.setUpdatedUser(updatedUser);
+                            currentToBeUpdated.setUpdatedTimestamp(time);
+                            currentToBeUpdated.setIsCustomized((attr.getIsCustomized() == null
+                                    || attr.getIsCustomized().equals(ActiveEnumeration.NO.getFlag()))
+                                            ? ActiveEnumeration.NO.getFlag()
+                                            : attr.getIsCustomized());
+                            currentToBeUpdated.setIsActiveYN(ActiveEnumeration.YES.getFlag());
+                            currentToBeUpdated.setObjectAttributeValue(attr.getObjectAttributeValue());
+                            this.objectAttributeRepository.save(currentToBeUpdated);
+
+                            if (datasetExists) {
+                                final ObjectAttributeValue previousRetrievedObj = new ObjectAttributeValue(
+                                        retrievedObj.getObjectAttributeValueId(),
+                                        retrievedObj.getStorageDsAttributeKeyId(), retrievedObj.getObjectId(),
+                                        previousObjectAttributeValueName,
+                                        retrievedObj.getIsCustomized(), retrievedObj.getIsActiveYN(),
+                                        retrievedObj.getCreatedUser(), retrievedObj.getCreatedTimestamp(),
+                                        updatedUser, retrievedObj.getUpdatedTimestamp());
+                                this.schemaMapUtil.insertChangeLogForObjectAttribute(previousRetrievedObj,
+                                        currentToBeUpdated, datasetList, "M");
+                            }
                         }
 
                     }
@@ -519,33 +731,32 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
                      * else we blindly insert the new property
                      */
                     else {
-
-                        final ObjectAttributeValue actualAttribute = new ObjectAttributeValue();
-                        actualAttribute.setCreatedTimestamp(time);
-                        actualAttribute.setUpdatedTimestamp(time);
-                        actualAttribute.setCreatedUser(updatedUser);
-                        actualAttribute.setUpdatedUser(updatedUser);
-                        actualAttribute.setIsCustomized(attr.getIsCustomized() == null ? ActiveEnumeration.NO.getFlag()
-                                : attr.getIsCustomized());
-                        actualAttribute.setIsActiveYN(ActiveEnumeration.YES.getFlag());
-                        actualAttribute.setObjectAttributeValue(attr.getObjectAttributeValue());
-                        actualAttribute.setStorageDsAttributeKeyId(attr.getStorageDsAttributeKeyId());
-                        actualAttribute.setObjectId(schemaMap.getObjectId());
+                        final String isCustomized = attr.getIsCustomized() == null ? ActiveEnumeration.NO.getFlag()
+                                : attr.getIsCustomized();
+                        final ObjectAttributeValue actualAttribute = new ObjectAttributeValue(
+                                attr.getStorageDsAttributeKeyId(), schemaMap.getObjectId(),
+                                attr.getObjectAttributeValue(), isCustomized, ActiveEnumeration.YES.getFlag(),
+                                updatedUser, time, updatedUser, time);
                         this.objectAttributeRepository.save(actualAttribute);
+
+                        if (datasetExists) {
+                            this.schemaMapUtil.insertChangeLogForObjectAttribute(retrievedObj,
+                                    actualAttribute, datasetList, "C");
+                        }
                     }
                 });
             }
         }
 
+        final List<Dataset> datasets = this.datasetRepository
+                .findByObjectSchemaMapId(retreivedSchemaMap.getObjectId());
         if (previousIsActiveFlag.equals(ActiveEnumeration.NO.getFlag())) {
-            final List<Dataset> datasets = this.datasetRepository
-                    .findByObjectSchemaMapId(retreivedSchemaMap.getObjectId());
             if (datasets != null && datasets.size() > 0) {
                 datasets.forEach(dataset -> {
                     dataset.setIsActiveYN(ActiveEnumeration.YES.getFlag());
                     dataset.setUpdatedTimestamp(time);
                 });
-                this.datasetRepository.save(datasets);
+                this.datasetRepository.saveAll(datasets);
 
                 datasets.forEach(dataset -> {
                     final DatasetStorageSystem datasetSystem = this.datasetSystemRepository
@@ -555,26 +766,12 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
                     this.datasetSystemRepository.save(datasetSystem);
                 });
 
-                final List<Long> clusters = this.clusterUtil.getAllClusters().stream()
-                        .map(cluster -> cluster.getClusterId())
-                        .collect(Collectors.toList());
+            }
+        }
 
-                final List<DatasetChangeLogRegistered> changeLogs = new ArrayList<DatasetChangeLogRegistered>();
-                datasets.forEach(dataset -> {
-                    for (final long clusterId : clusters) {
-                        final String query = retreivedSchemaMap.getQuery()
-                                .replace("TABLENAME", dataset.getStorageDataSetName())
-                                .replace("DATABASE", databaseName);
-                        dataset.setStorageSystemId(retreivedSchemaMap.getStorageSystemId());
-                        final DatasetChangeLogRegistered changeLog = this.datasetUtil.populateDSChangeLog(
-                                dataset.getCreatedUser(), time, dataset, ChangeEnumration.MODIFY.getFlag(),
-                                clusterId);
-                        changeLog.setStorageDatasetQuery(query);
-                        changeLog.setStorageContainerName(retreivedSchemaMap.getContainerName());
-                        changeLogs.add(changeLog);
-                    }
-                });
-                this.changeLogRegisteredRepository.save(changeLogs);
+        if (this.isEsWriteEnabled.equals("true")) {
+            for (final Dataset dataset : datasets) {
+                this.datasetUtil.upsertDataset(this.esDatasetIndex, this.esType, dataset, this.esTemplate);
             }
         }
 
@@ -602,6 +799,7 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
                 tempAttr.setStorageDsAttributeKeyId(attr.getStorageDsAttributeKeyId());
                 tempAttr.setObjectAttributeValue(attr.getObjectAttributeValue());
                 tempAttr.setObjectId(objectSchemaMap.getObjectId());
+                tempAttr.setIsCustomized(attr.getIsCustomized());
                 attributeValues.add(tempAttr);
             });
 
@@ -619,7 +817,7 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
                     objectSchemaMap.getStorageSystemId(), clusterIds,
                     objectSchemaMap.getQuery(), modifiedSchema, attributeValues,
                     objectSchemaMap.getIsActiveYN(), objectSchemaMap.getCreatedUserOnStore(),
-                    objectSchemaMap.getCreatedTimestampOnStore());
+                    objectSchemaMap.getCreatedTimestampOnStore(), objectSchemaMap.getIsSelfDiscovered());
             objects.add(object);
         }
         return objects;
@@ -633,15 +831,8 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
         final Timestamp timestamp = new Timestamp(System.currentTimeMillis());
         final String time = sdf.format(timestamp);
         final String hiveType = "Hive";
-        final String databaseName = "udc";
         // deactivate object in pc_object_schema_map table
-        final ObjectSchemaMap objectSchema = this.schemaMapCache.getObject(objectId);
-        if (objectSchema == null) {
-            final ValidationError v = new ValidationError();
-            v.setErrorCode(HttpStatus.BAD_REQUEST);
-            v.setErrorDescription("Invalid Object Schema Map ID");
-            throw v;
-        }
+        final ObjectSchemaMap objectSchema = this.schemaMapUtil.validateObjectSchemaMapId(objectId);
         objectSchema.setIsActiveYN(ActiveEnumeration.NO.getFlag());
         objectSchema.setUpdatedTimestamp(time);
         this.schemaMapRepository.save(objectSchema);
@@ -652,7 +843,7 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
             dataset.setIsActiveYN(ActiveEnumeration.NO.getFlag());
             dataset.setUpdatedTimestamp(time);
         });
-        this.datasetRepository.save(datasets);
+        this.datasetRepository.saveAll(datasets);
 
         // deactivate in pc_storage_dataset_system table
         datasets.forEach(dataset -> {
@@ -663,32 +854,61 @@ public class ObjectSchemaMapService implements IObjectSchemaMapService {
             this.datasetSystemRepository.save(datasetSystem);
         });
 
-        // add an entry to changelog registered table by changing it to delete
-        final StorageType storageType = this.storageSystemUtil
-                .getStorageType(objectSchema.getStorageSystemId());
-        final String storageTypeName = storageType.getStorageTypeName();
-        final List<Long> clusters = this.clusterUtil.getAllClusters().stream().map(cluster -> cluster.getClusterId())
-                .collect(Collectors.toList());
+        // update pc_storage_dataset_change_log table
+        datasets.forEach(dataset -> {
+            final List<DatasetChangeLog> changeLogList = this.changeLogRepository
+                    .findByStorageDataSetIdAndChangeColumnType(dataset.getStorageDataSetId(), "DATASET");
+            final DatasetChangeLog tempChangeLogDataset = changeLogList.get(changeLogList.size() - 1);
 
-        if (!storageTypeName.equals(hiveType)) {
-            final List<DatasetChangeLogRegistered> changeLogs = new ArrayList<DatasetChangeLogRegistered>();
-            datasets.forEach(dataset -> {
-                for (final long clusterId : clusters) {
+            final DatasetChangeLog dcl = new DatasetChangeLog(dataset.getStorageDataSetId(), "D",
+                    "DATASET", tempChangeLogDataset.getColumnCurrValInString(), "{}",
+                    sdf.format(timestamp));
+            this.changeLogRepository.save(dcl);
+        });
+    }
 
-                    final String query = objectSchema.getQuery()
-                            .replace("TABLENAME", dataset.getStorageDataSetName())
-                            .replace("DATABASE", databaseName);
-                    dataset.setStorageSystemId(objectSchema.getStorageSystemId());
-                    final DatasetChangeLogRegistered changeLog = this.datasetUtil.populateDSChangeLog(
-                            dataset.getCreatedUser(), time, dataset, ChangeEnumration.DELETE.getFlag(), clusterId);
-                    changeLog.setStorageContainerName(objectSchema.getContainerName());
-                    changeLog.setStorageDatasetQuery(query);
-                    changeLogs.add(changeLog);
-                }
-            });
-            this.changeLogRegisteredRepository.save(changeLogs);
+    @Override
+    public Page<ObjectSchemaMap> getObjectsByStorageSystem(final String objectStr, final String storageSystemName,
+            final Pageable pageable) {
+
+        if (!storageSystemName.equals("All")) {
+            final StorageSystem storageSystem = this.storageSystemRepository
+                    .findByStorageSystemName(storageSystemName);
+            final long storageSystemId = storageSystem.getStorageSystemId();
+            if (objectStr.equals("All")) {
+                return this.pageableSchemaMapRepository.findByStorageSystemId(storageSystemId,
+                        pageable);
+            }
+            else {
+                return this.pageableSchemaMapRepository.findByStorageSystemIdAndObjectNameContaining(storageSystemId,
+                        objectStr, pageable);
+            }
+
         }
+        else {
+            final List<Long> activeStorageSystemIds = this.storageSystemRepository
+                    .findByIsActiveYN(ActiveEnumeration.YES.getFlag()).stream()
+                    .map(storageSystem -> storageSystem.getStorageSystemId()).collect(Collectors.toList());
+            if (objectStr.equals("All")) {
+                return this.pageableSchemaMapRepository.findByStorageSystemIdIn(activeStorageSystemIds,
+                        pageable);
+            }
+            else {
+                return this.pageableSchemaMapRepository.findByStorageSystemIdInAndObjectNameContaining(
+                        activeStorageSystemIds, objectStr, pageable);
+            }
+        }
+    }
 
+    @Override
+    public List<ObjectAttributeKeyValue> getCustomAttributesByObject(final long objectId) {
+        return this.sackvr.findByObjectId(objectId);
+    }
+
+    @Override
+    public List<Dataset> getDatasetByObject(final String objectName) {
+        final List<Dataset> datasets = this.schemaMapUtil.getDatasetByObject(objectName);
+        return datasets;
     }
 
 }

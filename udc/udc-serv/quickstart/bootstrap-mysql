@@ -5,10 +5,16 @@ export this_script_path="$( cd "$( dirname "$this_file" )" && pwd)"
 cd ${this_script_path}
 cd ..
 export UDC_HOME=${PWD}
+
 source ${UDC_HOME}/build/udc_functions
 write_log "Current Working Directory is  ${UDC_HOME}"
 
 export this_dir=`dirname $0`
-source ${this_script_path}/set-env
+source ${this_script_path}/set-env.sh
 
-docker exec -i ${mysql_container_name} mysql -u${mysql_user} -p${mysql_password} ${mysql_database} < ${UDC_HOME}/quickstart/metastore/udc_ddl.sql
+cd ..
+export UDC_PARENT=${PWD}
+
+# docker exec -i ${mysql_container_name}
+
+docker exec -i mysql mysql -u${mysql_user} -p${mysql_password} < ${UDC_PARENT}/udc-meta/udc_ddl.sql

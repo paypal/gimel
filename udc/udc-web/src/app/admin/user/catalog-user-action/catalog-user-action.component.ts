@@ -1,13 +1,32 @@
-import {Component, Input, Output, EventEmitter} from '@angular/core';
-import {Observable} from 'rxjs/Observable';
-import {MdSnackBar, MdSnackBarConfig} from '@angular/material';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Observable } from 'rxjs/Observable';
+import { MatSnackBar, MatSnackBarConfig } from '@angular/material';
 import {
-  MdDialog, MdDialogRef, MdDialogConfig,
+  MatDialog, MatDialogRef, MatDialogConfig,
 } from '@angular/material';
 
-import {ConfigService} from '../../../core/services/config.service';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {CatalogUserEditDialogComponent} from '../catalog-user-edit-dialog/catalog-user-edit-dialog.component';
+import { ConfigService } from '../../../core/services/config.service';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { CatalogUserEditDialogComponent } from '../catalog-user-edit-dialog/catalog-user-edit-dialog.component';
 
 @Component({
   selector: 'app-catalog-user-action',
@@ -23,11 +42,11 @@ export class CatalogUserActionComponent {
   @Input() public errorStatus: boolean;
   public inProgress = false;
   public actionMsg: string;
-  dialogConfig: MdDialogConfig = {width: '600px'};
+  dialogConfig: MatDialogConfig = {width: '600px'};
 
   @Output() refresh: EventEmitter<string> = new EventEmitter();
 
-  constructor(private catalogService: CatalogService, private snackbar: MdSnackBar, private config: ConfigService, private dialog: MdDialog) {
+  constructor(private catalogService: CatalogService, private snackbar: MatSnackBar, private config: ConfigService, private dialog: MatDialog) {
   }
 
   private finishAction(result: boolean, refresh: boolean, message: string) {
@@ -39,7 +58,7 @@ export class CatalogUserActionComponent {
   }
 
   openEditUserDialog() {
-    let dialogRef: MdDialogRef<CatalogUserEditDialogComponent>;
+    let dialogRef: MatDialogRef<CatalogUserEditDialogComponent>;
     dialogRef = this.dialog.open(CatalogUserEditDialogComponent, this.dialogConfig);
     dialogRef.componentInstance.userName = this.userName;
     dialogRef.componentInstance.userId = this.userId;

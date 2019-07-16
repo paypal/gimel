@@ -1,14 +1,38 @@
-import {Component, OnInit} from '@angular/core';
-import {FormGroup, FormBuilder, Validators} from '@angular/forms';
-import {MdDialogRef} from '@angular/material';
-import {CustomValidators, onValueChanged} from '../../../shared/utils';
-import {CatalogService} from '../../../udc/catalog/services/catalog.service';
-import {Cluster} from '../../models/catalog-cluster';
-import {Category} from '../../models/catalog-category';
-import {MdDialog, MdOptionSelectionChange, MdSnackBar} from '@angular/material';
-import {Type} from '../../models/catalog-type';
-import {System} from '../../models/catalog-system';
-import {ConfigService} from '../../../core/services/config.service';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component, OnInit } from '@angular/core';
+import { FormGroup, FormBuilder, Validators } from '@angular/forms';
+import { MatDialogRef } from '@angular/material';
+import { CustomValidators, onValueChanged } from '../../../shared/utils';
+import { CatalogService } from '../../../udc/catalog/services/catalog.service';
+import { MatDialog, MatSnackBar } from '@angular/material';
+import { System } from '../../models/catalog-system';
+import { ConfigService } from '../../../core/services/config.service';
+import { environment } from '../../../../environments/environment';
+import { ThemePalette } from '@angular/material';
+import {SessionService} from '../../../core/services/session.service';
+
+export interface ChipColor {
+  name: string;
+  color: ThemePalette;
+}
 
 @Component({
   selector: 'app-catalog-system-create-dialog',
@@ -27,19 +51,23 @@ export class CatalogCreateSystemDialogComponent implements OnInit {
   public userList = [];
   public clusterList = [];
   public zoneList = [];
+  public entityList = [];
+  public frequencyList = Array<string>();
   public compatibilityList = Array<string>();
   public typeAttributes = Array<any>();
   public dbLoading = false;
   public clusterLoading = false;
   public zoneLoading = false;
+  public entityLoading = false;
   public userLoading = false;
+  public selectedStorageType: string;
+
   rows = [];
   editing = {};
-  systemValue = '';
   public readonly nameHint = 'Valid characters are a-z,0-9 and -. Names should not start with -.';
   public readonly usernameHint = 'Valid characters are a-z.';
   private readonly regex = '^(([A-Za-z0-9]+\.)*[A-Za-z0-9]+)*$';
-
+  public availableColor: ChipColor = {name: 'Primary', color: 'primary'};
 
   formErrors = {
     'storageSystemName': '', 'storageSystemDescription': '', 'createdUser': '', 'containers': '',
@@ -65,16 +93,22 @@ export class CatalogCreateSystemDialogComponent implements OnInit {
     },
   };
 
-  constructor(private config: ConfigService, public dialogRef: MdDialogRef<CatalogCreateSystemDialogComponent>, private snackbar: MdSnackBar, private dialog: MdDialog, private fb: FormBuilder, private catalogService: CatalogService) {
+  constructor(private config: ConfigService, public dialogRef: MatDialogRef<CatalogCreateSystemDialogComponent>, private snackbar: MatSnackBar, private dialog: MatDialog, private fb: FormBuilder, private catalogService: CatalogService, private sessionService: SessionService) {
   }
 
   ngOnInit() {
     this.compatibilityList.push('Y');
     this.compatibilityList.push('N');
+    this.frequencyList.push('15');
+    this.frequencyList.push('60');
+    this.frequencyList.push('120');
+    this.frequencyList.push('240');
+    this.frequencyList.push('1440');
     this.loadStorageTypes();
     this.loadUsers();
     this.loadClusters();
     this.loadZones();
+    this.loadEntities();
     this.createForm = this.fb.group({
       'storageSystemName': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForName), Validators.pattern(this.regex)]],
       'storageSystemDescription': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForDescName)]],
@@ -83,9 +117,10 @@ export class CatalogCreateSystemDialogComponent implements OnInit {
       'adminUser': [],
       'cluster': [],
       'zone': [],
+      'entity': [],
       'runningCluster': [],
-      'isGimelCompatible': [],
       'isReadCompatible': [],
+      'discoverySla': [],
       'containers': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForDescName)]],
     });
 
@@ -167,10 +202,27 @@ export class CatalogCreateSystemDialogComponent implements OnInit {
     this.dbLoading = false;
   }
 
+  loadEntities() {
+    this.entityLoading = true;
+    this.catalogService.getEntityList().subscribe(data => {
+      data.forEach(element => {
+        this.entityList.push(element);
+      });
+    }, error => {
+      this.entityList = [];
+      this.entityLoading = false;
+    }, () => {
+      this.entityList = this.entityList.sort((a, b): number => {
+        return a.entityName > b.entityName ? 1 : -1;
+      });
+    });
+    this.entityLoading = false;
+
+  }
+
   onSubmit() {
     const submitValue = Object.assign({}, this.createForm.value);
     const system: System = this.populateSystem(submitValue);
-    console.log(JSON.stringify(system));
     this.catalogService.getUserByName(system.createdUser)
       .subscribe(data => {
         this.catalogService.insertSystem(system)
@@ -191,9 +243,10 @@ export class CatalogCreateSystemDialogComponent implements OnInit {
   private populateSystem(submitValue) {
     const system: System = new System();
     const systemAttributes = [];
+    const dot = '.';
     system.storageSystemDescription = submitValue.storageSystemDescription;
     system.createdUser = submitValue.createdUser;
-    system.storageSystemName = submitValue.storageSystemName;
+    system.storageSystemName = submitValue.storageType.storageTypeName + dot + submitValue.storageSystemName;
     system.updatedUser = submitValue.createdUser;
     system.containers = submitValue.containers;
     system.storageTypeId = submitValue.storageType.storageTypeId;
@@ -201,8 +254,9 @@ export class CatalogCreateSystemDialogComponent implements OnInit {
     system.assignedClusterId = submitValue.cluster.clusterId;
     system.runningClusterId = submitValue.runningCluster.clusterId;
     system.zoneId = submitValue.zone.zoneId;
-    system.isGimelCompatible = submitValue.isGimelCompatible;
+    system.entityId = submitValue.entity.entityId;
     system.isReadCompatible = submitValue.isReadCompatible;
+    system.discoverySla = submitValue.discoverySla;
     this.typeAttributes.forEach(attr => {
       const systemAttr = {
         storageSystemAttributeValue: attr.storageTypeAttributeValue,
@@ -216,12 +270,14 @@ export class CatalogCreateSystemDialogComponent implements OnInit {
 
   onStorageTypeChange() {
     const storageType = Object.assign({}, this.createForm.value).storageType;
+    this.selectedStorageType = storageType.storageTypeName;
     this.typeAttributes = [];
     this.catalogService.getTypeAttributesAtSystemLevel(storageType.storageTypeId, 'Y')
       .subscribe(data => {
         data.forEach(element => {
           this.typeAttributes.push(element);
         });
+        this.typeAttributes = [...this.typeAttributes];
       }, error => {
         this.typeAttributes = [];
         this.snackbar.open('Invalid Storage Type', 'Dismiss', this.config.snackBarConfig);
@@ -229,8 +285,9 @@ export class CatalogCreateSystemDialogComponent implements OnInit {
 
   }
 
-  updateValue(event, cell, row) {
-    this.editing[row.$$index + '-' + cell] = false;
-    this.typeAttributes[row.$$index][cell] = event.target.value;
+  updateValue(event, cell, rowIndex) {
+    this.editing[rowIndex + '-' + cell] = false;
+    this.typeAttributes[rowIndex][cell] = event.target.value;
+    this.typeAttributes = [...this.typeAttributes];
   }
 }

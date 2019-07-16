@@ -1,0 +1,19 @@
+#!/bin/sh
+
+export this_file=${0}
+export this_script_path="$( cd "$( dirname "$this_file" )" && pwd)"
+cd ${this_script_path}
+cd ..
+export UDC_HOME=${PWD}
+source ${UDC_HOME}/build/udc_functions
+write_log "Current Working Directory is  ${UDC_HOME}"
+
+export this_dir=`dirname $0`
+source ${this_script_path}/set-env.sh
+
+write_log "------------------------------------------------------------------------------"
+write_log "    Starting Docker Container for UDC-Services"
+write_log "------------------------------------------------------------------------------"
+
+run_cmd "docker-compose -f ${UDC_HOME}/quickstart/docker-compose-udc-services.yml up -d" "ignore_errors"
+check_error $? "docker-compose -f ${UDC_HOME}/quickstart/docker-compose-udc-services.yml up -d"

@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.entity.objectschema;
 
 import java.io.Serializable;
@@ -177,8 +196,49 @@ public class ObjectAttributeValue implements Serializable {
 
     @Override
     public String toString() {
-        return "Type Attribute ID == " + this.storageDsAttributeKeyId + "Object Id == " + this.objectId
-                + "Object Attribute Value = " + this.objectAttributeValue;
+        return "ObjectAttributeValue [objectAttributeValueId=" + this.objectAttributeValueId
+                + ", storageDsAttributeKeyId=" + this.storageDsAttributeKeyId + ", objectId=" + this.objectId
+                + ", objectAttributeValue=" + this.objectAttributeValue + ", isCustomized=" + this.isCustomized
+                + ", isActiveYN=" + this.isActiveYN + ", createdUser=" + this.createdUser + ", createdTimestamp="
+                + this.createdTimestamp + ", updatedUser=" + this.updatedUser + ", updatedTimestamp="
+                + this.updatedTimestamp + ", storageDsAttributeKeyName=" + this.storageDsAttributeKeyName + "]";
     }
 
+    public ObjectAttributeValue(@NotNull final long storageDsAttributeKeyId, @NotNull final long objectId,
+            @Size(min = 1, message = "name need to have atleast 1 character") @NotNull final String objectAttributeValue,
+            @Size(min = 1, message = "name need to have atleast 1 character") @NotNull final String isCustomized,
+            final String isActiveYN, final String createdUser, final String createdTimestamp, final String updatedUser,
+            final String updatedTimestamp) {
+        this.storageDsAttributeKeyId = storageDsAttributeKeyId;
+        this.objectId = objectId;
+        this.objectAttributeValue = objectAttributeValue;
+        this.isCustomized = isCustomized;
+        this.isActiveYN = isActiveYN;
+        this.createdUser = createdUser;
+        this.createdTimestamp = createdTimestamp;
+        this.updatedUser = updatedUser;
+        this.updatedTimestamp = updatedTimestamp;
+    }
+
+    public ObjectAttributeValue(final long objectAttributeValueId, @NotNull final long storageDsAttributeKeyId,
+            @NotNull final long objectId,
+            @Size(min = 1, message = "name need to have atleast 1 character") @NotNull final String objectAttributeValue,
+            @Size(min = 1, message = "name need to have atleast 1 character") @NotNull final String isCustomized,
+            final String isActiveYN, final String createdUser, final String createdTimestamp, final String updatedUser,
+            final String updatedTimestamp) {
+        this.objectAttributeValueId = objectAttributeValueId;
+        this.storageDsAttributeKeyId = storageDsAttributeKeyId;
+        this.objectId = objectId;
+        this.objectAttributeValue = objectAttributeValue;
+        this.isCustomized = isCustomized;
+        this.isActiveYN = isActiveYN;
+        this.createdUser = createdUser;
+        this.createdTimestamp = createdTimestamp;
+        this.updatedUser = updatedUser;
+        this.updatedTimestamp = updatedTimestamp;
+    }
+
+    public ObjectAttributeValue() {
+
+    }
 }

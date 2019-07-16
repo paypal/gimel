@@ -1,26 +1,35 @@
-import {NgModule} from '@angular/core';
-import {RouterModule, Routes} from '@angular/router';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
-import {StandaloneStageProfileComponent} from './dataset/standalone-dataset.component';
-import {StandaloneDatasetSearchComponent} from './search/standalone-dataset-search.component';
-import {StandaloneSampleDataProfileComponent} from './sampledata/standalone-sample-data.component';
+import { NgModule } from '@angular/core';
+import { RouterModule, Routes } from '@angular/router';
+
+import { StandaloneStageProfileComponent } from './dataset/standalone-dataset.component';
 
 const standaloneRoutes: Routes = [{
-  path: 'dataset/:id',
+  path: 'dataset/:datasetName',
   component: StandaloneStageProfileComponent,
-  data: {title: 'Dataset ', page: 'standalonedataset'},
-}, {
-  path: 'datasets/:prefix',
-  component: StandaloneDatasetSearchComponent,
-  data: {title: 'Datasets' , page: 'standalonedatasetprefix'},
-}, {
-  path: 'sampledata/:name/:id',
-  component: StandaloneSampleDataProfileComponent,
-  data: {title: 'Dataset SampleData', page: 'standalonesampledata'},
+  data: {title: 'Dataset Details', page: 'standalonedataset'},
 }];
 
 @NgModule({
-  imports: [RouterModule.forChild(standaloneRoutes),], exports: [RouterModule,],
+  imports: [RouterModule.forChild(standaloneRoutes)], exports: [RouterModule],
 })
 export class StandaloneRoutingModule {
 }

@@ -1,6 +1,26 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.controller;
 
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +35,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import com.google.gson.Gson;
-import com.paypal.udc.entity.Cluster;
+import com.paypal.udc.entity.cluster.Cluster;
 import com.paypal.udc.exception.ValidationError;
 import com.paypal.udc.service.IClusterService;
+import com.paypal.udc.util.enumeration.UserAttributeEnumeration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -32,8 +53,17 @@ public class ClusterController {
     final static Logger logger = LoggerFactory.getLogger(ClusterController.class);
 
     final Gson gson = new Gson();
-    @Autowired
+
     private IClusterService clusterService;
+    private HttpServletRequest request;
+    private String userType;
+
+    @Autowired
+    private ClusterController(final IClusterService clusterService, final HttpServletRequest request) {
+        this.clusterService = clusterService;
+        this.request = request;
+        this.userType = UserAttributeEnumeration.SUCCESS.getFlag();
+    }
 
     @ApiOperation(value = "View the Cluster based on ID", response = Cluster.class)
     @ApiResponses(value = {
@@ -41,10 +71,15 @@ public class ClusterController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("cluster/{id}")
-    public ResponseEntity<Cluster> getClusterById(@PathVariable("id") final Long id) {
-        final Cluster cluster = this.clusterService.getClusterById(id);
-        return new ResponseEntity<Cluster>(cluster, HttpStatus.OK);
-    }
+    public ResponseEntity<?> getClusterById(@PathVariable("id") final Long id) {
+		Cluster cluster;
+		try {
+			cluster = this.clusterService.getClusterById(id);
+			return new ResponseEntity<Cluster>(cluster, HttpStatus.OK);
+		} catch (final ValidationError e) {
+			return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
+		}
+	}
 
     @ApiOperation(value = "View the Cluster based on Name", response = Cluster.class)
     @ApiResponses(value = {
@@ -52,10 +87,11 @@ public class ClusterController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("clusterByName/{name:.+}")
-    public ResponseEntity<Cluster> getClusterByName(@PathVariable("name") final String name) {
-        final Cluster storage = this.clusterService.getClusterByName(name);
-        return new ResponseEntity<Cluster>(storage, HttpStatus.OK);
-    }
+    public ResponseEntity<?> getClusterByName(@PathVariable("name") final String name) {
+		final Cluster storage = this.clusterService.getClusterByName(name);
+		return new ResponseEntity<Cluster>(storage, HttpStatus.OK);
+
+	}
 
     @ApiOperation(value = "View a list of available Cluster", response = Iterable.class)
     @ApiResponses(value = {
@@ -63,11 +99,10 @@ public class ClusterController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("clusters")
-    public ResponseEntity<List<Cluster>> getAllClusters() {
-
-        final List<Cluster> list = this.clusterService.getAllClusters();
-        return new ResponseEntity<List<Cluster>>(list, HttpStatus.OK);
-    }
+    public ResponseEntity<?> getAllClusters() {
+		final List<Cluster> list = this.clusterService.getAllClusters();
+		return new ResponseEntity<List<Cluster>>(list, HttpStatus.OK);
+	}
 
     @ApiOperation(value = "Insert a Cluster", response = Cluster.class)
     @ApiResponses(value = {
@@ -75,7 +110,7 @@ public class ClusterController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @PostMapping("cluster")
-    public ResponseEntity<?> addStorage(@RequestBody final Cluster cluster) {
+    public ResponseEntity<?> addCluster(@RequestBody final Cluster cluster) {
         Cluster insertedCluster;
         try {
             insertedCluster = this.clusterService.addCluster(cluster);
@@ -92,7 +127,7 @@ public class ClusterController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @PutMapping("cluster")
-    public ResponseEntity<String> updateStorage(@RequestBody final Cluster cluster) {
+    public ResponseEntity<String> updateCluster(@RequestBody final Cluster cluster) {
         Cluster updatedCluster;
         try {
             updatedCluster = this.clusterService.updateCluster(cluster);

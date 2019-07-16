@@ -1,17 +1,37 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
   <div fxFlex="75" class="main-container">
     <form [formGroup]="datasetForm">
-      <md-card>
-        <md-card-title color="primary">Register Dataset</md-card-title>
-        <md-card-content>
+      <mat-card>
+        <mat-card-title color="primary">Register Dataset</mat-card-title>
+        <mat-card-content>
           <div fxLayout="row" fxLayoutAlign="start start" class="field-row appname-row">
             <div fxFlex="45" fxFlexAlign="center">
               <label>Requester ID</label>
             </div>
             <div fxFlex="55" fxFlexAlign="center">
-              <md-input-container [floatPlaceholder]="'never'">
-                <input mdInput required="true" placeholder="Requester ID" value="{{username}}" disabled>
-              </md-input-container>
+              <mat-form-field [floatLabel]="'never'">
+                  <input matInput required="true" placeholder="Requester ID" value="{{username}}" disabled>
+              </mat-form-field>
+
             </div>
           </div>
 
@@ -23,13 +43,14 @@
               </p>
             </div>
             <div fxFlex="55" fxFlexAlign="center">
-              <md-input-container [floatPlaceholder]="'never'">
-                <input mdInput required formControlName="dataset" placeholder="Required Field"
-                       (change)="validateDataset($event)">
-                <md-hint *ngIf="formErrors.dataset" class="alert-danger">
-                  {{ formErrors.dataset }}
-                </md-hint>
-              </md-input-container>
+              <mat-form-field [floatLabel]="'never'">
+                  <input matInput required formControlName="dataset" placeholder="Required Field"
+                         (change)="validateDataset($event)">
+                  <mat-hint *ngIf="formErrors.dataset" class="alert-danger">
+                    {{ formErrors.dataset }}
+                  </mat-hint>
+              </mat-form-field>
+
             </div>
           </div>
 
@@ -38,14 +59,15 @@
               Description
             </label>
             <div fxFlex="55" fxFlexAlign="center">
-              <md-input-container [floatPlaceholder]="'never'">
-                <textarea mdInput md-maxlength="150" rows="5" md-select-on-focus
+              <mat-form-field [floatLabel]="'never'">
+                <textarea matInput mat-maxlength="150" rows="5" mat-select-on-focus
                           formControlName="description" placeholder="Required Field"
                           (change)="validateDescription($event)"></textarea>
-                <md-hint *ngIf="formErrors.description" class="alert-danger">
-                  {{ formErrors.description }}
-                </md-hint>
-              </md-input-container>
+                  <mat-hint *ngIf="formErrors.description" class="alert-danger">
+                    {{ formErrors.description }}
+                  </mat-hint>
+              </mat-form-field>
+
             </div>
           </div>
 
@@ -54,13 +76,15 @@
               Storage Category
             </label>
             <div fxFlex="55" fxFlexAlign="center">
-              <md-select required placeholder="Required Field" [floatPlaceholder]="'never'"
-                         formControlName="storageCategory" (change)="onStorageCategoryChange()">
-                <md-option *ngFor="let storageCategory of storageCategories" [value]="storageCategory">
-                  {{ storageCategory['storageName'] }}
-                </md-option>
-              </md-select>
-              <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+              <mat-form-field [floatLabel]="'never'">
+                <mat-select required placeholder="Required Field"
+                            formControlName="storageCategory" (selectionChange)="onStorageCategoryChange()">
+                  <mat-option *ngFor="let storageCategory of storageCategories" [value]="storageCategory">
+                    {{ storageCategory['storageName'] }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
             </div>
           </div>
 
@@ -69,13 +93,15 @@
               Storage Type
             </label>
             <div fxFlex="55" fxFlexAlign="center">
-              <md-select required placeholder="Required Field" [floatPlaceholder]="'never'"
-                         formControlName="storageType" (change)="onStorageTypeChange()">
-                <md-option *ngFor="let storageType of storageTypes" [value]="storageType">
-                  {{ storageType['storageTypeName'] }}
-                </md-option>
-              </md-select>
-              <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+              <mat-form-field [floatLabel]="'never'">
+                <mat-select required placeholder="Required Field"
+                            formControlName="storageType" (selectionChange)="onStorageTypeChange()">
+                  <mat-option *ngFor="let storageType of storageTypes" [value]="storageType">
+                    {{ storageType['storageTypeName'] }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
             </div>
           </div>
 
@@ -84,13 +110,15 @@
               Storage System
             </label>
             <div fxFlex="55" fxFlexAlign="center">
-              <md-select required placeholder="Required Field" [floatPlaceholder]="'never'"
-                         formControlName="storageSystem" (change)="onStorageSystemChange()">
-                <md-option *ngFor="let storageSystem of storageSystems" [value]="storageSystem">
-                  {{ storageSystem['storageSystemName'] }}
-                </md-option>
-              </md-select>
-              <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+              <mat-form-field [floatLabel]="'never'">
+                <mat-select required placeholder="Required Field"
+                            formControlName="storageSystem" (selectionChange)="onStorageSystemChange()">
+                  <mat-option *ngFor="let storageSystem of storageSystems" [value]="storageSystem">
+                    {{ storageSystem['storageSystemName'] }}
+                  </mat-option>
+                </mat-select>
+              </mat-form-field>
+              <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
             </div>
           </div>
 
@@ -100,18 +128,18 @@
                 ES Index
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input type="text" mdInput formControlName="container"
-                         (ngModelChange)="filterContainers($event)"
-                         [mdAutocomplete]="containers" required placeholder="Required Field">
-                  <md-autocomplete #containers="mdAutocomplete">
-                    <md-option *ngFor="let option of filteredContainers" [value]="option"
-                               (onSelectionChange)="containerSelect($event, option)" class="md-option-sm">
-                      {{ option }}
-                    </md-option>
-                  </md-autocomplete>
-                </md-input-container>
-                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+                <mat-form-field [floatLabel]="'never'">
+                    <input type="text" matInput formControlName="container"
+                           (ngModelChange)="filterContainers($event)"
+                           [matAutocomplete]="containers" required placeholder="Required Field">
+                    <mat-autocomplete #containers="matAutocomplete">
+                      <mat-option *ngFor="let option of filteredContainers" [value]="option"
+                                  (onSelectionChange)="containerSelect($event, option)" class="mat-option-sm">
+                        {{ option }}
+                      </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+                <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
               </div>
             </div>
 
@@ -120,42 +148,41 @@
                 ES Type
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input type="text" mdInput formControlName="object"
-                         (ngModelChange)="filterObjects($event)"
-                         [mdAutocomplete]="objects" required placeholder="Required Field">
-                  <md-autocomplete #objects="mdAutocomplete">
-                    <md-option *ngFor="let obj of filteredObjects" [value]="obj"
-                               (onSelectionChange)="objectSelect($event, obj)" class="md-option-sm">
-                      {{ obj }}
-                    </md-option>
-                  </md-autocomplete>
-                </md-input-container>
+                <mat-form-field [floatLabel]="'never'">
+                    <input type="text" matInput formControlName="object"
+                           (ngModelChange)="filterObjects($event)"
+                           [matAutocomplete]="objects" required placeholder="Required Field">
+                    <mat-autocomplete #objects="matAutocomplete">
+                      <mat-option *ngFor="let obj of filteredObjects" [value]="obj"
+                                  (onSelectionChange)="objectSelect($event, obj)" class="mat-option-sm">
+                        {{ obj }}
+                      </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
               </div>
             </div>
           </div>
 
 
           <div *ngIf="selectedStorageType==='Kafka'">
-
-
             <div fxLayout="row" fxLayoutAlign="start start">
               <label fxFlex="45" fxFlexAlign="center">
                 Namespace
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input type="text" mdInput formControlName="container"
-                         (ngModelChange)="filterContainers($event)"
-                         [mdAutocomplete]="containers" required placeholder="Required Field">
-                  <md-autocomplete #containers="mdAutocomplete" force-select>
-                    <md-option *ngFor="let option of filteredContainers" [value]="option"
-                               (onSelectionChange)="containerSelect($event, option)" class="md-option-sm">
-                      {{ option }}
-                    </md-option>
-                  </md-autocomplete>
-                </md-input-container>
-                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+                <mat-form-field [floatLabel]="'never'">
+                    <input type="text" matInput formControlName="container"
+                           (ngModelChange)="filterContainers($event)"
+                           [matAutocomplete]="containers" required placeholder="Required Field">
+                    <mat-autocomplete #containers="matAutocomplete" force-select>
+                      <mat-option *ngFor="let option of filteredContainers" [value]="option"
+                                  (onSelectionChange)="containerSelect($event, option)" class="mat-option-sm">
+                        {{ option }}
+                      </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+
+                <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
               </div>
             </div>
 
@@ -165,18 +192,19 @@
                 Topic
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input type="text" mdInput formControlName="object"
-                         (ngModelChange)="filterObjects($event)"
-                         [mdAutocomplete]="objects" required placeholder="Required Field">
-                  <md-autocomplete #objects="mdAutocomplete">
-                    <md-option *ngFor="let obj of filteredObjects" [value]="obj"
-                               (onSelectionChange)="objectSelect($event, obj)" class="md-option-sm">
-                      {{ obj }}
-                    </md-option>
-                  </md-autocomplete>
-                </md-input-container>
-                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+                <mat-form-field [floatLabel]="'never'">
+                    <input type="text" matInput formControlName="object"
+                           (ngModelChange)="filterObjects($event)"
+                           [matAutocomplete]="objects" required placeholder="Required Field">
+                    <mat-autocomplete #objects="matAutocomplete">
+                      <mat-option *ngFor="let obj of filteredObjects" [value]="obj"
+                                  (onSelectionChange)="objectSelect($event, obj)" class="mat-option-sm">
+                        {{ obj }}
+                      </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+
+                <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
               </div>
             </div>
 
@@ -190,18 +218,18 @@
                 Namespace
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input type="text" mdInput formControlName="container"
-                         (ngModelChange)="filterContainers($event)"
-                         [mdAutocomplete]="containers" required placeholder="Required Field">
-                  <md-autocomplete #containers="mdAutocomplete">
-                    <md-option *ngFor="let option of filteredContainers" [value]="option"
-                               (onSelectionChange)="containerSelect($event, option)" class="md-option-sm">
-                      {{ option }}
-                    </md-option>
-                  </md-autocomplete>
-                </md-input-container>
-                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+                <mat-form-field [floatLabel]="'never'">
+                    <input type="text" matInput formControlName="container"
+                           (ngModelChange)="filterContainers($event)"
+                           [matAutocomplete]="containers" required placeholder="Required Field">
+                    <mat-autocomplete #containers="matAutocomplete">
+                      <mat-option *ngFor="let option of filteredContainers" [value]="option"
+                                  (onSelectionChange)="containerSelect($event, option)" class="mat-option-sm">
+                        {{ option }}
+                      </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+                <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
               </div>
             </div>
 
@@ -210,17 +238,18 @@
                 Table
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input type="text" mdInput formControlName="object"
-                         (ngModelChange)="filterObjects($event)"
-                         [mdAutocomplete]="objects" required placeholder="Required Field">
-                  <md-autocomplete #objects="mdAutocomplete">
-                    <md-option *ngFor="let obj of filteredObjects" [value]="obj"
-                               (onSelectionChange)="objectSelect($event, obj)" class="md-option-sm">
-                      {{ obj }}
-                    </md-option>
-                  </md-autocomplete>
-                </md-input-container>
+                <mat-form-field [floatLabel]="'never'">
+                    <input type="text" matInput formControlName="object"
+                           (ngModelChange)="filterObjects($event)"
+                           [matAutocomplete]="objects" required placeholder="Required Field">
+                    <mat-autocomplete #objects="matAutocomplete">
+                      <mat-option *ngFor="let obj of filteredObjects" [value]="obj"
+                                  (onSelectionChange)="objectSelect($event, obj)" class="mat-option-sm">
+                        {{ obj }}
+                      </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+
               </div>
             </div>
 
@@ -234,18 +263,19 @@
                 Database
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input type="text" mdInput formControlName="container"
-                         (ngModelChange)="filterContainers($event)"
-                         [mdAutocomplete]="containers" required placeholder="Required Field">
-                  <md-autocomplete #containers="mdAutocomplete">
-                    <md-option *ngFor="let option of filteredContainers" [value]="option"
-                               (onSelectionChange)="containerSelect($event, option)" class="md-option-sm">
-                      {{ option }}
-                    </md-option>
-                  </md-autocomplete>
-                </md-input-container>
-                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+                <mat-form-field [floatLabel]="'never'">
+                    <input type="text" matInput formControlName="container"
+                           (ngModelChange)="filterContainers($event)"
+                           [matAutocomplete]="containers" required placeholder="Required Field">
+                    <mat-autocomplete #containers="matAutocomplete">
+                      <mat-option *ngFor="let option of filteredContainers" [value]="option"
+                                  (onSelectionChange)="containerSelect($event, option)" class="mat-option-sm">
+                        {{ option }}
+                      </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+
+                <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
               </div>
             </div>
             <div fxLayout="row" fxLayoutAlign="start start">
@@ -253,17 +283,17 @@
                 Table
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input type="text" mdInput formControlName="object"
-                         (ngModelChange)="filterObjects($event)"
-                         [mdAutocomplete]="objects" required placeholder="Required Field">
-                  <md-autocomplete #objects="mdAutocomplete">
-                    <md-option *ngFor="let obj of filteredObjects" [value]="obj"
-                               (onSelectionChange)="objectSelect($event, obj)" class="md-option-sm">
-                      {{ obj }}
-                    </md-option>
-                  </md-autocomplete>
-                </md-input-container>
+                <mat-form-field [floatLabel]="'never'">
+                    <input type="text" matInput formControlName="object"
+                           (ngModelChange)="filterObjects($event)"
+                           [matAutocomplete]="objects" required placeholder="Required Field">
+                    <mat-autocomplete #objects="matAutocomplete">
+                      <mat-option *ngFor="let obj of filteredObjects" [value]="obj"
+                                  (onSelectionChange)="objectSelect($event, obj)" class="mat-option-sm">
+                        {{ obj }}
+                      </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
               </div>
             </div>
           </div>
@@ -275,18 +305,18 @@
                 Database
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input type="text" mdInput formControlName="container"
-                         (ngModelChange)="filterContainers($event)"
-                         [mdAutocomplete]="containers" required placeholder="Required Field">
-                  <md-autocomplete #containers="mdAutocomplete">
-                    <md-option *ngFor="let option of filteredContainers" [value]="option"
-                               (onSelectionChange)="containerSelect($event, option)" class="md-option-sm">
-                      {{ option }}
-                    </md-option>
-                  </md-autocomplete>
-                </md-input-container>
-                <md-progress-bar mode="indeterminate" *ngIf="dbLoading"></md-progress-bar>
+                <mat-form-field [floatLabel]="'never'">
+                    <input type="text" matInput formControlName="container"
+                           (ngModelChange)="filterContainers($event)"
+                           [matAutocomplete]="containers" required placeholder="Required Field">
+                    <mat-autocomplete #containers="matAutocomplete">
+                      <mat-option *ngFor="let option of filteredContainers" [value]="option"
+                                  (onSelectionChange)="containerSelect($event, option)" class="mat-option-sm">
+                        {{ option }}
+                      </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
+                <mat-progress-bar mode="indeterminate" *ngIf="dbLoading"></mat-progress-bar>
               </div>
             </div>
             <div fxLayout="row" fxLayoutAlign="start start">
@@ -294,17 +324,17 @@
                 Table
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input type="text" mdInput formControlName="object"
-                         (ngModelChange)="filterObjects($event)"
-                         [mdAutocomplete]="objects" required placeholder="Required Field">
-                  <md-autocomplete #objects="mdAutocomplete">
-                    <md-option *ngFor="let obj of filteredObjects" [value]="obj"
-                               (onSelectionChange)="objectSelect($event, obj)" class="md-option-sm">
-                      {{ obj }}
-                    </md-option>
-                  </md-autocomplete>
-                </md-input-container>
+                <mat-form-field [floatLabel]="'never'">
+                    <input type="text" matInput formControlName="object"
+                           (ngModelChange)="filterObjects($event)"
+                           [matAutocomplete]="objects" required placeholder="Required Field">
+                    <mat-autocomplete #objects="matAutocomplete">
+                      <mat-option *ngFor="let obj of filteredObjects" [value]="obj"
+                                  (onSelectionChange)="objectSelect($event, obj)" class="mat-option-sm">
+                        {{ obj }}
+                      </mat-option>
+                    </mat-autocomplete>
+                </mat-form-field>
               </div>
             </div>
           </div>
@@ -319,12 +349,13 @@
                 </p>
               </div>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-input-container [floatPlaceholder]="'never'">
-                  <input mdInput required formControlName="hdfspath" placeholder="Required Field">
-                  <md-hint *ngIf="formErrors.hdfspath" class="alert-danger">
-                    {{ formErrors.hdfspath }}
-                  </md-hint>
-                </md-input-container>
+                <mat-form-field [floatLabel]="'never'">
+                    <input matInput required formControlName="hdfspath" placeholder="Required Field">
+                    <mat-hint *ngIf="formErrors.hdfspath" class="alert-danger">
+                      {{ formErrors.hdfspath }}
+                    </mat-hint>
+                </mat-form-field>
+
               </div>
             </div>
 
@@ -333,15 +364,17 @@
                 File Format
               </label>
               <div fxFlex="55" fxFlexAlign="center">
-                <md-select required formControlName="fileFormat" placeholder="Required Field"
-                           [floatPlaceholder]="'never'" (change)="onFileFormatChange($event)">
-                  <md-option value="Parquet">Parquet</md-option>
-                  <md-option value="ORC">ORC</md-option>
-                  <md-option value="RCFile">RCFile</md-option>
-                  <md-option value="Sequence">Sequence</md-option>
-                  <md-option value="Text">Text</md-option>
-                  <md-option value="Avro">Avro</md-option>
-                </md-select>
+                <mat-form-field [floatLabel]="'never'">
+                  <mat-select required formControlName="fileFormat" placeholder="Required Field"
+                              (selectionChange)="onFileFormatChange($event)">
+                    <mat-option value="Parquet">Parquet</mat-option>
+                    <mat-option value="ORC">ORC</mat-option>
+                    <mat-option value="RCFile">RCFile</mat-option>
+                    <mat-option value="Sequence">Sequence</mat-option>
+                    <mat-option value="Text">Text</mat-option>
+                    <mat-option value="Avro">Avro</mat-option>
+                  </mat-select>
+                </mat-form-field>
               </div>
             </div>
 
@@ -354,12 +387,13 @@
                   </p>
                 </div>
                 <div fxFlex="55" fxFlexAlign="center">
-                  <md-input-container [floatPlaceholder]="'never'">
-                    <input mdInput required formControlName="schemaPath" placeholder="Required Field">
-                    <md-hint *ngIf="formErrors.schemaPath" class="alert-danger">
-                      {{ formErrors.schemaPath }}
-                    </md-hint>
-                  </md-input-container>
+                  <mat-form-field [floatLabel]="'never'">
+                      <input matInput required formControlName="schemaPath" placeholder="Required Field">
+                      <mat-hint *ngIf="formErrors.schemaPath" class="alert-danger">
+                        {{ formErrors.schemaPath }}
+                      </mat-hint>
+                  </mat-form-field>
+
                 </div>
               </div>
             </div>
@@ -373,12 +407,13 @@
                   </p>
                 </div>
                 <div fxFlex="55" fxFlexAlign="center">
-                  <md-input-container [floatPlaceholder]="'never'">
-                    <input mdInput required formControlName="fieldTerminator" placeholder="Required Field">
-                    <md-hint *ngIf="formErrors.fieldTerminator" class="alert-danger">
-                      {{ formErrors.fieldTerminator }}
-                    </md-hint>
-                  </md-input-container>
+                  <mat-form-field [floatLabel]="'never'">
+                      <input matInput required formControlName="fieldTerminator" placeholder="Required Field">
+                      <mat-hint *ngIf="formErrors.fieldTerminator" class="alert-danger">
+                        {{ formErrors.fieldTerminator }}
+                      </mat-hint>
+                  </mat-form-field>
+
                 </div>
               </div>
               <div fxLayout="row" fxLayoutAlign="start start">
@@ -389,12 +424,13 @@
                   </p>
                 </div>
                 <div fxFlex="55" fxFlexAlign="center">
-                  <md-input-container [floatPlaceholder]="'never'">
-                    <input mdInput required formControlName="rowTerminator" placeholder="Required Field">
-                    <md-hint *ngIf="formErrors.rowTerminator" class="alert-danger">
-                      {{ formErrors.rowTerminator }}
-                    </md-hint>
-                  </md-input-container>
+                  <mat-form-field [floatLabel]="'never'">
+                      <input matInput required formControlName="rowTerminator" placeholder="Required Field">
+                      <mat-hint *ngIf="formErrors.rowTerminator" class="alert-danger">
+                        {{ formErrors.rowTerminator }}
+                      </mat-hint>
+                  </mat-form-field>
+
                 </div>
               </div>
             </div>
@@ -403,17 +439,17 @@
           <div class="button-bar">
             <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
               <div fxFlex="100" class="text-right button-bar-content">
-                <button md-button *ngIf="!submitting">Cancel</button>
-                <button md-button *ngIf="!submitting" color="primary" [disabled]="!datasetForm.valid" (click)="save()">
+                <button mat-button *ngIf="!submitting">Cancel</button>
+                <button mat-button *ngIf="!submitting" color="primary" [disabled]="!datasetForm.valid" (click)="save()">
                   Register
                 </button>
-                <button md-button *ngIf="submitting" color="primary" [disabled]="true">Submitting...</button>
+                <button mat-button *ngIf="submitting" color="primary" [disabled]="true">Submitting...</button>
               </div>
 
             </div>
           </div>
-        </md-card-content>
-      </md-card>
+        </mat-card-content>
+      </mat-card>
     </form>
   </div>
 </div>

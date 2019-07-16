@@ -5,10 +5,9 @@ if [ -z $UDC_HOME ]; then
 fi
 
 # ENVIRONMENT VARIABLES FOR UDC_SERV
-export exposed_port=8081
-export default_port=80
+export exposed_port=4200
+export default_port=4200
 export udc_repo_home=${UDC_HOME}
 export udc_jar_name=udc-services-0.0.1-SNAPSHOT.jar
 export udc_ui_container_name=udc-ui
 export udc_ui_image_name=udc-ui
-export final_jar=${udc_repo_home}/target/$udc_jar_name

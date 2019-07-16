@@ -13,24 +13,7 @@ source ${this_script_path}/set-env
 
 
 write_log "------------------------------------------------------------------------------"
-write_log "                 Stopping Docker Container for UDC-UI"
-write_log "------------------------------------------------------------------------------"
-run_cmd "docker stop ${udc_ui_container_name}" "ignore_errors"
-check_warning $? "docker stop ${udc_ui_container_name}"
-
-run_cmd "docker rm ${udc_ui_container_name}" "ignore_errors"
-check_warning $? "docker rm ${udc_ui_container_name}"
-
-
-write_log "------------------------------------------------------------------------------"
-write_log "          Installing udc-ui image"
-write_log "------------------------------------------------------------------------------"
-run_cmd "docker build -f $UDC_HOME/Dockerfile -t ${udc_ui_image_name} ."
-check_error $? "docker build -f $UDC_HOME/Dockerfile -t ${udc_ui_image_name} ."
-
-
-write_log "------------------------------------------------------------------------------"
 write_log "         Starting the UDC-UI DOCKER CONTAINER"
 write_log "------------------------------------------------------------------------------"
-run_cmd "docker run -it -p ${exposed_port}:${default_port} --name ${udc_ui_container_name} ${udc_ui_image_name}"
-check_error $? "docker run -it -p ${exposed_port}:${default_port} --name ${udc_ui_container_name} ${udc_ui_image_name}"
+run_cmd "docker-compose -f ${UDC_HOME}/quickstart/docker-compose-udc-ui-node.yml up -d" "ignore_errors"
+check_error $? "docker-compose -f ${UDC_HOME}/quickstart/docker-compose-udc-ui-node.yml up -d"

@@ -1,8 +1,27 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -28,11 +47,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import com.google.gson.Gson;
-import com.paypal.udc.cache.UserCache;
-import com.paypal.udc.config.UDCInterceptorConfig;
-import com.paypal.udc.dao.UserRepository;
-import com.paypal.udc.entity.User;
-import com.paypal.udc.interceptor.UDCInterceptor;
+import com.paypal.udc.dao.user.UserRepository;
+import com.paypal.udc.entity.user.User;
 import com.paypal.udc.service.IUserService;
 
 
@@ -48,30 +64,21 @@ public class UserControllerTest {
     @MockBean
     private UserRepository userRepository;
 
-    @MockBean
-    private UserCache userCache;
-
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
-
     @Autowired
     private WebApplicationContext webApplicationContext;
 
     final Gson gson = new Gson();
 
-    private String userName, userFullName, role, manager, organization, qid;
+    private String userName, userFullName, role, manager, organization, qid, location;
     private Long userId;
     private User user;
     private String jsonUser;
     private List<User> userList;
 
-    class AnyUser extends ArgumentMatcher<User> {
+    class AnyUser implements ArgumentMatcher<User> {
         @Override
-        public boolean matches(final Object object) {
-            return object instanceof User;
+        public boolean matches(final User user) {
+            return user instanceof User;
         }
     }
 
@@ -79,7 +86,6 @@ public class UserControllerTest {
     public void setup() {
         MockitoAnnotations.initMocks(this);
         this.mockMvc = MockMvcBuilders.webAppContextSetup(this.webApplicationContext).build();
-
         this.userName = "Name";
         this.userFullName = "UserFullName";
         this.role = "Role";
@@ -87,7 +93,9 @@ public class UserControllerTest {
         this.organization = "PayPal";
         this.userId = 0L;
         this.qid = "QID";
-        this.user = new User(this.userName, this.userFullName, this.role, this.manager, this.organization, this.qid);
+        this.location = "LOCATION";
+        this.user = new User(this.userName, this.userFullName, this.role, this.manager, this.organization, this.qid,
+                this.location);
         this.userList = Arrays.asList(this.user);
         this.jsonUser = "{" +
                 "\"createdTimestamp\": \"CrTime\", " +
@@ -106,7 +114,7 @@ public class UserControllerTest {
 
     @Test
     public void verifyValidGetUserByName() throws Exception {
-        when(this.userRepository.findByUserName(this.userName))
+        when(this.userService.getUserByName(this.userName))
                 .thenReturn(this.user);
 
         this.mockMvc.perform(get("/user/userByName/{name:.+}", this.userName)
@@ -114,12 +122,12 @@ public class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName").value(this.userName));
 
-        verify(this.userRepository).findByUserName(this.userName);
+        verify(this.userService).getUserByName(this.userName);
     }
 
     @Test
     public void verifyValidGetUserById() throws Exception {
-        when(this.userCache.getUser(this.userId))
+        when(this.userService.getUserById(this.userId))
                 .thenReturn(this.user);
 
         this.mockMvc.perform(get("/user/user/{id}", this.userId)
@@ -127,7 +135,7 @@ public class UserControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.userName").value(this.userName));
 
-        verify(this.userCache).getUser(this.userId);
+        verify(this.userService).getUserById(this.userId);
     }
 
     @Test
@@ -157,22 +165,6 @@ public class UserControllerTest {
                 .andExpect(jsonPath("$.userName").value(this.userName));
 
         verify(this.userService).addUser(argThat(new AnyUser()));
-    }
-
-    @Test
-    public void verifyValidUpdateUser() throws Exception {
-        when(this.userService.updateUser(argThat(new AnyUser())))
-                .thenReturn(this.user);
-
-        this.mockMvc.perform(put("/user/user")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(this.jsonUser)
-                .accept(MediaType.APPLICATION_JSON_UTF8))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.userName").exists())
-                .andExpect(jsonPath("$.userName").value(this.userName));
-
-        verify(this.userService).updateUser(argThat(new AnyUser()));
     }
 
     @Test

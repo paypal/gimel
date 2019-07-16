@@ -1,6 +1,26 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.controller;
 
 import java.util.List;
+import javax.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +39,7 @@ import com.paypal.udc.entity.storagesystem.CollectiveStorageSystemContainerObjec
 import com.paypal.udc.entity.storagesystem.StorageSystemContainer;
 import com.paypal.udc.exception.ValidationError;
 import com.paypal.udc.service.IStorageSystemContainerService;
+import com.paypal.udc.util.enumeration.UserAttributeEnumeration;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
@@ -33,8 +54,18 @@ public class StorageSystemContainerController {
     final static Logger logger = LoggerFactory.getLogger(StorageSystemContainerController.class);
 
     final Gson gson = new Gson();
-    @Autowired
+
     private IStorageSystemContainerService storageSystemContainerService;
+    private HttpServletRequest request;
+    private String userType;
+
+    @Autowired
+    private StorageSystemContainerController(final IStorageSystemContainerService storageSystemContainerService,
+            final HttpServletRequest request) {
+        this.storageSystemContainerService = storageSystemContainerService;
+        this.request = request;
+        this.userType = UserAttributeEnumeration.SUCCESS.getFlag();
+    }
 
     @ApiOperation(value = "View the Storage System Container based on ID", response = StorageSystemContainer.class)
     @ApiResponses(value = {
@@ -42,10 +73,16 @@ public class StorageSystemContainerController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("storageSystemContainer/{id}")
-    public ResponseEntity<StorageSystemContainer> getClusterById(@PathVariable("id") final Long id) {
-        final StorageSystemContainer cluster = this.storageSystemContainerService.getStorageSystemContainerById(id);
-        return new ResponseEntity<StorageSystemContainer>(cluster, HttpStatus.OK);
-    }
+	public ResponseEntity<?> getClusterById(@PathVariable("id") final Long id) {
+		try {
+			final StorageSystemContainer storageSystemContainerCluster = this.storageSystemContainerService
+					.getStorageSystemContainerById(id);
+			return new ResponseEntity<StorageSystemContainer>(storageSystemContainerCluster, HttpStatus.OK);
+		} catch (final ValidationError e) {
+			return new ResponseEntity<String>(this.gson.toJson(e), e.getErrorCode());
+		}
+
+	}
 
     @ApiOperation(value = "View a list of available Storage System Containers", response = Iterable.class)
     @ApiResponses(value = {
@@ -53,25 +90,25 @@ public class StorageSystemContainerController {
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
     @GetMapping("storageSystemContainers/{clusterId}")
-    public ResponseEntity<List<CollectiveStorageSystemContainerObject>> getAllStorageSystemContainers(
-            @PathVariable("clusterId") final long clusterId) {
-        final List<CollectiveStorageSystemContainerObject> list = this.storageSystemContainerService
-                .getAllStorageSystemContainers(clusterId);
-        return new ResponseEntity<List<CollectiveStorageSystemContainerObject>>(list, HttpStatus.OK);
-    }
+	public ResponseEntity<?> getAllStorageSystemContainers(@PathVariable("clusterId") final long clusterId)
+			throws ValidationError {
+		final List<CollectiveStorageSystemContainerObject> list = this.storageSystemContainerService
+				.getAllStorageSystemContainers(clusterId);
+		return new ResponseEntity<List<CollectiveStorageSystemContainerObject>>(list, HttpStatus.OK);
+	}
 
     @ApiOperation(value = "For a given Storage System ID - view a list of available Storage System Containers", response = Iterable.class)
     @ApiResponses(value = {
             @ApiResponse(code = 200, message = "Successfully retrieved list"),
             @ApiResponse(code = 404, message = "The resource you were trying to reach is not found")
     })
-    @GetMapping("storageSystemContainersByStorageSystem/{id}")
-    public ResponseEntity<List<StorageSystemContainer>> getAllStorageSystemContainersByStorageSystemId(
-            @PathVariable("id") final long storageSystemId) {
-        final List<StorageSystemContainer> list = this.storageSystemContainerService
-                .getStorageSystemContainersByStorageSystemId(storageSystemId);
-        return new ResponseEntity<List<StorageSystemContainer>>(list, HttpStatus.OK);
-    }
+	@GetMapping("storageSystemContainersByStorageSystem/{id}")
+	public ResponseEntity<?> getAllStorageSystemContainersByStorageSystemId(
+			@PathVariable("id") final long storageSystemId) {
+		final List<StorageSystemContainer> list = this.storageSystemContainerService
+				.getStorageSystemContainersByStorageSystemId(storageSystemId);
+		return new ResponseEntity<List<StorageSystemContainer>>(list, HttpStatus.OK);
+	}
 
     @ApiOperation(value = "Delete an Storage System Container By ID")
     @ApiResponses(value = {

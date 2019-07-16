@@ -1,15 +1,32 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 import {Component, OnInit} from '@angular/core';
-import { FormGroup, FormBuilder, Validators} from '@angular/forms';
-import {MdDialogRef} from '@angular/material';
+import {FormGroup, FormBuilder, Validators} from '@angular/forms';
+import {MatDialogRef} from '@angular/material';
 import {CustomValidators, onValueChanged} from '../../../shared/utils';
 import {CatalogService} from '../../../udc/catalog/services/catalog.service';
 import {Type} from '../../models/catalog-type';
 import {System} from '../../models/catalog-system';
 
 @Component({
-  selector: 'app-catalog-system-edit-dialog',
-  templateUrl: './catalog-system-edit-dialog.component.html',
-  styleUrls: ['./catalog-system-edit-dialog.component.scss'],
+  selector: 'app-catalog-system-edit-dialog', templateUrl: './catalog-system-edit-dialog.component.html', styleUrls: ['./catalog-system-edit-dialog.component.scss'],
 })
 
 export class CatalogSystemEditDialogComponent implements OnInit {
@@ -26,6 +43,7 @@ export class CatalogSystemEditDialogComponent implements OnInit {
   createdUser: string;
   containers: string;
   systemAttributes: Array<any>;
+  discoverySla: string;
   editing = {};
   public compatibilityList = Array<string>();
   public readonly nameHint = 'Valid characters are a-z,0-9 and -. Names should not start with -.';
@@ -33,45 +51,29 @@ export class CatalogSystemEditDialogComponent implements OnInit {
   private readonly regex = '^(([a-z0-9]+\-)*[a-z0-9]+)*$';
 
   formErrors = {
-    'modifiedStorageSystemName': '',
-    'updatedUser': '',
-    'modifiedStorageSystemDescription': '',
-    'modifiedContainers': '',
+    'modifiedStorageSystemName': '', 'updatedUser': '', 'modifiedStorageSystemDescription': '', 'modifiedContainers': '', 'modifiedSla': '',
   };
 
   validationMessages = {
     'modifiedStorageSystemName': {
-      'required': 'Storage System name is required.',
-      'maxlength': `name cannot be more than ${ this.maxCharsForName } characters long.`,
-      'pattern': this.nameHint,
+      'required': 'Storage System name is required.', 'maxlength': `name cannot be more than ${ this.maxCharsForName } characters long.`, 'pattern': this.nameHint,
     }, 'updatedUser': {
-      'required': 'user name is required.',
-      'maxlength': `name cannot be more than ${ this.maxCharsForUserName } characters long.`,
-      'pattern': this.usernameHint,
+      'required': 'user name is required.', 'maxlength': `name cannot be more than ${ this.maxCharsForUserName } characters long.`, 'pattern': this.usernameHint,
     }, 'modifiedStorageSystemDescription': {
-      'required': 'Storage System description is required.',
-      'maxlength': `name cannot be more than ${ this.maxCharsForDescName } characters long.`,
-      'pattern': this.nameHint,
-    }, 'modifiedContainers' : {
-      'required': 'Storage System name is required.',
-      'maxlength': `name cannot be more than ${ this.maxCharsForName } characters long.`,
-      'pattern': this.nameHint,
-    },
+      'required': 'Storage System description is required.', 'maxlength': `name cannot be more than ${ this.maxCharsForDescName } characters long.`, 'pattern': this.nameHint,
+    }, 'modifiedContainers': {
+      'required': 'Storage System name is required.', 'maxlength': `name cannot be more than ${ this.maxCharsForName } characters long.`, 'pattern': this.nameHint,
+    }, 'modifiedSla': [],
   };
 
-  constructor(public dialogRef: MdDialogRef<CatalogSystemEditDialogComponent>, private fb: FormBuilder, private catalogService: CatalogService) {
+  constructor(public dialogRef: MatDialogRef<CatalogSystemEditDialogComponent>, private fb: FormBuilder, private catalogService: CatalogService) {
   }
 
   ngOnInit() {
     this.compatibilityList.push('Y');
     this.compatibilityList.push('N');
     this.editSystemForm = this.fb.group({
-      'modifiedStorageSystemName': ['', [Validators.maxLength(this.maxCharsForName)]],
-      'modifiedContainers': ['', [Validators.maxLength(this.maxCharsForName)]],
-      'modifiedStorageSystemDescription': ['', [Validators.maxLength(this.maxCharsForAliasName)]],
-      'isGimelCompatible': [],
-      'isReadCompatible': [],
-      'updatedUser': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForUserName), Validators.pattern(this.regex)]],
+      'modifiedStorageSystemName': ['', [Validators.maxLength(this.maxCharsForName)]], 'modifiedContainers': ['', [Validators.maxLength(this.maxCharsForName)]], 'modifiedStorageSystemDescription': ['', [Validators.maxLength(this.maxCharsForAliasName)]], 'isReadCompatible': [], 'updatedUser': ['', [CustomValidators.required, Validators.maxLength(this.maxCharsForUserName), Validators.pattern(this.regex)]],
     });
 
     this.editSystemForm.valueChanges.subscribe(data => onValueChanged(this.editSystemForm, this.formErrors, this.validationMessages));
@@ -100,7 +102,8 @@ export class CatalogSystemEditDialogComponent implements OnInit {
     } else {
       data.storageSystemDescription = this.storageSystemDescription;
     }
-    data.isGimelCompatible = submitValue.isGimelCompatible;
+
+    data.discoverySla = this.discoverySla;
     data.isReadCompatible = submitValue.isReadCompatible;
     data.updatedUser = submitValue.updatedUser;
     data.systemAttributeValues = this.systemAttributes;
@@ -126,8 +129,11 @@ export class CatalogSystemEditDialogComponent implements OnInit {
         this.dialogRef.close({status: 'user fail', error: 'Invalid Username'});
       });
   }
-  updateValue(event, cell, row) {
-    this.editing[row.$$index + '-' + cell] = false;
-    this.systemAttributes[row.$$index][cell] = event.target.value;
+
+  updateValue(event, cell, rowIndex) {
+    this.editing[rowIndex + '-' + cell] = false;
+    this.systemAttributes[rowIndex][cell] = event.target.value;
+    this.systemAttributes = [...this.systemAttributes];
+
   }
 }

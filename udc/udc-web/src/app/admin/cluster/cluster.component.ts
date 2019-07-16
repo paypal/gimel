@@ -1,61 +1,31 @@
-import {Component, OnInit} from '@angular/core';
-import {FormGroup} from '@angular/forms';
-import {StorageSystem} from '../../udc/catalog/models/catalog-storagesystem';
-import {CatalogService} from '../../udc/catalog/services/catalog.service';
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+import { Component } from '@angular/core';
 
 @Component({
-  selector: 'app-udc-admin-cluster',
-  templateUrl: './cluster.component.html',
-  styleUrls: ['./cluster.component.scss'],
+  selector: 'app-udc-admin-cluster', templateUrl: './cluster.component.html', styleUrls: ['./cluster.component.scss'],
 })
 export class ClusterComponent {
-  projectList = [];
   displayList = [];
   loaded = true;
   projectName: string;
   projectLoaded = false;
   refresh = false;
-  defaultSystem: StorageSystem = new StorageSystem();
-
-  constructor(private catalogService: CatalogService) {
-  }
-
-  ngOnInit() {
-    this.projectLoaded = false;
-
-    this.defaultSystem.storageSystemId = 0;
-    this.defaultSystem.storageSystemName = 'All';
-    this.defaultSystem.storageSystemDescription = 'All';
-    this.projectList.push(this.defaultSystem);
-    this.catalogService.getStorageSystems().subscribe(data => {
-      data.map(element => {
-        this.projectList.push(element);
-      });
-    }, error => {
-      this.displayList = this.projectList = [];
-      this.projectLoaded = true;
-    }, () => {
-      this.displayList = this.projectList.sort((a, b): number => {
-        return a.storageSystemName > b.storageSystemName ? 1 : -1;
-      });
-      // this.projectName = this.displayList[0]['storageSystemName'];
-      this.projectName = this.defaultSystem.storageSystemName;
-      this.projectLoaded = true;
-    });
-  }
-
-  disableDropDown() {
-    // this.projectLoaded = false;
-    this.loaded = false;
-  }
-
-  enableDropDown() {
-    this.loaded = true;
-  }
-
-  refreshProject() {
-    this.refresh = !this.refresh;
-    this.loaded = false;
-  }
-
 }

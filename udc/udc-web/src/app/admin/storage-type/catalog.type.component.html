@@ -1,39 +1,58 @@
+<!--
+Copyright 2019 PayPal Inc.
+
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
+
+   http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
+
 <div class="app-top-container">
   <div class="app-container">
     <div fxLayout="row" fxLayoutAlign="center center" fxLayoutWrap="wrap">
       <div fxFlex="100" class="main-container">
-        <md-card>
+        <mat-card>
           <div>
             <div fxLayout="row" fxLayoutAlign="start center">
               <div fxFlex="50%" *ngIf="!projectLoaded">
-                <md-select class="long_dropdown" placeholder="Loading..." disabled></md-select>
-                <button md-icon-button class="action-btn grey-btn" disabled>
-                  <md-icon>refresh</md-icon>
+                <mat-form-field [floatLabel]="'never'"><mat-select class="long_dropdown" placeholder="Loading..." disabled></mat-select></mat-form-field>
+                <button mat-icon-button class="action-btn grey-btn" disabled>
+                  <mat-icon>refresh</mat-icon>
                 </button>
               </div>
 
               <div fxFlex="50%" *ngIf="loaded && projectLoaded">
-                <md-select [(ngModel)]="projectName" (ngModelChange)="disableDropDown()"
+                <mat-form-field [floatLabel]="'never'"><mat-select [(ngModel)]="projectName" (ngModelChange)="disableDropDown()"
                            placeholder="Datastore Categories"
                            class="long_dropdown">
-                  <md-option *ngFor="let row of displayList" [value]="row.storageName">{{ row.storageName }}</md-option>
-                </md-select>
+                  <mat-option *ngFor="let row of displayList" [value]="row.storageName">{{ row.storageName }}</mat-option>
+                </mat-select></mat-form-field>
                 <span *ngIf="projectName">
-                  <button md-icon-button class="action-btn grey-btn" md-tooltip="Refresh Categories"
+                  <button mat-icon-button class="action-btn grey-btn" mat-tooltip="Refresh Categories"
                           (click)="refreshProject()">
-                    <md-icon>refresh</md-icon>
+                    <mat-icon>refresh</mat-icon>
                   </button>
                 </span>
                 <span *ngIf="!projectName">
-                  <button md-icon-button class="action-btn grey-btn" disabled>
-                    <md-icon>refresh</md-icon>
+                  <button mat-icon-button class="action-btn grey-btn" disabled>
+                    <mat-icon>refresh</mat-icon>
                   </button>
                 </span>
               </div>
               <div fxFlex="50%" *ngIf="!loaded && projectLoaded">
-                <md-select class="long_dropdown" placeholder={{projectName}} disabled></md-select>
-                <button md-icon-button class="action-btn grey-btn" disabled>
-                  <md-icon>refresh</md-icon>
+                <mat-form-field [floatLabel]="'never'"><mat-select class="long_dropdown" placeholder={{projectName}} disabled></mat-select></mat-form-field>
+                <button mat-icon-button class="action-btn grey-btn" disabled>
+                  <mat-icon>refresh</mat-icon>
                 </button>
               </div>
               <div fxFlex="100%">
@@ -42,13 +61,13 @@
             </div>
           </div>
           <br/>
-          <md-tab-group>
-            <md-tab label="Datastore Types">
+          <mat-tab-group>
+            <mat-tab label="Datastore Types">
               <app-catalog-type-list [project]="projectName" [refresh]="refresh" (loaded)=enableDropDown()>
               </app-catalog-type-list>
-            </md-tab>
-          </md-tab-group>
-        </md-card>
+            </mat-tab>
+          </mat-tab-group>
+        </mat-card>
       </div>
     </div>
   </div>

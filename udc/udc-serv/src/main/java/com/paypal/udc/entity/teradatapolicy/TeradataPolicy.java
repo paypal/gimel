@@ -1,3 +1,22 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.entity.teradatapolicy;
 
 import java.io.Serializable;
@@ -38,6 +57,10 @@ public class TeradataPolicy implements Serializable {
     @Column(name = "iam_role_name")
     private String iamRoleName;
 
+    @ApiModelProperty(notes = "Role for")
+    @Column(name = "role_for")
+    private String roleFor;
+
     @ApiModelProperty(notes = "Created User")
     @Column(name = "cre_user")
     @NotNull
@@ -62,6 +85,14 @@ public class TeradataPolicy implements Serializable {
     @Column(name = "upd_ts")
     @NotNull
     private String updatedTimestamp;
+
+    public String getRoleFor() {
+        return this.roleFor;
+    }
+
+    public void setRoleFor(final String roleFor) {
+        this.roleFor = roleFor;
+    }
 
     public long getTeradataPolicyId() {
         return this.teradataPolicyId;
@@ -139,12 +170,13 @@ public class TeradataPolicy implements Serializable {
 
     }
 
-    public TeradataPolicy(final long storageSystemId,
-            final String databaseName, final String roleName, final String createdUser, final String createdTimestamp,
-            final String updatedUser, final String updatedTimestamp, final String isActiveYN) {
+    public TeradataPolicy(final long storageSystemId, final String databaseName, final String roleName,
+            final String roleFor, final String createdUser, final String createdTimestamp, final String updatedUser,
+            final String updatedTimestamp, final String isActiveYN) {
         this.storageSystemId = storageSystemId;
         this.databaseName = databaseName;
         this.iamRoleName = roleName;
+        this.roleFor = roleFor;
         this.createdUser = createdUser;
         this.createdTimestamp = createdTimestamp;
         this.updatedUser = updatedUser;
@@ -153,13 +185,13 @@ public class TeradataPolicy implements Serializable {
     }
 
     public TeradataPolicy(final long teradataPolicyId, final long storageSystemId, final String databaseName,
-            final String iamRoleName, final String createdUser, final String createdTimestamp, final String isActiveYN,
-            final String updatedUser, final String updatedTimestamp) {
-        super();
+            final String iamRoleName, final String roleFor, final String createdUser, final String createdTimestamp,
+            final String isActiveYN, final String updatedUser, final String updatedTimestamp) {
         this.teradataPolicyId = teradataPolicyId;
         this.storageSystemId = storageSystemId;
         this.databaseName = databaseName;
         this.iamRoleName = iamRoleName;
+        this.roleFor = roleFor;
         this.createdUser = createdUser;
         this.createdTimestamp = createdTimestamp;
         this.isActiveYN = isActiveYN;

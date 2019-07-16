@@ -1,56 +1,105 @@
-<md-nav-list class="side-nav-list" [class.opened]="opened">
-  <h3 md-subheader class="selected-app-subheader uppercase">Home</h3>
-  <md-list-item @zoomFromLeftAnimation [routerLink]="['/home','search']"
-                routerLinkActive="active">
-    <h3 md-line>Search</h3>
-  </md-list-item>
+<!--
+Copyright 2019 PayPal Inc.
 
-  <md-divider></md-divider>
+Licensed to the Apache Software Foundation (ASF) under one or more
+contributor license agreements.  See the NOTICE file distributed with
+this work for additional information regarding copyright ownership.
+The ASF licenses this file to You under the Apache License, Version 2.0
+(the "License"); you may not use this file except in compliance with
+the License.  You may obtain a copy of the License at
 
-  <h3 md-subheader class="selected-app-subheader uppercase">Data Services</h3>
-  <md-list-item @zoomFromLeftAnimation [routerLink]="['/admin','category']"
-                routerLinkActive="active">
-    <h3 md-line>Datastore Category</h3>
-  </md-list-item>
-  <md-list-item @zoomFromLeftAnimation [routerLink]="['/admin','type']"
-                routerLinkActive="active">
-    <h3 md-line>Datastore Type</h3>
-  </md-list-item>
-  <md-divider></md-divider>
+   http://www.apache.org/licenses/LICENSE-2.0
 
-  <h3 md-subheader class="selected-app-subheader uppercase">UDC</h3>
-  <md-list-item @zoomFromLeftAnimation [routerLink]="['/admin','system']"
-                routerLinkActive="active">
-    <h3 md-line>Datastore</h3>
-  </md-list-item>
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+-->
 
-  <md-list-item @zoomFromLeftAnimation [routerLink]="['/udc','objects']"
-                routerLinkActive="active">
-    <h3 md-line>Objects</h3>
-  </md-list-item>
-  <md-list-item @zoomFromLeftAnimation [routerLink]="['/udc','datasets']"
-                routerLinkActive="active">
-    <h3 md-line>Datasets</h3>
-  </md-list-item>
-  <md-list-item  @zoomFromLeftAnimation [routerLink]="['/udc','register']"
-                routerLinkActive="active">
-    <h3 md-line>Register</h3>
-  </md-list-item>
-  <md-divider></md-divider>
+<mat-nav-list class="side-nav-list" [class.opened]="opened">
+  <h3 mat-subheader class="selected-app-subheader uppercase">Home</h3>
+  <mat-list-item @zoomFromLeftAnimation [routerLink]="['/home','search']"
+                 routerLinkActive="active">
+    <h3 mat-line>Search</h3>
+  </mat-list-item>
+  <!--<mat-list-item @zoomFromLeftAnimation [routerLink]="['/home','advancedsearch']"-->
+  <!--routerLinkActive="active">-->
+  <!--<h3 mat-line>Advanced Search</h3>-->
+  <!--</mat-list-item>-->
+  <mat-divider></mat-divider>
 
-  <span>
-    <h3 md-subheader class="selected-app-subheader uppercase">Compute Services</h3>
-      <md-list-item @zoomFromLeftAnimation [routerLink]="['/admin','cluster']"
-                routerLinkActive="active">
-        <h3 md-line>Cluster</h3>
-      </md-list-item>
-    <md-list-item @zoomFromLeftAnimation [routerLink]="['/admin','zone']"
-                  routerLinkActive="active">
-      <h3 md-line>Zone</h3>
-    </md-list-item>
-    <md-divider></md-divider>
+  <h3 mat-subheader class="selected-app-subheader uppercase">Data Services</h3>
+  <mat-list-item @zoomFromLeftAnimation [routerLink]="['/admin','category']"
+                 routerLinkActive="active">
+    <h3 mat-line>Datastore Category</h3>
+  </mat-list-item>
+  <mat-list-item @zoomFromLeftAnimation [routerLink]="['/admin','type']"
+                 routerLinkActive="active">
+    <h3 mat-line>Datastore Type</h3>
+  </mat-list-item>
+  <mat-divider></mat-divider>
+
+  <h3 mat-subheader class="selected-app-subheader uppercase">UDC</h3>
+  <mat-list-item @zoomFromLeftAnimation [routerLink]="['/admin','system']"
+                 routerLinkActive="active">
+    <h3 mat-line>Datastore</h3>
+  </mat-list-item>
+
+  <mat-list-item *ngIf="admin" @zoomFromLeftAnimation [routerLink]="['/udc','objects']"
+                 routerLinkActive="active">
+    <h3 mat-line>Objects</h3>
+  </mat-list-item>
+  <mat-list-item @zoomFromLeftAnimation [routerLink]="['/udc','datasets']"
+                 routerLinkActive="active">
+    <h3 mat-line>Datasets</h3>
+  </mat-list-item>
+  <mat-list-item @zoomFromLeftAnimation [routerLink]="['/udc','upload']"
+                 routerLinkActive="active">
+    <h3 mat-line>Upload</h3>
+  </mat-list-item>
+  <mat-divider></mat-divider>
+
+  <span *ngIf="admin">
+    <h3 mat-subheader class="selected-app-subheader uppercase">Admin</h3>
+    <mat-list-item @zoomFromLeftAnimation [routerLink]="['/admin','notification']"
+                   routerLinkActive="active">
+      <h3 mat-line>Notification</h3>
+    </mat-list-item>
+
+<!--    <mat-list-item @zoomFromLeftAnimation [routerLink]="['/admin','upload']"-->
+<!--                routerLinkActive="active">-->
+<!--        <h3 mat-line>Upload</h3>-->
+<!--    </mat-list-item>-->
+
+    <mat-list-item @zoomFromLeftAnimation [routerLink]="['/admin','zone']"
+                   routerLinkActive="active">
+      <h3 mat-line>Zone</h3>
+    </mat-list-item>
+    <!--<mat-list-item @zoomFromLeftAnimation [routerLink]="['/admin','user']"-->
+    <!--routerLinkActive="active">-->
+    <!--<h3 mat-line>User</h3>-->
+    <!--</mat-list-item>-->
+    <mat-list-item @zoomFromLeftAnimation [routerLink]="['/admin','entity']"
+                   routerLinkActive="active">
+        <h3 mat-line>Entity</h3>
+    </mat-list-item>
+    <mat-list-item @zoomFromLeftAnimation [routerLink]="['/admin','cluster']"
+                   routerLinkActive="active">
+        <h3 mat-line>Cluster</h3>
+    </mat-list-item>
+    <mat-divider></mat-divider>
   </span>
 
-  <md-divider></md-divider>
+  <span *ngIf="(admin || classificationAdmin)">
+  <h3 mat-subheader class="selected-app-subheader uppercase">Security</h3>
+  <mat-list-item @zoomFromLeftAnimation [routerLink]="['/admin','classification']"
+                 routerLinkActive="active">
+    <h3 mat-line>Classifications</h3>
+  </mat-list-item>
+  </span>
 
-</md-nav-list>
+
+  <h3 mat-subheader class="selected-app-subheader uppercase"></h3>
+
+</mat-nav-list>

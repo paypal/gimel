@@ -1,8 +1,27 @@
+/*
+ * Copyright 2019 PayPal Inc.
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements.  See the NOTICE file distributed with
+ * this work for additional information regarding copyright ownership.
+ * The ASF licenses this file to You under the Apache License, Version 2.0
+ * (the "License"); you may not use this file except in compliance with
+ * the License.  You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.paypal.udc.controller;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
-import static org.mockito.Matchers.argThat;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -28,11 +47,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import com.google.gson.Gson;
-import com.paypal.udc.cache.StorageCache;
-import com.paypal.udc.config.UDCInterceptorConfig;
-import com.paypal.udc.dao.StorageRepository;
-import com.paypal.udc.entity.Storage;
-import com.paypal.udc.interceptor.UDCInterceptor;
+import com.paypal.udc.dao.storagecategory.StorageRepository;
+import com.paypal.udc.entity.storagecategory.Storage;
 import com.paypal.udc.service.IStorageService;
 
 
@@ -48,17 +64,9 @@ public class StorageControllerTest {
     @MockBean
     private StorageRepository storageRepository;
 
-    @MockBean
-    private StorageCache storageCache;
-
-    @MockBean
-    private UDCInterceptor udcInterceptor;
-
-    @MockBean
-    private UDCInterceptorConfig udcInterceptorConfig;
-
     @Autowired
     private WebApplicationContext webApplicationContext;
+
 
     final Gson gson = new Gson();
 
@@ -68,10 +76,10 @@ public class StorageControllerTest {
     private String jsonStorage;
     private List<Storage> storageList;
 
-    class AnyStorage extends ArgumentMatcher<Storage> {
+    class AnyStorage implements ArgumentMatcher<Storage> {
         @Override
-        public boolean matches(final Object object) {
-            return object instanceof Storage;
+        public boolean matches(final Storage storage) {
+            return storage instanceof Storage;
         }
     }
 
@@ -103,7 +111,7 @@ public class StorageControllerTest {
 
     @Test
     public void verifyValidGetStorageById() throws Exception {
-        when(this.storageCache.getStorage(this.storageId))
+        when(this.storageService.getStorageById(this.storageId))
                 .thenReturn(this.storage);
 
         this.mockMvc.perform(get("/storage/storage/{id}", this.storageId)
@@ -111,7 +119,7 @@ public class StorageControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.storageName").value(this.storageName));
 
-        verify(this.storageCache).getStorage(this.storageId);
+        verify(this.storageService).getStorageById(this.storageId);
     }
 
     @Test

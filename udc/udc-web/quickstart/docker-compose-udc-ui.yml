@@ -1,0 +1,16 @@
+version: '2'
+services:
+  udc-ui:
+    container_name: udc-ui
+    build:
+        context: ${UDC_HOME}
+        dockerfile: ${UDC_HOME}/Dockerfile
+    ports:
+      - ${exposed_port}:${default_port}
+    env_file:
+      - ./set-env.env
+    networks:
+      - udc-net
+
+networks:
+  udc-net:
