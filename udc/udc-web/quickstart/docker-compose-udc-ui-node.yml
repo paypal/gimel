@@ -6,7 +6,7 @@ services:
         context: ${UDC_HOME}
         dockerfile: ${UDC_HOME}/Dockerfile_node
     ports:
-      - 4200:4200
+      - 80:80
     env_file:
       - ./set-env.env
     networks:
