@@ -1,11 +1,11 @@
 
-# Contributing to Gimel
+# Contributing to UDC
 
 ## Discussions
 
-Our recommendation is to start a slack discussion as soon as you have an idea for contributing to Gimel.
+Our recommendation is to start a slack discussion as soon as you have an idea for contributing to UDC.
 This will help you, other interested contributors & the committers get to common grounds early in time.
-Contact the gimel-dev community on [slack](https://gimel-dev.slack.com).
+Contact the udc-dev community on [slack](https://udc-dev.slack.com).
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -29,7 +29,7 @@ You can also improve our documentation
 ## Contribution Process
 
 * Get your github account.
-* Fork the gimel repo into your account.
+* Fork the udc repo into your account.
 * Create an issue branch using the master branch.
 * Make modifications to the code.
 * Ensure code coverage by added test cases.
