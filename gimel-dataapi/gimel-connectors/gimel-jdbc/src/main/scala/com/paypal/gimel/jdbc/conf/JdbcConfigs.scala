@@ -32,6 +32,7 @@ object JdbcConfigs {
   val teradataWriteType: String = "gimel.jdbc.write.type"
   val jdbcOutputTableNameKey: String = "gimel.jdbc.output.table.name"
   val jdbcP: String = "gimel.jdbc.p.file"
+  val jdbcPassword: String = "gimel.jdbc.password"
   val jdbcPushDownEnabled: String = "gimel.jdbc.enableQueryPushdown"
   val jdbcInsertStrategy: String = "gimel.jdbc.insertStrategy"
   val jdbcInputDataPartitionCount: String = "gimel.jdbc.inputDataPartition.count"
