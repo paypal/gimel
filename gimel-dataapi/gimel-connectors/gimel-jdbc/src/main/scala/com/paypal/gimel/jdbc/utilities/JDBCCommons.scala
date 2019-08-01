@@ -146,6 +146,9 @@ object JDBCCommons {
           case "file" => {
             // do nothing
           }
+          case "inline" => {
+            // do nothing
+          }
           case _ => {
             logger.info(s"Setting QueryBand for ${actualUser}")
             try {
