@@ -110,6 +110,39 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     }
   }
 
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet create for hbase currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet drop for hbase currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet truncate for hbase currently not Supported")
+    true
+  }
+
   case class HBaseDataSetException(private val message: String = "", private val cause: Throwable = None.orNull) extends Exception(message, cause)
 
 }

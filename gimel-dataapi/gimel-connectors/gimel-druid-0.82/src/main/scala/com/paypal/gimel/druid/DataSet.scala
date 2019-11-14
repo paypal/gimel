@@ -46,7 +46,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   /**
     * Read Implementation for Casandra DataSet.
     *
-    * @param dataset      Name of the PCatalog Data Set.
+    * @param dataset      Name of the UDC Data Set.
     * @param datasetProps Additional parameters for read and write operations in DataSet class.
     * @return DataFrame
     */
@@ -56,7 +56,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
 
   /** Write Implementation for Druid DataSet.
     *
-    * @param dataset      Name of the PCatalog Data Set.
+    * @param dataset      Name of the UDC Data Set.
     * @param dataFrame    The DataFrame to write to target.
     * @param datasetProps Additional parameters for read and write operations in DataSet class.
     * @return DataFrame
@@ -129,7 +129,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * Dataset(sc).write(clientDataFrame, props)
     * }}}
     *
-    * @param dataset      Name of the PCatalog Data Set.
+    * @param dataset      Name of the UDC Data Set.
     * @param rdd          The RDD[T] to write into Target.
     * @param datasetProps Map containing dataset props
     * @return RDD[T]
@@ -179,6 +179,39 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     }
 
     rdd
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet create for druid currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet drop for druid currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet truncate for druid currently not Supported")
+    true
   }
 }
 
