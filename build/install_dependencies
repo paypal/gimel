@@ -34,4 +34,7 @@ check_error $? "install shc-core"
 mvn install:install-file -DgroupId=com.osscube -DartifactId=aerospike-spark -Dversion=0.3-SNAPSHOT -Dpackaging=jar -Dfile=${this_dir}/../lib/aerospike-spark.jar 1>>/dev/null 2>&1
 check_error $? "install aerospike-spark"
 
+mvn install:install-file -DgroupId=com.twitter -DartifactId=zookeeper-client_2.10 -Dversion=2.0.0_fs-b -Dpackaging=jar -Dfile=${this_dir}/../lib/zookeeper-client_2.10-2.0.0_fs-b.jar 1>>/dev/null 2>&1
+check_error $? "install zookeeper-client"
+
 write_log "Complete | Script | $0"
