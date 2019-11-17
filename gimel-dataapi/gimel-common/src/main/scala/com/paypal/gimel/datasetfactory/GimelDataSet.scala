@@ -24,7 +24,6 @@ import scala.reflect.runtime.universe._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-
 /**
   * Interface for the DataSet
   */
@@ -54,7 +53,6 @@ abstract class GimelDataSet(sparkSession: SparkSession) {
     */
   def read(dataset: String, dataSetProps: Map[String, Any] = Map.empty): DataFrame
 
-
   /**
     * Function writes a given dataframe to the actual Target System (Example Hive : DB.Table | HBASE namespace.Table)
     *
@@ -72,7 +70,7 @@ abstract class GimelDataSet(sparkSession: SparkSession) {
   /**
     * Function writes a given dataframe to the actual Target System (Example Hive : DB.Table | HBASE namespace.Table)
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param dataset Name of the UDC Data Set
     * @param anyRDD  The RDD[T] to write into Target
     *                Note the RDD has to be typeCast to supported types by the inheriting DataSet Operators
     *                instance#1 : ElasticSearchDataSet may support just RDD[Seq(Map[String, String])], so Elastic Search must implement supported Type checking
@@ -86,6 +84,37 @@ abstract class GimelDataSet(sparkSession: SparkSession) {
     */
   def write[T: TypeTag](dataset: String, anyRDD: RDD[T], dataSetProps: Map[String, Any]): RDD[T]
 
+  /**
+    * Function create the dataset (Currently only in the respective storages and not in the pcatalog/hive meta data)
+    *
+    * @param dataset Name of the UDC Data Set
+    * @param dataSetProps
+    *                props is the way to set various additional parameters for read and write operations in DataSet class
+    *                    * @return Boolean
+    */
+  def create(dataset: String, dataSetProps: Map[String, Any] = Map.empty): Boolean
+
+  /**
+    * Function to drop the dataset (Currently only in the respective storages and not in the pcatalog/hive meta data)
+    *
+    * @param dataset Name of the UDC Data Set
+    * @param dataSetProps
+    *                props is the way to set various additional parameters for read and write operations in DataSet class
+    *
+    * @return Boolean
+    */
+  def drop(dataset: String, dataSetProps: Map[String, Any] = Map.empty): Boolean
+
+  /**
+    * Function to purge the records in the dataset
+    *
+    * @param dataset Name of the UDC Data Set
+    * @param dataSetProps
+    *                props is the way to set various additional parameters for read and write operations in DataSet class
+    *
+    * @return Boolean
+    */
+  def truncate(dataset: String, dataSetProps: Map[String, Any] = Map.empty): Boolean
 
   /**
     * Supported Types of RDD, where RDD[T] is provided by client

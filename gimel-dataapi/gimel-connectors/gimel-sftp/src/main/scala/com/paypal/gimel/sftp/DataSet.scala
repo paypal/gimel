@@ -93,6 +93,39 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   }
 
   /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps - props is the way to set various additional parameters for read and write operations in DataSet class
+    * * @return Boolean
+    */
+  override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet create for SFTP currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps - props is the way to set various additional parameters for read and write operations in DataSet class
+    * * @return Boolean
+    */
+  override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet drop for SFTP currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps - props is the way to set various additional parameters for read and write operations in DataSet class
+    * * @return Boolean
+    */
+  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet truncate for SFTP currently not Supported")
+    true
+  }
+
+  /**
     * Custom Exception for SFTP read write errors.
     *
     * @param message Message to Throw
