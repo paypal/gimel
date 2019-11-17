@@ -46,7 +46,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   /**
     * Read Implementation for Casandra DataSet.
     *
-    * @param dataset      Name of the PCatalog Data Set.
+    * @param dataset      Name of the UDC Data Set.
     * @param datasetProps Additional parameters for read and write operations in DataSet class.
     * @return DataFrame
     */
@@ -61,7 +61,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
 
   /** Write Implementation for Cassandra DataSet.
     *
-    * @param dataset      Name of the PCatalog Data Set.
+    * @param dataset      Name of the UDC Data Set.
     * @param dataFrame    The DataFrame to write to target.
     * @param datasetProps Additional parameters for read and write operations in DataSet class.
     * @return DataFrame
@@ -103,7 +103,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * Dataset(sc).write(clientDataFrame, props)
     * }}}
     *
-    * @param dataset Name of the PCatalog Data Set.
+    * @param dataset Name of the UDC Data Set.
     * @param rdd     The RDD[T] to write into Target.
     * @param datasetProps
     * @return RDD[T]
@@ -111,6 +111,39 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   def write[T: TypeTag](dataset: String, rdd: RDD[T], datasetProps: Map[String, Any]): RDD[T] = {
     val msg = s"""Invalid RDD Type. Supported Types : ${supportedTypesOfRDD.mkString(" | ")}"""
     throw new UnsupportedOperationException(msg)
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet create for cassandra currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet drop for cassandra currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet truncate for cassandra currently not Supported")
+    true
   }
 }
 

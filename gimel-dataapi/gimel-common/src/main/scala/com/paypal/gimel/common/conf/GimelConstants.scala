@@ -34,20 +34,17 @@ object GimelConstants {
   val KEY_TAB: String = "gimel.keytab"
   val KEY_TAB_PRINCIPAL: String = "gimel.principal"
   val SECURITY_AUTH: String = "hadoop.security.authentication"
+  val SIMPLE: String = "simple"
+  val KERBEROS: String = "kerberos"
+  val DEFAULT_SECURITY_AUTH: String = SIMPLE
   val CLUSTER: String = "gimel.cluster"
   val DEPLOYMENT_CLUSTERS: String = "gimel.dataset.deployment.clusters"
-  val SPARK_EXECUTOR_MEMORY: String = "spark.executor.memory"
-  val SPARK_DRIVER_MEMORY: String = "spark.driver.memory"
-  val SPARK_EXECUTOR_INSTANCES: String = "spark.executor.instances"
-  val SPARK_DRIVER_CORES: String = "spark.driver.cores"
-  val SPARK_EXECUTOR_CORES: String = "spark.executor.cores"
   val STORAGE_TYPE: String = "gimel.storage.type"
   val LOG_LEVEL: String = "gimel.logging.level"
   val DATA_CACHE_IS_ENABLED: String = "gimel.dataset.caching.enabled"
   val DATA_CACHE_IS_ENABLED_FOR_ALL: String = "gimel.dataset.caching.enabled.for.all"
   val MAX_RESULTS_TO_SHOW: String = "gimel.query.results.show.rows.threshold"
   val SHOW_ROWS_ENABLED: String = "gimel.query.results.show.rows.only"
-  val FS_DEFAULT_NAME: String = "fs.default.name"
   val NONE_STRING: String = "NONE"
   val DEFAULT_STRING: String = "default"
   val NULL_STRING: String = "null"
@@ -55,6 +52,11 @@ object GimelConstants {
   val UDC_STRING: String = "udc"
   val STORAGE_HANDLER: String = "storage_handler"
   val HTTP_SUCCESS_STATUS_CODE: Int = 200
+
+  // HIVE
+  val HIVE_DATABASE_NAME: String = "gimel.hive.db.name"
+  val HIVE_TABLE_NAME: String = "gimel.hive.table.name"
+  val STORAGE_TYPE_HIVE: String = "hive"
   val HIVE_DDL_PARTITIONED_BY_CLAUSE: String = "PARTITIONED"
   val HIVE_DDL_PARTITIONS_STR: String = "PARTITIONS"
 
@@ -66,12 +68,18 @@ object GimelConstants {
 
   // HBASE CONSTANTS USED ACROSS ENTIRE GIMEL
   val HBASE_NAMESPACE: String = "gimel.hbase.namespace.name"
+  val STORAGE_TYPE_HBASE: String = "hbase"
 
   // TERA DATA RELATED CONSTANTS
   val STORAGE_TYPE_JDBC = "JDBC"
 
   // spark configs
   val SPARK_SPECULATION = "spark.speculation"
+  val SPARK_EXECUTOR_MEMORY: String = "spark.executor.memory"
+  val SPARK_DRIVER_MEMORY: String = "spark.driver.memory"
+  val SPARK_EXECUTOR_INSTANCES: String = "spark.executor.instances"
+  val SPARK_DRIVER_CORES: String = "spark.driver.cores"
+  val SPARK_EXECUTOR_CORES: String = "spark.executor.cores"
 
   // KAFKA CONSTANTS USED ACROSS ENTIRE GIMEL
   val ZOOKEEPER_LIST: String = "gimel.zookeeper.host"
@@ -93,6 +101,12 @@ object GimelConstants {
   val DISTRIBUTED_FS = "org.apache.hadoop.hdfs.DistributedFileSystem"
   val HADDOP_FILE_SYSTEM = "hdfs"
   val LOCAL_FILE_SYSTEM = "local"
+  val FS_DEFAULT_NAME: String = "fs.default.name"
+
+  // GTS
+  val GTS_DEFAULT_USER = ""
+  val GTS_USER_CONFIG = "gimel.gts.user"
+  val GTS_IMPERSONATION_FLAG = "spark.gimel.gts.impersonation.enabled"
 }
 
 

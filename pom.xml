@@ -52,10 +52,6 @@ under the License.
             <name>Confluent</name>
             <url>https://packages.confluent.io/maven/</url>
         </repository>
-	<repository>
-	    <id>repository.janrain</id>
-	    <url>https://repository-janrain.forge.cloudbees.com/release/</url>
-	</repository>
     </repositories>
     <profiles>
         <profile>

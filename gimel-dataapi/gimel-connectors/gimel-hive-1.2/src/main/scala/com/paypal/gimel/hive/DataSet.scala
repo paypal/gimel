@@ -105,6 +105,44 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     }
   }
 
+  /**
+    *
+    * @param dataset Name of the UDC Data Set
+    * @param dataSetProps
+    *                * @return Boolean
+    */
+  override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
+    throw new Exception(s"DataSet create for hdfs/hive currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset Name of the UDC Data Set
+    * @param dataSetProps
+    *                * @return Boolean
+    */
+  override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
+    throw new Exception(s"DataSet create for hdfs/hive currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset Name of the UDC Data Set
+    * @param dataSetProps
+    *                * @return Boolean
+    */
+  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
+    throw new Exception(s"DataSet create for hdfs/hive currently not Supported")
+    true
+  }
 }
 
 /**

@@ -50,7 +50,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
 
   /** Read Implementation for Elastic Search
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param dataset Name of the UDC Data Set
     * @param dataSetProps
     *                props is the way to set various additional parameters for read and write operations in DataSet class
     *                Example Usecase : to get 10 factor parallelism (specifically)
@@ -104,7 +104,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   /**
     * Write Implementation for Elastic Search
     *
-    * @param dataset   Name of the PCatalog Data Set
+    * @param dataset   Name of the UDC Data Set
     * @param dataFrame The dataframe to write into Target
     * @param dataSetProps
     *                  Example Usecase : we want only 1 executor for ES Writer (specifically)
@@ -173,7 +173,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   /**
     * Function writes a given dataframe to the actual Target System (Example Hive : DB.Table | HBASE namespace.Table)
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param dataset Name of the UDC Data Set
     * @param rdd     The RDD[T] to write into Target
     *                Note the RDD has to be typeCast to supported types by the inheriting DataSet Operators
     *                instance#1 : ElasticSearchDataSet may support just RDD[Seq(Map[String, String])], so Elastic Search must implement supported Type checking
@@ -226,6 +226,39 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
       })
       ElasticSearchUtilities.writeToESForRDD(rdd, esOptions)
     }
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet create for elastic search currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet drop for elastic search currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet truncate for elastic search currently not Supported")
+    true
   }
 }
 

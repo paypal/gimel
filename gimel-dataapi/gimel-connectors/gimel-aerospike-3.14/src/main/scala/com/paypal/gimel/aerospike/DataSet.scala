@@ -48,7 +48,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
 
   /**
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param dataset Name of the UDC Data Set
     * @param dataSetProps
     *                props is the way to set various additional parameters for read and write operations in DataSet class
     *                Example Usecase : Overwrite aerospike seed host over the one in hive table properties
@@ -66,7 +66,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
 
   /**
     *
-    * @param dataset   Name of the PCatalog Data Set
+    * @param dataset   Name of the UDC Data Set
     * @param dataFrame The Dataframe to write into Target
     * @param dataSetProps
     *                  Example Usecase : Specify column name which will be used as aerospike row key
@@ -90,7 +90,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   /**
     * Function writes a given dataframe to the actual Target System (Example Hive : DB.Table | HBASE namespace.Table)
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param dataset Name of the UDC Data Set
     * @param rdd     The RDD[T] to write into Target
     *                Note the RDD has to be typeCast to supported types by the inheriting DataSet Operators
     *                instance#1 : ElasticSearchDataSet may support just RDD[Seq(Map[String, String])], so Elastic Search must implement supported Type checking
@@ -109,6 +109,39 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
       // todo Implementation for Write
       rdd
     }
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet create for aerospike currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet drop for aerospike currently not Supported")
+    true
+  }
+
+  /**
+    *
+    * @param dataset   Name of the UDC Data Set
+    * @param dataSetProps
+    * * @return Boolean
+    */
+  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    throw new Exception(s"DataSet truncate for aerospike currently not Supported")
+    true
   }
 
   case class AerospikeDataSetException(private val message: String = "", private val cause: Throwable = None.orNull) extends Exception(message, cause)
