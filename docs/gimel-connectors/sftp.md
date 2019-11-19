@@ -38,7 +38,7 @@
 
 ## Create Hive Table Catalog
 
-The following hive table points to DropZone (SFTP server)
+The following hive table points to SFTP server
 
 ```sql
   CREATE EXTERNAL TABLE pcatalog.sftp_drop_zone (
@@ -52,7 +52,7 @@ The following hive table points to DropZone (SFTP server)
       LOCATION
         'hdfs://cluster1/tmp/pcatalog/sftp_drop_zone'
       TBLPROPERTIES (
-        'gimel.sftp.host'='dropzone.paypalcorp.com',
+        'gimel.sftp.host'='sftp_server',
         'gimel.storage.type'='SFTP')
 ```
 
@@ -102,7 +102,7 @@ val options = Map("gimel.sftp.username" -> "USERNAME",
                   "header" -> "false", 
                   "gimel.sftp.filetype" -> "csv", 
                   "gimel.sftp.file.location" -> "bus_use.csv" )
-val sftpDF = dataSet.read("pcatalog.SFTP.DropZone.default.Files", options )
+val sftpDF = dataSet.read("pcatalog.SFTP.SFTP_SERVER.default.Files", options )
 sftpDF.show
 
 ```
@@ -124,7 +124,7 @@ val options = Map("gimel.sftp.username" -> "USERNAME",
                   "header" -> "false", 
                   "gimel.sftp.filetype" -> "json", 
                   "gimel.sftp.file.location" -> "myJsonNew.json" )
-val sftpDFRes = dataSet.write("pcatalog.SFTP.DropZone.default.Files", sftpDF, options )
+val sftpDFRes = dataSet.write("pcatalog.SFTP.SFTP_SERVER.default.Files", sftpDF, options )
 ```
 
 
@@ -140,12 +140,12 @@ spark.sql("set gimel.jdbc.password.strategy=file")
 spark.sql("set hdfsTempLocation=/tmp/basu")
 spark.sql("set gimel.jdbc.p.file=hdfs://cluster1/user/USERNAME/pass.dat")
 
-val newDF = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch("create table pcatalog.teradata.simba.pp_scratch.myTable1 as select * from pcatalog.SFTP.DropZone.default.Files",spark)
+val newDF = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch("create table pcatalog.teradata.simba.pp_scratch.myTable1 as select * from pcatalog.SFTP.SFTP_SERVER.default.Files",spark)
 
-val sampleDF = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch("insert into pcatalog.teradata.simba.pp_scratch.myTable1 as select * from pcatalog.SFTP.DropZone.default.Files",spark)
+val sampleDF = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch("insert into pcatalog.teradata.simba.pp_scratch.myTable1 as select * from pcatalog.SFTP.SFTP_SERVER.default.Files",spark)
 
-// Here pcatalog.SFTP.DropZone.default.Files is pcatalog table created through gimel pcatalog UI
-// This is created by pointing dropzone of paypal corp.
+// Here pcatalog.SFTP.SFTP_SERVER.default.Files is pcatalog table created through gimel pcatalog UI
+// This is created by pointing sftp_server of paypal corp.
 
 
 ```
@@ -163,7 +163,7 @@ val options = Map("gimel.sftp.file.password.strategy" -> "file",
                         "gimel.sftp.filetype" -> "xml",
                        "rowTag" -> "YEAR",
                          "gimel.sftp.file.location" -> "myxml.xml" );
-val sftpDFRes = dataSet.read("pcatalog.SFTP.DropZone.default.Files", options )
+val sftpDFRes = dataSet.read("pcatalog.SFTP.SFTP_SERVER.default.Files", options )
 
 // Write XML
 
@@ -177,7 +177,7 @@ val options = Map("gimel.sftp.file.password.strategy" -> "file",
                        "rowTag" -> "YEAR",
                        "rootTag" -> "YEARS",
                          "gimel.sftp.file.location" -> "myxml.xml" );
-dataSet.write("pcatalog.SFTP.DropZone.default.Files", sftpDFRes, options )
+dataSet.write("pcatalog.SFTP.SFTP_SERVER.default.Files", sftpDFRes, options )
 
 
 
