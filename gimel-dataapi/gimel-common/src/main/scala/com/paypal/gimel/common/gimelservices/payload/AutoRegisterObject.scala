@@ -25,17 +25,18 @@
  * "clusterId": 5,"query": "CREATE EXTERNAL TABLE "}]
  */
 package com.paypal.gimel.common.gimelservices.payload
-case class AutoRegisterObject(
-                         objectId: Int = 0
-                         , objectName: String = ""
-                         , containerName: String = ""
-                         , storageSystemId: Int = -99
-                         , query: String = ""
-                         , clusterIds: Seq[Int] = Seq.empty[Int]
-                         , objectSchema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
-                         , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
-                         , isActiveYN: String = ""
-                         , createdUserOnStore: String
-                         , createdTimestampOnStore: String
 
-                       )
+case class AutoRegisterObject(
+                               objectId: Int = 0
+                               , objectName: String = ""
+                               , containerName: String = ""
+                               , storageSystemId: Int = -99
+                               , query: String = ""
+                               , clusterIds: Seq[Int] = Seq.empty[Int]
+                               , objectSchema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
+                               , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
+                               , isActiveYN: String = ""
+                               , createdUserOnStore: String
+                               , createdTimestampOnStore: String
+                               , isSelfDiscovered: String
+                             )

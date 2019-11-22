@@ -30,4 +30,5 @@ case class RawObjectSchemaMap(
                                , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
                                , createdUserOnStore: String
                                , createdTimestampOnStore: String
+                               , isSelfDiscovered: String
                              )

@@ -20,14 +20,14 @@
 package com.paypal.gimel.common.gimelservices.payload
 
 case class ObjectSchemaMapUpload(
-                               objectName: String = "default"
-                               , containerName: String = "default"
-                               , clusters: Seq[Int]
-                               , query: String = "create table"
-                               , storageSystemId: Int = 2
-                               , objectSchema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
-                               , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
-                               , createdUserOnStore: String
-                               , createdTimestampOnStore: String
-
-                           )
+                                  objectName: String = "default"
+                                  , containerName: String = "default"
+                                  , clusters: Seq[Int]
+                                  , query: String = "create table"
+                                  , storageSystemId: Int = 2
+                                  , objectSchema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
+                                  , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
+                                  , createdUserOnStore: String
+                                  , createdTimestampOnStore: String
+                                  , isSelfDiscovered: String
+                                )
