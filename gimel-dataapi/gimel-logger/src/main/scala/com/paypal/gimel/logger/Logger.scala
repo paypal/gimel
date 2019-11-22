@@ -77,6 +77,8 @@ class Logger(config: Any) extends Serializable {
   lazy val logger: JSONSystemLogger = JSONSystemLogger.getInstance(getClass)
   private var logAudit = false
   var consolePrintEnabled = false
+  // logic to attempt logging
+  var auditingAndAlertingEnabled = false
 
   private var sparkVersion: String = null
   /**
@@ -86,6 +88,7 @@ class Logger(config: Any) extends Serializable {
     */
   def setLogAudit(customLogAudit: Boolean = true): Unit = {
     logAudit = customLogAudit
+    auditingAndAlertingEnabled = customLogAudit
   }
 
   /**
@@ -133,7 +136,7 @@ class Logger(config: Any) extends Serializable {
         case _ =>
           if (!sendToKafka) s"[${_APP_reference}] : ${message.toString}" else message
       }
-      if (logMode >= 2) logger.debug(finalMessage.asInstanceOf[Object])
+      if (logMode >= 2 && auditingAndAlertingEnabled) logger.debug(finalMessage.asInstanceOf[Object])
       if (consolePrintEnabled) println(s"GIMEL-LOGGER | ${Calendar.getInstance().getTime} | ${message}")
     } catch {
       case ex: Throwable =>
@@ -155,7 +158,7 @@ class Logger(config: Any) extends Serializable {
         case _ =>
           if (!sendToKafka) s"[${_APP_reference}] : ${message.toString}" else message
       }
-      if (logMode >= 4) logger.info(finalMessage.asInstanceOf[Object])
+      if (logMode >= 4 && auditingAndAlertingEnabled) logger.info(finalMessage.asInstanceOf[Object])
       if (consolePrintEnabled) println(s"GIMEL-LOGGER | ${Calendar.getInstance().getTime} | ${message}")
     } catch {
       case ex: Throwable =>
@@ -177,7 +180,7 @@ class Logger(config: Any) extends Serializable {
         case _ =>
           if (!sendToKafka) s"[${_APP_reference}] : ${message.toString}" else message
       }
-      if (logMode >= 3) logger.warn(finalMessage.asInstanceOf[Object])
+      if (logMode >= 3 && auditingAndAlertingEnabled) logger.warn(finalMessage.asInstanceOf[Object])
       if (consolePrintEnabled) println(s"GIMEL-LOGGER | ${Calendar.getInstance().getTime} | ${message}")
     } catch {
       case ex: Throwable =>
@@ -198,7 +201,7 @@ class Logger(config: Any) extends Serializable {
         case _ =>
           s"[${_APP_reference}] : ${message.toString}"
       }
-      if (logMode >= 1) logger.error(finalMessage)
+      if (logMode >= 1 && auditingAndAlertingEnabled) logger.error(finalMessage)
       if (consolePrintEnabled) println(s"GIMEL-LOGGER | ${Calendar.getInstance().getTime} | ${message}")
     } catch {
       case ex: Throwable =>
