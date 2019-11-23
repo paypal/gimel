@@ -26,6 +26,7 @@ object GimelConstants {
   val USER_NAME = "username"
   val RESOLVED_HIVE_TABLE: String = "resolvedHiveTable"
   val SPARK_APP_NAME: String = "spark.app.name"
+  val SPARK_APP_ID: String = "spark.app.id"
   val GIMEL_PROPERTIES_FILE_KEY: String = "gimel.property.file"
   val GIMEL_PROPERTIES_FILE_NAME = "/pcatalog.properties"
   val DATASET_PROPS: String = "dataSetProperties"
@@ -52,6 +53,15 @@ object GimelConstants {
   val UDC_STRING: String = "udc"
   val STORAGE_HANDLER: String = "storage_handler"
   val HTTP_SUCCESS_STATUS_CODE: Int = 200
+
+  // common string constants
+  val SUCCESS = "success"
+  val FAILURE = "failure"
+  val EMPTY_STRING = ""
+  val READ_OPERATION = "read"
+  val WRITE_OPERATION = "write"
+  val ONE_BIGINT: BigInt = BigInt(1)
+  val UNKNOWN_STRING = "unknown"
 
   // HIVE
   val HIVE_DATABASE_NAME: String = "gimel.hive.db.name"
