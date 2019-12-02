@@ -31,7 +31,6 @@ case class PagedAutoRegisterObject(
                                     , totalElements: Int = 0
                                     , size: Int = 0
                                     , number: Int = 0
-                                    , sort: Option[String] = None
                                     , first: Boolean = false
                                     , numberOfElements: Int = 0
                                   )

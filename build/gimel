@@ -24,7 +24,7 @@ source ${this_dir}/gimel_functions
 write_log "Begin    | Script | $0"
 user_args=$@
 user_args_count=$#
-default_args="install T10"
+default_args="install -T 10"
 write_log "User Arguments : ${user_args}"
 
 if [ $user_args_count -gt 0 ]; then

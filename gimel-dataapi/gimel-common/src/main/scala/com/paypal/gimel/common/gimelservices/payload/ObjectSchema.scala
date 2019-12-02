@@ -27,4 +27,9 @@ case class ObjectSchema(
                          , restrictionStatus: Boolean
                          , partitionStatus: Boolean
                          , columnIndex: Int = 0
+                         , columnLength: Int
+                         , columnPrecision: Int
+                         , columnScale: Int
+                         , columnKey: String = "N/A"
+                         , indexes: String = "N/A"
                        )

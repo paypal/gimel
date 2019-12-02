@@ -21,7 +21,8 @@ package com.paypal.gimel.common.gimelservices.payload
 
 case class ObjectAttributeValue (
                                   storageDsAttributeKeyId: Int = 0
-                                , objectAttributeValue: String = ""
-                                , objectId: Int = 0
+                                  , objectAttributeValue: String = ""
+                                  , objectId: Int = 0
+                                  , isCustomized: String
                                 )
 

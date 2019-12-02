@@ -17,14 +17,18 @@
  * limitations under the License.
  */
 
-package com.paypal.gimel.common.catalog
+package com.paypal.gimel.common.gimelservices.payload
 
-import spray.json._
+case class PolicyDetails(
+                          derivedPolicyId: Int = -99
+                          , policyId: Int = -99
+                          , clusterId: Int = -99
+                          , policyName: String = ""
+                          , typeName: String = ""
+                          , policyLocations: String = ""
+                          , policyItems: Seq[PolicyItem] = Seq.empty[PolicyItem]
+                          , isActiveYN: String = ""
+                          , createdUser: String = ""
+                          , updatedUser: String = ""
+                        )
 
-/**
-  * Extending the DefaultJsonProtocol to Support the CatalogProvider Classes
-  */
-object GimelCatalogJsonProtocol extends DefaultJsonProtocol {
-  implicit val field: RootJsonFormat[Field] = jsonFormat5(Field)
-  implicit val dataSetProps: RootJsonFormat[DataSetProperties] = jsonFormat4(DataSetProperties)
-}

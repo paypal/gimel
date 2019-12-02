@@ -22,9 +22,9 @@ package com.paypal.gimel.common.gimelservices
 import java.util.Properties
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
-import com.paypal.gimel.common.conf.PCatalogUrlConfigs
+import com.paypal.gimel.common.conf.{GimelConstants, PCatalogUrlConfigs}
+import com.paypal.gimel.common.utilities.GenericUtils.{getConfigValue, withResources}
 import com.paypal.gimel.logger.Logger
 
 class GimelServicesProperties(userProps: Map[String, String] = Map[String, String]()) {
@@ -32,11 +32,11 @@ class GimelServicesProperties(userProps: Map[String, String] = Map[String, Strin
   // Get Logger
   val logger = Logger()
   // Get Properties
-  val props: mutable.Map[String, String] = getProps()
+  val props: Map[String, String] = getProps
   // Rest Services Method, Host & Port
-  val restMethod: String = userProps.getOrElse(PCatalogUrlConfigs.API_PROTOCOL, props(PCatalogUrlConfigs.API_PROTOCOL))
-  val restHost: String = userProps.getOrElse(PCatalogUrlConfigs.API_HOST, props(PCatalogUrlConfigs.API_HOST))
-  val restPort: String = userProps.getOrElse(PCatalogUrlConfigs.API_PORT, props(PCatalogUrlConfigs.API_PORT))
+  val restMethod: String = getConfigValue(PCatalogUrlConfigs.API_PROTOCOL, userProps, props)
+  val restHost: String = getConfigValue(PCatalogUrlConfigs.API_HOST, userProps, props)
+  val restPort: String = getConfigValue(PCatalogUrlConfigs.API_PORT, userProps, props)
   // Rest APIs
   val apiClusterByName: String = userProps.getOrElse(PCatalogUrlConfigs.CLUSTER_BY_NAME, props(PCatalogUrlConfigs.CLUSTER_BY_NAME))
   val apiClusterById: String = userProps.getOrElse(PCatalogUrlConfigs.CLUSTER_BY_ID, props(PCatalogUrlConfigs.CLUSTER_BY_ID))
@@ -61,6 +61,12 @@ class GimelServicesProperties(userProps: Map[String, String] = Map[String, Strin
   val apiDatasetPost: String = userProps.getOrElse(PCatalogUrlConfigs.REGISTER_DATASET, props(PCatalogUrlConfigs.REGISTER_DATASET))
   val apiStorageSystemContainers: String = userProps.getOrElse(PCatalogUrlConfigs.STORAGE_SYSTEM_CONTAINERS, props(PCatalogUrlConfigs.STORAGE_SYSTEM_CONTAINERS))
   val apiDatasetByName: String = userProps.getOrElse(PCatalogUrlConfigs.DATASET_BY_NAME, props(PCatalogUrlConfigs.DATASET_BY_NAME))
+  val apiStorageTypes = userProps.getOrElse(PCatalogUrlConfigs.STORAGE_TYPES, props(PCatalogUrlConfigs.STORAGE_TYPES))
+  val apiZoneByName = userProps.getOrElse(PCatalogUrlConfigs.ZONE_BY_NAME, props(PCatalogUrlConfigs.ZONE_BY_NAME))
+  val apiPostStorageSystem = userProps.getOrElse(PCatalogUrlConfigs.POST_STORAGE_SYSTEM, props(PCatalogUrlConfigs.POST_STORAGE_SYSTEM))
+  val appName = userProps.getOrElse(GimelConstants.APP_NAME, userProps.getOrElse(GimelConstants.SPARK_APP_NAME, "Unknown"))
+  val appId = userProps.getOrElse(GimelConstants.APP_ID, userProps.getOrElse(GimelConstants.SPARK_APP_ID, "Unknown"))
+  val appTag: String = userProps.getOrElse(GimelConstants.APP_TAG, "Unknown").toString
 
   // Rest URLs
   val baseUrl = s"$restMethod://$restHost:$restPort"
@@ -87,6 +93,9 @@ class GimelServicesProperties(userProps: Map[String, String] = Map[String, Strin
   val urlDataSetPost = s"$baseUrl$apiDatasetPost"
   val urlStorageSystemContainers = s"$baseUrl$apiStorageSystemContainers"
   val urlDataSetByName = s"$baseUrl$apiDatasetByName"
+  val urlStorageTypes = s"$baseUrl$apiStorageTypes"
+  val urlByZoneName = s"$baseUrl$apiZoneByName"
+  val urlStorageSystemPost = s"$baseUrl$apiPostStorageSystem"
 
   // Druid URLs
   val restDruidMethod: String = userProps.getOrElse(PCatalogUrlConfigs.REST_DRUID_PROTOCOL, props(PCatalogUrlConfigs.REST_DRUID_PROTOCOL))
@@ -102,13 +111,12 @@ class GimelServicesProperties(userProps: Map[String, String] = Map[String, Strin
     *
     * @return mutable.Map[String, String]
     */
-  private def getProps(): mutable.Map[String, String] = {
+  private def getProps: Map[String, String] = {
     val props: Properties = new Properties()
-    val configStream = this.getClass.getResourceAsStream("/pcatalogservices.properties")
-    props.load(configStream)
-    configStream.close
-    val finalProps: mutable.Map[String, String] = mutable.Map(props.asScala.toSeq: _*)
-    finalProps
+    withResources(this.getClass.getResourceAsStream("/pcatalogservices.properties")) {
+      configStream => props.load(configStream)
+    }
+    props.asScala.toMap
   }
 }
 
