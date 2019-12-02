@@ -17,14 +17,12 @@
  * limitations under the License.
  */
 
-package com.paypal.gimel.common.catalog
+package com.paypal.gimel.common.gimelservices.payload
 
-import spray.json._
-
-/**
-  * Extending the DefaultJsonProtocol to Support the CatalogProvider Classes
-  */
-object GimelCatalogJsonProtocol extends DefaultJsonProtocol {
-  implicit val field: RootJsonFormat[Field] = jsonFormat5(Field)
-  implicit val dataSetProps: RootJsonFormat[DataSetProperties] = jsonFormat4(DataSetProperties)
-}
+case class Zone (
+                  zoneId: Int
+                  , zoneName: String = "paz"
+                  , zoneDescription: String = ""
+                  , isActiveYN: String = "Y"
+                  , createdUser: String = "gimel_user"
+                )

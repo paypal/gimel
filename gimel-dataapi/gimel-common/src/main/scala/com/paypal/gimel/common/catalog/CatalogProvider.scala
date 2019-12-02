@@ -29,16 +29,14 @@ import org.apache.hadoop.hive.metastore.api.Table
 import spray.json._
 
 import com.paypal.gimel.common.catalog.GimelCatalogJsonProtocol._
-import com.paypal.gimel.common.conf.{CatalogProviderConfigs, CatalogProviderConstants}
-import com.paypal.gimel.common.conf.GimelConstants
+import com.paypal.gimel.common.conf.{CatalogProviderConfigs, CatalogProviderConstants, GimelConstants, PCatalogPayloadConstants}
 import com.paypal.gimel.logger.Logger
 
 case class Field(fieldName: String,
                  fieldType: String = "string",
                  isFieldNullable: Boolean = true,
                  partitionStatus: Boolean = false,
-                 columnIndex: Int = 0
-                )
+                 columnIndex: Int = 0)
 
 case class DataSetProperties(datasetType: String,
                              fields: Array[Field],
@@ -66,11 +64,10 @@ object CatalogProvider {
     logger.info(" @Begin --> " + MethodName)
 
     // The user options are passed which will override the default service util properties
-    if (!options.isEmpty) {
+    if (options.nonEmpty) {
       servUtils.customize(options.map { x => (x._1, x._2.toString) })
     }
 
-    val resolvedSourceTable = resolveDataSetName(datasetName)
     val suppliedCatalogProvider: String = options.getOrElse(CatalogProviderConfigs.CATALOG_PROVIDER, CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER).toString
 
     val catalogProvider: String = (suppliedCatalogProvider.equalsIgnoreCase(CatalogProviderConstants.HIVE_PROVIDER), datasetName.split('.').length > 2) match {
@@ -93,6 +90,7 @@ object CatalogProvider {
         }
       case _ => suppliedCatalogProvider
     }
+    val resolvedSourceTable = resolveDataSetName(datasetName, catalogProvider)
     logger.info(s"Resolved Catalog Provider is --> ${catalogProvider}")
     val datasetProps = catalogProvider.toUpperCase() match {
       case GimelConstants.USER =>
@@ -130,7 +128,6 @@ object CatalogProvider {
     val newProps = datasetProps.props ++
       Map("gimel.kafka.avro.schema.string" -> datasetProps.props.getOrElse("gimel.kafka.avro.schema.string", "").replace("\\", "\"")) ++ options.mapValues(_.toString)
     DataSetProperties(datasetProps.datasetType, datasetProps.fields, datasetProps.partitionFields, newProps)
-
   }
 
   /**
@@ -150,38 +147,38 @@ object CatalogProvider {
         val examplesString =
           """|
             |{
-            |    "datasetType": "KAFKA",
-            |    "fields": [{
-            |            "fieldName": "id",
-            |            "fieldType": "1",
-            |            "isFieldNullable": false
-            |        },
-            |        {
-            |            "fieldName": "name",
-            |            "fieldType": "john",
-            |            "isFieldNullable": true
-            |        }
-            |    ],
-            |    "partitionFields": [],
-            |    "props": {
-            |        "key.deserializer": "org.apache.kafka.common.serialization.StringDeserializer",
-            |        "auto.offset.reset": "earliest",
-            |        "gimel.kafka.checkpoint.zookeeper.host": "zookeeper:2181",
-            |        "gimel.kafka.whitelist.topics": "kafka_topic",
-            |        "datasetName": "dummy",
-            |        "gimel.kafka.throttle.batch.fetchRowsOnFirstRun": "250",
-            |        "gimel.kafka.throttle.batch.maxRecordsPerPartition": "25000000",
-            |        "gimel.kafka.throttle.batch.batch.parallelsPerPartition": "250",
-            |        "value.deserializer": "org.apache.kafka.common.serialization.ByteArrayDeserializer",
-            |        "value.serializer": "org.apache.kafka.common.serialization.ByteArraySerializer",
-            |        "gimel.kafka.checkpoint.zookeeper.path": "/pcatalog/kafka_consumer/checkpoint",
-            |        "gimel.kafka.avro.schema.source.url": "http://schema_registry:8081",
-            |        "key.serializer": "org.apache.kafka.common.serialization.StringSerializer",
-            |        "gimel.kafka.avro.schema.source.wrapper.key": "schema_registry_key",
-            |        "gimel.kafka.bootstrap.servers": "localhost:9092"
-            |    }
-            |}
-            | """.stripMargin.trim
+             |    "datasetType": "KAFKA",
+             |    "fields": [{
+             |            "fieldName": "id",
+             |            "fieldType": "1",
+             |            "isFieldNullable": false
+             |        },
+             |        {
+             |            "fieldName": "name",
+             |            "fieldType": "john",
+             |            "isFieldNullable": true
+             |        }
+             |    ],
+             |    "partitionFields": [],
+             |    "props": {
+             |        "key.deserializer": "org.apache.kafka.common.serialization.StringDeserializer",
+             |        "auto.offset.reset": "earliest",
+             |        "gimel.kafka.checkpoint.zookeeper.host": "zookeeper:2181",
+             |        "gimel.kafka.whitelist.topics": "kafka_topic",
+             |        "datasetName": "dummy",
+             |        "gimel.kafka.throttle.batch.fetchRowsOnFirstRun": "250",
+             |        "gimel.kafka.throttle.batch.maxRecordsPerPartition": "25000000",
+             |        "gimel.kafka.throttle.batch.batch.parallelsPerPartition": "250",
+             |        "value.deserializer": "org.apache.kafka.common.serialization.ByteArrayDeserializer",
+             |        "value.serializer": "org.apache.kafka.common.serialization.ByteArraySerializer",
+             |        "gimel.kafka.checkpoint.zookeeper.path": "/pcatalog/kafka_consumer/checkpoint",
+             |        "gimel.kafka.avro.schema.source.url": "http://schema_registry:8081",
+             |        "key.serializer": "org.apache.kafka.common.serialization.StringSerializer",
+             |        "gimel.kafka.avro.schema.source.wrapper.key": "schema_registry_key",
+             |        "gimel.kafka.bootstrap.servers": "localhost:9092"
+             |    }
+             |}
+             | """.stripMargin.trim
         val errorMessageForClient =
           s"""
              |Invalid props type ${x.getClass.getCanonicalName}.
@@ -215,7 +212,10 @@ object CatalogProvider {
       ++ Map(
       CatalogProviderConstants.PROPS_LOCATION -> hiveTable.getSd.getLocation,
       CatalogProviderConstants.PROPS_NAMESPACE -> nameSpace,
-      CatalogProviderConstants.DATASET_PROPS_DATASET -> datasetName
+      CatalogProviderConstants.DATASET_PROPS_DATASET -> datasetName,
+      GimelConstants.HIVE_DATABASE_NAME -> nameSpace,
+      GimelConstants.HIVE_TABLE_NAME -> datasetName,
+      GimelConstants.hdfsStorageNameKey -> com.paypal.gimel.common.utilities.DataSetUtils.getYarnClusterName()
     )
       ++ serDeParameters
       )
@@ -239,13 +239,18 @@ object CatalogProvider {
     * @param tableName Hive Table Name
     * @return Table
     */
-
   def getHiveTable(tableName: String): Table = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
-    logger.info(" @Begin --> " + MethodName)
 
+    logger.info(" @Begin --> " + MethodName)
+    logger.info(s"Incoming table name: $tableName")
     val hiveClient = new HiveMetaStoreClient(new HiveConf())
-    val Array(hiveDataBase, hiveTable) = tableName.split('.')
+    val actualHiveTable = if (tableName.contains(".")) {
+      tableName
+    } else {
+      s"default.$tableName"
+    }
+    val Array(hiveDataBase, hiveTable) = actualHiveTable.split('.')
     val hiveTableProps: Table = hiveClient.getTable(hiveDataBase, hiveTable)
     hiveClient.close()
     hiveTableProps
@@ -258,15 +263,31 @@ object CatalogProvider {
     * @return Resolve DataSet Name
     */
 
-  def resolveDataSetName(sourceName: String): String = {
+  def resolveDataSetName(sourceName: String, catalogProvider: String): String = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
     logger.info(" @Begin --> " + MethodName)
-
     if (sourceName.contains('.')) {
-      sourceName
+      // if dataset contain one or more dots
+      val leading = sourceName.split('.').head.toLowerCase()
+      val isKnownCatalog = leading.equalsIgnoreCase(GimelConstants.PCATALOG_STRING) || leading.equalsIgnoreCase(GimelConstants.UDC_STRING)
+      if (isKnownCatalog) sourceName // if "pcatalog" or "udc" is already in the dataset - do nothing
+      else if (!isKnownCatalog & sourceName.split('.').length > 2) s"${catalogProvider}.$sourceName" // if there are multiple dots, but pcatalog or udc is not there in the name , then append it
+      else sourceName
     } else {
-      s"${GimelConstants.DEFAULT_STRING}.$sourceName"
+      s"${GimelConstants.DEFAULT_STRING}.$sourceName" // if dataset never contained a dot, then consider it as non-pcatalog & append "default."
     }
   }
 
+  /**
+    * Utility for getting the storage system properties
+    *
+    * @param storageSystemName -> Name of the storage system like teradata.jackal
+    * @return
+    */
+  def getStorageSystemProperties(storageSystemName: String): Map[String, String] = {
+    val attributes = servUtils.getSystemAttributesMapByName(storageSystemName)
+    require(attributes.nonEmpty,
+      s" Expected attributes map to be available for the storageSystemName: $storageSystemName")
+    attributes
+  }
 }

@@ -19,6 +19,10 @@
 
 package com.paypal.gimel.common.utilities
 
+import java.time.Instant
+
+import org.apache.commons.lang3.time.DurationFormatUtils
+
 /**
   * Timer object to capture start and end of module.
   */
@@ -31,20 +35,24 @@ object Timer {
 }
 
 class Timer() {
-  private var startTime: Option[Long] = None
+  private lazy val (endTime1, totalTimeMillSec) = {
+    val endTime1 = Some(Instant.now().toEpochMilli)
+    (endTime1, (endTime1.get - startTime.get).toDouble)
+  }
   //  private var endTime: Option[Long] = None
+  private var startTime: Option[Long] = None
 
   def start: Option[Long] = {
-    startTime = Some(System.nanoTime())
+    startTime = Some(Instant.now().toEpochMilli)
     startTime
   }
 
-  private lazy val (endTime1, totalTimeMillSec) = {
-    val endTime1 = Some(System.nanoTime())
-    (endTime1, (endTime1.get - startTime.get).toDouble / 1000000)
-  }
-
   def endWithMillSecRunTime: Double = totalTimeMillSec
+
+  def end: (Long, String) = {
+    val timeTaken = endTime.get - startTime.get
+    (timeTaken, DurationFormatUtils.formatDurationWords(timeTaken, true, true))
+  }
 
   def endTime: Some[Long] = endTime1
 }

@@ -47,6 +47,9 @@ object PCatalogUrlConfigs {
   val USER_BY_NAME: String = "api.user.by.name"
   val STORAGE_SYSTEM_CONTAINERS = "api.storage.system.containers"
   val DATASET_BY_NAME: String = "api.dataset.by.name"
+  val STORAGE_TYPES = "api.storage.types"
+  val ZONE_BY_NAME = "api.zone.name"
+  val POST_STORAGE_SYSTEM = "api.post.storage.system"
 
   val REST_DRUID_PROTOCOL: String = "rest.druid.service.method"
   val REST_DRUID_HOST: String = "rest.druid.service.host"

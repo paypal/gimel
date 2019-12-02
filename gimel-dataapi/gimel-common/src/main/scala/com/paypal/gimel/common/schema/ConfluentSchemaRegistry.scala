@@ -49,7 +49,7 @@ object SchemaRegistryLookUp {
     catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        throw ex
+        throw new Exception("Unable to read schemas from Schema Registry -->" + schemaURL + "\n" + ex)
     }
   }
 
@@ -70,7 +70,7 @@ object SchemaRegistryLookUp {
     catch {
       case ex: Throwable =>
         ex.printStackTrace()
-        throw ex
+        throw new Exception("Unable to read schema subject '" + schemaSubject + "' from Schema Registry -->" + avroSchemaURL + "\n" + ex)
     }
   }
 

@@ -27,17 +27,16 @@
 package com.paypal.gimel.common.gimelservices.payload
 
 case class ObjectSchemaMapUploadOutput(
-                         objectId: Int = 0
-                         , objectName: String = ""
-                         , containerName: String = ""
-                         , isSelfDiscovered: String = ""
-                         , storageSystemId: Int = -99
-                         , query: String = ""
-                         , clusters: Seq[Int] = Seq.empty[Int]
-                         , objectSchema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
-                         , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
-                         , objectSchemaInString: String = ""
-                         , isActiveYN: String = ""
-                         , createdUserOnStore: String
-                         , createdTimestampOnStore: String
-                       )
+                                        objectId: Int = 0
+                                        , objectName: String = ""
+                                        , containerName: String = ""
+                                        , isSelfDiscovered: String = ""
+                                        , storageSystemId: Int = -99
+                                        , query: String = ""
+                                        , objectSchema: Seq[ObjectSchema] = Seq.empty[ObjectSchema]
+                                        , objectAttributes: Seq[ObjectAttributeValue] = Seq.empty[ObjectAttributeValue]
+                                        , objectSchemaInString: String = ""
+                                        , isActiveYN: String = ""
+                                        , createdUserOnStore: String
+                                        , createdTimestampOnStore: String
+                                      )

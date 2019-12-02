@@ -24,12 +24,14 @@ object GimelConstants {
   // COMMON CONSTANTS USED ACROSS ENTIRE GIMEL
   val USER: String = "USER"
   val USER_NAME = "username"
+  val HOST_NAME = "HOSTNAME"
+  val EXIT_CONDITION = "exitCondition"
   val RESOLVED_HIVE_TABLE: String = "resolvedHiveTable"
-  val SPARK_APP_NAME: String = "spark.app.name"
-  val SPARK_APP_ID: String = "spark.app.id"
   val GIMEL_PROPERTIES_FILE_KEY: String = "gimel.property.file"
   val GIMEL_PROPERTIES_FILE_NAME = "/pcatalog.properties"
   val DATASET_PROPS: String = "dataSetProperties"
+  val APP_NAME: String = "appName"
+  val APP_ID: String = "appId"
   val APP_TAG: String = "appTag"
   val DATASET: String = "dataSet"
   val KEY_TAB: String = "gimel.keytab"
@@ -52,9 +54,20 @@ object GimelConstants {
   val PCATALOG_STRING: String = "pcatalog"
   val UDC_STRING: String = "udc"
   val STORAGE_HANDLER: String = "storage_handler"
-  val HTTP_SUCCESS_STATUS_CODE: Int = 200
 
-  // common string constants
+  // HTTP status codes
+  val HTTP_SUCCESS_STATUS_CODE: Int = 200
+  val HTTP_SUCCESS_RESPONSE_CODE: Int = 300
+
+  // Special characters
+  val COMMA: String = ","
+  val DOT: String = "."
+  val SEMI_COLON: String = ";"
+  val COLON: String = ":"
+  val NEW_LINE: String = "\n"
+  val SPACE_CHAR: String = " "
+
+  // Common string constants
   val SUCCESS = "success"
   val FAILURE = "failure"
   val EMPTY_STRING = ""
@@ -90,6 +103,8 @@ object GimelConstants {
   val SPARK_EXECUTOR_INSTANCES: String = "spark.executor.instances"
   val SPARK_DRIVER_CORES: String = "spark.driver.cores"
   val SPARK_EXECUTOR_CORES: String = "spark.executor.cores"
+  val SPARK_APP_NAME: String = "spark.app.name"
+  val SPARK_APP_ID: String = "spark.app.id"
 
   // KAFKA CONSTANTS USED ACROSS ENTIRE GIMEL
   val ZOOKEEPER_LIST: String = "gimel.zookeeper.host"
@@ -112,6 +127,14 @@ object GimelConstants {
   val HADDOP_FILE_SYSTEM = "hdfs"
   val LOCAL_FILE_SYSTEM = "local"
   val FS_DEFAULT_NAME: String = "fs.default.name"
+  val hdfsStorageNameKey = "gimel.hdfs.storage.name"
+  val hdfsNameNodeKey = "gimel.hdfs.nn"
+
+  // CONDITIONAL FLAGS
+  val FALSE = "false"
+
+  // Connection timeout for requests in seconds
+  val CONNECTION_TIMEOUT = 180
 
   // GTS
   val GTS_DEFAULT_USER = ""
