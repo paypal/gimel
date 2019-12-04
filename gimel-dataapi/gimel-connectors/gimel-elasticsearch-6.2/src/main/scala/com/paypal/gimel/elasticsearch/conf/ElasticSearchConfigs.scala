@@ -31,11 +31,17 @@ object ElasticSearchConfigs {
   // misc properties for read/write
   val esStorageHandler: String = "org.elasticsearch.hadoop.hive.EsStorageHandler"
   val esMapping = "gimel.es.schema.mapping"
+  val esDateRichMapping = "es.mapping.date.rich"
   val esPartitionColumn: String = "gimel.es.sql.partition.column"
   val esIsDailyIndex = "gimel.es.sql.partition.dailyIndex"
   val esPartition: String = "gimel.es.index.partition.suffix"
   val esDefaultReadForAllPartitions: String = "gimel.es.index.read.all.partitions.isEnabled"
   val postStatsToESEnabledKey: String = "gimel.es.query.stats.post.enabled"
   val postStatsToLoggerESEnabled: String = "gimel.es.query.stats.post.logger.enabled"
+  val esDateRichMappingEnabled: String = "true"
+  val esDateRichMappingDisabled: String = "false"
+  val esIsPartitionedEnabled: String = "true"
+  val esIsPartitionedDisabled: String = "false"
+  val esIndexPartitionList = "gimel.es.index.partition.list"
 }
 

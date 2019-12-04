@@ -37,7 +37,6 @@ import com.paypal.gimel.elasticsearch.DataSetException
 import com.paypal.gimel.elasticsearch.conf.{ElasticSearchConfigs, ElasticSearchConstants}
 import com.paypal.gimel.logger.Logger
 
-
 /**
   * Elastic Search Functionalities internal to PCatalog
   */
@@ -113,14 +112,31 @@ object ElasticSearchUtilities {
     *                      }
     * @return String -> payload for creating ES index
     */
-  def generateESPayload(dataFrame: DataFrame, dataSet: String, schemaPayload: String): String = {
+  def generateESPayload(dataFrame: DataFrame, dataSet: String, schemaPayload: String, esVersion: String): String = {
 
     if (schemaPayload == null || schemaPayload.length == 0) {
-      logger.info("Mapping not supplied by the User. Proceed with default Schema.")
+      logger.info("Mapping not supplied by the User. Proceed with default Schema." + esVersion)
       val columnsFromDF: Array[StructField] = dataFrame.schema.fields
-      val columnsArray: String = columnsFromDF.map(column => {
-        s""""${column.name}":{"type":"${ElasticSearchConstants.dataFrameESMapping(column.dataType.toString)}"}"""
-      }).mkString("{", ",", "}")
+      val ESversion2Pattern = s"2.(.*)".r
+      val ESversion6Pattern = s"6.(.*)".r
+      val columnsArray: String = esVersion.replaceAll(""""""", "") match {
+        case ESversion2Pattern(_) =>
+
+          columnsFromDF.foreach(column => {
+            logger.info(s""""${column.name} => ${column.dataType.toString}""")})
+          columnsFromDF.map(column => {
+            s""""${column.name}":{"type":"${ElasticSearchConstants.dataFrameES2Mapping(column.dataType.toString)}"}"""
+          }).mkString("{", ",", "}")
+
+        case ESversion6Pattern(_) =>
+          columnsFromDF.foreach(column => {
+            logger.info(s""""${column.name} => ${column.dataType.toString}""")})
+          columnsFromDF.map(column => {
+            s""""${column.name}":{"type":"${ElasticSearchConstants.dataFrameES6Mapping(column.dataType.toString)}"}"""
+          }).mkString("{", ",", "}")
+
+        case _ => null
+      }
       val esPayload: String = s"""{"mappings":{"${dataSet.split(ElasticSearchConstants.slashSeparator)(1)}":{"properties":$columnsArray}}}"""
       logger.info("Payload to ES -> " + esPayload)
       esPayload
@@ -150,8 +166,12 @@ object ElasticSearchUtilities {
 
         // check for the partition list. If its empty throw an error
         if (esOptions.get(ElasticSearchConfigs.esPartition) == null) {
-          logger.error("Incorrect Usage of API. Parititon value cannot be empty ")
-          throw DataSetException("Incorrect usage of the API. Partition Value can not be empty.")
+          logger.error("Incorrect Usage of API-> Either you have 'gimel.es.index.partition.isEnabled' is set to true  but 'gimel.es.index.partition.suffix' property is not set.So for Partitioned Index please set these two properties" +
+            "For Partitioned Index  --> gimel.es.index.partition.isEnabled is set to true and gimel.es.index.partition.suffix is set" +
+            "For Non Partitioned Index  --> gimel.es.index.partition.isEnabled is set to false")
+          throw DataSetException("Incorrect Usage of API-> Either you have 'gimel.es.index.partition.isEnabled' is set to true  but 'gimel.es.index.partition.suffix' property is not set.So for Partitioned Index please set these two properties" +
+            "For Partitioned Index  --> gimel.es.index.partition.isEnabled is set to true and gimel.es.index.partition.suffix is set" +
+            "For Non Partitioned Index  --> gimel.es.index.partition.isEnabled is set to false")
         }
 
         // get the es.Resource name
@@ -166,7 +186,11 @@ object ElasticSearchUtilities {
         // construct the resource name from the partition info
         val indexName: String = indexTypeArray(0)
         val typeName: String = indexTypeArray(1)
-        val partitions: String = esOptions(ElasticSearchConfigs.esPartition)
+
+        val esHost: String = esOptions(GimelConstants.ES_NODE)
+        val port: String = esOptions(GimelConstants.ES_PORT)
+        val partitions: String = esOptions.getOrElse(ElasticSearchConfigs.esPartition, getLatestIndexPartition(esHost, port, indexName, esOptions))
+        logger.info("The suffix is " + partitions)
 
         // for regular expression based search
         if (partitions.contains('*')) {
@@ -175,14 +199,8 @@ object ElasticSearchUtilities {
             case ElasticSearchConstants.esReadFlag =>
               val esHost: String = esOptions(GimelConstants.ES_NODE)
               val port: String = esOptions(GimelConstants.ES_PORT)
-              val separator: String = ElasticSearchConstants.slashSeparator
-              val esUrl: String = esHost + ElasticSearchConstants.colon + port + separator + indexName.concat(esOptions(ElasticSearchConfigs.esDelimiter)).concat(partitions) + separator + ElasticSearchConstants.aliases
-              logger.info("ES URL -> " + esUrl)
-              val serviceUtility: GimelServiceUtilities = GimelServiceUtilities()
-              val response: JsObject = serviceUtility.getAsObject(esUrl)
-              response.fields.foreach(x => {
-                dataSets :+= x._1.toString
-              })
+              getAllIndexPartitions(esHost, port, indexName, esOptions).foreach(dataSet => dataSets :+= dataSet)
+              logger.info("dataSets reading => " + dataSets.toString())
             case ElasticSearchConstants.esWriteFlag =>
               logger.info("Continue Writing data")
           }
@@ -194,8 +212,8 @@ object ElasticSearchUtilities {
           operationFlag match {
             case ElasticSearchConstants.esWriteFlag =>
               if (partitionsArray.length > 1) {
-                logger.error("Incorrect Usage of API. Cannot Write to Multiple Partitions")
-                throw DataSetException("Incorrect usage of the API. Cannot write to multiple partitions.")
+                logger.error("Incorrect Usage of API. Cannot Write to Multiple Partitions -> gimel.es.index.partition.suffix has multiple suffix -->20180603,20180604 ")
+                throw DataSetException("Incorrect usage of the API. Cannot write to multiple partitions-> gimel.es.index.partition.suffix has multiple suffix -->20180603,20180604.")
               }
             case ElasticSearchConstants.esReadFlag =>
               logger.info("Continue Reading for data")
@@ -212,8 +230,8 @@ object ElasticSearchUtilities {
       case Some("false") =>
         // If the partition info is supplied, throw an error.
         if (esOptions.contains(ElasticSearchConfigs.esPartition) && esOptions(ElasticSearchConfigs.esPartition) != "*") {
-          logger.error("Incorrect Usage of API. Partitions should not be given.")
-          throw DataSetException("Incorrect usage of the API. Partitions should not be given. The table is a non-partitioned table.")
+          logger.info("Partition suffix is given,but it is not necessary for Non Partitioned Index --> pcatalog.es.index.partition.isEnabled is set to false,but gimel.es.index.partition.suffix has been set-->Continuing the operation ignoring suffix property")
+          //   throw DataSetException("Incorrect usage of the API. Partitions should not be given. The table is a non-partitioned table.")
         }
         dataSets +:= esOptions(ElasticSearchConfigs.esResource)
 
@@ -222,6 +240,47 @@ object ElasticSearchUtilities {
         throw DataSetException("Invalid partition strategy.")
     }
     dataSets
+  }
+
+  /**
+    * Gets all the partitions and sorts them and slices it into only the daily part as suffix
+    * @param esHost - Elastic Host
+    * @param port - Port
+    * @param indexName - Index Name
+    * @param esOptions - Set of Elastic search user options
+    * @return - returns the suffix (day portion of the index)
+    */
+  def getLatestIndexPartition(esHost: String, port: String, indexName: String, esOptions: Map[String, String]): String = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+    logger.info("@Begin --> " + MethodName)
+    val indexNameWithSuffix = getAllIndexPartitions(esHost, port, indexName, esOptions).sortWith(_ > _).head
+    logger.info("top index name =>" + indexNameWithSuffix)
+    indexNameWithSuffix.substring(indexNameWithSuffix.lastIndexOf(esOptions(ElasticSearchConfigs.esDelimiter)) + 1, indexNameWithSuffix.size)
+  }
+
+  /**
+    * Gets all the daily partitions of an Index by using the GimelServiceUtilities REST call
+    * @param esHost - Elastic Host
+    * @param port - Port
+    * @param indexName - Index Name
+    * @param esOptions - Set of Elastic search user options
+    * @return - It returns all the daily partitions of the given Index.
+    */
+  def getAllIndexPartitions(esHost: String, port: String, indexName: String, esOptions: Map[String, String]): Seq[String] = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+    logger.info("@Begin --> " + MethodName)
+    val separator: String = ElasticSearchConstants.slashSeparator
+
+
+    val esUrl: String = esHost + ElasticSearchConstants.colon + port + separator + "_mapping"
+    logger.info("ES URL -> " + esUrl)
+
+    val serviceUtility: GimelServiceUtilities = GimelServiceUtilities()
+    val response: JsObject = serviceUtility.getAsObject(esUrl)
+    val listAllIndexes = response.fields.map(x => x._1.toString).toSeq
+    val listCurrentIndexes = listAllIndexes.filter(x => x.contains(indexName.concat(esOptions(ElasticSearchConfigs.esDelimiter))))
+    logger.info(listCurrentIndexes.toString())
+    listCurrentIndexes
   }
 
   /**
@@ -275,6 +334,25 @@ object ElasticSearchUtilities {
         logger.info(s"Write to ES - Success.")
     }
     rdd
+  }
+
+  /**
+    * Get elastic search version
+    * Following is the output of version call from ES and we grab the version and return it
+    * {"name":"pba.com","cluster_name":"hadoop","version":{"number":"2.2.0","lucene_version":"5.4.1","build_snapshot":false,"build_timestamp":
+    * "2016-01-27T13:32:39Z","build_hash":"8ff36d139e16f8720f2947ef62c8167a888992fe"},"tagline":"You Know, for Search"}
+    * @param host - Host of Elastic Search cluster
+    * @param port - Port of Elastic Search cluster
+    * @return - Version number
+    */
+  def getESVersion(host: String, port: String): String = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+    logger.info("@Begin --> " + MethodName)
+    val esUrl: String = host +  ElasticSearchConstants.colon + port
+    logger.info("ES URL -> " + esUrl)
+    val serviceUtility: GimelServiceUtilities = GimelServiceUtilities()
+    val response: JsObject = serviceUtility.getAsObject(esUrl)
+    response.fields("version").asJsObject.fields("number").toString
   }
 
   /**
