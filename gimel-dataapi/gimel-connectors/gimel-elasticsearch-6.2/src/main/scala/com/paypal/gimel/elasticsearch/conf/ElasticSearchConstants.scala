@@ -30,12 +30,20 @@ object ElasticSearchConstants {
   val defaultDelimiter: String = "_"
   val defaultReadAllFlag: String = "false"
   val defaultPartitionsIsEnabled: String = "false"
-  val dataFrameESMapping: Map[String, String] = Map(
+  val dataFrameES2Mapping: Map[String, String] = Map(
     "null" -> "null", "ByteType" -> "byte",
     "ShortType" -> "short", "IntegerType" -> "integer", "LongType" -> "long", "FloatType" -> "float",
     "DoubleType" -> "double", "StringType" -> "string", "BinaryType" -> "string", "BooleanType" -> "boolean",
     "TimestampType" -> "long", "ArrayType" -> "array", "MapType" -> "object", "StructType" -> "object",
     "DateType" -> "date")
+
+  val dataFrameES6Mapping: Map[String, String] = Map(
+    "null" -> "null", "ByteType" -> "byte",
+    "ShortType" -> "short", "IntegerType" -> "integer", "LongType" -> "long", "FloatType" -> "float",
+    "DoubleType" -> "double", "StringType" -> "text", "BinaryType" -> "text", "BooleanType" -> "boolean",
+    "TimestampType" -> "long", "ArrayType" -> "array", "MapType" -> "object", "StructType" -> "object",
+    "DateType" -> "date")
+
   val whiteListIndicesDefault =
     """[{"prefix": "hdfsaudit-cluster1","delimiter": "-","suffix": "YYYYMMDD"},
       |{"prefix": "sparkjoblogs-cluster2","delimiter": "-","suffix": "YYYYMMDD"},
@@ -56,4 +64,3 @@ object ElasticSearchConstants {
   val esPollingSmokeTestStreamingIndex = "pc_smoketest_kafka_streaming_es"
   val esPollingKibanaIndex = ".kibana"
 }
-

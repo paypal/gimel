@@ -28,7 +28,8 @@ import org.apache.spark.sql.types.StructType
 import org.elasticsearch.spark.rdd.EsSpark
 import org.elasticsearch.spark.sql._
 
-import com.paypal.gimel.common.conf.GimelConstants
+import com.paypal.gimel.common.catalog.{DataSetProperties}
+import com.paypal.gimel.common.conf.{CatalogProviderConstants, GimelConstants}
 import com.paypal.gimel.common.gimelservices.GimelServiceUtilities
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.elasticsearch.conf.{ElasticSearchConfigs, ElasticSearchConstants}
@@ -115,7 +116,26 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     */
   override def write(dataset: String, dataFrame: DataFrame, dataSetProps: Map[String, Any]): DataFrame = {
     val sqlDailyPartitionWrite: Boolean = dataSetProps.getOrElse(ElasticSearchConfigs.esIsDailyIndex, false).toString.toBoolean
+
+    val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
+
+
+    logger.info("outside " + dataSetProps.getOrElse(CatalogProviderConstants.DYNAMIC_DATASET, "outside").toString)
+    logger.info("inside " + datasetProps.props.getOrElse(CatalogProviderConstants.DYNAMIC_DATASET, "inside").toString)
+    logger.info("sqlDailyPartitionWrite =>" + sqlDailyPartitionWrite)
     if (sqlDailyPartitionWrite) {
+      val isCataloguedTable = datasetProps.props.getOrElse(CatalogProviderConstants.DYNAMIC_DATASET, "false").toString
+      if(isCataloguedTable.contains("true"))
+      {
+        val errorMessage =
+          s"""
+             |Writing to dynamic dataset with partitioned index is not currently supported
+             |Solutions for common exceptions are documented here : http://go/gimel/exceptions"
+             |""".stripMargin
+        throw new Exception(errorMessage)
+
+      }
+
       val columnRepartitionName = dataSetProps.getOrElse(ElasticSearchConfigs.esPartitionColumn, "").toString
       val esMappingId = dataSetProps.getOrElse(ElasticSearchConfigs.esMappingId, ElasticSearchConstants.esRowHashId).toString
       val hashedDF = dataFrame.withColumn(ElasticSearchConstants.esRowHashId, hash(dataFrame.columns.map(col): _*))
@@ -142,16 +162,21 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
         val port: String = esOptions(GimelConstants.ES_PORT)
         val separator: String = ElasticSearchConstants.slashSeparator
         val esUrl: String = esHost + ElasticSearchConstants.colon + port + separator + dataSet.split(separator)(0)
+        logger.info("esUrl is =>" +  esUrl )
         val statusCode: Int = serviceUtility.getStatusCode(esUrl)
+        logger.info("statusCode code is " + statusCode)
         statusCode match {
           case GimelConstants.HTTP_SUCCESS_STATUS_CODE =>
             logger.info("dataSet already indexed ->" + dataSet + ". Proceed to Write.")
           case _ =>
-            val esMapping: String = esOptions.getOrElse(ElasticSearchConfigs.esMapping, "")
-            val esPayload: String = ElasticSearchUtilities.generateESPayload(dataFrame, dataSet, esMapping)
-            val (statusCode: Int, response: String) = serviceUtility.put(esUrl, esPayload)
-            if (statusCode != GimelConstants.HTTP_SUCCESS_STATUS_CODE) {
-              throw DataSetException(s"Unable to create index with status code -> ${statusCode} and with the following cause -> ${response}. Please try again")
+            if (esOptions.contains(ElasticSearchConfigs.esMapping)) {
+              logger.info("Mapping supplied by the User. Creating index with user specified Mapping.")
+              val esMapping: String = esOptions.getOrElse(ElasticSearchConfigs.esMapping, "")
+              val esPayload: String = s"""{"mappings":{"${dataSet.split(ElasticSearchConstants.slashSeparator)(1)}":{"properties":$esMapping}}}"""
+              val (statusCode: Int, response: String) = serviceUtility.put(esUrl, esPayload)
+              if (statusCode != GimelConstants.HTTP_SUCCESS_STATUS_CODE) {
+                throw DataSetException(s"Unable to create index with status code -> ${statusCode} and with the following cause -> ${response}. Please try again")
+              }
             }
         }
       }
