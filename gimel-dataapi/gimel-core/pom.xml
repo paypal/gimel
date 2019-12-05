@@ -92,7 +92,7 @@ under the License.
     </dependency>
     <dependency>
       <groupId>com.paypal.gimel</groupId>
-      <artifactId>gimel-elasticsearch-5.6</artifactId>
+      <artifactId>gimel-elasticsearch-6.2</artifactId>
       <version>1.2.0-SNAPSHOT</version>
     </dependency>
     <dependency>
