@@ -25,15 +25,17 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.protobuf.Message;
 import com.googlecode.protobuf.format.JsonFormat;
+import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.producer.KafkaProducer;
+import org.apache.kafka.clients.producer.ProducerRecord;
+import org.apache.kafka.clients.producer.RecordMetadata;
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
+
 import com.paypal.gimel.logging.Constants;
 import com.paypal.gimel.logging.LogProvider;
 import com.paypal.gimel.logging.GimelLogger;
 import com.paypal.gimel.logging.utils.Context;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
-
 
 /**
  * Contains the basic logger functionalities define in {@link GimelLogger}
@@ -41,17 +43,17 @@ import org.apache.log4j.Logger;
  */
 public class BaseLogger implements GimelLogger {
 
-  protected final ObjectMapper jsonizer = new ObjectMapper();
-  private final Context context = new Context();
-  private final Logger logger = LogManager.getLogger(this.getClass().toString());
   protected LogProvider logProvider;
   private JsonFormat protoBufFormat;
+  private final Context context = new Context();
+  protected final ObjectMapper jsonizer = new ObjectMapper();
+
+  private final Logger logger = LogManager.getLogger(this.getClass().toString());
 
   protected BaseLogger(String className) {
     this.init(className);
     this.jsonizer.setSerializationInclusion(JsonInclude.Include.NON_NULL);
   }
-
 
   @Override
   public void logCustomMetrics(Object... args) {
@@ -100,7 +102,6 @@ public class BaseLogger implements GimelLogger {
     return result;
   }
 
-
   private void init(String classname) {
 
     this.logProvider = new LogProvider(classname);
@@ -110,8 +111,24 @@ public class BaseLogger implements GimelLogger {
 
   protected void publishToKafka(Constants.TopicType topicType, String value) {
     String currentTopic = this.logProvider.getTopicName(topicType);
-    KafkaProducer kafka = this.logProvider.getKafkaProducer(topicType);
-    kafka.send(new ProducerRecord(currentTopic, value));
+    KafkaProducer<byte[], byte[]> kafka = this.logProvider.getKafkaProducer(topicType);
+
+    // if kafka producer is not created, ignore the error and march
+    // TODO: Needs to be handled better way. But for now we decided to ignore and not fail
+    //  applications.
+    if (kafka == null) {
+      logger.error("Unable to send metrics to kafka. Printing the metrics to console.");
+      System.out.println(value);
+      return;
+    }
+    kafka.send(new ProducerRecord(currentTopic, value.getBytes()), new Callback() {
+      @Override
+      public void onCompletion(final RecordMetadata metadata, final Exception e) {
+        if (e != null) {
+          logger.error("Unable to write to Kafka in appender [ " + metadata + "]", e);
+        }
+      }
+    });
 
   }
 

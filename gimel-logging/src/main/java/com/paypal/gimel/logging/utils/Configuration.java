@@ -17,10 +17,12 @@
 
 package com.paypal.gimel.logging.utils;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
+
+import org.apache.log4j.LogManager;
+import org.apache.log4j.Logger;
 
 import com.paypal.gimel.logging.Constants;
 
@@ -28,6 +30,8 @@ public class Configuration {
 
   private static Configuration instance = null;
   private Properties properties = null;
+  private final Logger logger = LogManager.getLogger(this.getClass().toString());
+
   /**
    * It's a singleton class. Use {@link #getInstance()}
    */
@@ -49,6 +53,7 @@ public class Configuration {
   public void readConfiguration() {
     properties = new Properties();
     try {
+      this.logger.debug("Reading scaas logger properties.");
       String fileName = "/scaasConfig.properties";
       final InputStream configStream = this.getClass().getResourceAsStream(fileName);
       properties.load(configStream);
@@ -89,6 +94,4 @@ public class Configuration {
     }
     return props;
   }
-
-
 }

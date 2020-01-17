@@ -29,18 +29,19 @@ import org.apache.kafka.clients.producer.KafkaProducer;
  */
 public class LogProvider {
 
-  private KafkaProducer<String, String> kafkaProducer;
-  private KafkaProducer<String, String> customKafkaProducer;
+  private KafkaProducer<byte[], byte[]> kafkaProducer;
+  private KafkaProducer<byte[], byte[]> customKafkaProducer;
   private Configuration config = Configuration.getInstance();
   private final Properties kafkaProps = config.getKafkaProperties();
   private final Properties topics = config.getKafkaTopics();
 
 
-  public LogProvider(final String className) {
-  }
-
   public String getTopicName(Constants.TopicType topicType) {
     return topics.get(topicType.toString()).toString();
+  }
+
+
+  public LogProvider(final String className) {
   }
 
   /**
@@ -57,11 +58,13 @@ public class LogProvider {
     switch (topicType) {
       case APPLICATION:
         if (this.customKafkaProducer == null) {
-          this.customKafkaProducer = new KafkaProducer<String, String>(kafkaProps);
+          this.customKafkaProducer = new KafkaProducer<byte[], byte[]>(kafkaProps);
         }
         return this.customKafkaProducer;
       default: {
-        kafkaProducer = new KafkaProducer<String, String>(config.getKafkaProperties());
+        if (kafkaProducer == null) {
+          kafkaProducer = new KafkaProducer<byte[], byte[]>(config.getKafkaProperties());
+        }
         return this.kafkaProducer;
       }
 
@@ -97,4 +100,3 @@ public class LogProvider {
     topics.put(Constants.GIMEL_LOGGER_APPMETRICS_TOPIC_KEY, topic);
   }
 }
-
