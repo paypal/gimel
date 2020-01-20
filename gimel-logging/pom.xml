@@ -29,10 +29,11 @@
     <groupId>com.paypal.gimel</groupId>
     <artifactId>gimel-logging</artifactId>
     <packaging>pom</packaging>
-    <version>0.4.2-SNAPSHOT</version>
+    <version>0.4.3-SNAPSHOT</version>
     <modules>
         <module>gimel-logging_2.0</module>
         <module>gimel-logging_2.2</module>
+        <module>gimel-logging_2.3</module>
     </modules>
 
     <properties>

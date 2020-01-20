@@ -25,7 +25,6 @@ trait Logging {
 
   lazy val logger = LoggerFactory.getLogger(this.getClass)
 
-
   def trace(message: => Any): Unit = {
     if (logger.isTraceEnabled) {
       logger.trace(message.toString)
