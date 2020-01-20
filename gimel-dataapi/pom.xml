@@ -78,7 +78,7 @@ under the License.
         <scala.binary.version>2.11</scala.binary.version>
         <scala.version>2.11.8</scala.version>
         <gimel.logging.spark.binary.version>2.2</gimel.logging.spark.binary.version>
-        <gimel.logging.version>0.4.2-SNAPSHOT</gimel.logging.version>
+        <gimel.logging.version>0.4.3-SNAPSHOT</gimel.logging.version>
         <scalatest.version>3.0.1</scalatest.version>
         <tranquility.version>0.8.2</tranquility.version>
         <mockito.version>2.13.0</mockito.version>
