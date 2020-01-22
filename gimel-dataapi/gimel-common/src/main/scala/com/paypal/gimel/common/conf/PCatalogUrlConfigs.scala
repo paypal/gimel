@@ -20,7 +20,7 @@
 package com.paypal.gimel.common.conf
 
 // keys related to web services
-// IMPORTANT: Keys changed here must be changed in pcatalogservices.properties as well
+// IMPORTANT: Keys changed here must be changed in udcservices.properties as well
 object PCatalogUrlConfigs {
   val API_PROTOCOL: String = "rest.service.method"
   val API_HOST: String = "rest.service.host"
