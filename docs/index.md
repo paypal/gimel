@@ -27,7 +27,7 @@ Contents
 | ------------- | ----------- | ------------ | ------------- |-----------------|
 | <img src="images/scala.png" width="90" height="40" /> | 2.11.8 | PRODUCTION | | <br> Data API is built on scala 2.11.8 <br> regardless the library should be compatible as long as the spark major version of library and the environment match <br> |
 | <img src="images/python.png" width="100" height="40" /> | 2.6.6 | PRODUCTION | [PySpark Support](getting-started/gimel-pyspark-support.md)  | Data API / GSQL works fully well with PySpark as long as spark version in environment & Gimel library matches. |
-| <img src="images/spark.png" width="90" height="40" /> | 2.2.0 | | | This is the recommended version |
+| <img src="images/spark.png" width="90" height="40" /> | 2.3.0 | | | This is the recommended version |
 | <img src="images/hadoop.png" width="120" height="40" /> | 2.7.3 | | | This is the recommended version |
 | <img src="images/csv.png" width="60" height="60" /> | 2.7.3 | PRODUCTION | [CSV Reader Doc](gimel-connectors/hdfs-csv.md) | CSV Reader & Writer for HDFS |
 | <img src="images/restapi.png" width="150" height="60" /> | 2.7.3 | PRODUCTION WITH LIMITATIONS | [Restful/Web-API Doc](gimel-connectors/restapi.md) | <br>Allows Accessing Data<br>- to any source supporting<br>- Rest API<br> |

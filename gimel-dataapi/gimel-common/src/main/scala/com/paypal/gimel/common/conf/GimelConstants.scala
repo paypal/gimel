@@ -28,7 +28,7 @@ object GimelConstants {
   val EXIT_CONDITION = "exitCondition"
   val RESOLVED_HIVE_TABLE: String = "resolvedHiveTable"
   val GIMEL_PROPERTIES_FILE_KEY: String = "gimel.property.file"
-  val GIMEL_PROPERTIES_FILE_NAME = "/pcatalog.properties"
+  val GIMEL_PROPERTIES_FILE_NAME = "/gimel.properties"
   val DATASET_PROPS: String = "dataSetProperties"
   val APP_NAME: String = "appName"
   val APP_ID: String = "appId"

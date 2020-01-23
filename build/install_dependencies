@@ -28,7 +28,7 @@ write_log "Begin    | Script | $0"
 mvn install:install-file -DgroupId=qubole-hive-JDBC -DartifactId=qubole-hive-JDBC -Dversion=0.0.7 -Dpackaging=jar -Dfile=${this_dir}/../lib/qubole-hive-JDBC.jar 1>>/dev/null 2>&1
 check_error $? "install qubole-hive-JDBC"
 
-mvn install:install-file -DgroupId=com.hortonworks -DartifactId=shc-core -Dversion=1.1.2-2.2-s_2.11 -Dpackaging=jar -Dfile=${this_dir}/../lib/shc-core.jar 1>>/dev/null 2>&1
+mvn install:install-file -DgroupId=com.hortonworks -DartifactId=shc-core -Dversion=1.1.2-2.3-s_2.11 -Dpackaging=jar -Dfile=${this_dir}/../lib/shc-core.jar 1>>/dev/null 2>&1
 check_error $? "install shc-core"
 
 mvn install:install-file -DgroupId=com.osscube -DartifactId=aerospike-spark -Dversion=0.3-SNAPSHOT -Dpackaging=jar -Dfile=${this_dir}/../lib/aerospike-spark.jar 1>>/dev/null 2>&1

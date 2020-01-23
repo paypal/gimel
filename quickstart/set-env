@@ -20,6 +20,6 @@ if [ -z $GIMEL_HOME ]; then
 fi
 export gimel_repo_home=${GIMEL_HOME}
 export standalone_dir=${gimel_repo_home}/gimel-dataapi/gimel-standalone
-export gimel_jar_name=gimel-sql-1.2.0-SNAPSHOT-uber.jar
+export gimel_jar_name=gimel-sql-2.0.0-SNAPSHOT-uber.jar
 export final_jar=${standalone_dir}/lib/$gimel_jar_name
 export FLIGHTS_DATA_PATH=$GIMEL_HOME/gimel-dataapi/gimel-quickstart/flights

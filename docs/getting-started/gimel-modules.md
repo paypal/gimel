@@ -14,7 +14,7 @@
     <dependency>
       <groupId>com.paypal.gimel</groupId>
       <artifactId>gimel-tools</artifactId> <!--Refer one of the below listed 3 versions, depending on the required spark version -->
-      <version>1.2.0</version> <!--provides spark 2.2.0 compiled code-->
+      <version>2.0.0-SNAPSHOT</version> <!--provides spark 2.2.0 compiled code-->
       <scope>provided</scope> <!--Ensure scope is provided as the gimel libraries can be added at runtime-->
     </dependency>
 ```
@@ -23,7 +23,7 @@
     <dependency>
       <groupId>com.paypal.gimel</groupId>
       <artifactId>gimel-sql</artifactId> <!--Refer one of the below listed 3 versions, depending on the required spark version -->
-      <version>1.2.0</version> <!--provides spark 2.2.0 compiled code-->
+      <version>2.0.0-SNAPSHOT</version> <!--provides spark 2.2.0 compiled code-->
       <scope>provided</scope> <!--Ensure scope is provided as the gimel libraries can be added at runtime-->
     </dependency>
 ```
@@ -32,7 +32,7 @@
     <dependency>
       <groupId>com.paypal.gimel</groupId>
       <artifactId>gimel-core</artifactId> <!--Refer one of the below listed 3 versions, depending on the required spark version -->
-      <version>1.2.0</version> <!--provides spark 2.2.0 compiled code-->
+      <version>2.0.0-SNAPSHOT</version> <!--provides spark 2.2.0 compiled code-->
       <scope>provided</scope> <!--Ensure scope is provided as the gimel libraries can be added at runtime-->
     </dependency>
 ```

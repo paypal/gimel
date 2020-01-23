@@ -89,7 +89,7 @@ quickstart/start-gimel kafka,elasticsearch,hbase-master,hbase-regionserver
 ```
 docker exec -it spark-master bash -c \
 "export USER=an;export SPARK_HOME=/spark/;export PATH=$PATH:$SPARK_HOME/bin:$SPARK_HOME/sbin; \
-/spark/bin/spark-shell --jars /root/gimel-sql-1.2.0-SNAPSHOT-uber.jar"
+/spark/bin/spark-shell --jars /root/gimel-sql-2.0.0-SNAPSHOT-uber.jar"
 ```
 
 **Note:** *You can view the Spark UI  <a href="http://localhost:4040" target="_blank">here</a>*
