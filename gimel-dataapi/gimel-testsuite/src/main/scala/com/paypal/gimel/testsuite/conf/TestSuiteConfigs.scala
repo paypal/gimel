@@ -22,7 +22,7 @@ package com.paypal.gimel.testsuite.conf
 import com.paypal.gimel.common.conf.GimelConstants
 
 object TestSuiteConfigs {
-  // IMPORTANT: Keys changed here must be changed in pcatalog.properties as well
+  // IMPORTANT: Keys changed here must be changed in gimel.properties as well
   val smokeTestCDHKafkaHiveTableKey: String = "smoketest.kafka.cdh.hive.table"
   val smokeTestCDHKafkaTopicKey: String = "smoketest.kafka.cdh.topic"
   val smokeTestKafkaHiveTableKey: String = "smoketest.kafka.hive.table"

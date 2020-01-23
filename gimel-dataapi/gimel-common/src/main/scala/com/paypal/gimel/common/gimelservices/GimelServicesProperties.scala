@@ -113,7 +113,7 @@ class GimelServicesProperties(userProps: Map[String, String] = Map[String, Strin
     */
   private def getProps: Map[String, String] = {
     val props: Properties = new Properties()
-    withResources(this.getClass.getResourceAsStream("/pcatalogservices.properties")) {
+    withResources(this.getClass.getResourceAsStream("/udcservices.properties")) {
       configStream => props.load(configStream)
     }
     props.asScala.toMap

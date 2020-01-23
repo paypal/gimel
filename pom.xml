@@ -28,7 +28,7 @@ under the License.
     <name>Gimel Data API</name>
     <inceptionYear>2017</inceptionYear>
 
-    <version>1.2.0-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <modules>
         <module>gimel-logging</module>
         <module>gimel-dataapi</module>
@@ -60,7 +60,7 @@ under the License.
                 <property>
                     <name>general</name>
                 </property>
-                <!--<activeByDefault>true</activeByDefault>-->
+                <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
                 <packaging.scope>compile</packaging.scope>
@@ -69,6 +69,14 @@ under the License.
                 <hadoop.packaging.scope>provided</hadoop.packaging.scope>
                 <hive.packaging.scope>provided</hive.packaging.scope>
                 <zookeeper.version>3.4.6</zookeeper.version>
+                <gimel.version>2.0.0</gimel.version>
+                <scala.version>2.11.8</scala.version>
+                <spark.binary.version>2.3</spark.binary.version>
+                <spark.version>2.3.0</spark.version>
+                <hadoop.version>2.7.3</hadoop.version>
+                <hive.version>1.2.1000</hive.version>
+                <hbase.version>1.1.2</hbase.version>
+                <java.version>1.8</java.version>
                 <packaging.tag />
             </properties>
         </profile>
@@ -76,9 +84,9 @@ under the License.
             <id>hwx-2.6.3.11-1</id>
             <activation>
                 <property>
-                    <name>hortonworks-2.6.3.11-1_spark-2.2.0</name>
+                    <name>hortonworks-2.6.3.11-1_spark-2.3.0</name>
                 </property>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
                 <packaging.scope>compile</packaging.scope>
@@ -86,10 +94,10 @@ under the License.
                 <spark.packaging.scope>compile</spark.packaging.scope>
                 <hive.packaging.scope>provided</hive.packaging.scope>
                 <hadoop.packaging.scope>provided</hadoop.packaging.scope>
-                <gimel.version>0.6.0</gimel.version>
+                <gimel.version>2.0.0</gimel.version>
                 <scala.version>2.11.8</scala.version>
-                <spark.binary.version>2.2</spark.binary.version>
-                <spark.version>2.2.0.2.6.3.11-1</spark.version>
+                <spark.binary.version>2.3</spark.binary.version>
+                <spark.version>2.3.0.2.6.3.11-1</spark.version>
                 <hadoop.version>2.7.3.2.6.3.11-1</hadoop.version>
                 <hive.version>1.2.1000.2.6.3.11-1</hive.version>
                 <hbase.version>1.1.2.2.6.3.11-1</hbase.version>
@@ -101,9 +109,9 @@ under the License.
             <id>hwx-2.6.3.5-4</id>
             <activation>
                 <property>
-                    <name>hortonworks-2.6.3.5-4_spark-2.2.0</name>
+                    <name>hortonworks-2.6.3.5-4_spark-2.3.0</name>
                 </property>
-                <!--<activeByDefault>true</activeByDefault>-->
+                <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
                 <packaging.scope>compile</packaging.scope>
@@ -111,10 +119,10 @@ under the License.
                 <spark.packaging.scope>compile</spark.packaging.scope>
                 <hive.packaging.scope>provided</hive.packaging.scope>
                 <hadoop.packaging.scope>provided</hadoop.packaging.scope>
-                <gimel.version>0.6.0</gimel.version>
+                <gimel.version>2.0.0</gimel.version>
                 <scala.version>2.11.8</scala.version>
-                <spark.binary.version>2.2</spark.binary.version>
-                <spark.version>2.2.0.2.6.3.5-4</spark.version>
+                <spark.binary.version>2.3</spark.binary.version>
+                <spark.version>2.3.0.2.6.3.5-4</spark.version>
                 <hadoop.version>2.7.3.2.6.3.5-4</hadoop.version>
                 <hive.version>1.2.1000.2.6.3.5-4</hive.version>
                 <hbase.version>1.1.2.2.6.3.5-4</hbase.version>
