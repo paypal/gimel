@@ -762,23 +762,28 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     var objProps = scala.collection.mutable.Map[String, String]()
     storageTypeName.toUpperCase() match {
       case "HIVE" => {
-        val dbTable = dataset.split('.').tail.mkString(".").split('.').tail.mkString(".")
-        val Array(db, table) = dbTable.split('.')
-        objProps += ("gimel.hive.db.name" -> db)
+        val containerTable = dataset.split('.').tail.mkString(".").split('.').tail.mkString(".")
+        val Array(container, table) = containerTable.split('.')
+        objProps += ("gimel.hive.db.name" -> container)
         objProps += ("gimel.hive.table.name" -> table)
       }
       case "TERADATA" | "MYSQL" => {
-        val dbTable = dataset.split('.').tail.mkString(".").split('.').tail.mkString(".")
-        objProps += ("gimel.jdbc.input.table.name" -> dbTable)
+        val containerTable = dataset.split('.').tail.mkString(".").split('.').tail.mkString(".")
+        objProps += ("gimel.jdbc.input.table.name" -> containerTable)
       }
       case "ELASTIC" => {
-        val dbTable = dataset.split('.').tail.mkString(".").split('.').tail.mkString(".")
-        val Array(db, table) = dbTable.split('.')
-        objProps += ("es.resource" -> (db + "/" + table))
+        val containerTable = dataset.split('.').tail.mkString(".").split('.').tail.mkString(".")
+        val Array(container, table) = containerTable.split('.')
+        objProps += ("es.resource" -> (container + "/" + table))
         objProps += ("es.index.auto.create" -> "true")
       }
+      case "HBASE" => {
+        val containerTable = dataset.split('.').tail.mkString(".").split('.').tail.mkString(".")
+        val Array(container, table) = containerTable.split('.')
+        objProps += ("gimel.hbase.namespace.name" -> container)
+        objProps += ("gimel.hbase.table.name" -> table)
+      }
       case _ => {
-
         val errorMessage =
           s"""
              |[The dataset ${dataset} does not exist. Please check if the dataset name is correct.
