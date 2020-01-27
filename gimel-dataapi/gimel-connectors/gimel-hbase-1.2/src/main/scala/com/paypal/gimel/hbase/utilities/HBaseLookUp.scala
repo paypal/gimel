@@ -29,9 +29,7 @@ import org.apache.spark.sql.{DataFrame, SparkSession, SQLContext}
 import spray.json._
 import spray.json.DefaultJsonProtocol._
 
-import com.paypal.gimel.common.catalog.DataSetProperties
-import com.paypal.gimel.common.conf.GimelConstants
-import com.paypal.gimel.hbase.conf.HbaseConfigs
+import com.paypal.gimel.hbase.conf.{HbaseClientConfiguration, HbaseConfigs}
 import com.paypal.gimel.logger.Logger
 
 object HBaseLookUp {
@@ -43,39 +41,65 @@ object HBaseLookUp {
 class HBaseLookUp(sparkSession: SparkSession) {
 
   val logger = Logger()
-  val thisUser: String = sys.env(GimelConstants.USER)
 
   /**
     * This function reads all or given columns in column family for a rowKey specified by user
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param Dataset Name
     * @param dataSetProps
     *                props is the way to set various additional parameters for read and write operations in DataSet class
     *                Example Usecase : Hbase lookup for rowKey=r1 and columns c1, c12 of column family cf1 and c2 of cf2
     *                val options: Map[String, Any] = Map("operation"->"get","filter"->"rowKey=r1:toGet=cf1-c1,c12|cf2-c2")
-    *                val recsDF = dataSet.read("pcatalog.test123", options);
+    *                val recsDF = dataSet.read("udc.test123", options);
     * @return DataFrame
     */
   def get(dataset: String, dataSetProps: Map[String, Any]): DataFrame = {
     try {
 
-      // This is the DataSet Properties
-      val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
+      // Hbase configuration
+      val conf = new HbaseClientConfiguration(dataSetProps)
+      var options = Map.empty[String, String]
+      try {
+        if (conf.getOption.isEmpty) {
+          throw new IllegalArgumentException(
+            s"""
+               | HBase get filter condition not found. Please set the property ${HbaseConfigs.hbaseFilter}.
+               | Example: rowKey=1:toGet=personal
+               | where personal is the column family name
+               |""".stripMargin)
+        }
+        options = conf.getOption.split(":").map { x => x.split("=")(0) -> x.split("=")(1) }.toMap
+        if (!options.contains("rowKey")) {
+          throw new IllegalArgumentException(
+            s"""
+               | rowKey not present in the filter condition. Please check the property ${HbaseConfigs.hbaseFilter}.
+               | Examples: rowKey=1:toGet=personal
+               | where personal is the column family name
+               |""".stripMargin)
+        }
+      } catch {
+        case ex: Throwable =>
+          logger.error(
+            s"""
+               | Unable to parse the filter condition. Please check the property ${HbaseConfigs.hbaseFilter}
+               | Example: rowKey=1:toGet=personal
+               | where personal is the column family name
+               |""".stripMargin)
+          ex.printStackTrace()
+          throw ex
+      }
 
-      val tableProperties = datasetProps.props
-      val hbaseTable = dataSetProps.getOrElse(HbaseConfigs.hbaseTableKey, tableProperties.getOrElse(HbaseConfigs.hbaseTableKey, "")).asInstanceOf[String]
-      val getOption = dataSetProps.getOrElse(HbaseConfigs.hbaseFilter, "").asInstanceOf[String]
-      val options = getOption.split(":").map { x => x.split("=")(0) -> x.split("=")(1) }.toMap
       val rowKey = options("rowKey")
 
-      val dataFromHBASE: Map[String, String] = if (!options.contains("toGet")) getColumnsInRowKey(hbaseTable, rowKey)
-      else {
+      val dataFromHBASE: Map[String, String] = if (!options.contains("toGet")) {
+        getColumnsInRowKey(conf.hbaseNameSpace + ":" + conf.hbaseTableName, rowKey)
+      } else {
         val cfsAndCols = options("toGet")
         // (Column family to Array[Columns]) mapping specified by user in toGet
         val cfsSets: Map[String, Array[String]] = cfsAndCols.split('|').map { x =>
           if (x.split("-").length > 1) x.split('-')(0) -> x.split('-')(1).split(',') else x.split('-')(0) -> null
         }.toMap
-        getColumnsInRowKey(hbaseTable, rowKey, cfsSets)
+        getColumnsInRowKey(conf.hbaseNameSpace + ":" + conf.hbaseTableName, rowKey, cfsSets)
       }
       val hbaseDataJSON = dataFromHBASE.toJson.compactPrint
       val hbaseDf = jsonStringToDF(sparkSession, hbaseDataJSON)
@@ -91,7 +115,7 @@ class HBaseLookUp(sparkSession: SparkSession) {
   /**
     * Returns all/specified columns in column family for a rowKey specified by user
     *
-    * @param hbaseTable Name of the PCatalog Data Set
+    * @param hbaseTable Name of the Data Set
     * @param rowKey     row Key for the lookup
     * @param cfsSets    User Specified column family and columns
     * @return Map[Column -> Column Value ]
@@ -179,7 +203,7 @@ class HBaseLookUp(sparkSession: SparkSession) {
   /**
     * Returns all columns in all column families for a rowKey specified by user
     *
-    * @param hbaseTable Name of the PCatalog Data Set
+    * @param hbaseTable Name of the Data Set
     * @param rowKey     row Key for the lookup
     * @return Map[Column -> Column Value ]
     */

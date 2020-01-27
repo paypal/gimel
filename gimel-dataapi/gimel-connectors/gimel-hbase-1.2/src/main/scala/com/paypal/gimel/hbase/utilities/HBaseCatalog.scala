@@ -53,7 +53,32 @@ object HBaseCatalog {
         |}
     """.stripMargin
 
+  /**
+    * This function creates fields as String for Catalog with column Family appending with Column Name
+    *
+    * @param fields       Hbase Table namespace
+    * @param columnFamily Hbase table name
+    */
+  def fieldsAsStringForCataLogAppendColumnFamily(fields: Array[String], columnFamily: String = "rowkey"): String = {
 
+    var lengthString = ""
+    fields.map {
+      eachKey =>
+        val hbaseCol = if (columnFamily == "rowkey") {
+          lengthString = """, "length":"50""""
+          eachKey
+        } else eachKey
+        s""""$columnFamily""" + s"""_$eachKey":{"cf":"$columnFamily", "col":"$hbaseCol", "type":"string"$lengthString}"""
+    }.mkString("", ",\n", "")
+  }
+
+
+  /**
+    * This function creates fields as String for Catalog
+    *
+    * @param fields       Hbase Table namespace
+    * @param columnFamily Hbase table name
+    */
   def fieldsAsStringForCataLog(fields: Array[String], columnFamily: String = "rowkey"): String = {
 
     var lengthString = ""
@@ -104,10 +129,19 @@ object HBaseCatalog {
     * @return String
     */
 
-  def apply(nameSpace: String, tableName: String, cfColsMap: Map[String, Array[String]], keys: Array[String], tableCoder: String): String = {
+  def apply(nameSpace: String, tableName: String, cfColsMap: Map[String, Array[String]], keys: Array[String], tableCoder: String, readWithColumnFamily: Boolean): String = {
     val key = keys.mkString(":")
-    val keysAsCols = fieldsAsStringForCataLog(keys)
-    val colsAsCols = cfColsMap.map { x => fieldsAsStringForCataLog(x._2.diff(keys), x._1) }.mkString("", ",\n", "")
+    val keysAsCols = if (readWithColumnFamily) {
+      fieldsAsStringForCataLogAppendColumnFamily(keys)
+    } else {
+      fieldsAsStringForCataLog(keys)
+    }
+    val colsAsCols = if (readWithColumnFamily) {
+      cfColsMap.map { x => fieldsAsStringForCataLogAppendColumnFamily(x._2.diff(keys), x._1) }.mkString("", ",\n", "")
+    }
+    else {
+      cfColsMap.map { x => fieldsAsStringForCataLog(x._2.diff(keys), x._1) }.mkString("", ",\n", "")
+    }
     val catalogString = catalogTemplate.
       replaceAllLiterally(holderNameSpace, nameSpace)
       .replaceAllLiterally(holderTableName, tableName)
@@ -116,7 +150,7 @@ object HBaseCatalog {
       .replaceAllLiterally(holderColumns, colsAsCols)
       .replaceAllLiterally(holderKeysAsCols, keysAsCols)
     logger.info(catalogString)
-    println("catalog is --> " + catalogString)
+    logger.info("catalog is --> " + catalogString)
     catalogString
   }
 
@@ -144,11 +178,7 @@ object HBaseCatalog {
       .replaceAllLiterally(holderColumns, colsAsCols)
       .replaceAllLiterally(holderKeysAsCols, keysAsCols)
     logger.info(catalogString)
-    println("catalog is --> " + catalogString)
+    logger.info("catalog is --> " + catalogString)
     catalogString
   }
-
-
 }
-
-
