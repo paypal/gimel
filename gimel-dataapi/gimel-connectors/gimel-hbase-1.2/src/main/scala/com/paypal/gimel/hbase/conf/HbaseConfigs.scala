@@ -32,8 +32,10 @@ object HbaseConfigs {
   val hbaseFilter: String = "gimel.hbase.get.filter"
   val hbaseRowKey: String = "gimel.hbase.rowkey"
   val hbaseColumnNamewithColumnFamilyAppended: String = "gimel.hbase.colName.with.cfName.appended"
-  val hbaseUseColumnsSpecifiedFlag: String = "gimel.hbase.columns.specified.flag"
   val hbaseSiteXMLHDFSPathKey: String = "gimel.hbase.site.xml.hdfs.path"
+  val hbaseMaxRecordsForSchema: String = "gimel.hbase.schema.max.records"
+  val hbaseMaxColumnsForSchema: String = "gimel.hbase.schema.max.columns"
+
 }
 
 

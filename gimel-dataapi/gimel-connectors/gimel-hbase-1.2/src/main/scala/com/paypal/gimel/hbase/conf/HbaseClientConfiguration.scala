@@ -51,11 +51,9 @@ class HbaseClientConfiguration(val props: Map[String, Any]) {
   val clusterName = com.paypal.gimel.common.utilities.DataSetUtils.getYarnClusterName()
   val hbaseNameSpaceAndTable = GenericUtils.getValueFailIfEmpty(tableProps, HbaseConfigs.hbaseTableKey,
     "HBase table name not found. Please set the property " + HbaseConfigs.hbaseTableKey)
-  val hbaseTableColumnMapping = GenericUtils.getValueFailIfEmpty(tableProps, HbaseConfigs.hbaseColumnMappingKey,
-    s"""
-       | HBase column family to columns mapping not found. Please set the property ${HbaseConfigs.hbaseColumnMappingKey}.
-       | Example: cf1:col1,cf1:col2,cf2:col3
-       |""".stripMargin)
+  val hbaseTableColumnMapping = tableProps.getOrElse(HbaseConfigs.hbaseColumnMappingKey, "")
+  val maxSampleRecordsForSchema = GenericUtils.getValue(tableProps, HbaseConfigs.hbaseMaxRecordsForSchema, HbaseConstants.MAX_SAMPLE_RECORDS_FOR_SCHEMA).toInt
+  val maxColumnsForSchema = GenericUtils.getValue(tableProps, HbaseConfigs.hbaseMaxColumnsForSchema, HbaseConstants.MAX_COLUMNS_FOR_SCHEMA).toInt
   // If this property consists of namespace and tablename both separated by colon ":", take the table name by splitting this string
   val hbaseTableNamespaceSplit = hbaseNameSpaceAndTable.split(":")
   val hbaseTableName = if (hbaseTableNamespaceSplit.length > 1) {
@@ -63,7 +61,7 @@ class HbaseClientConfiguration(val props: Map[String, Any]) {
   } else {
     hbaseNameSpaceAndTable
   }
-  val hbaseNameSpace = tableProps.getOrElse(HbaseConfigs.hbaseNamespaceKey, HbaseConstants.hbaseDefaultNamespace)
+  val hbaseNameSpace = tableProps.getOrElse(HbaseConfigs.hbaseNamespaceKey, HbaseConstants.DEFAULT_NAMESPACE)
   // If ColumnFamily name needs to be appneded with Column Name in resultant Dataframe
   val hbaseColumnNamewithColumnFamilyAppended = tableProps.getOrElse(HbaseConfigs.hbaseColumnNamewithColumnFamilyAppended, "false").toString.toBoolean
   // HDFS path for hbase-site.xml
@@ -77,7 +75,7 @@ class HbaseClientConfiguration(val props: Map[String, Any]) {
   val getOption = tableProps.getOrElse(HbaseConfigs.hbaseFilter, "")
 
   // Getting Row Key from user otherwise from schema in UDC or hive table. If it is not present in schema also, set defaultValue
-  val hbaseRowKeys = tableProps.getOrElse(HbaseConfigs.hbaseRowKey, HbaseConstants.defaultRowKeyColumn).split(",")
+  val hbaseRowKeys = tableProps.getOrElse(HbaseConfigs.hbaseRowKey, HbaseConstants.DEFAULT_ROW_KEY_COLUMN).split(",")
 
   logger.info(s"Fields Initiated --> ${this.getClass.getFields.map(f => s"${f.getName} --> ${f.get().toString}").mkString("\n")}")
   logger.info(s"Completed Building --> ${this.getClass.getName}")
