@@ -193,7 +193,7 @@ class DataSet(val sparkSession: SparkSession) {
   /**
     * Client API : Calls appropriate DataSet & its Write method
     *
-    * @param dataSet   Example : cdh.wuser.confdba | wuser | default:wuser
+    * @param dataSet   Example : flights | flights | default.flights
     * @param dataFrame DataFrame
     * @param props     Additional Properties for the Reader of Dataset
     * @return DataFrame
@@ -313,7 +313,7 @@ class DataSet(val sparkSession: SparkSession) {
   /**
     * Client API : Calls appropriate DataSet & its Write method
     *
-    * @param dataSet Example : cdh.wuser.confdba | wuser | default:wuser
+    * @param dataSet Example : flights | flights_time | default.flights
     * @param anyRDD  RDD[T] UnSupported Types may fail at run-time.
     *                Please check Documentation of APIs carefully.
     * @param props   Additional Properties for the Reader of Dataset
@@ -426,7 +426,7 @@ class DataSet(val sparkSession: SparkSession) {
     * Calls appropriate DataSet & its read method
     *
     * @param sourceType Example : KAFKA | ELASTIC_SEARCH | HDFS | HBASE  |JDBC
-    * @param sourceName Example : cdh.wuser.confdba | wuser | default:wuser
+    * @param sourceName Example : flights | flights_time | default.flights
     * @param props      Additional Properties for the Reader of Dataset
     * @return DataFrame
     */
@@ -442,7 +442,7 @@ class DataSet(val sparkSession: SparkSession) {
     * Calls appropriate DataSet & its Write method
     *
     * @param targetType Example : KAFKA | ELASTIC_SEARCH | HDFS | HBASE | JDBC
-    * @param targetName Example : cdh.wuser.confdba | wuser | default:wuser
+    * @param targetName Example : flights | flights_time | default.flights
     * @param dataFrame  DataFrame
     * @param props      Additional Properties for the Reader of Dataset
     * @return DataFrame
@@ -460,7 +460,7 @@ class DataSet(val sparkSession: SparkSession) {
     * Calls appropriate DataSet & its Write method
     *
     * @param targetType Example : KAFKA | ELASTIC_SEARCH | HDFS | HBASE  | JDBC
-    * @param targetName Example : cdh.wuser.confdba | wuser | default:wuser
+    * @param targetName Example : flights | flights_time | default.flights
     * @param anyRDD     RDD[T] UnSupported Types may fail at run-time.
     *                   Please check Documentation of APIs carefully.
     * @param props      Additional Properties for the Reader of Dataset
@@ -479,7 +479,7 @@ class DataSet(val sparkSession: SparkSession) {
     * Calls appropriate DataSet & its create method
     *
     * @param sourceType Example : KAFKA | ELASTIC_SEARCH | HDFS | HBASE  |JDBC
-    * @param sourceName Example : cdh.wuser.confdba | wuser | default:wuser
+    * @param sourceName Example : flights | flights_time | default.flights
     * @param props      Additional Properties for the Reader of Dataset
     * @return DataFrame
     */
@@ -612,7 +612,7 @@ class DataSet(val sparkSession: SparkSession) {
     * Calls appropriate DataSet & its drop method
     *
     * @param sourceType Example : KAFKA | ELASTIC_SEARCH | HDFS | HBASE  |JDBC
-    * @param sourceName Example : cdh.wuser.confdba | wuser | default:wuser
+    * @param sourceName Example : flights | flights_time | default.flights
     * @param props      Additional Properties for the Reader of Dataset
     * @return DataFrame
     */
@@ -741,7 +741,7 @@ class DataSet(val sparkSession: SparkSession) {
     * Calls appropriate DataSet & its truncate method
     *
     * @param sourceType Example : KAFKA | ELASTIC_SEARCH | HDFS | HBASE  |JDBC
-    * @param sourceName Example : cdh.wuser.confdba | wuser | default:wuser
+    * @param sourceName Example : flights | flights_time | default.flights
     * @param props      Additional Properties for the Reader of Dataset
     * @return DataFrame
     */

@@ -271,6 +271,15 @@ object GenericUtils {
     }.getOrElse(defaultValue)
   }
 
+  def getValueFailIfEmpty[T](conf: Map[String, String], key: String, msg: String): String = {
+    val optionValue = conf.getOrElse(key, "").toString
+    if (optionValue.isEmpty) {
+      throw new IllegalArgumentException(msg)
+    } else {
+      optionValue
+    }
+  }
+
   def log(msg: String,
           classLogger: Logger,
           incomingLogger: Option[Logger] = None): Unit = {

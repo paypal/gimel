@@ -92,6 +92,7 @@ object GimelConstants {
   // HBASE CONSTANTS USED ACROSS ENTIRE GIMEL
   val HBASE_NAMESPACE: String = "gimel.hbase.namespace.name"
   val STORAGE_TYPE_HBASE: String = "hbase"
+  val HBASE_PAGE_SIZE = "spark.hbase.connector.pageSize"
 
   // TERA DATA RELATED CONSTANTS
   val STORAGE_TYPE_JDBC = "JDBC"

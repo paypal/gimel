@@ -436,6 +436,4 @@ object HBaseAdminClient {
     }
     hbaseConfigFileLocation
   }
-
-
 }
