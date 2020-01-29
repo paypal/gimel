@@ -24,9 +24,7 @@ import org.apache.hadoop.hbase.client.{ConnectionFactory, Put}
 import org.apache.hadoop.hbase.util.Bytes
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-import com.paypal.gimel.common.catalog.DataSetProperties
-import com.paypal.gimel.common.conf.GimelConstants
-import com.paypal.gimel.hbase.conf.HbaseConfigs
+import com.paypal.gimel.hbase.conf.{HbaseClientConfiguration, HbaseConfigs}
 import com.paypal.gimel.logger.Logger
 
 object HBasePut {
@@ -37,12 +35,12 @@ object HBasePut {
 
 class HBasePut(sparkSession: SparkSession) {
   val logger = Logger()
-  val thisUser: String = sys.env(GimelConstants.USER)
+  lazy val hbaseUtilities = HBaseUtilities(sparkSession)
 
   /**
     * This function performs put(insert/update) operation on each row of dataframe
     *
-    * @param dataset   Name of the PCatalog Data Set
+    * @param Dataset Name
     * @param dataFrame The Dataframe to write into Target
     * @param dataSetProps
     *                  props is the way to set various additional parameters for read and write operations in DataSet class
@@ -51,25 +49,17 @@ class HBasePut(sparkSession: SparkSession) {
     *                  val recsDF = dataSet.write("pcatalog.test123", df, options);
     * @return DataFrame
     */
-
   def put(dataset: String, dataFrame: DataFrame, dataSetProps: Map[String, Any]): DataFrame = {
     try {
-
-      // This is the DataSet Properties
-      val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
-      val schema: Array[String] = datasetProps.fields.map(_.fieldName)
-      val tableProperties = datasetProps.props
-      val tableColumnMapping = tableProperties(HbaseConfigs.hbaseColumnMappingKey)
-      val rowkeyPosition = tableColumnMapping.split(",").indexOf(":key")
-      val hbaseRowKeys = dataSetProps.getOrElse(HbaseConfigs.hbaseRowKey, Array(schema(rowkeyPosition))).asInstanceOf[Array[String]]
-      val hbaseTable = dataSetProps.getOrElse(HbaseConfigs.hbaseTableKey, tableProperties.getOrElse(HbaseConfigs.hbaseTableKey, "")).asInstanceOf[String]
-      // Setting (Column family -> Array[Columns]) mapping
-      val columnFamilyFromTable: Map[String, String] = if (tableColumnMapping.split(",").length > 1 && !tableColumnMapping.split(",")(1).contains(":key")) {
-        tableColumnMapping.replaceAll(":key,", "").split(",").map(x => (x.split(":")(1), x.split(":")(0))).toMap
-      } else null
-
-      val columnSet = dataFrame.columns
-      putRows(hbaseTable, dataFrame, hbaseRowKeys.mkString(":"), columnSet, columnFamilyFromTable)
+      // Hbase configuration
+      val conf = new HbaseClientConfiguration(dataSetProps)
+      // Getting (Column family -> Array[Columns]) mapping
+      val columnFamilyToColumnMapping: Map[String, Array[String]] = hbaseUtilities.getColumnMappingForColumnFamily(conf.hbaseTableColumnMapping)
+      logger.info("Column mapping -> " + columnFamilyToColumnMapping)
+      // Converting columnFamilyToColumnMapping to a map of (Column -> Column Family)
+      val columnToColumnFamilyMapping = columnFamilyToColumnMapping.flatMap(cfCols => cfCols._2.map(col => (col, cfCols._1)))
+      // Create Put object for each row in dataframe
+      putRows(conf.hbaseNameSpace + ":" + conf.hbaseTableName, dataFrame, conf.hbaseRowKeys.mkString(":"), dataFrame.columns, columnToColumnFamilyMapping)
       dataFrame
     } catch {
       case ex: Throwable =>
@@ -97,7 +87,7 @@ class HBasePut(sparkSession: SparkSession) {
       val rows = dataFrame.rdd.map { row =>
         (row.getAs(rowKeyColumn).toString,
           columns.map(eachCol => (cfColsMap.getOrElse(eachCol, ""), eachCol, row.getAs(eachCol).asInstanceOf[String]))
-          )
+        )
       }.collect()
       // Performing put operation on each row of dataframe
       rows.foreach { row =>

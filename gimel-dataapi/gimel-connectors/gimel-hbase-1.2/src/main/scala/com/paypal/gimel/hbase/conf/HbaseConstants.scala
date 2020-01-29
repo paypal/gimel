@@ -19,21 +19,14 @@
 
 package com.paypal.gimel.hbase.conf
 
-// keys related to HBASE
-object HbaseConfigs {
-  // metastore properties
-  val hbaseTableKey: String = "gimel.hbase.table.name"
-  val hbaseColumnMappingKey: String = "gimel.hbase.columns.mapping"
-  val hbaseNamespaceKey = "gimel.hbase.namespace.name"
+object HbaseConstants {
+  // basic variable references
+  val defaultRowKeyColumn = "rowKey"
+  val hbaseDefaultNamespace = "default"
 
-  // misc properties for read/write
-  val hbaseStorageHandler: String = "org.apache.hadoop.hive.hbase.HBaseStorageHandler"
-  val hbaseOperation: String = "gimel.hbase.operation"
-  val hbaseFilter: String = "gimel.hbase.get.filter"
-  val hbaseRowKey: String = "gimel.hbase.rowkey"
-  val hbaseColumnNamewithColumnFamilyAppended: String = "gimel.hbase.colName.with.cfName.appended"
-  val hbaseUseColumnsSpecifiedFlag: String = "gimel.hbase.columns.specified.flag"
-  val hbaseSiteXMLHDFSPathKey: String = "gimel.hbase.site.xml.hdfs.path"
+  val scanOperation = "scan"
+  val getOperation = "get"
+  val putOperation = "put"
+
+  val NONE_STRING = "NONE"
 }
-
-

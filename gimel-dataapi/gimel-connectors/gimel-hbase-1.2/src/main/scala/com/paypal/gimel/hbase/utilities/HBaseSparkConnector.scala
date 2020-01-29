@@ -22,14 +22,12 @@ package com.paypal.gimel.hbase.utilities
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.execution.datasources.hbase.{HBaseRelation, HBaseTableCatalog}
 
-import com.paypal.gimel.common.catalog.DataSetProperties
-import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.storageadmin.HBaseAdminClient
-import com.paypal.gimel.hbase.conf.HbaseConfigs
+import com.paypal.gimel.hbase.conf.{HbaseClientConfiguration, HbaseConfigs, HbaseConstants}
 import com.paypal.gimel.logger.Logger
 
 /**
-  * HBASE implementations internal to PCatalog
+  * Spark Hbase Connector by Hortonworks implementations internal to Gimel
   */
 object HBaseSparkConnector {
 
@@ -39,12 +37,12 @@ object HBaseSparkConnector {
 
 class HBaseSparkConnector(sparkSession: SparkSession) {
   val logger = Logger()
-  val thisUser: String = sys.env(GimelConstants.USER)
+  lazy val hbaseUtilities = HBaseUtilities(sparkSession)
 
   /**
     * This function performs scan/bulkGet on hbase table
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param Dataset Name
     * @param dataSetProps
     *                props is the way to set various additional parameters for read and write operations in DataSet class
     *                Example Usecase : to get 10 factor parallelism (specifically)
@@ -56,43 +54,19 @@ class HBaseSparkConnector(sparkSession: SparkSession) {
   def read(dataset: String, dataSetProps: Map[String, Any] = Map.empty): DataFrame = {
     try {
 
-      val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
-      val schema: Array[String] = datasetProps.fields.map(_.fieldName)
-      val tableProperties = datasetProps.props
-      val tableColumnMappingInput = dataSetProps.getOrElse(HbaseConfigs.hbaseColumnMappingKey, "").asInstanceOf[String]
-      val tableColumnMapping: String = if (tableColumnMappingInput.isEmpty) {
-        tableProperties(HbaseConfigs.hbaseColumnMappingKey).toString
-      }
-      else {
-        tableColumnMappingInput
-      }
-      val rowkeyPosition = if (!tableColumnMapping.isEmpty && tableColumnMapping.contains(":key")) {
-        tableColumnMapping.split(",").indexOf(":key")
-      } else {
-        0
-      }
-      // Getting Row Key from user otherwise from DDL
-      val hbaseRowKeys = dataSetProps.getOrElse(HbaseConfigs.hbaseRowKey, schema(rowkeyPosition)).asInstanceOf[String].split(",")
-      logger.info("Hbase Row Keys : " + hbaseRowKeys.mkString(","))
-      val hbaseTable = dataSetProps.getOrElse(HbaseConfigs.hbaseTableKey, tableProperties.getOrElse(HbaseConfigs.hbaseTableKey, "")).asInstanceOf[String]
-      val hbaseNameSpace = dataSetProps.getOrElse(GimelConstants.HBASE_NAMESPACE, tableProperties.getOrElse(GimelConstants.HBASE_NAMESPACE, "default")).asInstanceOf[String]
-      // Setting (Column family -> array of columns) mapping
-      val columnFamilyFromTable: Map[String, Array[String]] = if (tableColumnMapping.split(",").length > 0) {
-        tableColumnMapping.replaceAll(":key,", "").split(",").map(x => (x.split(":")(0), x.split(":")(1))).groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
-      } else {
-        null
-      }
-      val hbaseSiteXMLHDFS = tableProperties.getOrElse(HbaseConfigs.hbaseSiteXMLHDFSPathKey, "NONE")
-      val hbaseConfigFileLocation = HBaseAdminClient.getHbaseSiteXml(hbaseSiteXMLHDFS)
-      if (columnFamilyFromTable == null) {
-        logger.error("hbase.columns.mapping not found in hive table schema.")
-      }
-      val hbaseTableName = hbaseTable.split(":")(1)
-      val catalog = HBaseCatalog(hbaseNameSpace, hbaseTableName, columnFamilyFromTable, hbaseRowKeys, "PrimitiveType")
-      logger.info(s"reading with catalog --> $catalog")
+      val conf = new HbaseClientConfiguration(dataSetProps)
+      // Setting the map (Column family -> Array of columns)
+      val columnFamilyToColumnMapping: Map[String, Array[String]] = hbaseUtilities.getColumnMappingForColumnFamily(conf.hbaseTableColumnMapping)
+      logger.info("Column mapping -> " + columnFamilyToColumnMapping)
+      // Get the hbase-site.xml file location
+      val hbaseConfigFileLocation = HBaseAdminClient.getHbaseSiteXml(conf.hbaseSiteXMLHDFSPath)
+      // Create catalog for the SHC connector
+      val catalog = HBaseCatalog(conf.hbaseNameSpace, conf.hbaseTableName, columnFamilyToColumnMapping, conf.hbaseRowKeys,
+        "PrimitiveType", conf.hbaseColumnNamewithColumnFamilyAppended)
+      logger.info(s"Reading with catalog --> $catalog")
 
-      val dataframe = hbaseSiteXMLHDFS match {
-        case "NONE" =>
+      val dataframe = conf.hbaseSiteXMLHDFSPath match {
+        case HbaseConstants.NONE_STRING =>
           readWithCatalog(catalog)
         case _ =>
           readWithCatalog(catalog, hbaseConfigFileLocation)
@@ -151,7 +125,7 @@ class HBaseSparkConnector(sparkSession: SparkSession) {
   /**
     * This function performs bulk write into hbase table
     *
-    * @param dataset   Name of the PCatalog Data Set
+    * @param Dataset Name
     * @param dataFrame The Dataframe to write into Target
     * @param dataSetProps
     *                  Example Usecase : we want only 1 executor for hbase (specifically)
@@ -163,43 +137,47 @@ class HBaseSparkConnector(sparkSession: SparkSession) {
 
   def write(dataset: String, dataFrame: DataFrame, dataSetProps: Map[String, Any]): DataFrame = {
     try {
-      val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
-      val schema: Array[String] = datasetProps.fields.map(_.fieldName)
-      val tableProperties = datasetProps.props
-      val tableColumnMappingSerDe = tableProperties(HbaseConfigs.hbaseColumnMappingKey)
-      val rowkeyPosition = if (!tableColumnMappingSerDe.isEmpty) tableColumnMappingSerDe.split(",").indexOf(":key") else 0
-      val hbaseRowKeys = dataSetProps.getOrElse(HbaseConfigs.hbaseRowKey, schema(rowkeyPosition)).asInstanceOf[String].split(",")
-      logger.info("Hbase Row Keys : " + hbaseRowKeys.mkString(","))
-      if (!(hbaseRowKeys.diff(dataFrame.columns.toSeq).isEmpty)) logger.error("Row Key column not found in input dataframe.")
-      val dfColumns = dataFrame.columns.filter(x => !hbaseRowKeys.contains(x)).toSeq
-      val useColumnsSpecifiedFlag = dataSetProps.getOrElse(HbaseConfigs.hbaseUseColumnsSpecifiedFlag, false).asInstanceOf[Boolean]
-      // Get table column family and column mapping from input option from user
-      val tableColumnMappingInput = dataSetProps.getOrElse(HbaseConfigs.hbaseColumnMappingKey, "").asInstanceOf[String]
-      if (useColumnsSpecifiedFlag && tableColumnMappingInput.isEmpty) logger.error("You need to specify hbase.columns.mapping option with hbase.columns.specified.flag.")
-      val tableColumnMapping = if (useColumnsSpecifiedFlag) tableColumnMappingInput else tableColumnMappingSerDe + "," + tableColumnMappingInput
-      val columnsInSchema = tableColumnMapping.split(",").map(eachCol => eachCol.split(":")(1)).distinct.toSeq
-      logger.info("Columns in schema : " + columnsInSchema)
-      val diff = if (useColumnsSpecifiedFlag) columnsInSchema.diff(dfColumns) else dfColumns.diff(columnsInSchema)
-      val columnFamilyToColumns: Map[String, Array[String]] = if (diff.isEmpty) {
-        tableColumnMapping.replaceAll(":key,", "").split(",").map(x => (x.split(":")(0), x.split(":")(1))).groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
-      } else {
-        logger.error("Column Families for columns : " + diff.mkString(",") + " not found in schema. You can specify the mapping in the option: " + HbaseConfigs.hbaseColumnMappingKey)
-        null
+      val conf = new HbaseClientConfiguration(dataSetProps)
+
+      if (conf.hbaseRowKeys.diff(dataFrame.columns.toSeq).nonEmpty) {
+        throw new IllegalArgumentException(
+          s"""
+             |Row Key columns not found in input dataframe.
+             |You can modify the value through ${HbaseConfigs.hbaseRowKey} parameter.
+             |Note: Default value is first column of the schema from UDC or ${HbaseConstants.defaultRowKeyColumn}.
+             |""".stripMargin)
       }
-      val dataFrameToWrite = if (useColumnsSpecifiedFlag) dataFrame.selectExpr(columnsInSchema ++ hbaseRowKeys: _*) else dataFrame
-      val hbaseTable = dataSetProps.getOrElse(HbaseConfigs.hbaseTableKey, tableProperties.getOrElse(HbaseConfigs.hbaseTableKey, "")).asInstanceOf[String]
-      val hbaseNameSpace = dataSetProps.getOrElse(GimelConstants.HBASE_NAMESPACE, tableProperties.getOrElse(GimelConstants.HBASE_NAMESPACE, "default")).asInstanceOf[String]
+      // Get columns in dataframe excluding row key columns
+      val dfColumns = dataFrame.columns.filter(x => !conf.hbaseRowKeys.contains(x)).toSeq
+      logger.info("Columns in dataframe -> " + dfColumns)
       // Setting (Column family -> array of columns) mapping
-      val hbaseSiteXMLHDFS = tableProperties.getOrElse(HbaseConfigs.hbaseSiteXMLHDFSPathKey, "NONE")
-      val hbaseConfigFileLocation = HBaseAdminClient.getHbaseSiteXml(hbaseSiteXMLHDFS)
-      val hbaseTableName = hbaseTable.split(":")(1)
-      val catalog = HBaseCatalog(hbaseNameSpace, hbaseTableName, columnFamilyToColumns, hbaseRowKeys, "PrimitiveType")
-      logger.info(s"writing with catalog --> $catalog")
-      val dataframe = hbaseSiteXMLHDFS match {
-        case "NONE" =>
+      val columnFamilyToColumnMapping: Map[String, Array[String]] = hbaseUtilities.getColumnMappingForColumnFamily(conf.hbaseTableColumnMapping)
+      logger.info("Column mapping -> " + columnFamilyToColumnMapping)
+      val columnsInSchema = columnFamilyToColumnMapping.map(_._2).flatten.toSeq
+      logger.info("Columns in schema : " + columnsInSchema)
+      // Check what columns in the input hbase column mapping are not present in the input dataframe
+      val diff = columnsInSchema.diff(dfColumns)
+      if (diff.nonEmpty) {
+        throw new IllegalArgumentException(
+          s"""
+             |Columns : ${diff.mkString(",")} not found in dataframe schema.
+             |Please check the property : ${HbaseConfigs.hbaseColumnMappingKey} = ${conf.hbaseTableColumnMapping}
+             |""".stripMargin
+        )
+      }
+      // Select columns provided in gimel.hbase.column.mapping property and row keys from the input dataframe.
+      val dataFrameToWrite = dataFrame.selectExpr(columnsInSchema ++ conf.hbaseRowKeys: _*)
+      // Get the hbase-site.xml file location
+      val hbaseConfigFileLocation = HBaseAdminClient.getHbaseSiteXml(conf.hbaseSiteXMLHDFSPath)
+      // Create catalog for the SHC connector
+      val catalog = HBaseCatalog(conf.hbaseNameSpace, conf.hbaseTableName, columnFamilyToColumnMapping, conf.hbaseRowKeys, "PrimitiveType", false)
+      logger.info(s"Writing with catalog --> $catalog")
+      conf.hbaseSiteXMLHDFSPath match {
+        case HbaseConstants.NONE_STRING =>
           logger.info(s"PLAIN WRITE")
           writeWithCatalog(dataFrameToWrite, catalog)
-        case _ => logger.info(s"write with ${hbaseSiteXMLHDFS}")
+        case _ =>
+          logger.info(s"write with ${conf.hbaseSiteXMLHDFSPath}")
           writeWithCatalog(dataFrameToWrite, catalog, hbaseConfigFileLocation)
       }
       dataFrame
@@ -253,5 +231,4 @@ class HBaseSparkConnector(sparkSession: SparkSession) {
         throw ex
     }
   }
-
 }

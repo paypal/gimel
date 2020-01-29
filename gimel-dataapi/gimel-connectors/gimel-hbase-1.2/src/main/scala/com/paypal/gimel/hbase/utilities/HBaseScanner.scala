@@ -61,7 +61,7 @@ class HBaseScanner() {
         val cells = result.listCells().iterator().asScala
         cells.map(cell => (Bytes.toString(CellUtil.cloneFamily(cell)), Bytes.toString(CellUtil.cloneQualifier(cell)))).toList
       }.toList.distinct.groupBy(_._1).map(x => (x._1, x._2.map(p => p._2).toArray))
-      logger.info("Records Count : " + count)
+      logger.info(s"Records Count for ${tableName} : " + count)
       val rowKeyMap = Map("rowKey" -> Array(rowKey))
       rowKeyMap ++ res
     } finally {

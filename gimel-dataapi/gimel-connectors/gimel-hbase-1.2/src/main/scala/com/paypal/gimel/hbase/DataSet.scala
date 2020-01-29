@@ -25,7 +25,8 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import com.paypal.gimel.datasetfactory.GimelDataSet
-import com.paypal.gimel.hbase.utilities.HBaseUtilities
+import com.paypal.gimel.hbase.conf.{HbaseConfigs, HbaseConstants}
+import com.paypal.gimel.hbase.utilities.{HBaseLookUp, HBasePut, HBaseSparkConnector, HBaseUtilities}
 import com.paypal.gimel.logger.Logger
 
 /**
@@ -42,11 +43,14 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * Change this parameter with cluster config
     */
   logger.info(s"Initiated --> ${this.getClass.getName}")
-  val hBASEUtilities = HBaseUtilities(sparkSession)
+  lazy val hbaseUtilities = HBaseUtilities(sparkSession)
+  lazy val hbaseLookUp = HBaseLookUp(sparkSession)
+  lazy val hbasePut = HBasePut(sparkSession)
+  lazy val hbaseSparkConnector = HBaseSparkConnector(sparkSession)
 
   /**
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param dataset Name of the UDC Data Set
     * @param dataSetProps
     *                props is the way to set various additional parameters for read and write operations in DataSet class
     *                Example Usecase : to get 10 factor parallelism (specifically)
@@ -56,14 +60,22 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @return DataFrame
     */
   override def read(dataset: String, dataSetProps: Map[String, Any]): DataFrame = {
-    if (dataSetProps.isEmpty) throw HBaseDataSetException("props cannot be empty !")
+    if (dataSetProps.isEmpty) throw new DataSetException("props cannot be empty !")
 
-    hBASEUtilities.read(dataset, dataSetProps)
+    val hbaseOperation = dataSetProps.getOrElse(HbaseConfigs.hbaseOperation, HbaseConstants.scanOperation).toString
+    hbaseOperation match {
+      case HbaseConstants.getOperation =>
+        logger.info("Reading through Java Get API.")
+        hbaseLookUp.get(dataset, dataSetProps)
+      case _ =>
+        logger.info("Reading through SHC Connector.")
+        hbaseSparkConnector.read(dataset, dataSetProps)
+    }
   }
 
   /**
     *
-    * @param dataset   Name of the PCatalog Data Set
+    * @param dataset   Name of the UDC Data Set
     * @param dataFrame The Dataframe to write into Target
     * @param dataSetProps
     *                  Example Usecase : we want only 1 executor for hbase (specifically)
@@ -75,10 +87,19 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
 
   override def write(dataset: String, dataFrame: DataFrame, dataSetProps: Map[String, Any]): DataFrame = {
     if (dataSetProps.isEmpty) {
-      throw HBaseDataSetException("props cannot be empty !")
+      throw new DataSetException("props cannot be empty !")
     }
 
-    hBASEUtilities.write(dataset, dataFrame, dataSetProps)
+    val castedDataFrame = hbaseUtilities.castAllColsToString(dataFrame)
+    val hbaseOperation = dataSetProps.getOrElse(HbaseConfigs.hbaseOperation, HbaseConstants.scanOperation).toString
+    hbaseOperation match {
+      case HbaseConstants.putOperation =>
+        logger.info("Writing through Java Put API.")
+        hbasePut.put(dataset, castedDataFrame, dataSetProps)
+      case _ =>
+        logger.info("Writing through SHC Connector.")
+        hbaseSparkConnector.write(dataset, castedDataFrame, dataSetProps)
+    }
   }
 
   // Add Additional Supported types to this list as and when we support other Types of RDD
@@ -88,7 +109,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   /**
     * Function writes a given dataframe to the actual Target System (Example Hive : DB.Table | HBASE namespace.Table)
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param dataset Name of the UDC Data Set
     * @param rdd     The RDD[T] to write into Target
     *                Note the RDD has to be typeCast to supported types by the inheriting DataSet Operators
     *                instance#1 : ElasticSearchDataSet may support just RDD[Seq(Map[String, String])], so Elastic Search must implement supported Type checking
@@ -117,7 +138,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * * @return Boolean
     */
   override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
-    throw new Exception(s"DataSet create for hbase currently not Supported")
+    throw new UnsupportedOperationException(s"DataSet create for hbase currently not Supported")
     true
   }
 
@@ -128,7 +149,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * * @return Boolean
     */
   override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
-    throw new Exception(s"DataSet drop for hbase currently not Supported")
+    throw new UnsupportedOperationException(s"DataSet drop for hbase currently not Supported")
     true
   }
 
@@ -139,10 +160,22 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * * @return Boolean
     */
   override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
-    throw new Exception(s"DataSet truncate for hbase currently not Supported")
+    throw new UnsupportedOperationException(s"DataSet truncate for hbase currently not Supported")
     true
   }
+}
 
-  case class HBaseDataSetException(private val message: String = "", private val cause: Throwable = None.orNull) extends Exception(message, cause)
+/**
+  * Custom Exception for HBase API initiation errors
+  *
+  * @param message Message to Throw
+  * @param cause   A Throwable Cause
+  */
+private class DataSetException(message: String, cause: Throwable)
+  extends RuntimeException(message) {
+  if (cause != null) {
+    initCause(cause)
+  }
 
+  def this(message: String) = this(message, null)
 }
