@@ -54,6 +54,15 @@ ________________________________________________________________________________
 
 ## Catalog Providers
 
+### Dynamic Dataset: You can provide the dataset name in format Hbase.CLusterName.NamespaceName.TableName
+Example: <br>
+Dataset name: Hbase.Test_Cluster.default.test_table<br>
+It will take the namespace and table name from the dataset name at runtime.
+Here the namespace name is default and hbase table name is test_table.
+You will need to provide the following mandatory properties
+- gimel.hbase.rowkey in case of write
+
+
 ### HIVE - Create Hive Table pointing to HBase table
 
 The following hive table points to a hbase table named default:test_emp with column families personal and professional
