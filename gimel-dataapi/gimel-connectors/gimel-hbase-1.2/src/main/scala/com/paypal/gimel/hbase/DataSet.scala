@@ -163,6 +163,20 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     throw new UnsupportedOperationException(s"DataSet truncate for hbase currently not Supported")
     true
   }
+
+  /**
+    * Save Checkpoint
+    */
+  override def clearCheckPoint(): Unit = {
+    logger.info(s"Clear check Point functionality is not available for Hbase Dataset")
+  }
+
+  /**
+    * Clear Checkpoint
+    */
+  override  def saveCheckPoint(): Unit = {
+    logger.info(s"Save check Point functionality is not available for Hbase Dataset")
+  }
 }
 
 /**

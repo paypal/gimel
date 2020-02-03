@@ -17,12 +17,13 @@
  * limitations under the License.
  */
 
-package com.paypal.gimel.common.gimelservices.payload
+package com.paypal.gimel.kafka2.conf
 
-case class Zone (
-                  zoneId: Int
-                  , zoneName: String = "restricted"
-                  , zoneDescription: String = ""
-                  , isActiveYN: String = "Y"
-                  , createdUser: String = "gimel_user"
-                )
+import spray.json.{DefaultJsonProtocol, RootJsonFormat}
+
+import com.paypal.gimel.kafka2.utilities.{OffsetProperties, OffsetRangeProperties}
+
+object KafkaJsonProtocol extends DefaultJsonProtocol {
+  implicit val offsetRangePropertiesFormat: RootJsonFormat[OffsetRangeProperties] = jsonFormat3(OffsetRangeProperties)
+  implicit val offsetPropertiesFormat: RootJsonFormat[OffsetProperties] = jsonFormat2(OffsetProperties)
+}

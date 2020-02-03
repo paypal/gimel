@@ -43,8 +43,10 @@ object ZooKeeperAdminClient {
     logger.info(" @Begin --> " + MethodName)
 
     logger.info(s"Zookeeper WRITE Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
+    // try-with-resources block dint work here as ZooKeeperClient does not implements AutoClosable
+    var zookeeperClient: ZooKeeperClient = null
     try {
-      val zookeeperClient: ZooKeeperClient = new ZooKeeperClient(zServers)
+      zookeeperClient = new ZooKeeperClient(zServers)
       if (zookeeperClient.exists(zNode) == null) {
         logger.warning(s"Creating Zookeeper Node --> $zNode in Host --> $zServers ")
         zookeeperClient.createPath(zNode)
@@ -52,10 +54,13 @@ object ZooKeeperAdminClient {
       val bytesToWrite = someData.getBytes
       zookeeperClient.set(zNode, bytesToWrite)
       logger.info(s"Persisted in Node -> $zNode in Value --> $someData")
-      zookeeperClient.close()
     } catch {
       case ex: Throwable =>
         throw ex
+    } finally {
+      if (zookeeperClient != null) {
+        zookeeperClient.close()
+      }
     }
   }
 
@@ -72,19 +77,24 @@ object ZooKeeperAdminClient {
 
     logger.info(s"Zookeeper READ Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
     var read: Option[String] = None
+    // try-with-resources block dint work here as ZooKeeperClient does not implements AutoClosable
+    var zookeeperClient: ZooKeeperClient = null
     try {
-      val zookeeperClient: ZooKeeperClient = new ZooKeeperClient(zServers)
+      zookeeperClient = new ZooKeeperClient(zServers)
       if (zookeeperClient.exists(zNode) == null) {
         logger.warning(s"Path does not exists --> $zNode ! Will return None.")
       } else {
         read = Some(new String(zookeeperClient.get(zNode)))
         logger.info(s"Found value --> $read")
       }
-      zookeeperClient.close()
       read
     } catch {
       case ex: Throwable =>
         throw ex
+    } finally {
+      if (zookeeperClient != null) {
+        zookeeperClient.close()
+      }
     }
   }
 
@@ -99,8 +109,10 @@ object ZooKeeperAdminClient {
     logger.info(" @Begin --> " + MethodName)
 
     logger.info(s"Zookeeper DELETE Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
+    // try-with-resources block dint work here as ZooKeeperClient does not implements AutoClosable
+    var zookeeperClient: ZooKeeperClient = null
     try {
-      val zookeeperClient: ZooKeeperClient = new ZooKeeperClient(zServers)
+      zookeeperClient = new ZooKeeperClient(zServers)
       if (zookeeperClient.exists(zNode) == null) {
         logger.warning(s"Path does not exists --> $zNode ! Will delete None.")
         None
@@ -108,11 +120,13 @@ object ZooKeeperAdminClient {
         zookeeperClient.delete(zNode)
         logger.warning(s"Deleted Node -> $zNode")
       }
-      zookeeperClient.close()
     } catch {
       case ex: Throwable =>
         throw ex
+    } finally {
+      if (zookeeperClient != null) {
+        zookeeperClient.close()
+      }
     }
   }
-
 }

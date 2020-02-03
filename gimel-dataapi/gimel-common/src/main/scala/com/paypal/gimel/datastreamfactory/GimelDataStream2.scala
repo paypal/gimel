@@ -19,7 +19,8 @@
 
 package com.paypal.gimel.datastreamfactory
 
-import org.apache.spark.sql.{DataFrame, SparkSession}
+import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.streaming.DataStreamWriter
 import org.apache.spark.streaming.kafka010.OffsetRange
 
 /**
@@ -28,7 +29,7 @@ import org.apache.spark.streaming.kafka010.OffsetRange
   * -  Get CheckPoint At the Beginning of Current Window
   * -  Save CheckPoint At the End of Current Window
   *
-  * @param df            A dataframe
+  * @param df A dataframe
   */
 case class StructuredStreamingResult(val df: DataFrame,
                                      val saveCheckPoint: Unit,
@@ -49,7 +50,7 @@ case class StructuredStreamingResult(val df: DataFrame,
 
 }
 
-abstract class GimelStructuredDataStream(sparkSession: SparkSession) {
+abstract class GimelDataStream2(sparkSession: SparkSession) {
 
   /**
     * Provides DStream for a given configuration
@@ -60,6 +61,20 @@ abstract class GimelStructuredDataStream(sparkSession: SparkSession) {
     */
 
   def read(dataset: String, datasetProps: Map[String, Any] = Map()): StructuredStreamingResult
+
+  /**
+    * Function writes a given dataframe to the actual Target System (Example Hive : DB.Table | HBASE namespace.Table)
+    *
+    * @param dataset   Name of the Data Set
+    * @param dataFrame The Dataframe to write into Target
+    * @param dataSetProps
+    *                  props is the way to set various additional parameters for read and write operations in DataSet class
+    *                  Example Usecase : to write kafka with a specific parallelism : One can set something like below -
+    *                  val props = Map("parallelsPerPartition" -> 10)
+    *                  Dataset(sc).write(clientDataFrame, props)
+    * @return DataStreamWriter[Row]
+    */
+  def write(dataset: String, dataFrame: DataFrame, dataSetProps: Map[String, Any] = Map.empty): DataStreamWriter[Row]
 
 }
 

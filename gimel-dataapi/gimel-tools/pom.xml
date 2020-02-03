@@ -74,6 +74,13 @@ under the License.
               </excludes>
             </filter>
           </filters>
+          <transformers>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+              <resource>
+                META-INF/services/org.apache.spark.sql.sources.DataSourceRegister
+              </resource>
+            </transformer>
+          </transformers>
         </configuration>
         <executions>
           <execution>

@@ -145,6 +145,20 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     throw new Exception(s"DataSet truncate for cassandra currently not Supported")
     true
   }
+
+  /**
+    * Save Checkpoint
+    */
+  override def clearCheckPoint(): Unit = {
+    logger.info(s"Clear check Point functionality is not available for Cassandra Dataset")
+  }
+
+  /**
+    * Clear Checkpoint
+    */
+  override  def saveCheckPoint(): Unit = {
+    logger.info(s"Save check Point functionality is not available for Cassandra Dataset")
+  }
 }
 
 /**

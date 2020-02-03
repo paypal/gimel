@@ -90,7 +90,7 @@ object APIUsageKafkaProduceConsume extends App {
     * Below will return "true"
     */
 
-  val isAlreadyCheckPointed = kafkaOperator.alreadyCheckPointed
+  // val isAlreadyCheckPointed = kafkaOperator.alreadyCheckPointed
 
   /**
     * Second call on CheckPoint function will not perform any save but throw a warning message to user -

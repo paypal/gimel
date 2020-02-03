@@ -118,6 +118,16 @@ object GimelConstants {
   val STREAM_MODE: String = "gimel.kafka.stream.mode"
   val DS_STREAM: String = "direct.stream"
   val BATCH_INTERVAL: String = "15"
+  val GIMEL_KAFKA_VERSION = "gimel.kafka.api.version"
+  val GIMEL_KAFKA_VERSION_ONE = "1"
+  val GIMEL_KAFKA_VERSION_TWO = "2"
+  val GIMEL_KAFKA_DEFAULT_VERSION: String = GIMEL_KAFKA_VERSION_TWO
+
+  // Gimel Streaming
+  val GIMEL_STREAMING_CHECKPOINT_LOCATION = "gimel.streaming.checkpoint.location"
+  val GIMEL_STREAMING_OUTPUT_MODE = "gimel.streaming.output.mode"
+  val STREAMING_CHECKPOINT_LOCATION = "checkpointLocation"
+  val GIMEL_STREAMING_TRIGGER_INTERVAL = "gimel.streaming.trigger.interval"
 
   // hdfs constants
   val HDFS_IMPL = "fs.hdfs.impl"
