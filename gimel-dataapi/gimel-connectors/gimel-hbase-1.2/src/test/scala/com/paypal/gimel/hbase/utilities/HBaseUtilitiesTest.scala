@@ -48,19 +48,5 @@ class HBaseUtilitiesTest extends HBaseLocalClient with Matchers with BeforeAndAf
     val mapping2 = hbaseUtilities.getColumnMappingForColumnFamily("cf1:c1,:key,cf1:c2,cf1:c3,cf2:c4")
     assert(mapping2("cf1").sameElements(Array("c1", "c2", "c3")))
     assert(mapping2("cf2").sameElements(Array("c4")))
-
-    // it should throw exception with incorrect or empty pattern
-    assert(checkForIncorrectPattern("") == true)
-    assert(checkForIncorrectPattern(":key") == true)
-    assert(checkForIncorrectPattern("cf1:c1,cf1:") == true)
-    assert(checkForIncorrectPattern("cf1,cf1") == true)
-  }
-
-  def checkForIncorrectPattern(pattern: String): Boolean = {
-    println("Checking for pattern -> " + pattern)
-    val exception = intercept[Exception] {
-      hbaseUtilities.getColumnMappingForColumnFamily(pattern)
-    }
-    exception.getMessage.contains("Column family to column mapping pattern is not correct")
   }
 }

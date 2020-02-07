@@ -53,46 +53,6 @@ class DataSetTest extends HBaseLocalClient with Matchers {
     assert(df.count() == 10)
   }
 
-  test("Read operation - missing " + HbaseConfigs.hbaseColumnMappingKey) {
-    val props : Map[String, String] = Map(HbaseConfigs.hbaseNamespaceKey -> "default",
-      HbaseConfigs.hbaseTableKey -> s"""$tableName""",
-      HbaseConfigs.hbaseRowKey -> "id")
-    val dataSetName = "HBase.Local.default." + tableName
-    val dataSetProperties = DataSetProperties(dataSetName, null, null, props)
-    val datasetProps : Map[String, Any] = Map("dataSetProperties" -> dataSetProperties)
-    val exception = intercept[Exception] {
-      dataSet.read(dataSetName, datasetProps)
-    }
-    assert(exception.getMessage.contains("HBase column family to columns mapping not found.") == true)
-  }
-
-  test("Read operation - missing " + HbaseConfigs.hbaseTableKey) {
-    val props : Map[String, String] = Map(HbaseConfigs.hbaseNamespaceKey -> "default",
-      HbaseConfigs.hbaseRowKey -> "id",
-      HbaseConfigs.hbaseColumnMappingKey -> "personal:name,personal:address,personal:age,professional:company,professional:designation,professional:salary")
-    val dataSetName = "HBase.Local.default." + tableName
-    val dataSetProperties = DataSetProperties(dataSetName, null, null, props)
-    val datasetProps : Map[String, Any] = Map("dataSetProperties" -> dataSetProperties)
-    val exception = intercept[Exception] {
-      dataSet.read(dataSetName, datasetProps)
-    }
-    assert(exception.getMessage.contains("HBase table name not found.") == true)
-  }
-
-  test("Read operation - incorrect " + HbaseConfigs.hbaseColumnMappingKey) {
-    val props : Map[String, String] = Map(HbaseConfigs.hbaseNamespaceKey -> "default",
-      HbaseConfigs.hbaseTableKey -> s"""$tableName""",
-      HbaseConfigs.hbaseRowKey -> "id",
-      HbaseConfigs.hbaseColumnMappingKey -> ":key,personal:name,personal:address,personal:age,professional:company,professional:")
-    val dataSetName = "HBase.Local.default." + tableName
-    val dataSetProperties = DataSetProperties(dataSetName, null, null, props)
-    val datasetProps : Map[String, Any] = Map("dataSetProperties" -> dataSetProperties)
-    val exception = intercept[Exception] {
-      dataSet.read(dataSetName, datasetProps)
-    }
-    assert(exception.getMessage.contains("Column family to column mapping pattern is not correct") == true)
-  }
-
   test("Write operation - column given in input via " + HbaseConfigs.hbaseColumnMappingKey + " not present in dataframe to write") {
     val props : Map[String, String] = Map(HbaseConfigs.hbaseNamespaceKey -> "default",
       HbaseConfigs.hbaseTableKey -> s"""$tableName""",

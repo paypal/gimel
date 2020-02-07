@@ -42,7 +42,7 @@ class HBaseSparkConnector(sparkSession: SparkSession) {
   /**
     * This function performs scan/bulkGet on hbase table
     *
-    * @param Dataset Name
+    * @param dataset Name
     * @param dataSetProps
     *                props is the way to set various additional parameters for read and write operations in DataSet class
     *                Example Usecase : to get 10 factor parallelism (specifically)
@@ -56,7 +56,11 @@ class HBaseSparkConnector(sparkSession: SparkSession) {
 
       val conf = new HbaseClientConfiguration(dataSetProps)
       // Setting the map (Column family -> Array of columns)
-      val columnFamilyToColumnMapping: Map[String, Array[String]] = hbaseUtilities.getColumnMappingForColumnFamily(conf.hbaseTableColumnMapping)
+      val columnFamilyToColumnMapping: Map[String, Array[String]] = hbaseUtilities.getColumnMappingForColumnFamily(conf.hbaseNameSpace,
+        conf.hbaseTableName,
+        conf.hbaseTableColumnMapping,
+        conf.maxSampleRecordsForSchema,
+        conf.maxColumnsForSchema)
       logger.info("Column mapping -> " + columnFamilyToColumnMapping)
       // Get the hbase-site.xml file location
       val hbaseConfigFileLocation = HBaseAdminClient.getHbaseSiteXml(conf.hbaseSiteXMLHDFSPath)
@@ -125,7 +129,7 @@ class HBaseSparkConnector(sparkSession: SparkSession) {
   /**
     * This function performs bulk write into hbase table
     *
-    * @param Dataset Name
+    * @param dataset Name
     * @param dataFrame The Dataframe to write into Target
     * @param dataSetProps
     *                  Example Usecase : we want only 1 executor for hbase (specifically)
@@ -144,14 +148,18 @@ class HBaseSparkConnector(sparkSession: SparkSession) {
           s"""
              |Row Key columns not found in input dataframe.
              |You can modify the value through ${HbaseConfigs.hbaseRowKey} parameter.
-             |Note: Default value is first column of the schema from UDC or ${HbaseConstants.defaultRowKeyColumn}.
+             |Note: Default value is first column of the schema from UDC or ${HbaseConstants.DEFAULT_ROW_KEY_COLUMN}.
              |""".stripMargin)
       }
       // Get columns in dataframe excluding row key columns
       val dfColumns = dataFrame.columns.filter(x => !conf.hbaseRowKeys.contains(x)).toSeq
       logger.info("Columns in dataframe -> " + dfColumns)
       // Setting (Column family -> array of columns) mapping
-      val columnFamilyToColumnMapping: Map[String, Array[String]] = hbaseUtilities.getColumnMappingForColumnFamily(conf.hbaseTableColumnMapping)
+      val columnFamilyToColumnMapping: Map[String, Array[String]] = hbaseUtilities.getColumnMappingForColumnFamily(conf.hbaseNameSpace,
+        conf.hbaseTableName,
+        conf.hbaseTableColumnMapping,
+        conf.maxSampleRecordsForSchema,
+        conf.maxColumnsForSchema)
       logger.info("Column mapping -> " + columnFamilyToColumnMapping)
       val columnsInSchema = columnFamilyToColumnMapping.map(_._2).flatten.toSeq
       logger.info("Columns in schema : " + columnsInSchema)

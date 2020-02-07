@@ -62,9 +62,9 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   override def read(dataset: String, dataSetProps: Map[String, Any]): DataFrame = {
     if (dataSetProps.isEmpty) throw new DataSetException("props cannot be empty !")
 
-    val hbaseOperation = dataSetProps.getOrElse(HbaseConfigs.hbaseOperation, HbaseConstants.scanOperation).toString
+    val hbaseOperation = dataSetProps.getOrElse(HbaseConfigs.hbaseOperation, HbaseConstants.SCAN_OPERATION).toString
     hbaseOperation match {
-      case HbaseConstants.getOperation =>
+      case HbaseConstants.GET_OPERATION =>
         logger.info("Reading through Java Get API.")
         hbaseLookUp.get(dataset, dataSetProps)
       case _ =>
@@ -91,9 +91,9 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     }
 
     val castedDataFrame = hbaseUtilities.castAllColsToString(dataFrame)
-    val hbaseOperation = dataSetProps.getOrElse(HbaseConfigs.hbaseOperation, HbaseConstants.scanOperation).toString
+    val hbaseOperation = dataSetProps.getOrElse(HbaseConfigs.hbaseOperation, HbaseConstants.SCAN_OPERATION).toString
     hbaseOperation match {
-      case HbaseConstants.putOperation =>
+      case HbaseConstants.PUT_OPERATION =>
         logger.info("Writing through Java Put API.")
         hbasePut.put(dataset, castedDataFrame, dataSetProps)
       case _ =>
