@@ -21,12 +21,15 @@ package com.paypal.gimel.hbase.conf
 
 object HbaseConstants {
   // basic variable references
-  val defaultRowKeyColumn = "rowKey"
-  val hbaseDefaultNamespace = "default"
+  val DEFAULT_ROW_KEY_COLUMN = "rowKey"
+  val DEFAULT_NAMESPACE = "default"
 
-  val scanOperation = "scan"
-  val getOperation = "get"
-  val putOperation = "put"
+  val SCAN_OPERATION = "scan"
+  val GET_OPERATION = "get"
+  val PUT_OPERATION = "put"
 
   val NONE_STRING = "NONE"
+
+  val MAX_SAMPLE_RECORDS_FOR_SCHEMA = "1000"
+  val MAX_COLUMNS_FOR_SCHEMA = "100000"
 }

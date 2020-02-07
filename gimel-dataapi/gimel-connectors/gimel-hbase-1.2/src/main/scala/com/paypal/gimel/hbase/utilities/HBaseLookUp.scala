@@ -45,7 +45,7 @@ class HBaseLookUp(sparkSession: SparkSession) {
   /**
     * This function reads all or given columns in column family for a rowKey specified by user
     *
-    * @param Dataset Name
+    * @param dataset Name
     * @param dataSetProps
     *                props is the way to set various additional parameters for read and write operations in DataSet class
     *                Example Usecase : Hbase lookup for rowKey=r1 and columns c1, c12 of column family cf1 and c2 of cf2

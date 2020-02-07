@@ -19,6 +19,7 @@
 
 package com.paypal.gimel.hbase.utilities
 
+import org.apache.commons.lang.StringEscapeUtils
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StringType
@@ -38,6 +39,7 @@ object HBaseUtilities {
 class HBaseUtilities(sparkSession: SparkSession) {
   val logger = Logger()
   val columnFamilyNamePattern = "(.+):(.+)".r
+  lazy val hbaseScanner = HBaseScanner()
 
   /**
     *
@@ -61,6 +63,29 @@ class HBaseUtilities(sparkSession: SparkSession) {
   }
 
   /**
+    * This function scans the sample records from hbase table if column mapping parameter is empty
+    *
+    * @param namespace String HBase Namespace Name
+    * @param tableName String HBase Table Name
+    * @param tableColumnMapping String (:key,cf1:c1,cf1:c2,cf2:c3)
+    * @return
+    */
+
+  def getColumnMappingForColumnFamily(namespace: String, tableName: String, tableColumnMapping: String, maxRecords: Int, maxColumns: Int): Map[String, Array[String]] = {
+    val schema = getColumnMappingForColumnFamily(tableColumnMapping)
+    if (schema.isEmpty) {
+      logger.info("Column family to column mapping is not present or is in wrong format, scanning the sample records.")
+      val schemaFromSampleRecords = hbaseScanner.getSchema(namespace, tableName, maxRecords, maxColumns)
+      if (schemaFromSampleRecords.isEmpty) {
+        throw new IllegalStateException("No columns found while scanning. May be the table is empty.")
+      }
+      schemaFromSampleRecords
+    } else {
+      schema
+    }
+  }
+
+  /**
     * This function performs Table Column Mapping
     *
     * @param tableColumnMapping String (:key,cf1:c1,cf1:c2,cf2:c3)
@@ -77,15 +102,22 @@ class HBaseUtilities(sparkSession: SparkSession) {
     } else {
       tableColumnMapping
     }
-    // checking if CF Mapping matches the pattern
-    val columnMapping = updateMapping.split(",").flatMap {
-      case columnFamilyNamePattern(cf, cname) => Some((cf, cname))
-      case _ => throw new IllegalArgumentException(
-        s"""
-           |Column family to column mapping pattern is not correct -> ${tableColumnMapping}.
-           |Please check the property ${HbaseConfigs.hbaseColumnMappingKey}, it should be in format -> cf1:c1,cf1:c2,cf2:c3
-           |""".stripMargin)
-    }.groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
-    columnMapping
+
+    try {
+      // checking if CF Mapping matches the pattern
+      val columnMapping = updateMapping.split(",").flatMap {
+        case columnFamilyNamePattern(cf, cname) => Some((StringEscapeUtils.escapeJava(cf), StringEscapeUtils.escapeJava(cname)))
+        case _ => throw new IllegalArgumentException(
+          s"""
+             |Column family to column mapping pattern is not correct -> ${tableColumnMapping}
+             |Please check the property ${HbaseConfigs.hbaseColumnMappingKey}, it should be in format -> cf1:c1,cf1:c2,cf2:c3
+             |""".stripMargin)
+      }.groupBy(_._1).map { case (k, v) => (k, v.map(_._2)) }
+      columnMapping
+    } catch {
+      case ex: IllegalArgumentException =>
+        logger.warning(ex.getMessage)
+        Map.empty[String, Array[String]]
+    }
   }
 }
