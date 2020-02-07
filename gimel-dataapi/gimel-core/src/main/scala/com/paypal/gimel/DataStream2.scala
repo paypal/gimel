@@ -29,6 +29,7 @@ import org.apache.spark.sql.streaming.DataStreamWriter
 
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{CatalogProviderConfigs, CatalogProviderConstants, GimelConstants}
+import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
 import com.paypal.gimel.common.utilities.Timer
 import com.paypal.gimel.datastreamfactory.{GimelDataStream2, StructuredStreamingResult}
 import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
@@ -126,6 +127,19 @@ class DataStream2(val sparkSession: SparkSession) {
 
       val streamingResult = this.read(StructuredDataStreamType.KAFKA, dataSet, newProps)
 
+      // To deserialize the resultant Dataframe if serializer class is given (Using Class Loader)
+      val deserializerClassName = newProps.getOrElse(GimelConstants.GIMEL_DESERIALIZER_CLASS,
+        dataSetProperties.props.getOrElse(GimelConstants.GIMEL_DESERIALIZER_CLASS, "")).toString
+
+      val deserializedStreamingResult = if (deserializerClassName.isEmpty) {
+        streamingResult
+      } else {
+        val deserializerObj = GimelSerdeUtils.getDeserializerObject(deserializerClassName)
+        val df = streamingResult.df
+        val deserializedDf = deserializerObj.deserialize(df, dataSetProperties.props ++ newProps)
+        StructuredStreamingResult(deserializedDf, streamingResult.saveCheckPoint, streamingResult.clearCheckPoint)
+      }
+
       // update log variables to push logs
       val endTime = gimelTimer.endTime.get
       val executionTime: Double = gimelTimer.endWithMillSecRunTime
@@ -152,7 +166,7 @@ class DataStream2(val sparkSession: SparkSession) {
         , executionTime
       )
 
-      streamingResult
+      deserializedStreamingResult
     }
     catch {
       case e: Throwable =>
@@ -258,7 +272,18 @@ class DataStream2(val sparkSession: SparkSession) {
       dataSetProps.foreach(x => propsToLog.put(x._1, x._2))
       datasetSystemType = systemType.toString
 
-      val dataStreamWriter = this.write(systemType, dataSet, dataFrame, newProps)
+      // To serialize the resultant Dataframe if serializer class is given (Using Class Loader)
+      val serializerClassName = newProps.getOrElse(GimelConstants.GIMEL_SERIALIZER_CLASS,
+        dataSetProperties.props.getOrElse(GimelConstants.GIMEL_SERIALIZER_CLASS, "")).toString
+
+      val serializedData = if (serializerClassName.isEmpty) {
+        dataFrame
+      } else {
+        val serializerObj = GimelSerdeUtils.getSerializerObject(serializerClassName)
+        serializerObj.serialize(dataFrame, dataSetProperties.props ++ newProps)
+      }
+
+      val dataStreamWriter = this.write(systemType, dataSet, serializedData, newProps)
 
       // update log variables to push logs
       val endTime = gimelTimer.endTime.get

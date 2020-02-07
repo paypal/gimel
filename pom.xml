@@ -33,6 +33,7 @@ under the License.
         <module>gimel-logging</module>
         <module>gimel-dataapi</module>
         <module>gimel-parser</module>
+        <module>gimel-serde</module>
     </modules>
 
     <repositories>
