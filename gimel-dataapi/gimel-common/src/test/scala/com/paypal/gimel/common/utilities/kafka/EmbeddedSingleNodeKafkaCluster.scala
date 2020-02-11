@@ -17,19 +17,22 @@
  * limitations under the License.
  */
 
-package com.paypal.gimel.kafka2
+package com.paypal.gimel.common.utilities.kafka
 
 import java.util.Properties
 
 // import io.confluent.kafka.schemaregistry.RestApp
 import io.confluent.kafka.schemaregistry.avro.AvroCompatibilityLevel
 import kafka.server.KafkaConfig
-import org.apache.curator.test.InstanceSpec
 import org.junit.rules.ExternalResource
 
+import com.paypal.gimel.common.utilities.zookeeper.ZooKeeperEmbedded
 import com.paypal.gimel.logger.Logger
 
 /**
+  * This logic is borrowed from confluent kafka-streams-examples.
+  * https://github.com/confluentinc/kafka-streams-examples/blob/5.4.0-post/src/test/java/io/confluent/examples/streams/kafka/EmbeddedSingleNodeKafkaCluster.java
+  *
   * Runs an in-memory, "embedded" Kafka cluster with 1 ZooKeeper instance and 1 Kafka broker.
   */
 class EmbeddedSingleNodeKafkaCluster(val brokerConfig: Properties = new Properties()) extends ExternalResource {

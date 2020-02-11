@@ -53,7 +53,23 @@ under the License.
             <groupId>org.apache.spark</groupId>
             <artifactId>spark-sql-kafka-${spark.kafka.connector.version}</artifactId>
             <version>${spark.version}</version>
-            <scope>${spark.packaging.scope}</scope>
+            <scope>${packaging.scope}</scope>
+        </dependency>
+
+        <!-- Test dependencies -->
+        <!-- To reuse some of the common testing utilities -->
+        <dependency>
+            <groupId>com.paypal.gimel</groupId>
+            <artifactId>gimel-common</artifactId>
+            <version>${gimel.version}-SNAPSHOT</version>
+            <type>test-jar</type>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.scalatest</groupId>
+            <artifactId>scalatest_${scala.binary.version}</artifactId>
+            <version>${scalatest.version}</version>
+            <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>io.confluent</groupId>
@@ -134,6 +150,19 @@ under the License.
                             </excludes>
                         </filter>
                     </filters>
+                    <!--
+                    For spark-sql-kafka data source to work we have to ensure that
+                    META-INF/services/org.apache.spark.sql.sources.DataSourceRegister
+                    of all the data sources are merged.
+                    Without this it gets overwritten by similar file which is present in spark-sql jar.
+                    -->
+                    <transformers>
+                        <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+                            <resource>
+                                META-INF/services/org.apache.spark.sql.sources.DataSourceRegister
+                            </resource>
+                        </transformer>
+                    </transformers>
                 </configuration>
                 <executions>
                     <execution>

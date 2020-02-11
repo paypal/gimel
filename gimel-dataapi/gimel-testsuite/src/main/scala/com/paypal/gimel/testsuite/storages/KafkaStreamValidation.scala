@@ -28,7 +28,7 @@ import org.apache.spark.sql._
 import com.paypal.gimel.DataSet
 import com.paypal.gimel.common.conf._
 import com.paypal.gimel.common.storageadmin
-import com.paypal.gimel.common.storageadmin.KafkaAdminClient
+import com.paypal.gimel.common.storageadmin.KafkaAdminUtils
 import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
 import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
@@ -66,11 +66,11 @@ class KafkaStreamValidation(dataset: DataSet, sparkSession: SparkSession, gimelP
     logger.info(" @Begin --> " + MethodName)
 
     try {
-      KafkaAdminClient.deleteTopicIfExists(
+      KafkaAdminUtils.deleteTopicIfExists(
         gimelProps.zkHostAndPort
         , topicName
       )
-      storageadmin.KafkaAdminClient.createTopicIfNotExists(
+      storageadmin.KafkaAdminUtils.createTopicIfNotExists(
         gimelProps.zkHostAndPort
         , topicName
         , 1

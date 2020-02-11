@@ -17,13 +17,16 @@
  * limitations under the License.
  */
 
-package com.paypal.gimel.kafka2
+package com.paypal.gimel.common.utilities.zookeeper
 
-import org.apache.curator.test.TestingServer;
+import org.apache.curator.test.TestingServer
 
 import com.paypal.gimel.logger.Logger
 
 /**
+  * This logic is borrowed from confluent kafka-streams-examples.
+  * https://github.com/confluentinc/kafka-streams-examples/blob/5.4.0-post/src/test/java/io/confluent/examples/streams/zookeeper/ZooKeeperEmbedded.java
+  *
   * Runs an in-memory, "embedded" instance of a ZooKeeper server.
   *
   * The ZooKeeper server instance is automatically started when you create a new instance of this class.

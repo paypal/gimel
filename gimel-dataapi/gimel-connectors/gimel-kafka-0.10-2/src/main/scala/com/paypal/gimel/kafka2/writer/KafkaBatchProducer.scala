@@ -83,7 +83,6 @@ object KafkaBatchProducer {
 
   /**
     * InTakes a DataFrame
-    * Convert to Avro Record
     * Serialize the record into Bytes
     * Publish to Kafka
     *

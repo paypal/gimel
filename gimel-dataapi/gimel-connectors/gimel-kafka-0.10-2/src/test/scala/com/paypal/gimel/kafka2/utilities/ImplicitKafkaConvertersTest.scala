@@ -25,7 +25,9 @@ import org.scalatest._
 
 import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf.GimelConstants
-import com.paypal.gimel.kafka2.{DataSet, EmbeddedSingleNodeKafkaCluster, SharedSparkSession}
+import com.paypal.gimel.common.utilities.kafka.EmbeddedSingleNodeKafkaCluster
+import com.paypal.gimel.common.utilities.spark.SharedSparkSession
+import com.paypal.gimel.kafka2.DataSet
 import com.paypal.gimel.kafka2.conf.KafkaConfigs
 import com.paypal.gimel.kafka2.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.logger.Logger

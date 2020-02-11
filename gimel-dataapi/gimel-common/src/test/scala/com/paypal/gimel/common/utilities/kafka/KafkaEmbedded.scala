@@ -17,25 +17,24 @@
  * limitations under the License.
  */
 
-package com.paypal.gimel.kafka2
+package com.paypal.gimel.common.utilities.kafka
 
-import java.util.Collections
-import java.util.Properties
+import java.util.{Collections, Properties}
 
 import io.confluent.kafka.schemaregistry.storage.serialization.ZkStringSerializer
 import kafka.admin.AdminUtils
-import kafka.server.KafkaConfig
-import kafka.server.KafkaServer
-import kafka.utils.CoreUtils
-import kafka.utils.ZkUtils
-import org.I0Itec.zkclient.ZkClient
-import org.I0Itec.zkclient.ZkConnection
+import kafka.server.{KafkaConfig, KafkaServer}
+import kafka.utils.{CoreUtils, ZkUtils}
+import org.I0Itec.zkclient.{ZkClient, ZkConnection}
 import org.junit.rules.TemporaryFolder
 
-import com.paypal.gimel.common.storageadmin.KafkaAdminClient
+import com.paypal.gimel.common.storageadmin.KafkaAdminUtils
 import com.paypal.gimel.logger.Logger
 
 /**
+  * This logic is borrowed from confluent kafka-streams-examples.
+  * https://github.com/confluentinc/kafka-streams-examples/blob/5.4.0-post/src/test/java/io/confluent/examples/streams/kafka/KafkaEmbedded.java
+  *
   * Runs an in-memory, "embedded" instance of a Kafka broker, which listens at `127.0.0.1:9092` by
   * default.
   *
@@ -173,6 +172,6 @@ class KafkaEmbedded(initialConfig: Properties) {
     * @param topic       The name of the topic.
     */
   def deleteTopicIfExists(topic: String): Unit = {
-    KafkaAdminClient.deleteTopicIfExists(zookeeperConnect(), topic)
+    KafkaAdminUtils.deleteTopicIfExists(zookeeperConnect(), topic)
   }
 }

@@ -19,16 +19,20 @@
 
 package com.paypal.gimel.kafka2.writer
 
-import org.scalatest.FunSuite
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.DataFrame
+import org.scalatest._
 
 import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf.GimelConstants
-import com.paypal.gimel.kafka2.{EmbeddedSingleNodeKafkaCluster, SharedSparkSession}
+import com.paypal.gimel.common.utilities.kafka.EmbeddedSingleNodeKafkaCluster
+import com.paypal.gimel.common.utilities.spark.SharedSparkSession
 import com.paypal.gimel.kafka2.conf.{KafkaClientConfiguration, KafkaConfigs}
 import com.paypal.gimel.kafka2.reader.KafkaBatchConsumer
+import com.paypal.gimel.kafka2.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.logger.Logger
 
-class KafkaBatchProducerTest extends FunSuite with SharedSparkSession {
+class KafkaBatchProducerTest extends FunSpec with SharedSparkSession {
   val kafkaCluster = new EmbeddedSingleNodeKafkaCluster()
   val topic = "test_gimel_producer"
   var appTag: String = _
@@ -51,19 +55,28 @@ class KafkaBatchProducerTest extends FunSuite with SharedSparkSession {
     kafkaCluster.stop()
   }
 
-  test("produceToKafka - DataFrame") {
-    val props : Map[String, String] = Map(KafkaConfigs.whiteListTopicsKey -> (topic + "_1"),
-      KafkaConfigs.kafkaServerKey -> kafkaCluster.bootstrapServers(),
-      KafkaConfigs.zookeeperCheckpointHost -> kafkaCluster.zookeeperConnect())
-    val dataSetProperties = DataSetProperties("KAFKA", null, null, props)
-    val datasetProps : Map[String, Any] = Map("dataSetProperties" -> dataSetProperties,
-      GimelConstants.APP_TAG -> appTag)
-    val dataFrame = mockDataInDataFrame(10)
-    val serializedDF = dataFrame.toJSON.toDF
-    serializedDF.collect
-    val conf = new KafkaClientConfiguration(datasetProps)
-    KafkaBatchProducer.produceToKafka(conf, serializedDF)
-    val (df, offSetRanges) = KafkaBatchConsumer.consumeFromKakfa(spark, conf)
-    assert(df.count() == 10)
+  describe("produceToKafka - DataFrame") {
+    it ("should take a DataFrame, serialize the record into bytes and publish to kafka") {
+      val topicName = topic + "_1"
+      val props : Map[String, String] = Map(KafkaConfigs.whiteListTopicsKey -> topicName,
+        KafkaConfigs.kafkaServerKey -> kafkaCluster.bootstrapServers(),
+        KafkaConfigs.zookeeperCheckpointHost -> kafkaCluster.zookeeperConnect())
+      val dataSetProperties = DataSetProperties("KAFKA", null, null, props)
+      val datasetProps : Map[String, Any] = Map("dataSetProperties" -> dataSetProperties,
+        GimelConstants.APP_TAG -> appTag)
+      val dataFrame = mockDataInDataFrame(10)
+      val serializedDF = dataFrame.toJSON.toDF
+      serializedDF.collect
+      val conf = new KafkaClientConfiguration(datasetProps)
+      KafkaBatchProducer.produceToKafka(conf, serializedDF)
+      val (df, offsetRanges) = KafkaBatchConsumer.consumeFromKakfa(spark, conf)
+      // Deserialize json messages
+      val deserializedDS: RDD[String] = df.rdd.map { eachRow => {
+        eachRow.getAs("value").asInstanceOf[Array[Byte]].map(_.toChar).mkString
+      } }
+      val deserializedDF: DataFrame = spark.read.json(deserializedDS)
+      assert(deserializedDF.except(dataFrame).count == 0)
+      assert(offsetRanges.toStringOfKafkaOffsetRanges == s"$topicName,0,0,10")
+    }
   }
 }

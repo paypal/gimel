@@ -17,7 +17,7 @@
  * limitations under the License.
  */
 
-package com.paypal.gimel.kafka2
+package com.paypal.gimel.common.utilities.spark
 
 import org.apache.spark.SparkConf
 import org.apache.spark.rdd.RDD

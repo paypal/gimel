@@ -22,7 +22,7 @@ package com.paypal.gimel.kafka2.utilities
 import org.apache.spark.streaming.kafka010.OffsetRange
 import org.scalatest._
 
-import com.paypal.gimel.kafka2.ZooKeeperEmbedded
+import com.paypal.gimel.common.utilities.zookeeper.ZooKeeperEmbedded
 import com.paypal.gimel.kafka2.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.kafka2.utilities.ImplicitZKCheckPointers._
 import com.paypal.gimel.logger.Logger

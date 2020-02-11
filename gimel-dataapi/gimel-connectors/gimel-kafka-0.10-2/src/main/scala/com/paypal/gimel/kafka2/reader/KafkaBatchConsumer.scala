@@ -39,7 +39,7 @@ object KafkaBatchConsumer {
   val logger = com.paypal.gimel.logger.Logger()
 
   /**
-    * Connects to Kafka, Deserializes data from Kafka, Attempts to Convert Avro to a DataFrame
+    * Connects to Kafka, and get the source data in dataframe
     *
     * @param sparkSession : SparkSession
     * @param conf           KafkaClientConfiguration
@@ -80,6 +80,13 @@ object KafkaBatchConsumer {
     }
   }
 
+  /**
+    * Connects to zookeeper to get the last checkpoint if found otherwise gets the available offsets for each kafka partition
+    *
+    * @param conf : KafkaClientConfiguration
+    * @return (Array[OffsetRange], Array[OffsetRange]) : Tuple of available and parallelized offset ranges from zookeeper
+    *
+    */
   def getOffsetRange(conf: KafkaClientConfiguration): (Array[OffsetRange], Array[OffsetRange]) = {
     //  Read raw data from kafka topic
     val finalOffsetRangesForReader: Array[OffsetRange] = if (conf.kafkaCustomOffsetRange.isEmpty()) {
@@ -103,6 +110,13 @@ object KafkaBatchConsumer {
     (finalOffsetRangesForReader, parallelizedRanges)
   }
 
+  /**
+    * Checks if the given kafka topics are empty
+    *
+    * @param offsetRanges : OffsetRanges for the topics to check
+    * @return
+    *
+    */
   def isKafkaTopicEmpty(offsetRanges: Array[OffsetRange]): Boolean = {
     offsetRanges.isEmpty || offsetRanges.forall (each => (each.untilOffset - each.fromOffset) == 0)
   }

@@ -22,7 +22,7 @@ package com.paypal.gimel.kafka2.utilities
 import org.apache.spark.streaming.kafka010.OffsetRange
 import org.scalatest.{BeforeAndAfterAll, FunSpec, Matchers}
 
-import com.paypal.gimel.kafka2.EmbeddedSingleNodeKafkaCluster
+import com.paypal.gimel.common.utilities.kafka.EmbeddedSingleNodeKafkaCluster
 import com.paypal.gimel.kafka2.conf.KafkaConstants
 import com.paypal.gimel.kafka2.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.logger.Logger
@@ -47,7 +47,7 @@ class KafkaUtilitiesTest extends FunSpec with Matchers with BeforeAndAfterAll {
   }
 
   describe("inStreamCheckPoint") {
-    it("should checkpoint a given OffsetRange") {
+    it("should checkpoint a given OffsetRange in zookeeper") {
       val offsetRanges = Array(OffsetRange(topic, 0, 100000, 300000), OffsetRange(topic, 1, 100000, 400000), OffsetRange(topic, 2, 100000, 500000))
       KafkaUtilities.inStreamCheckPoint(kafkaCluster.zookeeperConnect(), Seq(zkNode + topic), offsetRanges)
       val lastCheckpoint = KafkaUtilities.getLastCheckPointFromZK(kafkaCluster.zookeeperConnect(), Seq(zkNode + topic))
@@ -57,7 +57,7 @@ class KafkaUtilitiesTest extends FunSpec with Matchers with BeforeAndAfterAll {
   }
 
   describe("getNewOffsetRangeForReader") {
-    it("should get the lastCheckpoint if exists") {
+    it("should get the lastCheckpoint if exists from zookeeper") {
       // Mock offset ranges in zookeeper
       val offsetRanges = Array(OffsetRange(topic + "_2", 0, 100000, 300000), OffsetRange(topic + "_2", 1, 100000, 400000), OffsetRange(topic + "_2", 2, 100000, 500000))
       KafkaUtilities.inStreamCheckPoint(kafkaCluster.zookeeperConnect(), Seq(zkNode + topic + "_2"), offsetRanges)
