@@ -28,7 +28,7 @@ import org.apache.spark.sql.types.{BinaryType, StructField, StructType}
 import com.paypal.gimel.DataSet
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.storageadmin
-import com.paypal.gimel.common.storageadmin.KafkaAdminClient
+import com.paypal.gimel.common.storageadmin.KafkaAdminUtils
 import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 
@@ -94,11 +94,11 @@ class KafkaBinaryMessageValidation(dataset: DataSet, sparkSession: SparkSession,
     logger.info(" @Begin --> " + MethodName)
 
     try {
-      KafkaAdminClient.deleteTopicIfExists(
+      KafkaAdminUtils.deleteTopicIfExists(
         gimelProps.zkHostAndPort
         , topicName
       )
-      storageadmin.KafkaAdminClient.createTopicIfNotExists(
+      storageadmin.KafkaAdminUtils.createTopicIfNotExists(
         gimelProps.zkHostAndPort
         , topicName
         , 1
@@ -148,7 +148,7 @@ class KafkaBinaryMessageValidation(dataset: DataSet, sparkSession: SparkSession,
     logger.info(" @Begin --> " + MethodName)
 
     try {
-      storageadmin.KafkaAdminClient.deleteTopicIfExists(
+      storageadmin.KafkaAdminUtils.deleteTopicIfExists(
         gimelProps.zkHostAndPort
         , topicName
       )

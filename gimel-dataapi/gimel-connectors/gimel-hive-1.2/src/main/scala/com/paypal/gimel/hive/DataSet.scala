@@ -143,6 +143,20 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     throw new Exception(s"DataSet create for hdfs/hive currently not Supported")
     true
   }
+
+  /**
+    * Save Checkpoint
+    */
+  override def clearCheckPoint(): Unit = {
+    logger.info(s"Clear check Point functionality is not available for Hive Dataset")
+  }
+
+  /**
+    * Clear Checkpoint
+    */
+  override  def saveCheckPoint(): Unit = {
+    logger.info(s"Save check Point functionality is not available for Hive Dataset")
+  }
 }
 
 /**

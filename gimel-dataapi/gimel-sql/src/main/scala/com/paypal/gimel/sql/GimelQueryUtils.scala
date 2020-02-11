@@ -294,7 +294,7 @@ object GimelQueryUtils {
 
     val userSuppliedPushDownFlag = sparkSession.conf.get(JdbcConfigs.jdbcPushDownEnabled, "false").toBoolean
 
-    var kafkaDataSets: List[com.paypal.gimel.kafka.DataSet] = List()
+    var kafkaDataSets: List[com.paypal.gimel.datasetfactory.GimelDataSet] = List()
     var sqlTmpString = selectSQL
     var sqlOriginalString = originalSQL
 
@@ -336,7 +336,7 @@ object GimelQueryUtils {
     * @param dataSet      Dataset Object
     * @return Tuple of (Resolved Original SQL, Resolved Select SQL, List of (KafkaDataSet)
     */
-  def resolveSQLWithTmpTables(originalSQL: String, selectSQL: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, String, List[com.paypal.gimel.kafka.DataSet], String) = {
+  def resolveSQLWithTmpTables(originalSQL: String, selectSQL: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, String, List[com.paypal.gimel.datasetfactory.GimelDataSet], String) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
@@ -344,7 +344,7 @@ object GimelQueryUtils {
     // get queryPushDown flag
     val queryPushDownFlag = getQueryPushDownFlag(originalSQL, selectSQL, sparkSession, dataSet)
 
-    var kafkaDataSets: List[com.paypal.gimel.kafka.DataSet] = List()
+    var kafkaDataSets: List[com.paypal.gimel.datasetfactory.GimelDataSet] = List()
     var sqlTmpString = selectSQL
     var sqlOriginalString = originalSQL
     val pCatalogTablesToReplaceAsTmpTable: Map[String, String] = getTablesFrom(selectSQL).map {
@@ -714,7 +714,7 @@ object GimelQueryUtils {
     * @param dataSet      DataSet
     * @return Tuple ( Target Table, select SQL String, List(KafkaDataSet)  )
     */
-  def resolveSQL(sql: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, Option[String], String, List[com.paypal.gimel.kafka.DataSet], String) = {
+  def resolveSQL(sql: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, Option[String], String, List[com.paypal.gimel.datasetfactory.GimelDataSet], String) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info("@Begin --> " + MethodName)

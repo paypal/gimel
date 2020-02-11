@@ -26,7 +26,7 @@ import org.apache.spark.sql._
 import com.paypal.gimel.DataSet
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.storageadmin
-import com.paypal.gimel.common.storageadmin.KafkaAdminClient
+import com.paypal.gimel.common.storageadmin.KafkaAdminUtils
 import com.paypal.gimel.kafka.conf.KafkaConfigs
 import com.paypal.gimel.testsuite.utilities.GimelTestSuiteProperties
 
@@ -102,11 +102,11 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
     logger.info(" @Begin --> " + MethodName)
 
     try {
-      KafkaAdminClient.deleteTopicIfExists(
+      KafkaAdminUtils.deleteTopicIfExists(
         gimelProps.zkHostAndPort
         , gimelProps.smokeTestKafkaTopic
       )
-      storageadmin.KafkaAdminClient.createTopicIfNotExists(
+      storageadmin.KafkaAdminUtils.createTopicIfNotExists(
         gimelProps.zkHostAndPort
         , gimelProps.smokeTestKafkaTopic
         , 1
@@ -160,7 +160,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, g
     logger.info(" @Begin --> " + MethodName)
 
     try {
-      storageadmin.KafkaAdminClient.deleteTopicIfExists(
+      storageadmin.KafkaAdminUtils.deleteTopicIfExists(
         gimelProps.zkHostAndPort
         , gimelProps.smokeTestKafkaTopic
       )

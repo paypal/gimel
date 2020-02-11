@@ -74,6 +74,19 @@ under the License.
               </excludes>
             </filter>
           </filters>
+          <!--
+          For spark-sql-kafka data source to work we have to ensure that
+          META-INF/services/org.apache.spark.sql.sources.DataSourceRegister
+          of all the data sources are merged.
+          Without this it gets overwritten by similar file which is present in spark-sql jar.
+          -->
+          <transformers>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.AppendingTransformer">
+              <resource>
+                META-INF/services/org.apache.spark.sql.sources.DataSourceRegister
+              </resource>
+            </transformer>
+          </transformers>
         </configuration>
         <executions>
           <execution>

@@ -35,7 +35,7 @@ import com.paypal.gimel.DataSet
 import com.paypal.gimel.benchmarksuite.utilities.GimelBenchmarkProperties
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.storageadmin
-import com.paypal.gimel.common.storageadmin.KafkaAdminClient
+import com.paypal.gimel.common.storageadmin.KafkaAdminUtils
 import com.paypal.gimel.common.utilities.Timer
 import com.paypal.gimel.kafka.conf.KafkaConfigs
 import com.paypal.gimel.kafka.utilities.BrokersAndTopic
@@ -104,21 +104,21 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
     logger.info(" @Begin --> " + MethodName)
 
     try {
-      KafkaAdminClient.deleteTopicIfExists(
+      KafkaAdminUtils.deleteTopicIfExists(
         pcatProps.zkHostAndPort
         , topicName_native
       )
-      storageadmin.KafkaAdminClient.createTopicIfNotExists(
+      storageadmin.KafkaAdminUtils.createTopicIfNotExists(
         pcatProps.zkHostAndPort
         , topicName_native
         , 1
         , 1
       )
-      KafkaAdminClient.deleteTopicIfExists(
+      KafkaAdminUtils.deleteTopicIfExists(
         pcatProps.zkHostAndPort
         , topicName_dataset
       )
-      storageadmin.KafkaAdminClient.createTopicIfNotExists(
+      storageadmin.KafkaAdminUtils.createTopicIfNotExists(
         pcatProps.zkHostAndPort
         , topicName_dataset
         , 1
@@ -216,11 +216,11 @@ class KafkaStringMessageValidation(dataset: DataSet, sparkSession: SparkSession,
     logger.info(" @Begin --> " + MethodName)
 
     try {
-      storageadmin.KafkaAdminClient.deleteTopicIfExists(
+      storageadmin.KafkaAdminUtils.deleteTopicIfExists(
         pcatProps.zkHostAndPort
         , topicName_native
       )
-      storageadmin.KafkaAdminClient.deleteTopicIfExists(
+      storageadmin.KafkaAdminUtils.deleteTopicIfExists(
         pcatProps.zkHostAndPort
         , topicName_dataset
       )

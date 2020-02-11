@@ -27,7 +27,7 @@ import com.paypal.gimel.DataSet
 import com.paypal.gimel.benchmarksuite.utilities.GimelBenchmarkProperties
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.storageadmin
-import com.paypal.gimel.common.storageadmin.KafkaAdminClient
+import com.paypal.gimel.common.storageadmin.KafkaAdminUtils
 import com.paypal.gimel.kafka.conf.KafkaConfigs
 
 class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, sqlContext: SQLContext, pcatProps: GimelBenchmarkProperties, testData: DataFrame)
@@ -194,11 +194,11 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
     logger.info(" @Begin --> " + MethodName)
 
     try {
-      KafkaAdminClient.deleteTopicIfExists(
+      KafkaAdminUtils.deleteTopicIfExists(
         pcatProps.zkHostAndPort
         , topicName_dataset
       )
-      storageadmin.KafkaAdminClient.createTopicIfNotExists(
+      storageadmin.KafkaAdminUtils.createTopicIfNotExists(
         pcatProps.zkHostAndPort
         , topicName_dataset
         , 1
@@ -295,7 +295,7 @@ class KafkaAvroMessageValidation(dataset: DataSet, sparkSession: SparkSession, s
     logger.info(" @Begin --> " + MethodName)
 
     try {
-      storageadmin.KafkaAdminClient.deleteTopicIfExists(
+      storageadmin.KafkaAdminUtils.deleteTopicIfExists(
         pcatProps.zkHostAndPort
         , topicName_dataset
       )
