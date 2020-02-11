@@ -285,6 +285,20 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     throw new Exception(s"DataSet truncate for elastic search currently not Supported")
     true
   }
+
+  /**
+    * Save Checkpoint
+    */
+  override def clearCheckPoint(): Unit = {
+    logger.info(s"Clear check Point functionality is not available for ElasticSearch Dataset")
+  }
+
+  /**
+    * Clear Checkpoint
+    */
+  override  def saveCheckPoint(): Unit = {
+    logger.info(s"Save check Point functionality is not available for ElasticSearch Dataset")
+  }
 }
 
 case class DataSetException(private val message: String = "", private val cause: Throwable = null)

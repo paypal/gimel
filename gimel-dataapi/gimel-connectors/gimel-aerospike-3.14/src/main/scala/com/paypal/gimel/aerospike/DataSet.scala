@@ -144,6 +144,20 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     true
   }
 
+  /**
+    * Save Checkpoint
+    */
+  override def clearCheckPoint(): Unit = {
+    logger.info(s"Clear check Point functionality is not available for Aerospike Dataset")
+  }
+
+  /**
+    * Clear Checkpoint
+    */
+  override  def saveCheckPoint(): Unit = {
+    logger.info(s"Save check Point functionality is not available for Aerospike Dataset")
+  }
+
   case class AerospikeDataSetException(private val message: String = "", private val cause: Throwable = None.orNull) extends Exception(message, cause)
 
 }

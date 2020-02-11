@@ -21,7 +21,7 @@ package com.paypal.gimel.common.gimelservices.payload
 
 case class Zone (
                   zoneId: Int
-                  , zoneName: String = "paz"
+                  , zoneName: String = "restricted"
                   , zoneDescription: String = ""
                   , isActiveYN: String = "Y"
                   , createdUser: String = "gimel_user"

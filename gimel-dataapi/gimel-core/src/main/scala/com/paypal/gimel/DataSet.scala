@@ -33,15 +33,12 @@ import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf._
 import com.paypal.gimel.common.utilities._
 import com.paypal.gimel.datasetfactory.GimelDataSet
-import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
-import com.paypal.gimel.hbase.conf.HbaseConfigs
-import com.paypal.gimel.jdbc.conf.JdbcConfigs
-import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
+import com.paypal.gimel.kafka.conf.KafkaConstants
 import com.paypal.gimel.logger.Logger
 
 object DataSetType extends Enumeration {
   type SystemType = Value
-  val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID, RESTAPI, SFTP = Value
+  val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID, RESTAPI, SFTP, KAFKA2 = Value
 }
 
 class DataSet(val sparkSession: SparkSession) {
@@ -69,7 +66,7 @@ class DataSet(val sparkSession: SparkSession) {
 
   import DataSetUtils._
 
-  def latestKafkaDataSetReader: Option[com.paypal.gimel.kafka.DataSet] = {
+  def latestKafkaDataSetReader: Option[GimelDataSet] = {
     getLatestKafkaDataSetReader(this)
   }
 
@@ -174,9 +171,9 @@ class DataSet(val sparkSession: SparkSession) {
           , datasetSystemType
           , ""
           , additionalPropsToLog
-          , GimelConstants.SUCCESS
-          , GimelConstants.EMPTY_STRING
-          , GimelConstants.EMPTY_STRING
+          , GimelConstants.FAILURE
+          , e.toString + "\n" + e.getStackTraceString
+          , GimelConstants.UNKNOWN_STRING
           , startTime
           , endTime
           , executionTime
@@ -934,52 +931,42 @@ object DataSetUtils {
     */
 
   def getSystemType(dataSetProperties: DataSetProperties): (DataSetType.Value) = {
-
-    val storageHandler = dataSetProperties.props.getOrElse(GimelConstants.STORAGE_HANDLER, GimelConstants.NONE_STRING)
-    val storageType = dataSetProperties.datasetType
-
-    val systemType = storageHandler match {
-      case HbaseConfigs.hbaseStorageHandler =>
+    dataSetProperties.datasetType.toUpperCase() match {
+      case "HBASE" =>
         DataSetType.HBASE
-      case ElasticSearchConfigs.esStorageHandler =>
-        DataSetType.ES
-      case KafkaConfigs.kafkaStorageHandler =>
-        DataSetType.KAFKA
-      case JdbcConfigs.jdbcStorageHandler =>
-        DataSetType.JDBC
-      case _ =>
-        storageType.toUpperCase() match {
-          case "HBASE" =>
-            DataSetType.HBASE
-          case "KAFKA" =>
-            DataSetType.KAFKA
-          case "ELASTIC_SEARCH" =>
-            DataSetType.ES
-          case "JDBC" =>
-            DataSetType.JDBC
-          case "CASSANDRA" =>
-            DataSetType.CASSANDRA
-          case "AEROSPIKE" =>
-            DataSetType.AEROSPIKE
-          case "DRUID" =>
-            DataSetType.DRUID
-          case "HDFS" =>
-            DataSetType.HDFS
-          case "RESTAPI" =>
-            DataSetType.RESTAPI
-          case "HIVE" =>
-            DataSetType.HIVE
-          case "SFTP" =>
-            DataSetType.SFTP
-          case _ =>
-            DataSetType.HIVE
+      case "KAFKA" =>
+        val kafkaApiVersion = GenericUtils.getValue(dataSetProperties.props,
+          GimelConstants.GIMEL_KAFKA_VERSION, defaultValue = GimelConstants.GIMEL_KAFKA_DEFAULT_VERSION)
+        if (kafkaApiVersion.equals(GimelConstants.GIMEL_KAFKA_VERSION_ONE)) {
+          DataSetType.KAFKA
+        } else {
+          DataSetType.KAFKA2
         }
+      case "ELASTIC_SEARCH" =>
+        DataSetType.ES
+      case "JDBC" =>
+        DataSetType.JDBC
+      case "CASSANDRA" =>
+        DataSetType.CASSANDRA
+      case "AEROSPIKE" =>
+        DataSetType.AEROSPIKE
+      case "DRUID" =>
+        DataSetType.DRUID
+      case "HDFS" =>
+        DataSetType.HDFS
+      case "RESTAPI" =>
+        DataSetType.RESTAPI
+      case "HIVE" =>
+        DataSetType.HIVE
+      case "SFTP" =>
+        DataSetType.SFTP
+      case _ =>
+        DataSetType.HIVE
     }
-    systemType
   }
 
   /**
-    * provides an appropriate Gimel DataSet
+    * provides an appropriate gimel DataSet
     *
     * @param sparkSession : SparkSession
     * @param sourceType   Type of System. Example - HBASE , ES, KAFKA, HDFS, MYSQL
@@ -1006,12 +993,14 @@ object DataSetUtils {
         new com.paypal.gimel.aerospike.DataSet(sparkSession)
       case DataSetType.HDFS =>
         new com.paypal.gimel.hdfs.DataSet(sparkSession)
-      case DataSetType.DRUID =>
-        new com.paypal.gimel.druid.DataSet(sparkSession)
       case DataSetType.RESTAPI =>
         new com.paypal.gimel.restapi.DataSet(sparkSession)
+      case DataSetType.DRUID =>
+        new com.paypal.gimel.druid.DataSet(sparkSession)
       case DataSetType.SFTP =>
         new com.paypal.gimel.sftp.DataSet(sparkSession)
+      case DataSetType.KAFKA2 =>
+        new com.paypal.gimel.kafka2.DataSet(sparkSession)
     }
   }
 
@@ -1022,9 +1011,14 @@ object DataSetUtils {
     * @return Option[KafkaDataSet]
     */
 
-  def getLatestKafkaDataSetReader(dataSet: DataSet): Option[com.paypal.gimel.kafka.DataSet] = {
+  def getLatestKafkaDataSetReader(dataSet: DataSet): Option[GimelDataSet] = {
     Try {
-      dataSet.latestDataSetReader.get.asInstanceOf[com.paypal.gimel.kafka.DataSet]
+      dataSet.latestDataSetReader.get match {
+        case kafka: com.paypal.gimel.kafka.DataSet =>
+          kafka
+        case kafka2: com.paypal.gimel.kafka2.DataSet =>
+          kafka2
+      }
     }.toOption
   }
 
@@ -1040,7 +1034,6 @@ object DataSetUtils {
   (dataSet: String): Boolean = {
     dataSet.split('.').head.toLowerCase() != GimelConstants.PCATALOG_STRING && dataSet.split('.').length == 2
   }
-
 }
 
 /**

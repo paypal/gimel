@@ -126,6 +126,20 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   }
 
   /**
+    * Save Checkpoint
+    */
+  override def clearCheckPoint(): Unit = {
+    logger.info(s"Clear check Point functionality is not available for SFTP Dataset")
+  }
+
+  /**
+    * Clear Checkpoint
+    */
+  override  def saveCheckPoint(): Unit = {
+    logger.info(s"Save check Point functionality is not available for SFTP Dataset")
+  }
+
+  /**
     * Custom Exception for SFTP read write errors.
     *
     * @param message Message to Throw

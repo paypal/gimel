@@ -45,7 +45,7 @@ import com.paypal.gimel.common.catalog.CatalogProvider
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.schema.ConfluentSchemaRegistry
 import com.paypal.gimel.common.storageadmin
-import com.paypal.gimel.common.storageadmin.KafkaAdminClient
+import com.paypal.gimel.common.storageadmin.KafkaAdminUtils
 import com.paypal.gimel.common.utilities.DataSetUtils._
 import com.paypal.gimel.datastreamfactory.{StreamCheckPointHolder, WrappedData}
 import com.paypal.gimel.kafka.avro.SparkAvroUtilities._
@@ -943,7 +943,7 @@ object KafkaUtilities {
 
     logger.info(" @Begin --> " + MethodName)
 
-    KafkaAdminClient.createTopicIfNotExists(
+    KafkaAdminUtils.createTopicIfNotExists(
       zookKeeperHostAndPort
       , kafkaTopicName
       , numberOfPartitions
@@ -962,7 +962,7 @@ object KafkaUtilities {
 
     logger.info(" @Begin --> " + MethodName)
 
-    storageadmin.KafkaAdminClient.deleteTopicIfExists(
+    storageadmin.KafkaAdminUtils.deleteTopicIfExists(
       zookKeeperHostAndPort
       , kafkaTopicName
     )

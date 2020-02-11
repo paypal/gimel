@@ -46,6 +46,7 @@ under the License.
         <module>gimel-connectors/gimel-cassandra-2.0</module>
         <module>gimel-connectors/gimel-aerospike-3.14</module>
         <module>gimel-connectors/gimel-kafka-0.10</module>
+        <module>gimel-connectors/gimel-kafka-0.10-2</module>
         <module>gimel-connectors/gimel-druid-0.82</module>
         <module>gimel-connectors/gimel-restapi</module>
         <module>gimel-core</module>

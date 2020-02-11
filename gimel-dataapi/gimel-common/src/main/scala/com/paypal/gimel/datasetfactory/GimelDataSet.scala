@@ -123,5 +123,16 @@ abstract class GimelDataSet(sparkSession: SparkSession) {
 
   val supportedTypesOfRDD: List[String] = List[String]()
 
-}
+  /**
+    * Save Checkpoint
+    */
+  def saveCheckPoint(): Unit
 
+
+  /**
+    * Clear CheckPoint
+    *
+    */
+
+  def clearCheckPoint(): Unit
+}

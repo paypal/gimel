@@ -30,7 +30,7 @@ import org.apache.kafka.common.security.JaasUtils
 
 import com.paypal.gimel.logger.Logger
 
-object KafkaAdminClient {
+object KafkaAdminUtils {
 
   val logger = Logger()
 
