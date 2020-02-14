@@ -19,32 +19,32 @@
 
 package com.paypal.gimel.hdfs
 
-import java.net._
-
 import scala.reflect.runtime.universe._
 
-import org.apache.hadoop.fs.FileSystem
-import org.apache.hadoop.fs.Path
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.json4s._
+import org.json4s.jackson.JsonMethods._
 
-import com.paypal.gimel.common.catalog.DataSetProperties
-import com.paypal.gimel.common.conf.{CatalogProviderConstants, GimelConstants}
 import com.paypal.gimel.datasetfactory.GimelDataSet
-import com.paypal.gimel.hdfs.conf.{HdfsConfigs, HdfsConstants}
+import com.paypal.gimel.hdfs.conf.{HdfsClientConfiguration, HdfsConfigs, HdfsConstants}
 import com.paypal.gimel.hdfs.utilities.HDFSUtilities
 import com.paypal.gimel.logger.Logger
 
 class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
 
+  val hdfsUtils = new HDFSUtilities
+  import hdfsUtils._
+
   // GET LOGGER
   val logger = Logger()
   logger.info(s"Initiated --> ${this.getClass.getName}")
 
+  private var conf: HdfsClientConfiguration = _
+
   /** Read Implementation for HDFS DataSet
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param dataset Name of the UDC Data Set
     * @param dataSetProps
     *                props is the way to set various additional parameters for read and write operations in DataSet class
     *                Example Usecase : to get 10 factor parallelism (specifically)
@@ -54,62 +54,58 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @return DataFrame
     */
   override def read(dataset: String, dataSetProps: Map[String, Any]): DataFrame = {
-    if (dataSetProps.isEmpty) {
-      throw new DataSetOperationException("Props Cannot Be Empty !")
-    }
-    val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
-    val dataSet: String = dataSetProps(GimelConstants.RESOLVED_HIVE_TABLE).toString
-    val dataLocation = datasetProps.props(CatalogProviderConstants.PROPS_LOCATION)
-    val dataFormat = datasetProps.props.getOrElse(HdfsConfigs.hdfsDataFormatKey, "None")
-    val inferSchema = dataSetProps.getOrElse(HdfsConfigs.inferSchemaKey, "true").toString
-    val header = dataSetProps.getOrElse(HdfsConfigs.fileHeaderKey, "true").toString
-    val isCrossClusterDataSet = datasetProps.props.contains(HdfsConfigs.hdfsStorageNameKey)
-    if (!isCrossClusterDataSet) {
-      try {
-        dataFormat.toLowerCase match {
-          case "csv" =>
-            val sqlContext = sparkSession.sqlContext
-            sqlContext.read.option(HdfsConstants.inferSchema, inferSchema).option(HdfsConstants.fileHeader, header).csv(dataLocation)
-          case _ =>
-            sparkSession.sql(s"select * from ${dataSet}")
-        }
-      } catch {
-        case ex: Throwable =>
-          ex.printStackTrace()
-          throw new DataSetOperationException(s"Read Error for ${dataset} with Props ${dataSetProps}")
+    try {
+      if (dataSetProps.isEmpty) {
+        throw new DataSetOperationException("Props Cannot Be Empty !")
       }
-    }
-    else {
+      conf = new HdfsClientConfiguration(dataSetProps)
+      val clusterReadOptions: Map[String, String] = getOptions(conf.readOptions)
+      val clusterDataLocationPath = new java.net.URI(conf.clusterDataLocation).getPath()
+      val clusterPathToRead = conf.clusterNameNode + "/" + clusterDataLocationPath
+      logger.info("Read options provided for the cluster are: " + clusterReadOptions)
 
-      logger.info("Cross Cluster Read Detected !")
-
-      val crossClusterName = datasetProps.props.getOrElse(HdfsConfigs.hdfsStorageNameKey, "")
-      val crossClusterNameNode = datasetProps.props.getOrElse(HdfsConfigs.hdfsNameNodeKey, "")
-      val crossClusterDataLocation = datasetProps.props.getOrElse(HdfsConfigs.hdfsDataLocationKey, "")
-      val crossClusterdataFormat = datasetProps.props.getOrElse(HdfsConfigs.hdfsDataFormatKey, "")
-      val crossClusterThresholdGB = dataSetProps.getOrElse(HdfsConfigs.hdfsCrossClusterThresholdKey, HdfsConstants.thresholdGBData).toString
-      val crossClusterpathToRead = crossClusterNameNode + "/" + crossClusterDataLocation
-
-      // TODO: Threshold Logic will be implemented with respect to partition
-      if (!crossClusterpathToRead.toLowerCase.startsWith(HdfsConstants.alluxioString)) {
-        val (isThresholdMet, dataSizeGB) = validateThreshold(crossClusterpathToRead, crossClusterThresholdGB, crossClusterNameNode)
-        // if (isThresholdMet) {
-        logger.info("CrossCluster Path --> " + crossClusterpathToRead)
+      if (clusterPathToRead.toLowerCase.startsWith(HdfsConstants.alluxioString)) {
+        val (isThresholdMet, dataSizeGB) = validateThreshold(sparkSession, clusterPathToRead, conf.clusterThresholdGB, conf.clusterNameNode)
+        logger.info("Cluster Path --> " + clusterPathToRead)
         logger.info(s"Size of the Data in the above path -->${dataSizeGB} GB")
-        // This will be removed once logger issue is fixed
-        println("CrossCluster Path --> " + crossClusterpathToRead)
-        println(s"WARNING : Size of the data in the root path before applying where clause(if any)  -->${dataSizeGB} GB")
+        logger.info(s"WARNING : Size of the data in the root path before applying where clause(if any)  -->${dataSizeGB} GB")
       }
-      readAcrossCluster(crossClusterpathToRead, crossClusterdataFormat, inferSchema, header)
-      // } else {
-      //   throw new DataSetOperationException(s"Size of the data is greater than threshold GB  => Data size GB ${dataSizeGB} > threshold GB ${crossClusterThresholdGB}")
-      // }
+      readPath(sparkSession,
+        conf,
+        clusterPathToRead,
+        conf.clusterdataFormat,
+        conf.inferSchema,
+        conf.header,
+        conf.datasetProps.fields,
+        conf.datasetProps.partitionFields,
+        clusterReadOptions)
     }
+    catch {
+      case ex: Throwable =>
+        ex.printStackTrace()
+        throw new DataSetOperationException(s"Read Error for ${dataset} with Props ${dataSetProps}")
+    }
+
+  }
+
+  /** Get user custom options for read in Hdfs
+    *
+    * @param value      The Json String from the dataset properties
+    * @return Map[String,String]
+    */
+  def getOptions(value: String): Map[String, String] = {
+    implicit val formats = org.json4s.DefaultFormats
+    if(!(value.compareTo("") == 0)) {
+      logger.info("value is " + value)
+      parse(value).extract[Map[String, String]]
+    }
+    Map[String, String]()
+
   }
 
   /** Write Implementation for HDFS DataSet
     *
-    * @param dataset      Name of the PCatalog Data Set
+    * @param dataset      Name of the UDC Data Set
     * @param dataFrame    The DataFrame to Write into Target
     * @param dataSetProps props is the way to set various additional parameters for read and write operations in DataSet class
     * @return DataFrame
@@ -120,9 +116,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
       throw new DataSetOperationException("Props Cannot Be Empty")
     }
     try {
-      val dataSet: String = dataSetProps(GimelConstants.RESOLVED_HIVE_TABLE).toString
-      val hdfsUtils = new HDFSUtilities
-      hdfsUtils.writeToHDFS(dataSet, dataFrame, sparkSession, dataSetProps)
+      writeToHDFS(dataFrame, sparkSession, dataSetProps)
+      logger.info("Finished")
       dataFrame
     } catch {
       case ex: Throwable =>
@@ -138,7 +133,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   /**
     * Function writes a given dataframe to the actual Target System (Example Hive : DB.Table | HBASE namespace.Table)
     *
-    * @param dataset Name of the PCatalog Data Set
+    * @param dataset Name of the UDC Data Set
     * @param rdd     The RDD[T] to write into Target
     *                Note the RDD has to be typeCast to supported types by the inheriting DataSet Operators
     *                instance#1 : ElasticSearchDataSet may support just RDD[Seq(Map[String, String])], so Elastic Search must implement supported Type checking
@@ -161,59 +156,13 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   }
 
   /**
-    * Function reads  cross cluster data and return as a dataframe
-    * @param pathToRead             Path of HDFS Data
-    * @param crossClusterDataFormat Cross Cluster Format
-    * @return DataFrame
-    */
-  def readAcrossCluster(pathToRead: String, crossClusterDataFormat: String, inferSchema: String, header: String): DataFrame = {
-    val crossClusterData = crossClusterDataFormat.toLowerCase match {
-      case "text" =>
-        val k = sparkSession.sparkContext.textFile(pathToRead)
-        val kRow = k.map(Row(_))
-        val kDataFrame = sparkSession.createDataFrame(kRow, StructType(Seq(StructField(GimelConstants.PCATALOG_STRING, StringType))))
-        kDataFrame
-      case "parquet" =>
-        sparkSession.read.parquet(pathToRead)
-      case "orc" =>
-        sparkSession.read.orc(pathToRead)
-      case "csv" =>
-        val sqlContext = sparkSession.sqlContext
-        sqlContext.read.option(HdfsConstants.inferSchema, inferSchema).option(HdfsConstants.fileHeader, header).csv(pathToRead)
-      case _ =>
-        throw new Exception(s"UnSupported Format ${crossClusterDataFormat}")
-    }
-    crossClusterData
-  }
-
-  /**
-    * Function reads  cross cluster data and return as a dataframe
-    * @param path        Path of HDFS Data
-    * @param thresholdGB Threshold GB to Read
-    * @return isThresholdMet,sizeGB to String
-    */
-
-  def validateThreshold(path: String, thresholdGB: String, uri: String): (Boolean, String) = {
-    val conf = new org.apache.hadoop.conf.Configuration()
-    val fs1 = FileSystem.get(new URI(uri), conf)
-    val hdfsPath = new Path(path)
-    val contentSummary = fs1.getContentSummary(hdfsPath)
-    val gb = (1024 * 1024 * 1024).toDouble
-    val size = contentSummary.getLength
-    val sizeGB = size.toDouble / gb
-    val isThresholdMet = sizeGB <= thresholdGB.toDouble
-    (isThresholdMet, sizeGB.toString)
-  }
-
-  /**
     *
     * @param dataset Name of the UDC Data Set
     * @param dataSetProps
     *                * @return Boolean
     */
   override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
-    throw new Exception(s"DataSet create for hdfs/hive currently not Supported")
-    true
+    throw new UnsupportedOperationException(s"DataSet create for hdfs/hive currently not Supported")
   }
 
   /**
@@ -223,8 +172,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     *                * @return Boolean
     */
   override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
-    throw new Exception(s"DataSet drop for hdfs/hive currently not Supported")
-    true
+    throw new UnsupportedOperationException(s"DataSet drop for hdfs/hive currently not Supported")
   }
 
   /**
@@ -234,8 +182,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     *                * @return Boolean
     */
   override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
-    throw new Exception(s"DataSet truncate for hdfs/hive currently not Supported")
-    true
+    throw new UnsupportedOperationException(s"DataSet truncate for hdfs/hive currently not Supported")
   }
 
   /**
@@ -251,6 +198,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   override  def saveCheckPoint(): Unit = {
     logger.info(s"Save check Point functionality is not available for HDFS Dataset")
   }
+
+
 }
 
 
@@ -268,4 +217,3 @@ private class DataSetOperationException(message: String, cause: Throwable)
 
   def this(message: String) = this(message, null)
 }
-

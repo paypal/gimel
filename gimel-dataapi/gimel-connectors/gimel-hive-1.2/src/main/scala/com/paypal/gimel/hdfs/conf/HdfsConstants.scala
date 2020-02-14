@@ -23,10 +23,13 @@ object HdfsConstants {
   val inferSchema = "inferSchema"
   val fileHeader = "header"
   val thresholdGBData = "50"
-  val tabDelimiterValue = "11"
+  val tabDelimiterValue = "\t"
+  val newLineDelimiterValue = "\n"
+  val controlAOctalDelimiterValue = "\u0001"
+  val commaDelimiterValue = ","
   val octalValue = "8"
   val alluxioString = "alluxio"
-
+  val avroInputFormat = "com.databricks.spark.avro"
+  val csvInputFormat = "com.databricks.spark.csv"
+  val delimiter = "delimiter"
 }
-
-

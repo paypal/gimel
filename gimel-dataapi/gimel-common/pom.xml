@@ -97,6 +97,12 @@ under the License.
       <scope>${packaging.scope}</scope>
     </dependency>
     <dependency>
+      <groupId>com.databricks</groupId>
+      <artifactId>spark-avro_${scala.binary.version}</artifactId>
+      <version>4.0.0</version>
+      <scope>${packaging.scope}</scope>
+    </dependency>
+    <dependency>
       <groupId>org.apache.zookeeper</groupId>
       <artifactId>zookeeper</artifactId>
       <version>${zookeeper.version}</version>
@@ -186,12 +192,6 @@ under the License.
       <groupId>io.confluent</groupId>
       <artifactId>kafka-avro-serializer</artifactId>
       <version>${confluent.version}</version>
-      <scope>test</scope>
-    </dependency>
-    <dependency>
-      <groupId>org.apache.avro</groupId>
-      <artifactId>avro</artifactId>
-      <version>1.7.7</version>
       <scope>test</scope>
     </dependency>
     <!-- Kafka local testing utility needs Netty 3.x at test scope for the minicluster -->
