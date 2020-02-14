@@ -216,7 +216,7 @@ class Logger(config: Any) extends Serializable {
     * @param yarnAppName               Yarn Application Name
     * @param runType                   Run Type is Either Batch or Stream
     * @param runMode                   Either Batch or Stream
-    * @param cluster                   The Cluster, example Horton, Stampy
+    * @param cluster                   The Cluster name
     * @param user                      User who is running the API code
     * @param appTag                    Gimel Unique Application Tag
     * @param method                    The method, example - read, write, executeQuery
@@ -280,7 +280,7 @@ class Logger(config: Any) extends Serializable {
     * @param yarnAppName               Yarn Application Name
     * @param runType                   Run Type mostly the class name
     * @param runMode                   Either Batch or Stream
-    * @param cluster                   The Cluster, example Horton, Stampy
+    * @param cluster                   The Cluster name
     * @param user                      User who is running the API code
     * @param appTag                    Gimel Unique Application Tag
     * @param method                    The method, example - read, write, executeQuery

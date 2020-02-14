@@ -140,9 +140,9 @@ spark.sql("set gimel.jdbc.password.strategy=file")
 spark.sql("set hdfsTempLocation=/tmp/basu")
 spark.sql("set gimel.jdbc.p.file=hdfs://cluster1/user/USERNAME/pass.dat")
 
-val newDF = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch("create table pcatalog.teradata.simba.pp_scratch.myTable1 as select * from pcatalog.SFTP.SFTP_SERVER.default.Files",spark)
+val newDF = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch("create table pcatalog.teradata.mycluster.test_db.myTable1 as select * from pcatalog.SFTP.SFTP_SERVER.default.Files",spark)
 
-val sampleDF = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch("insert into pcatalog.teradata.simba.pp_scratch.myTable1 as select * from pcatalog.SFTP.SFTP_SERVER.default.Files",spark)
+val sampleDF = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch("insert into pcatalog.teradata.mycluster.test_db.myTable1 as select * from pcatalog.SFTP.SFTP_SERVER.default.Files",spark)
 
 // Here pcatalog.SFTP.SFTP_SERVER.default.Files is pcatalog table created through gimel pcatalog UI
 // This is created by pointing sftp_server of paypal corp.
