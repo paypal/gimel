@@ -281,7 +281,7 @@ object CatalogProvider {
   /**
     * Utility for getting the storage system properties
     *
-    * @param storageSystemName -> Name of the storage system like teradata.jackal
+    * @param storageSystemName -> Name of the storage system like teradata.cluster_name
     * @return
     */
   def getStorageSystemProperties(storageSystemName: String): Map[String, String] = {

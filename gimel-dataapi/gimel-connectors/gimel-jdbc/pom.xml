@@ -43,25 +43,36 @@ under the License.
       <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
-<!--
     <dependency>
       <groupId>com.teradata.jdbc</groupId>
       <artifactId>terajdbc4</artifactId>
       <version>${teradata.version}</version>
-      <scope>${packaging.scope}</scope>
+      <!--<scope>${packaging.scope}</scope>-->
     </dependency>
     <dependency>
       <groupId>com.teradata.jdbc</groupId>
       <artifactId>tdgssconfig</artifactId>
       <version>${teradata.version}</version>
-      <scope>${packaging.scope}</scope>
+      <!--<scope>${packaging.scope}</scope>-->
     </dependency>
--->
     <dependency>
       <groupId>qubole-hive-JDBC</groupId>
       <artifactId>qubole-hive-JDBC</artifactId>
       <version>${qubole.hive.jdbc.version}</version>
       <scope>${packaging.scope}</scope>
+    </dependency>
+    <!-- https://mvnrepository.com/artifact/mysql/mysql-connector-java -->
+    <dependency>
+      <groupId>mysql</groupId>
+      <artifactId>mysql-connector-java</artifactId>
+      <version>8.0.13</version>
+      <!--<scope>compile</scope>-->
+    </dependency>
+    <!--DB Utils-->
+    <dependency>
+      <groupId>commons-dbutils</groupId>
+      <artifactId>commons-dbutils</artifactId>
+      <version>1.7</version>
     </dependency>
   </dependencies>
 

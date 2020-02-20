@@ -19,24 +19,55 @@
 
 package com.paypal.gimel.jdbc.utilities
 
-import java.sql.{BatchUpdateException, Connection, DriverManager, JDBCType, PreparedStatement, ResultSet, ResultSetMetaData, SQLException}
+import java.io.{PrintWriter, StringWriter}
+import java.sql.{Connection, PreparedStatement, SQLException, SQLWarning}
+import java.time.Instant
 
 import scala.collection.immutable.Map
+import scala.collection.mutable
+import scala.util.{Failure, Success, Try}
 
+import org.apache.commons.lang3.time.DurationFormatUtils
 import org.apache.spark.TaskContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
+import org.apache.spark.sql.types.StructField
 
+import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf.{CatalogProviderConfigs, GimelConstants}
+import com.paypal.gimel.common.utilities.{DataSetUtils, GenericUtils}
 import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
+import com.paypal.gimel.jdbc.exception._
+import com.paypal.gimel.jdbc.utilities.JdbcAuxiliaryUtilities.getJDBCSystem
 import com.paypal.gimel.logger.Logger
-
 
 /**
   * JDBC implementation internal to PCatalog
   * This implementation will be used to read from any JDBC data sources e.g. MYSQL, TERADATA
   */
 object JDBCUtilities {
+
+  val DEF_LOWER_BOUND : Long = 0
+  val DEF_UPPER_BOUND : Long = 20
+
+  def getOrCreateConnection(jdbcConnectionUtility: JDBCConnectionUtility,
+                            conn: Option[Connection] = None,
+                            logger: Option[Logger] = None): Connection = {
+    if (conn.isEmpty || conn.get.isClosed) {
+      jdbcConnectionUtility.jdbcSystem match {
+        case JdbcConstants.TERADATA =>
+          Class.forName("com.teradata.jdbc.TeraDriver")
+        case _ =>
+          // scalastyle:off println
+          println(s"Not loading the driver class for ${jdbcConnectionUtility.jdbcSystem} !!")
+        // scalastyle:on println
+      }
+      jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand(logger)
+    } else {
+      conn.get
+    }
+  }
+
   def apply(sparkSession: SparkSession): JDBCUtilities = new JDBCUtilities(sparkSession)
 }
 
@@ -57,6 +88,8 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     * @return DataFrame
     */
   def read(dataset: String, dataSetProps: Map[String, Any]): DataFrame = {
+    import JDBCUtilities._
+    import PartitionUtils._
 
     val logger = Logger(this.getClass.getName)
     // logger.setLogLevel("CONSOLE")
@@ -65,171 +98,82 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps)
 
     val jdbcOptions: Map[String, String] = JdbcAuxiliaryUtilities.getJDBCOptions(dataSetProps)
-    val jdbcURL = jdbcOptions("url")
-    val dbtable = jdbcOptions("dbtable")
+    logger.info(s"Received JDBC options: $jdbcOptions and dataset options: $dataSetProps")
 
-    // get real user of JDBC
-    val realUser: String = dataSetProps.getOrElse(JdbcConstants.jdbcUserName, JDBCCommons.getDefaultUser(sparkSession)).toString
-
-    // get password strategy for JDBC
-    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.jdbcDefaultPasswordStrategy).toString
-
+    val jdbcURL = jdbcOptions(JdbcConfigs.jdbcUrl)
+    val dbtable = jdbcOptions(JdbcConfigs.jdbcDbTable)
 
     // get connection
-    var conn: Connection = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
+    val conn: Connection = getOrCreateConnection(jdbcConnectionUtility)
+    val userSpecifiedFetchSize = dataSetProps.getOrElse("fetchSize", JdbcConstants.defaultReadFetchSize).toString.toInt
 
-    // get partitionColumn
-    val userPartitionColumn: Option[Any] = dataSetProps.get("partitionColumn")
-    val partitionColumn = userPartitionColumn match {
-
-      case None =>
-        // get numeric only primary index of the table if not specified
-        val primaryIndices: Seq[String] = JdbcAuxiliaryUtilities.getPrimaryKeys(jdbcURL, dbtable, conn, true)
-        val defaultPartitionColumn: String = {
-          if (!primaryIndices.isEmpty) {
-            primaryIndices(0)
-          }
-          else {
-            JdbcConstants.noPartitionColumn
-          }
-        }
-        defaultPartitionColumn
-
-      case _ =>
-        userPartitionColumn.get.toString
-    }
-
-    // get lowerBound & upperBound
-    val (lowerBoundValue: Double, upperBoundValue: Double) = if (!partitionColumn.equals(JdbcConstants.noPartitionColumn)) {
-      println(s"Partition column is set to ${partitionColumn}")
-      JdbcAuxiliaryUtilities.getMinMax(partitionColumn, dbtable, conn)
-    }
-    else {
-      (0.0, 20.0)
-    }
-
-    val lowerBound = dataSetProps.getOrElse("lowerBound", lowerBoundValue.floor.toLong).toString.toLong
-    val upperBound = dataSetProps.getOrElse("upperBound", upperBoundValue.ceil.toLong).toString.toLong
-
-    val userSpecifiedPartitions = dataSetProps.getOrElse("numPartitions", JdbcConstants.NUM_READ_PARTITIONS).toString.toInt
-
-    // set number of partitions
-    val numPartitions: Int = partitionColumn match {
-      case JdbcConstants.noPartitionColumn =>
-        println(s"Number of partitions are set to 1 with NO partition column.")
-        1
-      case _ =>
-        if (userSpecifiedPartitions > JdbcConstants.NUM_READ_PARTITIONS) {
-          println(s"WARNING: Maximum number of partitions are SET to ${JdbcConstants.NUM_READ_PARTITIONS} due to Teradata connections limitations")
-        }
-        println(s"Teradata Read for  partitionColumn=${partitionColumn} with lowerBound=${lowerBound} and upperBound=${upperBound}")
-        Math.min(userSpecifiedPartitions, JdbcConstants.NUM_READ_PARTITIONS)
-    }
-
-    val fetchSize = dataSetProps.getOrElse("fetchSize", JdbcConstants.defaultReadFetchSize).toString.toInt
-
-    val dbConnection = new DbConnection(jdbcConnectionUtility)
-    val selectStmt = s"SELECT * FROM ${dbtable} WHERE ?<=$partitionColumn AND $partitionColumn<=?"
+    val jdbcSystem = getJDBCSystem(jdbcURL)
     try {
+      jdbcSystem match {
+        case JdbcConstants.TERADATA =>
+          val selectStmt = s"SELECT * FROM $dbtable"
 
-      // set jdbcPushDownFlag to false if using through dataset.read
-      logger.info(s"Setting jdbcPushDownFlag to FALSE in TaskContext")
-      sparkSession.sparkContext.setLocalProperty(JdbcConfigs.jdbcPushDownEnabled, "false")
+          val mutableJdbcOptions: mutable.Map[String, String] = scala.collection.mutable.Map(jdbcOptions.toSeq: _*)
 
-      val jdbcRDD: ExtendedJdbcRDD[Array[Object]] = new ExtendedJdbcRDD(sparkSession.sparkContext, dbConnection, selectStmt, lowerBound, upperBound, numPartitions, fetchSize, realUser, jdbcPasswordStrategy)
+          // get the partition columns
+          val partitionColumns: Seq[String] = JdbcAuxiliaryUtilities.getAndSetPartitionParameters(
+            sparkSession, dataSetProps, userSpecifiedFetchSize, mutableJdbcOptions, conn)
 
-      conn = if (conn.isClosed || conn == null) {
-        jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
+          // Get connection details per the explain plan of the incomingSql
+          val (connectionDetails, connectionUtilityPerIncomingSQL) =
+            JdbcAuxiliaryUtilities.getConnectionInfo(sparkSession, jdbcConnectionUtility,
+              dataSetProps, selectStmt, Some(logger), partitionColumns)
+
+          val jdbcRDD: ExtendedJdbcRDD[Array[Object]] = new ExtendedJdbcRDD(sparkSession.sparkContext,
+            new DbConnection(connectionUtilityPerIncomingSQL), selectStmt, connectionDetails.fetchSize,
+            PartitionInfoWrapper(JdbcConstants.TERADATA, partitionColumns, JdbcConstants.defaultLowerBound,
+              JdbcConstants.defaultUpperBound, numOfPartitions = connectionDetails.numOfPartitions))
+
+          // getting table schema to build final dataframe
+          val tableSchema = JdbcReadUtility.resolveTable(jdbcURL, selectStmt,
+            getOrCreateConnection(jdbcConnectionUtility, Some(conn)))
+          val rowRDD: RDD[Row] = jdbcRDD.map(v => Row(v: _*))
+          sparkSession.createDataFrame(rowRDD, tableSchema)
+        case _ =>
+          // get partitionColumns
+          val partitionOptions = if (dataSetProps.contains(JdbcConfigs.jdbcPartitionColumns)) {
+            jdbcOptions + (JdbcConfigs.jdbcPartitionColumns -> dataSetProps(JdbcConfigs.jdbcPartitionColumns).toString)
+          } else jdbcOptions
+          val partitionColumns = PartitionUtils.getPartitionColumns(partitionOptions, conn, numericOnlyFlag = true)
+          val (partitionColumn, lowerBoundValue, upperBoundValue, nofOfPartitions) = if (partitionColumns.nonEmpty) {
+            Try(JdbcAuxiliaryUtilities.getMinMax(partitionColumns.head, dbtable, conn)) match {
+              case Success((lowerBound, upperBound)) =>
+                // set number of partitions
+                val userSpecifiedPartitions = dataSetProps.get("numPartitions")
+                val numPartitions: Int = JdbcAuxiliaryUtilities.getNumPartitions(jdbcURL, userSpecifiedPartitions,
+                  JdbcConstants.readOperation)
+                logger.info(s"Partition column is set to ${partitionColumns.head} " +
+                  s"and no of partitions: $numPartitions")
+                (Some(partitionColumns.head), GenericUtils.parseLong(dataSetProps.getOrElse("lowerBound",
+                  lowerBound).toString).getOrElse(JDBCUtilities.DEF_LOWER_BOUND),
+                  GenericUtils.parseLong(dataSetProps.getOrElse("upperBound",
+                    upperBound).toString).getOrElse(JDBCUtilities.DEF_UPPER_BOUND), numPartitions)
+              case Failure(_) => (None, JDBCUtilities.DEF_LOWER_BOUND, JDBCUtilities.DEF_UPPER_BOUND, 1)
+            }
+          } else {
+            (None, JDBCUtilities.DEF_LOWER_BOUND, JDBCUtilities.DEF_UPPER_BOUND, 1)
+          }
+
+          // default spark JDBC read
+          JdbcAuxiliaryUtilities.sparkJdbcRead(sparkSession, jdbcURL, dbtable,
+            partitionColumn, lowerBoundValue, upperBoundValue, nofOfPartitions, userSpecifiedFetchSize,
+            jdbcConnectionUtility.getConnectionProperties)
       }
-      else {
-        conn
-      }
-
-      // getting table schema to build final dataframe
-      val tableSchema = JdbcReadUtility.resolveTable(jdbcURL, dbtable, conn)
-      val rowRDD: RDD[Row] = jdbcRDD.map(v => Row(v: _*))
-      sparkSession.createDataFrame(rowRDD, tableSchema)
     }
     catch {
-      case exec: SQLException =>
-        var ex: SQLException = exec
-        while (ex != null) {
-          ex.printStackTrace()
-          ex = ex.getNextException
-        }
-        throw exec
+      case throwable: Throwable =>
+        handleException(logger, throwable, s"Exception in reading dataset: $dataset ")
     }
     finally {
       // re-setting all configs for read
-      JDBCCommons.resetDefaultConfigs(sparkSession)
+      JDBCCommons.resetReadConfigs(sparkSession)
     }
-
   }
-
-  // Degrading this READ API
-  //  /**
-  //    * This function reads data with specified parameters from JDBC datasource table and returns it as a dataFrame
-  //    *
-  //    * @param dataSetProps dataset properties to specify additional parameters
-  //    * @return DataFrame
-  //    */
-  //  private def readWithJdbc(dataSetProps: Map[String, Any]): DataFrame = {
-  //
-  //    val jdbcOptions: Map[String, String] = getJDBCOptions(dataSetProps)
-  //
-  //    // get real user of JDBC
-  //    val realUser: String = dataSetProps.getOrElse(JdbcConstants.jdbcUserName, JDBCCommons.getDefaultUser(sparkSession)).toString
-  //
-  //    // get password strategy for JDBC
-  //    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.jdbcDefaultPasswordStrategy).toString
-  //
-  //
-  //    val conn: Connection = JDBCCommons.getJdbcConnection(jdbcOptions("url"), jdbcOptions("user"), jdbcOptions("password"))
-  //    // set QueryBand
-  //    JDBCCommons.setQueryBand(conn, realUser, jdbcPasswordStrategy)
-  //
-  //    // get primary index of the table
-  //    val primaryIndices: Seq[String] = getPrimaryKeys(jdbcOptions("dbtable"), conn)
-  //    val defaultPartitionColumn: String = {
-  //      if (!primaryIndices.isEmpty) {
-  //        primaryIndices(0)
-  //      }
-  //      else {
-  //        "10"
-  //      }
-  //    }
-  //    val partitionColumn: String = dataSetProps.getOrElse("partitionColumn", defaultPartitionColumn).toString
-  //
-  //    val (lowerBoundValue, upperBoundValue) = if (!partitionColumn.equals("10")) {
-  //      getMinMax(partitionColumn, jdbcOptions("dbtable"), conn)
-  //    }
-  //    else {
-  //      (0, 20)
-  //    }
-  //
-  //    // close connection
-  //    conn.close()
-  //
-  //    val lowerBound = dataSetProps.getOrElse("lowerBound", lowerBoundValue).toString
-  //    val upperBound = dataSetProps.getOrElse("upperBound", upperBoundValue).toString
-  //    val numPartitions = dataSetProps.getOrElse("numPartitions", JdbcConstants.NUM_READ_PARTITIONS).toString
-  //    val fetchSize = dataSetProps.getOrElse("fetchSize", JdbcConstants.defaultReadFetchSize).toString
-  //
-  //    // map to specify all JDBC read paramaters
-  //    val jdbcREADOptions: Map[String, String] = jdbcOptions +
-  //      ("partitionColumn" -> partitionColumn) +
-  //      ("lowerBound" -> lowerBound) +
-  //      ("upperBound" -> upperBound) +
-  //      ("numPartitions" -> numPartitions) +
-  //      ("fetchSize" -> fetchSize)
-  //
-  //    // Read data from JDBC datasource with specified parameters
-  //    sparkSession
-  //      .read
-  //      .format("jdbc")
-  //      .options(jdbcREADOptions)
-  //      .load()
-  //  }
 
 
   /**
@@ -243,39 +187,87 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
   def write(dataset: String, dataFrame: DataFrame, dataSetProps: Map[String, Any]): DataFrame = {
 
     val logger = Logger(this.getClass.getName)
+    logger.info(s"In JDBC write, received Dataset[$dataset] properties: $dataSetProps")
+    // Getting connection info from dataset properties else from the incoming properties
+    val jdbcConnectionOptions = DataSetUtils.getJdbcConnectionOptionsFromDataset(dataset, dataSetProps)
+    logger.info(s"received JDBC options from dataset[$dataset]: $jdbcConnectionOptions")
+    val mergedJdbcOptions = JdbcAuxiliaryUtilities.mergeJDBCOptions(dataSetProps, jdbcConnectionOptions)
+    logger.info(s"received merged JDBC options from datasetProps[$dataset]: $mergedJdbcOptions")
 
-    // throw exception if spark.speculation is set to true
-    // NOTE:  When spark speculation is turned on, a Teradata write task could be potentially blocked due to a deadlock / race condition created by speculative tasks.
-    // This is not a permanent fix. In order to avoid race conditions set spark.speculation=false. The exception is thrown so that user is aware of the settings and assumptions while using API.
-    val sparkSpeculation: String = sparkSession.sparkContext.getConf.get(GimelConstants.SPARK_SPECULATION)
-    if (sparkSpeculation.equalsIgnoreCase("true")) {
-      throw new Exception("Unsupported spark configuration for spark.speculation=true. Teradata write API works with spark.speculation=false. Please restart your spark session with spark.speculation=false in your spark configuration")
+    val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession,
+      if (mergedJdbcOptions.nonEmpty) {
+        mergedJdbcOptions
+      } else {
+        dataSetProps
+      }
+    )
+    val jdbc_url = mergedJdbcOptions(JdbcConfigs.jdbcUrl)
+
+    val batchSize: Int = Try(
+      dataSetProps.getOrElse("batchSize", s"${JdbcConstants.defaultWriteBatchSize}").toString.toInt
+    ).getOrElse(JdbcConstants.defaultWriteBatchSize)
+    val dbtable = mergedJdbcOptions(JdbcConfigs.jdbcDbTable)
+
+    val insertStrategy: String = dataSetProps.getOrElse(JdbcConfigs.jdbcInsertStrategy,
+      s"${JdbcConstants.defaultInsertStrategy}").toString
+
+    val partialArgHolder: Int => JDBCArgsHolder = extractJdbcArgsHolder(dataFrame, dataSetProps, logger,
+      jdbcConnectionUtility, jdbc_url, dbtable, insertStrategy)
+
+    if (insertStrategy.equalsIgnoreCase("FullLoad")) {
+      logger.info(s"Truncating the table :$dbtable as part of the FullLoad strategy")
+      // truncate table
+      JDBCConnectionUtility.withResources(jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()) {
+        connection => JdbcAuxiliaryUtilities.truncateTable(jdbc_url, dbtable, connection, Some(logger))
+      }
+    } else {
+      // Validate target table availability
+      JdbcAuxiliaryUtilities.isTargetTableAvailable(dbtable, jdbcConnectionUtility, Some(logger))
     }
 
-    val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps)
-
-    val jdbcOptions: Map[String, String] = JdbcAuxiliaryUtilities.getJDBCOptions(dataSetProps)
-    var jdbc_url = jdbcOptions("url")
-    val batchSize: Int = dataSetProps.getOrElse("batchSize", s"${JdbcConstants.defaultWriteBatchSize}").toString.toInt
-    val dbtable = jdbcOptions("dbtable")
     val teradataType: String = dataSetProps.getOrElse(JdbcConfigs.teradataWriteType, "").toString
-    val insertStrategy: String = dataSetProps.getOrElse(JdbcConfigs.jdbcInsertStrategy, s"${JdbcConstants.defaultInsertStrategy}").toString
-
-    val userSpecifiedPartitions = dataSetProps.getOrElse("numPartitions", JdbcConstants.NUM_WRITE_PARTITIONS).toString.toInt
-
-    if (userSpecifiedPartitions > JdbcConstants.NUM_WRITE_PARTITIONS) {
-      println(s"WARNING: Maximum number of partitions are SET to ${JdbcConstants.NUM_WRITE_PARTITIONS} due to Teradata connections limitations")
+    val (insetBatchSize, insertMethod) = (insertStrategy, teradataType) match {
+      case ("update", _) =>
+        (0, updateTable _)
+      case ("upsert", _) =>
+        (0, upsertTable _)
+      case (_, _) =>
+        (batchSize, insertParallelBatch _)
     }
-    val insertPartitionsCount: Int = Math.min(userSpecifiedPartitions, JdbcConstants.NUM_WRITE_PARTITIONS)
+
+    // get number of user partitions based on the type of connection utility[TD: FastLoad or FastExport or JDBC] used
+    val userSpecifiedPartitions = dataSetProps.get("numPartitions")
+    val sourceDataFrame = JdbcAuxiliaryUtilities.getPartitionedDataFrame(jdbc_url, dataFrame, userSpecifiedPartitions)
+
+    try {
+      val jdbcHolder = partialArgHolder(insetBatchSize)
+      insertMethod(sourceDataFrame, jdbcConnectionUtility, jdbcHolder)
+      dataFrame
+    }
+    catch {
+      case exec: Throwable =>
+        throw exec
+    }
+    finally {
+      // re-setting all configs for write
+      JDBCCommons.resetWriteConfigs(sparkSession)
+    }
+  }
+
+  private def extractJdbcArgsHolder(dataFrame: DataFrame, dataSetProps: Map[String, Any],
+                                    logger: Logger, jdbcConnectionUtility: JDBCConnectionUtility,
+                                    jdbc_url: String, dbtable: String,
+                                    insertStrategy: String): Int => JDBCArgsHolder = {
     // Get specific URL properties
     // get real user of JDBC
-    val realUser: String = dataSetProps.getOrElse(JdbcConstants.jdbcUserName, JDBCCommons.getDefaultUser(sparkSession)).toString
+    val realUser: String = JDBCCommons.getJdbcUser(dataSetProps, sparkSession)
 
     // get password strategy for JDBC
-    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.jdbcDefaultPasswordStrategy).toString
+    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy,
+      JdbcConstants.jdbcDefaultPasswordStrategy).toString
 
-
-    val partialArgHolder = if (insertStrategy.equalsIgnoreCase("update") || insertStrategy.equalsIgnoreCase("upsert")) {
+    if (insertStrategy.equalsIgnoreCase(
+      "update") || insertStrategy.equalsIgnoreCase("upsert")) {
       // get Set columns for update API
       val setColumns: List[String] = {
         val userSpecifiedSetColumns = dataSetProps.getOrElse(JdbcConfigs.jdbcUpdateSetColumns, null)
@@ -291,59 +283,22 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
       val whereColumns: List[String] = {
         val userSpecifiedWhereColumns = dataSetProps.getOrElse(JdbcConfigs.jdbcUpdateWhereColumns, null)
         if (userSpecifiedWhereColumns == null) {
-          val primaryKeys = JdbcAuxiliaryUtilities.getPrimaryKeys(jdbc_url, dbtable, jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand(), false)
-          primaryKeys
+          JDBCConnectionUtility.withResources(jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()) {
+            connection =>
+              JdbcAuxiliaryUtilities.getPrimaryKeys(jdbc_url, dbtable, connection)
+          }
         }
         else {
           userSpecifiedWhereColumns.toString.split(",").toList
         }
       }
-      println(s"Setting SET columns: ${setColumns}")
-      println(s"Setting WHERE columns: ${whereColumns}")
-      JDBCArgsHolder(dataSetProps, dataFrame.columns, jdbc_url, dbtable, _: Int, dataFrame.schema.length, setColumns, whereColumns)
-    }
-    else {
-      JDBCArgsHolder(dataSetProps, dataFrame.columns, jdbc_url, dbtable, _: Int, dataFrame.schema.length)
-    }
-
-
-    if (insertStrategy.equalsIgnoreCase("FullLoad")) {
-      val dbconn: Connection = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
-
-      // truncate table
-      JdbcAuxiliaryUtilities.truncateTable(dbtable, dbconn)
-
-      dbconn.close()
-    }
-
-    val (insetBatchSize, insertMethod, coalesceMethod) = (insertStrategy, teradataType) match {
-      case ("update", _) =>
-        val dfIdentityFunction = (df: DataFrame) => df.coalesce(insertPartitionsCount.toInt)
-        (0, updateTable _, dfIdentityFunction)
-      case ("upsert", _) =>
-        val dfIdentityFunction = (df: DataFrame) => df.coalesce(insertPartitionsCount.toInt)
-        (0, upsertTable _, dfIdentityFunction)
-      case (_, _) =>
-        // doing coalesce ---- check
-        val dfIdentityFunction = (df: DataFrame) => df.coalesce(insertPartitionsCount.toInt)
-        (batchSize, insertParallelBatch _, dfIdentityFunction)
-    }
-
-    val sourceDataFrame = coalesceMethod(dataFrame)
-
-    val jdbcHolder = partialArgHolder(insetBatchSize)
-
-    try {
-      insertMethod(sourceDataFrame, jdbcConnectionUtility, jdbcHolder)
-      dataFrame
-    }
-    catch {
-      case exec: Throwable =>
-        throw exec
-    }
-    finally {
-      // re-setting all configs for read
-      JDBCCommons.resetDefaultConfigs(sparkSession)
+      logger.info(s"Setting SET columns: $setColumns")
+      logger.info(s"Setting WHERE columns: $whereColumns")
+      JDBCArgsHolder(dataSetProps, dataFrame.columns, jdbc_url, realUser, jdbcPasswordStrategy, dbtable, _ : Int,
+        dataFrame.schema.length, setColumns, whereColumns)
+    } else {
+      JDBCArgsHolder(dataSetProps, dataFrame.columns, jdbc_url, realUser, jdbcPasswordStrategy,
+        dbtable, _ : Int, dataFrame.schema.length)
     }
   }
 
@@ -377,11 +332,24 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     columnIndices.zip(paramIndices).foreach { case (columnIndex, paramIndex) =>
       val columnValue = row.get(columnIndex)
       val targetSqlType = SparkToJavaConverter.getSQLType(row.schema(columnIndex).dataType)
-      st.setObject(paramIndex, columnValue, targetSqlType)
+      try {
+        st.setObject(paramIndex, columnValue, targetSqlType)
+      }
+      catch {
+        case e: Throwable =>
+          e.printStackTrace()
+          val msg =
+            s"""
+               |Error setting column value=$columnValue at column index=$columnIndex
+               |with input dataFrame column dataType=${row.schema(columnIndex).dataType}
+               |to target dataType=$targetSqlType
+            """.stripMargin
+          throw new SetColumnObjectException(msg, e)
+
+      }
     }
     st
   }
-
 
   /**
     * This method inserts into given table in given mode
@@ -390,14 +358,25 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     * @param jdbcConnectionUtility
     * @param jdbcHolder
     */
-  private def insertParallelBatch(dataFrame: DataFrame, jdbcConnectionUtility: JDBCConnectionUtility, jdbcHolder: JDBCArgsHolder) {
+  private def insertParallelBatch(dataFrame: DataFrame, jdbcConnectionUtility: JDBCConnectionUtility,
+                                  jdbcHolder: JDBCArgsHolder) {
+    import JDBCConnectionUtility.withResources
+    val jdbcSystem = JdbcAuxiliaryUtilities.getJDBCSystem(jdbcHolder.jdbcURL)
+    var ddl = ""
+    // create logger inside the driver
+    val driverLogger = Option(Logger(this.getClass.getName))
 
-    // create a JDBC connection to get DDL of target table
-    var driverCon = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
+    jdbcSystem match {
+      case JdbcConstants.TERADATA =>
+        // create a JDBC connection to get DDL of target table
+        withResources(jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand(driverLogger)) {
+          connection =>
+            // get DDL of target table
+            ddl = JdbcAuxiliaryUtilities.getDDL(jdbcHolder.jdbcURL, jdbcHolder.dbTable, connection)
+        }
+      case _ => // do nothing
+    }
 
-    // get DDL of target table
-    val ddl = JdbcAuxiliaryUtilities.getDDL(jdbcHolder.dbTable, driverCon).toUpperCase
-    driverCon.close()
 
     // For each partition create a temp table to insert
     dataFrame.foreachPartition { batch =>
@@ -409,135 +388,181 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
       val partitionID = TaskContext.getPartitionId()
 
       // creating a new connection for every partition
-      // NOTE: Here, singleton connection is replaced by java.sql.Connection creating a separate connection for every partition.
+      // NOTE: Here, singleton connection is replaced by java.sql.Connection creating a separate connection
+      // for every partition.
       // Singleton connection connection needs to be correctly verified within multiple cores.
-      var dbc = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
+      val dbc = JdbcAuxiliaryUtilities.createConnectionWithPreConfigsSet(jdbcConnectionUtility,
+        jdbcHolder, logger = Some(logger))
 
-      val partitionTableName = s"${jdbcHolder.dbTable.toUpperCase}_${JdbcConstants.GIMEL_TEMP_PARTITION}_${partitionID}"
+      val partitionTableName = jdbcSystem match {
+        case JdbcConstants.TERADATA =>
+          val partitionTableName = JdbcAuxiliaryUtilities.getPartitionTableName(jdbcHolder.jdbcURL,
+            jdbcHolder.dbTable, dbc, partitionID)
 
-      // first drop the temp table, if exists
-      JdbcAuxiliaryUtilities.dropTable(partitionTableName, dbc)
+          // first drop the temp table, if exists
+          JdbcAuxiliaryUtilities.dropTable(partitionTableName, dbc)
 
-      try {
-
-        // create JDBC temp table
-        val tempTableDDL = ddl.replace(jdbcHolder.dbTable.toUpperCase, partitionTableName)
-
-        logger.info(s"Creating temptable: ${partitionTableName}")
-
-        // create a temp partition table
-        JdbcAuxiliaryUtilities.executeQuerySatement(tempTableDDL, dbc)
-      }
-      catch {
-        case ex =>
-          logger.info(s"Creation of temptable: ${partitionTableName} failed")
-          ex.printStackTrace()
-          throw ex
+          try {
+            // create JDBC temp table
+            val tempTableDDL = ddl.replace(jdbcHolder.dbTable, partitionTableName)
+            logger.info(s"Creating temp table: $partitionTableName with DDL = $tempTableDDL")
+            // create a temp partition table
+            JdbcAuxiliaryUtilities.executeQueryStatement(tempTableDDL, dbc, recordTimeTakenToExecute = true)
+          }
+          catch {
+            case ex: Throwable =>
+              val msg = s"Failure creating temp partition table $partitionTableName"
+              logger.error(msg + "\n" + s"${ex.toString}")
+              ex.addSuppressed(new JDBCPartitionException(msg))
+              throw ex
+          }
+          partitionTableName
+        case _ =>
+          jdbcHolder.dbTable
       }
 
       // close the connection, if batch is empty, so that we don't hold connection
       if (batch.isEmpty) {
         dbc.close()
-      }
-
-      if (batch.nonEmpty) {
-
+      } else {
+        logger.info(s"Inserting into $partitionTableName")
         val maxBatchSize = math.max(1, jdbcHolder.batchSize)
-        try {
+        withResources {
+          JdbcAuxiliaryUtilities.createConnectionWithPreConfigsSet(jdbcConnectionUtility,
+            jdbcHolder, connection = Option(dbc))
+        } { connection =>
+          withResources {
+            connection.prepareStatement(JdbcAuxiliaryUtilities.getInsertStatement(partitionTableName, jdbcHolder.cols))
+          } {
+            statement =>
+            {
+              // Handle connection warnings
+              handleWarning(connection.getWarnings, logger)
 
-          // check if connection is closed or null
-          if (dbc.isClosed || dbc == null) {
-            dbc = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
-          }
-
-          val st = dbc.prepareStatement(JdbcAuxiliaryUtilities.getInsertStatement(partitionTableName, jdbcHolder.cols))
-
-          logger.info(s"Inserting to temptable ${partitionTableName} of Partition: ${partitionID}")
-
-          // set AutoCommit to FALSE
-          dbc.setAutoCommit(false)
-
-          var count = 0
-          var rowCount = 0
-
-          batch.sliding(maxBatchSize, maxBatchSize).foreach { rows =>
-            rows.foreach { row =>
-              cookStatementWithRow(st, row, 0 until row.schema.length, 1 to row.schema.length)
-              st.addBatch()
-              rowCount = rowCount + 1
-            }
-            try {
-              st.executeBatch()
-              count = count + 1
-            }
-            catch {
-              case exec: Throwable => {
-                exec match {
-                  case batchExc: BatchUpdateException =>
-                    logger.info(s"Exception in inserting data into ${partitionTableName} of Partition: ${partitionID}")
-                    var ex: SQLException = batchExc
-                    while (ex != null) {
-                      ex.printStackTrace()
-                      ex = ex.getNextException
+              val start = Instant.now().toEpochMilli
+              var end = start
+              connection.setAutoCommit(false)
+              var batchCount = 0
+              var rowCount = 0
+              var startRowCount = rowCount
+              batch.sliding(maxBatchSize, maxBatchSize).foreach {
+                rows =>
+                  startRowCount = rowCount
+                  rows.foreach { row =>
+                    cookStatementWithRow(statement, row, 0 until row.schema.length,
+                      1 to row.schema.length)
+                    statement.addBatch()
+                    rowCount += 1
+                  }
+                  try {
+                    val recordsUpserted: Array[Int] = statement.executeBatch()
+                    if(statement.getWarnings != null){
+                      // Handle statement warnings
+                      handleWarning(statement.getWarnings, logger)
                     }
-                    throw batchExc
-                  case _ =>
-                    logger.info(s"Exception in inserting data into ${partitionTableName} of Partition: ${partitionID}")
-                    throw exec
-                }
+                    end = Instant.now().toEpochMilli
+                    batchCount += 1
+                    logger.info(s"Total time taken to insert [${Try(recordsUpserted.length).getOrElse(0)} records " +
+                      s"with (start_row: $startRowCount & end_row: $rowCount and diff ${rowCount - startRowCount} " +
+                      s"records)] for the batch[Batch no: $batchCount & Partition: $partitionTableName] : ${
+                        DurationFormatUtils.formatDurationWords(
+                          end - start, true, true
+                        )
+                      }")
+                  }
+                  catch {
+                    case exec: Throwable =>
+                      handleException(logger, exec, s"Exception in inserting data into $partitionTableName " +
+                        s"of Partition: $partitionID")
+                  }
               }
+              // commit per batch
+              dbc.commit()
+              logger.info(s"Successfully inserted into $partitionTableName of Partition: $partitionID " +
+                s"with $rowCount rows and $batchCount batches," +
+                s" overall time taken -> ${
+                  DurationFormatUtils.formatDurationWords(
+                    end - start, true, true
+                  )
+                } ")
+              // Connection will be closed as part of JDBCConnectionUtility.withResources
             }
           }
-          logger.info(s"Data Insert successful into ${partitionTableName} of Partition: ${partitionID}")
-
-          // commit
-          dbc.commit()
-
-          // close the connection
-          dbc.close()
-
         }
-        catch {
-          case exec: Throwable =>
-            exec.printStackTrace()
-            throw exec
-        }
-        finally {
-          // check if any connection open inside executor and explicitly close it
-          if (!dbc.isClosed && dbc != null) {
-            dbc.close()
+      }
+    }
+
+
+
+    jdbcSystem match {
+      case JdbcConstants.TERADATA =>
+        try {
+          withResources(JdbcAuxiliaryUtilities.createConnectionWithPreConfigsSet(jdbcConnectionUtility, jdbcHolder)) {
+            connection =>
+
+              // Now union all the temp partition tables and insert into target table
+              // and insert all partitions into target table
+              JdbcAuxiliaryUtilities.insertPartitionsIntoTargetTable(jdbcHolder.dbTable,
+                connection, dataFrame.toJavaRDD.getNumPartitions, driverLogger)
+
+              // now drop all the temp tables created by executors
+              JdbcAuxiliaryUtilities.dropAllPartitionTables(jdbcHolder.dbTable,
+                connection, dataFrame.toJavaRDD.getNumPartitions, driverLogger)
           }
+        } catch {
+          case e: Throwable =>
+            withResources {
+              JdbcAuxiliaryUtilities.createConnectionWithPreConfigsSet(jdbcConnectionUtility, jdbcHolder)
+            } { connection =>
+              // now drop all the temp tables created by executors
+              JdbcAuxiliaryUtilities.dropAllPartitionTables(jdbcHolder.dbTable,
+                connection, dataFrame.toJavaRDD.getNumPartitions, driverLogger)
+            }
+            // scalastyle:off printStackTrace
+            e.printStackTrace()
+            // scalastyle:on printStackTrace
+            throw e
         }
-      }
+      case _ => // do nothing
     }
+  }
 
-    // create a JDBC connection to get DDL of target table
-    driverCon = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
-
-    // Now union all the temp partition tables and insert into target table
-    try {
-      // now insert all partitions into target table
-      JdbcAuxiliaryUtilities.insertPartitionsIntoTargetTable(jdbcHolder.dbTable, driverCon, dataFrame.toJavaRDD.getNumPartitions)
-
-      // now drop all the temp tables created by executors
-      JdbcAuxiliaryUtilities.dropAllPartitionTables(jdbcHolder.dbTable, driverCon, dataFrame.toJavaRDD.getNumPartitions)
-      driverCon.close()
+  private def handleException(logger: Logger, exec: Throwable, errorMessage: String): Nothing = {
+    exec match {
+      case batchExc: SQLException =>
+        logger.info(errorMessage)
+        val errors = new mutable.StringBuilder()
+        var ex: SQLException = batchExc
+        var lastException: SQLException = batchExc
+        while (ex != null) {
+          if (errors.nonEmpty) {
+            errors.append(s"${GimelConstants.COMMA} ")
+          }
+          errors.append(s = s"SQL state: ${ex.getSQLState} - Error code: ${ex.getErrorCode.toString}")
+          lastException = ex
+          ex = ex.getNextException
+        }
+        if (lastException != null) {
+          // scalastyle:off printStackTrace
+          lastException.printStackTrace()
+          // scalastyle:on printStackTrace
+        }
+        logger.info(s"SQLException: Error codes -> ${errors.toString()}")
+        logger.error(batchExc)
+        throw lastException
+      case _ =>
+        logger.error(errorMessage)
+        throw exec
     }
-    catch {
-      case e: Throwable => e.printStackTrace()
+  }
 
-        // get or create a JDBC connection to get DDL of target table
-        val driverCon = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
-        // now drop all the temp tables created by executors
-        JdbcAuxiliaryUtilities.dropAllPartitionTables(jdbcHolder.dbTable, driverCon, dataFrame.toJavaRDD.getNumPartitions)
-        driverCon.close()
-        throw e
-    }
-    finally {
-      // check if any connection open inside executor and explicitly close it
-      if (!driverCon.isClosed && driverCon != null) {
-        driverCon.close()
-      }
+  private def handleWarning(warning: SQLWarning, logger: Logger): Unit = {
+    var w = warning
+    while (w != null) {
+      val sw: StringWriter = new StringWriter()
+      w.printStackTrace(new PrintWriter(sw, true))
+      logger.info("WARNING: - SQL State = " + w.getSQLState + ", Error Code = " + w.getErrorCode + "\n" + sw.toString)
+      w = w.getNextWarning
     }
   }
 
@@ -547,62 +572,53 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     * @param dataFrame  dataFrame to be loaded into table
     * @param jdbcHolder jdbc arguments required for writing into table
     */
-  private def updateTable(dataFrame: DataFrame, jdbcConnectionUtility: JDBCConnectionUtility, jdbcHolder: JDBCArgsHolder) {
-
+  private def updateTable(dataFrame: DataFrame, jdbcConnectionUtility: JDBCConnectionUtility,
+                          jdbcHolder: JDBCArgsHolder) {
     dataFrame.foreachPartition { batch =>
       if (batch.nonEmpty) {
+        // create logger inside the executor
+        val logger = Logger(this.getClass.getName)
 
         // creating a new connection for every partition
-        // NOTE: Here, singleton connection is replaced by java.sql.Connection creating a separate connection for every partition.
-        // Singleton connection connection needs to be correctly verified within multiple cores.
-        val dbc = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
-
-        try {
-          val updateStatement = JdbcAuxiliaryUtilities.getUpdateStatement(jdbcHolder.dbTable, jdbcHolder.setColumns, jdbcHolder.whereColumns)
-          val st: PreparedStatement = dbc.prepareStatement(updateStatement)
-          val maxBatchSize = math.max(1, jdbcHolder.batchSize)
-          val setColumnIndices = jdbcHolder.setColumns.map(getColumnIndex(jdbcHolder.dataFrameColumns, _))
-          val whereColumnIndices = jdbcHolder.whereColumns.map(getColumnIndex(jdbcHolder.dataFrameColumns, _))
-          batch.sliding(maxBatchSize, maxBatchSize).foreach { rows =>
-            rows.foreach { row =>
-              cookStatementWithRow(st, row, setColumnIndices, 1 to setColumnIndices.length)
-              // set the condition variables
-              val whereColumnIndicesUpdated = (1 to whereColumnIndices.length).map(_ + setColumnIndices.length)
-              cookStatementWithRow(st, row, whereColumnIndices, whereColumnIndicesUpdated)
-              st.addBatch()
-            }
+        // NOTE: Here, singleton connection is replaced by java.sql.Connection creating a separate connection
+        // for every partition. Singleton connection connection needs to be correctly verified within multiple cores.
+        import JDBCConnectionUtility.withResources
+        withResources(jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()) {
+          dbc =>
+            JdbcAuxiliaryUtilities.executePreConfigs(jdbcHolder.jdbcURL, jdbcHolder.dbTable, dbc)
             try {
-              st.executeBatch()
-            }
-            catch {
-              case exec: Throwable => {
-                exec match {
-                  case batchExc: BatchUpdateException =>
-                    var ex: SQLException = batchExc
-                    while (ex != null) {
-                      ex.printStackTrace()
-                      ex = ex.getNextException
+              val updateStatement = JdbcAuxiliaryUtilities.getUpdateStatement(jdbcHolder.dbTable,
+                jdbcHolder.setColumns, jdbcHolder.whereColumns)
+              withResources(dbc.prepareStatement(updateStatement)) {
+                st =>
+                  val maxBatchSize = math.max(1, jdbcHolder.batchSize)
+                  val setColumnIndices = jdbcHolder.setColumns.map(getColumnIndex(jdbcHolder.dataFrameColumns, _))
+                  val whereColumnIndices = jdbcHolder.whereColumns.map(getColumnIndex(jdbcHolder.dataFrameColumns, _))
+                  batch.sliding(maxBatchSize, maxBatchSize).foreach { rows =>
+                    rows.foreach { row =>
+                      cookStatementWithRow(st, row, setColumnIndices, 1 to setColumnIndices.length)
+                      // set the condition variables
+                      val whereColumnIndicesUpdated = (1 to whereColumnIndices.length).map(_ + setColumnIndices.length)
+                      cookStatementWithRow(st, row, whereColumnIndices, whereColumnIndicesUpdated)
+                      st.addBatch()
                     }
-                    throw batchExc
-                  case _ =>
-                    throw exec
-                }
+                    try {
+                      st.executeBatch()
+                    }
+                    catch {
+                      case throwable: Throwable =>
+                        handleException(logger, throwable,
+                          s"Exception occured while updating table in executeBatch : ${jdbcHolder.dbTable} ")
+                    }
+                  }
               }
             }
-          }
+            catch {
+              case throwable: Throwable =>
+                handleException(logger, throwable,
+                  s"Exception occured while updating table in executeBatch : ${jdbcHolder.dbTable} ")
+            }
         }
-        catch {
-          case exec: Throwable =>
-            exec.printStackTrace()
-            throw exec
-        }
-        finally {
-          // check if any connection open inside executor and explicitly close it
-          if (!dbc.isClosed && dbc != null) {
-            dbc.close()
-          }
-        }
-
       }
     }
   }
@@ -614,62 +630,180 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     * @param jDBCConnectionUtility
     * @param jdbcHolder
     */
-  private def upsertTable(dataFrame: DataFrame, jDBCConnectionUtility: JDBCConnectionUtility, jdbcHolder: JDBCArgsHolder) {
+  private def upsertTable(dataFrame: DataFrame, jDBCConnectionUtility: JDBCConnectionUtility,
+                          jdbcHolder: JDBCArgsHolder) {
     dataFrame.foreachPartition { batch =>
+      // create logger inside the executor
+      val logger = Logger(this.getClass.getName)
       if (batch.nonEmpty) {
-        val dbc = jDBCConnectionUtility.getJdbcConnectionAndSetQueryBand()
-        try {
-          val numCols: Int = jdbcHolder.cols
-          val updateStatement = JdbcAuxiliaryUtilities.getUpdateStatement(jdbcHolder.dbTable, jdbcHolder.setColumns, jdbcHolder.whereColumns)
-          val st: PreparedStatement = dbc.prepareStatement(updateStatement)
-          val setColumnIndices = jdbcHolder.setColumns.map(getColumnIndex(jdbcHolder.dataFrameColumns, _))
-          val whereColumnIndices = jdbcHolder.whereColumns.map(getColumnIndex(jdbcHolder.dataFrameColumns, _))
-          batch.foreach { row =>
-            cookStatementWithRow(st, row, setColumnIndices, 1 to setColumnIndices.length)
-            // set the condition variables
-            val whereColumnIndicesUpdated = (1 to whereColumnIndices.length).map(_ + setColumnIndices.length)
-            cookStatementWithRow(st, row, whereColumnIndices, whereColumnIndicesUpdated)
-            // update table
-            val updateResult: Int = st.executeUpdate()
-            // if no update, then insert into table
-            if (updateResult == 0) {
-              val st = dbc.prepareStatement(JdbcAuxiliaryUtilities.getInsertStatement(jdbcHolder.dbTable, numCols))
-              cookStatementWithRow(st, row, 0 until row.schema.length, 1 to row.schema.length)
-              // insert into table
-              try {
-                st.executeUpdate()
-              }
-              catch {
-                case exec: Throwable => {
-                  exec match {
-                    case batchExc: BatchUpdateException =>
-                      var ex: SQLException = batchExc
-                      while (ex != null) {
-                        ex.printStackTrace()
-                        ex = ex.getNextException
+        import JDBCConnectionUtility.withResources
+        withResources(jDBCConnectionUtility.getJdbcConnectionAndSetQueryBand()) {
+          dbc => {
+            JdbcAuxiliaryUtilities.executePreConfigs(jdbcHolder.jdbcURL, jdbcHolder.dbTable, dbc)
+            try {
+              val numCols: Int = jdbcHolder.cols
+              val updateStatement = JdbcAuxiliaryUtilities.getUpdateStatement(jdbcHolder.dbTable,
+                jdbcHolder.setColumns, jdbcHolder.whereColumns)
+              withResources(dbc.prepareStatement(updateStatement)) {
+                updateStatement =>
+                  val setColumnIndices = jdbcHolder.setColumns.map(getColumnIndex(jdbcHolder.dataFrameColumns, _))
+                  val whereColumnIndices = jdbcHolder.whereColumns.map(getColumnIndex(jdbcHolder.dataFrameColumns, _))
+                  batch.foreach { row =>
+                    cookStatementWithRow(updateStatement, row, setColumnIndices, 1 to setColumnIndices.length)
+                    // set the condition variables
+                    val whereColumnIndicesUpdated = (1 to whereColumnIndices.length).map(_ + setColumnIndices.length)
+                    cookStatementWithRow(updateStatement, row, whereColumnIndices, whereColumnIndicesUpdated)
+                    // update table
+                    val updateResult: Int = updateStatement.executeUpdate()
+                    // if no update, then insert into table
+                    if (updateResult == 0) {
+                      withResources(dbc.prepareStatement(
+                        JdbcAuxiliaryUtilities.getInsertStatement(jdbcHolder.dbTable, numCols))
+                      ) {
+                        insertStatement =>
+                          cookStatementWithRow(insertStatement, row, 0 until row.schema.length,
+                            1 to row.schema.length)
+                          // insert into table
+                          try {
+                            insertStatement.executeUpdate()
+                          }
+                          catch {
+                            case throwable: Throwable =>
+                              handleException(logger, throwable,
+                                s"Exception occured while inserting[part of upsert] into table: ${jdbcHolder.dbTable} ")
+                          }
                       }
-                      throw batchExc
-                    case _ =>
-                      throw exec
+                    }
                   }
-                }
               }
+            } catch {
+              case throwable: Throwable =>
+                handleException(logger, throwable,
+                  s"Exception occured while upserting table: ${jdbcHolder.dbTable} ")
             }
-          }
-        }
-        catch {
-          case exec: Throwable =>
-            exec.printStackTrace()
-            throw exec
-        }
-        finally {
-          // check if any connection open inside executor and explicitly close it
-          if (!dbc.isClosed && dbc != null) {
-            dbc.close()
           }
         }
       }
     }
+  }
+
+
+  /** This method creates the table in teradata database
+    *
+    * @param dataset      dataset name
+    * @param dataSetProps dataset properties
+    * @return Boolean
+    */
+  def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    val logger = Logger(this.getClass.getName)
+    val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps)
+    val jdbcOptions: Map[String, String] = JdbcAuxiliaryUtilities.getJDBCOptions(dataSetProps)
+    val actualProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
+    val catalogProvider = dataSetProps(CatalogProviderConfigs.CATALOG_PROVIDER).toString
+    val sql = dataSetProps(GimelConstants.TABLE_SQL).toString
+    logger.info("sql statement " + sql)
+    val createTableStatement = catalogProvider match {
+      case com.paypal.gimel.common.conf
+             .CatalogProviderConstants.PCATALOG_PROVIDER | com.paypal.gimel.common.conf
+             .CatalogProviderConstants.UDC_PROVIDER =>
+        dataSetProps(GimelConstants.CREATE_STATEMENT_IS_PROVIDED) match {
+          case "true" =>
+            // Since create statement is provided, we do not need to prepare the statement instead we need
+            // to pass the sql as is to the teradata engine.
+            sql
+          case _ =>
+            // As the create statement is not provided we need to infer schema from the dataframe.
+            // In GimelQueryProcesser we already infer schema and pass the columns with their data types
+            // we need construct the create statement
+            JDBCUtilityFunctions.prepareCreateStatement(sql, jdbcOptions(JdbcConfigs.jdbcDbTable), dataSetProps)
+        }
+      case GimelConstants.USER =>
+        val colList: Array[String] = actualProps.fields.map(x => (x.fieldName + " " + (x.fieldType) + ","))
+        val conCatColumns = colList.mkString("")
+        s"""CREATE TABLE ${jdbcOptions(JdbcConfigs.jdbcDbTable)} (${conCatColumns.dropRight(1)} ) """
+    }
+    val con = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
+    val columnStatement: PreparedStatement = con.prepareStatement(createTableStatement)
+    columnStatement.execute()
+  }
+
+  /**
+    * prepareCreateStatement - From the column details passed in datasetproperties from GimelQueryProcesser,
+    * create statement is constructed. If user passes primary index , set or multi set table, those will be added in the create statement
+    *
+    * @param dbtable      - Table Name
+    * @param dataSetProps - Data set properties
+    * @return - the created prepared statement for creating the table
+    */
+  def prepareCreateStatement(sql: String, dbtable: String, dataSetProps: Map[String, Any]): String = {
+    // Here we remove the SELECT portion and have only the CREATE portion of the DDL supplied so that we can use that to create the table
+    val sqlParts = sql.split(" ")
+    val lenPartKeys = sqlParts.length
+    val index = sqlParts.indexWhere(_.toUpperCase() == "SELECT")
+    val createOnly: String = sqlParts.slice(0, index - 1).mkString(" ")
+
+    // Here we remove the PCATALOG prefix => we replace pcatalog.storagetype.storagesystem.DB.Table with DB.Table
+    val createParts = createOnly.split(" ")
+    val pcatSQL = createParts.map(element => {
+      if (element.toLowerCase().contains(GimelConstants.PCATALOG_STRING)
+        || element.toLowerCase().contains(GimelConstants.UDC_STRING) ) {
+        // we replace pcatalog.storagetype.storagesystem.DB.Table with DB.Table
+        element.split('.').tail.mkString(".").split('.').tail.mkString(".").split('.').tail.mkString(".")
+      }
+      else {
+        element
+      }
+    }
+    ).mkString(" ")
+
+    val sparkSchema = dataSetProps(GimelConstants.TABLE_FILEDS).asInstanceOf[Array[StructField]]
+    // From the dataframe schema, translate them into Teradata data types
+    val gimelSchema: Array[com.paypal.gimel.common.catalog.Field] = sparkSchema.map(x => {
+      com.paypal.gimel.common.catalog.Field(x.name, SparkToJavaConverter.getTeradataDataType(x.dataType), x.nullable)
+    })
+    val colList: Array[String] = gimelSchema.map(x => (x.fieldName + " " + (x.fieldType) + ","))
+    val conCatColumns = colList.mkString("").dropRight(1)
+    val colQulifier = s"""(${conCatColumns})"""
+
+    // Here we inject back the columns with data types back in the SQL statemnt
+    val newSqlParts = pcatSQL.split(" ")
+    val PCATindex = newSqlParts.indexWhere(_.toUpperCase().contains("TABLE"))
+    val catPrefix = newSqlParts.slice(0, PCATindex + 2).mkString(" ")
+    val catSuffix = newSqlParts.slice(PCATindex + 2, newSqlParts.length).mkString(" ")
+    val fullStatement = s"""${catPrefix} ${colQulifier} ${catSuffix}"""
+    fullStatement
+  }
+
+  /** This method drops the table from teradata database
+    *
+    * @param dataset      dataset name
+    * @param dataSetProps dataset properties
+    * @return Boolean
+    */
+  def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps)
+    val jdbcOptions: Map[String, String] = JdbcAuxiliaryUtilities.getJDBCOptions(dataSetProps)
+    val actualProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
+    val dropTableStatement = s"""DROP TABLE ${jdbcOptions(JdbcConfigs.jdbcDbTable)}"""
+    val con = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
+    val columnStatement: PreparedStatement = con.prepareStatement(dropTableStatement)
+    columnStatement.execute()
+  }
+
+  /** This method purges data in the table
+    *
+    * @param dataset      dataset name
+    * @param dataSetProps dataset properties
+    * @return Boolean
+    */
+  def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+    val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps)
+    val jdbcOptions: Map[String, String] = JdbcAuxiliaryUtilities.getJDBCOptions(dataSetProps)
+    val actualProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
+    val dropTableStatement = s"""DELETE FROM ${jdbcOptions(JdbcConfigs.jdbcDbTable)}"""
+    val con = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
+    val columnStatement: PreparedStatement = con.prepareStatement(dropTableStatement)
+    columnStatement.execute()
   }
 
 }
