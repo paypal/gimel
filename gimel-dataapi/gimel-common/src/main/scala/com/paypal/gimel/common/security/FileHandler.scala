@@ -28,10 +28,6 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.logger.Logger
 
-
-
-
-
 object FileHandler {
 
   val logger = Logger(this.getClass)
