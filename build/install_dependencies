@@ -25,6 +25,8 @@ source ${this_dir}/gimel_functions
 
 write_log "Begin    | Script | $0"
 
+# All jars below are not present in maven central or any public repository, thats why they are added manually while building gimel.
+
 mvn install:install-file -DgroupId=qubole-hive-JDBC -DartifactId=qubole-hive-JDBC -Dversion=0.0.7 -Dpackaging=jar -Dfile=${this_dir}/../lib/qubole-hive-JDBC.jar 1>>/dev/null 2>&1
 check_error $? "install qubole-hive-JDBC"
 

@@ -56,12 +56,12 @@ class JDBCAuthUtilities(sparkSession: SparkSession) extends Serializable {
   private def getPasswordFile(dataSetProps: Map[String, Any]): String = {
     val logger = Logger(this.getClass.getName)
     val userName = JDBCCommons.getJdbcUser(dataSetProps, sparkSession)
-    val pFile = JdbcConstants.pFile.replace(GimelConstants.USER_NAME, userName)
+    val pFile = JdbcConstants.P_FILEPATH.replace(GimelConstants.USER_NAME, userName)
     val defaultValue = sparkSession.conf.get(JdbcConfigs.jdbcP, pFile)
     if (dataSetProps.get(JdbcConfigs.jdbcP) == None) {
       logger.info(
         s"""
-           | Please specify configuration ${JdbcConfigs.jdbcP} with local (along with option ${JdbcConfigs.jdbcPFileSource} as ${JdbcConstants.localFileSource}) or HDFS file location containing password.
+           | Please specify configuration ${JdbcConfigs.jdbcP} with local (along with option ${JdbcConfigs.jdbcPFileSource} as ${JdbcConstants.LOCAL_FILE_SOURCE}) or HDFS file location containing password.
            | Otherwise password file will be searched in default location ${defaultValue}. Please check docs for more info.
          """.stripMargin)
     }
@@ -90,17 +90,17 @@ class JDBCAuthUtilities(sparkSession: SparkSession) extends Serializable {
     var userName = JDBCCommons.getJdbcUser(dataSetProps, sparkSession)
 
     // get password strategy for JDBC
-    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.jdbcDefaultPasswordStrategy).toString
+    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.JDBC_DEFAULT_PASSWORD_STRATEGY).toString
 
     jdbcPasswordStrategy match {
-      case JdbcConstants.jdbcFilePasswordStrategy => {
+      case JdbcConstants.JDBC_FILE_PASSWORD_STRATEGY => {
         val passwordFile = getPasswordFile(dataSetProps)
         logger.info(s"Password file provided by user: ${passwordFile}")
 
-        val fileSource = dataSetProps.getOrElse(JdbcConfigs.jdbcPFileSource, JdbcConstants.defaultJdbcPFileSource).toString
+        val fileSource = dataSetProps.getOrElse(JdbcConfigs.jdbcPFileSource, JdbcConstants.DEFAULT_P_FILE_SOURCE).toString
         fileSource match {
 
-          case JdbcConstants.localFileSource => {
+          case JdbcConstants.LOCAL_FILE_SOURCE => {
             password = JDBCCommons.getJdbcP(passwordFile, "", "", url, userName)
           }
           case _ => {

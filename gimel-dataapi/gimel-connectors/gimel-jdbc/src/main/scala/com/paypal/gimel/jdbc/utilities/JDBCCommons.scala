@@ -129,8 +129,8 @@ object JDBCCommons {
     */
   def getJdbcUser(dataSetProps: Map[String, Any], sparkSession: SparkSession): String = {
     // get real user of JDBC
-    val defaultValue = sparkSession.conf.get(JdbcConstants.jdbcUserName, sparkSession.sparkContext.sparkUser)
-    val username = dataSetProps.getOrElse(JdbcConstants.jdbcUserName, defaultValue).toString
+    val defaultValue = sparkSession.conf.get(JdbcConfigs.jdbcUserName, sparkSession.sparkContext.sparkUser)
+    val username = dataSetProps.getOrElse(JdbcConfigs.jdbcUserName, defaultValue).toString
     username
   }
 
@@ -142,7 +142,7 @@ object JDBCCommons {
     * @param actualUser
     */
   def setQueryBand(conn: Connection, url: String, actualUser: String,
-                   jdbcPasswordStrategy: String = JdbcConstants.jdbcDefaultPasswordStrategy): Unit = {
+                   jdbcPasswordStrategy: String = JdbcConstants.JDBC_DEFAULT_PASSWORD_STRATEGY): Unit = {
 
     val jdbcSystem = getJDBCSystem(url)
 
@@ -179,16 +179,16 @@ object JDBCCommons {
   def resetPushDownConfigs(sparkSession: SparkSession): Unit = {
 
     // reset JDBC Read type to Batch
-    logger.info(s"Resetting ${JdbcConfigs.teradataReadType} to ${JdbcConstants.defaultReadType}")
-    sparkSession.conf.set(JdbcConfigs.teradataReadType, JdbcConstants.defaultReadType)
+    logger.info(s"Resetting ${JdbcConfigs.teradataReadType} to ${JdbcConstants.DEFAULT_READ_TYPE}")
+    sparkSession.conf.set(JdbcConfigs.teradataReadType, JdbcConstants.DEFAULT_READ_TYPE)
 
     // reset JDBC Write type to Batch
-    logger.info(s"Resetting ${JdbcConfigs.teradataWriteType} to ${JdbcConstants.defaultWriteType}")
-    sparkSession.conf.set(JdbcConfigs.teradataWriteType, JdbcConstants.defaultWriteType)
+    logger.info(s"Resetting ${JdbcConfigs.teradataWriteType} to ${JdbcConstants.DEFAULT_WRITE_TYPE}")
+    sparkSession.conf.set(JdbcConfigs.teradataWriteType, JdbcConstants.DEFAULT_WRITE_TYPE)
 
     // reset JDBC default write strategy to insert
-    logger.info(s"Resetting ${JdbcConfigs.jdbcInsertStrategy} to ${JdbcConstants.defaultInsertStrategy}")
-    sparkSession.conf.set(JdbcConfigs.jdbcInsertStrategy, JdbcConstants.defaultInsertStrategy)
+    logger.info(s"Resetting ${JdbcConfigs.jdbcInsertStrategy} to ${JdbcConstants.DEFAULT_INSERT_STRATEGY}")
+    sparkSession.conf.set(JdbcConfigs.jdbcInsertStrategy, JdbcConstants.DEFAULT_INSERT_STRATEGY)
 
     // reset JDBC pushdownflag
     //    logger.info(s"Resetting ${JdbcConfigs.jdbcPushDownEnabled} to False")
@@ -199,8 +199,8 @@ object JDBCCommons {
     sparkSession.conf.unset(JdbcConfigs.jdbcUrl)
 
     // unsetting the jdbc username from spark conf
-    // logger.info(s"Unsetting ${JdbcConstants.jdbcUserName} from spark conf")
-    // sparkSession.conf.unset(JdbcConstants.jdbcUserName)
+    // logger.info(s"Unsetting ${JdbcConfigs.jdbcUserName} from spark conf")
+    // sparkSession.conf.unset(JdbcConfigs.jdbcUserName)
 
     // unsetting the jdbc driver class from spark conf
     logger.info(s"Unsetting ${JdbcConfigs.jdbcDriverClassKey} from spark conf")
@@ -220,12 +220,12 @@ object JDBCCommons {
   def resetWriteConfigs(sparkSession: SparkSession): Unit = {
 
     // reset JDBC Write type to Batch
-    logger.info(s"Resetting ${JdbcConfigs.teradataWriteType} to ${JdbcConstants.defaultWriteType}")
-    sparkSession.conf.set(JdbcConfigs.teradataWriteType, JdbcConstants.defaultWriteType)
+    logger.info(s"Resetting ${JdbcConfigs.teradataWriteType} to ${JdbcConstants.DEFAULT_WRITE_TYPE}")
+    sparkSession.conf.set(JdbcConfigs.teradataWriteType, JdbcConstants.DEFAULT_WRITE_TYPE)
 
     // reset JDBC default write strategy to insert
-    logger.info(s"Resetting ${JdbcConfigs.jdbcInsertStrategy} to ${JdbcConstants.defaultInsertStrategy}")
-    sparkSession.conf.set(JdbcConfigs.jdbcInsertStrategy, JdbcConstants.defaultInsertStrategy)
+    logger.info(s"Resetting ${JdbcConfigs.jdbcInsertStrategy} to ${JdbcConstants.DEFAULT_INSERT_STRATEGY}")
+    sparkSession.conf.set(JdbcConfigs.jdbcInsertStrategy, JdbcConstants.DEFAULT_INSERT_STRATEGY)
 
   }
 
@@ -237,8 +237,8 @@ object JDBCCommons {
   def resetReadConfigs(sparkSession: SparkSession): Unit = {
 
     // reset JDBC Read type to Batch
-    logger.info(s"Resetting ${JdbcConfigs.teradataReadType} to ${JdbcConstants.defaultReadType}")
-    sparkSession.conf.set(JdbcConfigs.teradataReadType, JdbcConstants.defaultReadType)
+    logger.info(s"Resetting ${JdbcConfigs.teradataReadType} to ${JdbcConstants.DEFAULT_READ_TYPE}")
+    sparkSession.conf.set(JdbcConfigs.teradataReadType, JdbcConstants.DEFAULT_READ_TYPE)
   }
 
 

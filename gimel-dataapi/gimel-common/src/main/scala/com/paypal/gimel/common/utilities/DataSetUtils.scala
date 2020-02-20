@@ -189,7 +189,7 @@ object DataSetUtils {
   /**
     * Given the dataset name, it queries UDC for getting the appropriate connection information and returns back
     *
-    * @param datasetName -> udc.teradata.jackal.pp_scratch.test
+    * @param datasetName -> udc.teradata.mycluster.flightsdb.flights
     * @return
     */
   def getJdbcConnectionOptionsFromDataset(datasetName: String, dataSetProps: Map[String, Any]): Map[String, String] = {

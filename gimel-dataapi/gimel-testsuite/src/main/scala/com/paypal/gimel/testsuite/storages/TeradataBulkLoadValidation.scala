@@ -37,15 +37,15 @@ class TeradataBulkLoadValidation(dataset: DataSet, sparkSession: SparkSession, g
   val dataSetName = s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestTeradataHiveTable}"
   val teradataTable = s"${gimelProps.smokeTestTeradataDB}.${gimelProps.smokeTestTeradataTable}"
   val url = s"jdbc:teradata://${gimelProps.smokeTestTeradataURL}"
-  val dataSetProps: Map[String, Any] = Map((JdbcConstants.jdbcUserName, gimelProps.smokeTestTeradataUsername), (JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile))
+  val dataSetProps: Map[String, Any] = Map((JdbcConfigs.jdbcUserName, gimelProps.smokeTestTeradataUsername), (JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile))
   val authUtilities: JDBCAuthUtilities = JDBCAuthUtilities(sparkSession)
   val (username, password) = authUtilities.getJDBCCredentials(url, dataSetProps)
   val teradataURL: String = s"$url"
   val teradataWriteType: String = gimelProps.smokeTestTeradataWriteType
   val teradataReadType: String = gimelProps.smokeTestTeradataReadType
   val teradataSessions: String = gimelProps.smokeTestTeradataSessions
-  val writeOptionsMap: Map[String, String] = Map(("TYPE", teradataWriteType), ("SESSIONS", teradataSessions), (JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile), (JdbcConstants.jdbcUserName, gimelProps.smokeTestTeradataUsername))
-  val readOptionsMap: Map[String, String] = Map(("TYPE", teradataReadType), ("SESSIONS", teradataSessions), (JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile), (JdbcConstants.jdbcUserName, gimelProps.smokeTestTeradataUsername))
+  val writeOptionsMap: Map[String, String] = Map(("TYPE", teradataWriteType), ("SESSIONS", teradataSessions), (JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile), (JdbcConfigs.jdbcUserName, gimelProps.smokeTestTeradataUsername))
+  val readOptionsMap: Map[String, String] = Map(("TYPE", teradataReadType), ("SESSIONS", teradataSessions), (JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile), (JdbcConfigs.jdbcUserName, gimelProps.smokeTestTeradataUsername))
 
   /**
     * BootStrap Required Storage Objects

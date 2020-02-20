@@ -105,7 +105,7 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
 
     // get connection
     val conn: Connection = getOrCreateConnection(jdbcConnectionUtility)
-    val userSpecifiedFetchSize = dataSetProps.getOrElse("fetchSize", JdbcConstants.defaultReadFetchSize).toString.toInt
+    val userSpecifiedFetchSize = dataSetProps.getOrElse("fetchSize", JdbcConstants.DEFAULT_READ_FETCH_SIZE).toString.toInt
 
     val jdbcSystem = getJDBCSystem(jdbcURL)
     try {
@@ -126,8 +126,8 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
 
           val jdbcRDD: ExtendedJdbcRDD[Array[Object]] = new ExtendedJdbcRDD(sparkSession.sparkContext,
             new DbConnection(connectionUtilityPerIncomingSQL), selectStmt, connectionDetails.fetchSize,
-            PartitionInfoWrapper(JdbcConstants.TERADATA, partitionColumns, JdbcConstants.defaultLowerBound,
-              JdbcConstants.defaultUpperBound, numOfPartitions = connectionDetails.numOfPartitions))
+            PartitionInfoWrapper(JdbcConstants.TERADATA, partitionColumns, JdbcConstants.DEFAULT_LOWER_BOUND,
+              JdbcConstants.DEFAULT_UPPER_BOUND, numOfPartitions = connectionDetails.numOfPartitions))
 
           // getting table schema to build final dataframe
           val tableSchema = JdbcReadUtility.resolveTable(jdbcURL, selectStmt,
@@ -146,7 +146,7 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
                 // set number of partitions
                 val userSpecifiedPartitions = dataSetProps.get("numPartitions")
                 val numPartitions: Int = JdbcAuxiliaryUtilities.getNumPartitions(jdbcURL, userSpecifiedPartitions,
-                  JdbcConstants.readOperation)
+                  JdbcConstants.READ_OPERATION)
                 logger.info(s"Partition column is set to ${partitionColumns.head} " +
                   s"and no of partitions: $numPartitions")
                 (Some(partitionColumns.head), GenericUtils.parseLong(dataSetProps.getOrElse("lowerBound",
@@ -204,12 +204,12 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     val jdbc_url = mergedJdbcOptions(JdbcConfigs.jdbcUrl)
 
     val batchSize: Int = Try(
-      dataSetProps.getOrElse("batchSize", s"${JdbcConstants.defaultWriteBatchSize}").toString.toInt
-    ).getOrElse(JdbcConstants.defaultWriteBatchSize)
+      dataSetProps.getOrElse("batchSize", s"${JdbcConstants.DEFAULT_WRITE_BATCH_SIZE}").toString.toInt
+    ).getOrElse(JdbcConstants.DEFAULT_WRITE_BATCH_SIZE)
     val dbtable = mergedJdbcOptions(JdbcConfigs.jdbcDbTable)
 
     val insertStrategy: String = dataSetProps.getOrElse(JdbcConfigs.jdbcInsertStrategy,
-      s"${JdbcConstants.defaultInsertStrategy}").toString
+      s"${JdbcConstants.DEFAULT_INSERT_STRATEGY}").toString
 
     val partialArgHolder: Int => JDBCArgsHolder = extractJdbcArgsHolder(dataFrame, dataSetProps, logger,
       jdbcConnectionUtility, jdbc_url, dbtable, insertStrategy)
@@ -264,7 +264,7 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
 
     // get password strategy for JDBC
     val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy,
-      JdbcConstants.jdbcDefaultPasswordStrategy).toString
+      JdbcConstants.JDBC_DEFAULT_PASSWORD_STRATEGY).toString
 
     if (insertStrategy.equalsIgnoreCase(
       "update") || insertStrategy.equalsIgnoreCase("upsert")) {
