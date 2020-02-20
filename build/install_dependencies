@@ -37,4 +37,10 @@ check_error $? "install aerospike-spark"
 mvn install:install-file -DgroupId=com.twitter -DartifactId=zookeeper-client_2.10 -Dversion=2.0.0_fs-b -Dpackaging=jar -Dfile=${this_dir}/../lib/zookeeper-client_2.10-2.0.0_fs-b.jar 1>>/dev/null 2>&1
 check_error $? "install zookeeper-client"
 
+mvn install:install-file -DgroupId=com.teradata.jdbc -DartifactId=terajdbc4 -Dversion=15.10.00.22 -Dpackaging=jar -Dfile=${this_dir}/../lib/terajdbc4-15.10.00.22.jar 1>>/dev/null 2>&1
+check_error $? "install terajdbc4"
+
+mvn install:install-file -DgroupId=com.teradata.jdbc -DartifactId=tdgssconfig -Dversion=15.10.00.22 -Dpackaging=jar -Dfile=${this_dir}/../lib/tdgssconfig-15.10.00.22.jar 1>>/dev/null 2>&1
+check_error $? "install tdgssconfig"
+
 write_log "Complete | Script | $0"

@@ -19,23 +19,24 @@
 
 package com.paypal.gimel.jdbc.utilities
 
-import java.sql.Connection
+import java.sql.{Connection, DriverManager}
 
-import scala.runtime.AbstractFunction0
+object SingletonConnection {
 
-import com.paypal.gimel.logger.Logger
+  private var connection: Connection = null
 
-/**
-  *
-  * Supporting class to specify a function that returns an open Connection.
-  *
-  * @param jDBCConnectionUtility
-  */
-class DbConnection(jDBCConnectionUtility: JDBCConnectionUtility)
-  extends AbstractFunction0[Connection] with Serializable {
-  override def apply(): Connection = {
-    jDBCConnectionUtility.getJdbcConnectionAndSetQueryBand(Some(Logger(this.getClass.getName)))
+  def getConnection(url: String, username: String, password: String): Connection = synchronized {
+    if (connection == null || connection.isClosed) {
+      connection = DriverManager.getConnection(url, username, password)
+    }
+    connection
+  }
+
+
+  def getConnection(jdbcConnectionUtility: JDBCConnectionUtility): Connection = synchronized {
+    if (connection == null || connection.isClosed) {
+      connection = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
+    }
+    connection
   }
 }
-
-

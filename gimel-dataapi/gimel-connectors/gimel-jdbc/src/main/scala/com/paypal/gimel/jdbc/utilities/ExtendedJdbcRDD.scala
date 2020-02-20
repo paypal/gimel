@@ -19,15 +19,19 @@
 
 package com.paypal.gimel.jdbc.utilities
 
-import java.sql.{BatchUpdateException, Connection, PreparedStatement, ResultSet, SQLException}
+import java.sql.{Connection, PreparedStatement, ResultSet}
 
 import scala.reflect.ClassTag
 
+import com.teradata.jdbc.jdk6.JDK6_SQL_Clob
+import org.apache.commons.io.IOUtils
 import org.apache.spark.{Partition, SparkContext, TaskContext}
 import org.apache.spark.internal.Logging
 import org.apache.spark.rdd.JdbcRDD
 
-import com.paypal.gimel.jdbc.conf.JdbcConfigs
+import com.paypal.gimel.common.conf.GimelConstants
+import com.paypal.gimel.jdbc.conf.JdbcConstants
+import com.paypal.gimel.jdbc.utilities.PartitionUtils._
 import com.paypal.gimel.logger.Logger
 
 
@@ -51,12 +55,6 @@ import com.paypal.gimel.logger.Logger
   *                      {{{
   *                         select title, author from books where ? <= id and id <= ?
   *                      }}}
-  * @param lowerBound    the minimum value of the first placeholder
-  * @param upperBound    the maximum value of the second placeholder
-  *                      The lower and upper bounds are inclusive.
-  * @param numPartitions the number of partitions.
-  *                      Given a lowerBound of 1, an upperBound of 20, and a numPartitions of 2,
-  *                      the query would be executed twice, once with (1, 10) and once with (11, 20)
   * @param mapRow        a function from a ResultSet to a single row of the desired result type(s).
   *                      This should only call getInt, getString, etc; the RDD takes care of calling next.
   *                      The default maps a ResultSet to an array of Object.
@@ -65,69 +63,86 @@ class ExtendedJdbcRDD[T: ClassTag](
                                     sc: SparkContext,
                                     getConnection: () => Connection,
                                     sql: String,
-                                    lowerBound: Long,
-                                    upperBound: Long,
-                                    numPartitions: Int,
                                     fetchSize: Int,
-                                    realUser: String,
-                                    jdbcPasswordStrategy: String,
-                                    mapRow: (ResultSet) => T = ExtendedJdbcRDD.resultSetToObjectArray _
-
+                                    partitionInfoWrapper: PartitionInfoWrapper,
+                                    mapRow: ResultSet => T = ExtendedJdbcRDD.resultSetToObjectArray _
                                   )
-  extends JdbcRDD[T](sc, getConnection, sql, lowerBound, upperBound, numPartitions, mapRow) with Logging {
+  extends JdbcRDD[T](sc, getConnection, sql, partitionInfoWrapper.lowerBound,
+    partitionInfoWrapper.upperBound, partitionInfoWrapper.numOfPartitions, mapRow) with Logging {
 
   override def getPartitions: Array[Partition] = {
-    val logger = Logger(this.getClass.getName)
-
-    // bounds are inclusive, hence the + 1 here and - 1 on end
-    val length = BigInt(1) + upperBound - lowerBound
-    (0 until numPartitions).map { i =>
-      val start = lowerBound + ((i * length) / numPartitions)
-      val end = lowerBound + (((i + 1) * length) / numPartitions) - 1
-      logger.info(s"Bounds for partition=${i} --> lowerBound=${start},upperBound=${upperBound} ")
-      new ModifiedJdbcPartition(i, start.toLong, end.toLong)
-    }.toArray
-
+    partitionInfoWrapper.jdbcSystem match {
+      case JdbcConstants.TERADATA =>
+        (0 until partitionInfoWrapper.numOfPartitions).map { i =>
+          TeradataJdbcPartition(i, partitionInfoWrapper.partitionColumns, partitionInfoWrapper.numOfPartitions)
+        }.toArray
+      case _ =>
+        val logger = Logger(this.getClass.getName)
+        val length = BigInt(1) + partitionInfoWrapper.upperBound - partitionInfoWrapper.lowerBound
+        (0 until partitionInfoWrapper.numOfPartitions).map { i =>
+          val start = partitionInfoWrapper.lowerBound + ((i * length) / partitionInfoWrapper.numOfPartitions)
+          val end = partitionInfoWrapper.lowerBound + (((i + 1) * length) / partitionInfoWrapper.numOfPartitions) - 1
+          logger.info(s"Bounds for partition=$i --> lowerBound=$start,upperBound=$end ")
+          new ModifiedJdbcPartition(i, start.toLong, end.toLong)
+        }.toArray
+    }
   }
 
 
-  override def compute(thePart: Partition, context: TaskContext): Iterator[T] = new Iterator[T] {
-
-    val logger = Logger(this.getClass.getName)
+  override def compute(incomingPartition: Partition, context: TaskContext): Iterator[T] = new Iterator[T] {
 
     private var gotNext = false
     private var nextValue: T = _
     private var closed = false
+    private var recordsRead: Int = 0
     protected var finished = false
+    val logger = Logger(this.getClass.getName)
 
     context.addTaskCompletionListener { context => closeIfNeeded() }
-    val part = thePart.asInstanceOf[ModifiedJdbcPartition]
-    val conn = getConnection()
 
-    val stmt: PreparedStatement = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
+    val conn: Connection = getConnection()
+
+    val stmt: PreparedStatement = incomingPartition match {
+      case teradataJdbcPartition: TeradataJdbcPartition =>
+        // Appending the partition specific modulus query onto the incoming sql
+        // If the number of partitions is greater than 1, then appending the merge sequence
+        val sqlToBeExecuted = if (teradataJdbcPartition.numOfPartitions > 1) {
+          PartitionUtils.getMergedPartitionSequence(
+            sql,
+            teradataJdbcPartition.partitionColumns,
+            teradataJdbcPartition.numOfPartitions
+          )
+        } else {
+          sql
+        }
+        val stmt: PreparedStatement = conn.prepareStatement(
+          sqlToBeExecuted, ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY
+        )
+        // Setting the current mod based on the partition index
+        if(teradataJdbcPartition.numOfPartitions >1 ){
+          stmt.setInt(1, teradataJdbcPartition.index)
+        }
+        logger.info(s"Executing: $sqlToBeExecuted & partition_index -> ${teradataJdbcPartition.index}")
+        stmt
+      case modifiedJdbcPartition: ModifiedJdbcPartition =>
+        logger.info(s"Setting lowerBound = ${modifiedJdbcPartition.lower} &" +
+          s"  upperBound=${modifiedJdbcPartition.upper}")
+        val stmt: PreparedStatement = conn.prepareStatement(sql, ResultSet.TYPE_FORWARD_ONLY,
+          ResultSet.CONCUR_READ_ONLY)
+        stmt.setString(1, modifiedJdbcPartition.lower.toString)
+        stmt.setString(2, modifiedJdbcPartition.upper.toString)
+        logger.info(s"Executing: $sql")
+        stmt
+    }
 
     // setting fetchSize
     stmt.setFetchSize(fetchSize)
 
-    // set lowerBound and upperBound
-    // NOTE: set lower and upper bounds only when querypushdown is NOT set. i.e, != "true"
-    val queryPushDownFlag: String = context.getLocalProperty(JdbcConfigs.jdbcPushDownEnabled)
-    logger.info(s"queryPushDownFlag is set to ${queryPushDownFlag}")
-    queryPushDownFlag match {
-      case "true" =>
-        // do nothing
+    val rs: ResultSet = stmt.executeQuery()
 
-      case _ =>
-        logger.info(s"Setting lowerBound = ${part.lower} &  upperBound=${part.upper}")
-        stmt.setLong(1, part.lower)
-        stmt.setLong(2, part.upper)
-    }
-
-    logger.info(s"Executing: ${sql}")
-    val rs = stmt.executeQuery()
-
-    def getNext(): T = {
+    def getNext: T = {
       if (rs.next()) {
+        recordsRead+=1
         mapRow(rs)
       } else {
         finished = true
@@ -142,6 +157,8 @@ class ExtendedJdbcRDD[T: ClassTag](
         }
       } catch {
         case e: Exception => logWarning("Exception closing resultset", e)
+      } finally {
+        logger.info(s"Records read for partition: ${incomingPartition.index} -> $recordsRead rows")
       }
       try {
         if (null != stmt) {
@@ -166,8 +183,7 @@ class ExtendedJdbcRDD[T: ClassTag](
         // Note: it's important that we set closed = true before calling close(), since setting it
         // afterwards would permit us to call close() multiple times if close() threw an exception.
         closed = true
-
-        logger.info(s"Closing connection in Executor:${id}")
+        logger.info(s"Closing connection in Executor:$id")
         close()
       }
     }
@@ -175,7 +191,7 @@ class ExtendedJdbcRDD[T: ClassTag](
     override def hasNext: Boolean = {
       if (!finished) {
         if (!gotNext) {
-          nextValue = getNext()
+          nextValue = getNext
           if (finished) {
             closeIfNeeded()
           }
@@ -197,7 +213,17 @@ class ExtendedJdbcRDD[T: ClassTag](
 
 object ExtendedJdbcRDD {
   def resultSetToObjectArray(rs: ResultSet): Array[Object] = {
-    Array.tabulate[Object](rs.getMetaData.getColumnCount)(i => rs.getObject(i + 1))
+    Array.tabulate[Object](rs.getMetaData.getColumnCount)(
+      i => {
+        val obj = rs.getObject(i + 1)
+        obj match {
+          case value: JDK6_SQL_Clob =>
+            val lines = IOUtils.readLines(value.getAsciiStream)
+            String.join(GimelConstants.COMMA, lines)
+          case _ => obj
+        }
+      }
+    )
   }
 
   trait ConnectionFactory extends Serializable {
@@ -208,5 +234,10 @@ object ExtendedJdbcRDD {
 }
 
 private class ModifiedJdbcPartition(idx: Int, val lower: Long, val upper: Long) extends Partition {
+  override def index: Int = idx
+}
+
+private case class TeradataJdbcPartition(idx: Int, partitionColumns: Seq[String], numOfPartitions: Int)
+  extends Partition {
   override def index: Int = idx
 }

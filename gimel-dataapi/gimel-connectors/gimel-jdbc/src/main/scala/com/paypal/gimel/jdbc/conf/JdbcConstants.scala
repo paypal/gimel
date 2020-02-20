@@ -19,6 +19,8 @@
 
 package com.paypal.gimel.jdbc.conf
 
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
+
 import com.paypal.gimel.common.conf.GimelConstants
 
 object JdbcConstants {
@@ -30,33 +32,67 @@ object JdbcConstants {
   val jdbcUserName: String = s"gimel.jdbc.${GimelConstants.USER_NAME}"
   val MYSQL = "MYSQL"
   val TERADATA = "TERADATA"
-  val jdbcDefaultPasswordStrategy = "file"
+  val ORCALE = "ORACLE"
+  val POSTGRESQL = "POSTGRESQL"
+  val defaultJdbcPFileSource = "hdfs"
+  val localFileSource = "local"
 
   // polling properties
   val jdbcPPath = "default_path"
+  val jdbcDefaultPasswordStrategy = "queryband"
+  val jdbcFilePasswordStrategy = "file"
+  val jdbcProxyUsername = "gimelproxyuser"
 
   // default TD properties
   val defaultTeradataSessions = 5
-  val deafaultCharset = "UTF16"
+  val defaultCharset = "UTF16"
   val defaultSessions = "6"
+  val TD_FASTLOAD_KEY: String = "FASTLOAD"
+  val TD_FASTEXPORT_KEY: String = "FASTEXPORT"
+  val TD_FASTLOAD_KEY_LC: String = TD_FASTLOAD_KEY.toLowerCase
+  val TD_FASTEXPORT_KEY_LC: String = TD_FASTEXPORT_KEY.toLowerCase
+
+  // INCLUDE LIST
+  val dbList: String = "DATABASE_LIST"
+  val includeStatus: String = "INCLUDE_STATUS"
+  val deltaHours: String = "DELTA_HOURS"
 
   // JDBC READ configs
-  val NUM_READ_PARTITIONS = 16
+  val MAX_TD_JDBC_READ_PARTITIONS = 24
+  val MAX_FAST_EXPORT_READ_PARTITIONS = 2
   val defaultReadFetchSize = 1000
   val defaultFastExportSessions = "16"
   val defaultLowerBound = 0
   val defaultUpperBound = 20
   val defaultReadType = "BATCH"
   val noPartitionColumn = "10"
+  val readOperation = "read"
+
 
   // JDBC write configs
   val GIMEL_TEMP_PARTITION = "GIMEL_TEMP_PARTITION"
   val defaultWriteBatchSize = 10000
-  val NUM_WRITE_PARTITIONS = 12
+  val MAX_TD_JDBC_WRITE_PARTITIONS: Int = 24
+  val MAX_FAST_LOAD_WRITE_PARTITIONS: Int = 2
   val defaultInsertStrategy = "insert"
   val defaultFastLoadSessions = "12"
   val defaultWriteType = "BATCH"
+  val writeOperation = "write"
+  val defaultPartitionMethod = "coalesce"
+  val repartitionMethod = "repartition"
+  val coalesceMethod = "coalesce"
 
+  // partitions for Systems other than Teradata
+  val defaultJDBCReadPartitions = 100
+  val defaultJDBCWritePartitions = 100
+  val defaultJDBCPerProcessMaxRowsLimit: Long = 1000000000L
+  val defaultJDBCPerProcessMaxRowsLimitString: String = defaultJDBCPerProcessMaxRowsLimit.toString
+  val defaultJDBCProcesEnableRunasis: String = "false"
+  val defaultJDBCProcesEnableRunasisB: Boolean = defaultJDBCProcesEnableRunasis.toBoolean
+
+  // pushdown constants
+  val DEF_JDBC_PUSH_DOWN_SCHEMA: StructType = new StructType(fields = Seq(
+    StructField("QUERY_EXECUTION", StringType, nullable = false)
+  ).toArray)
 
 }
-
