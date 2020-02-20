@@ -19,7 +19,7 @@
 
 package com.paypal.gimel.jdbc.utilities
 
-import java.sql.{Connection, DriverManager, PreparedStatement}
+import java.sql.{Connection, DriverManager}
 
 import org.apache.spark.sql.SparkSession
 
@@ -108,6 +108,7 @@ object JDBCCommons {
     password
   }
 
+
   /**
     *
     * @param url
@@ -120,13 +121,19 @@ object JDBCCommons {
   }
 
   /**
+    * get JDBC User
     *
+    * @param dataSetProps
     * @param sparkSession
+    * @return
     */
-  def getDefaultUser(sparkSession: SparkSession): String = {
+  def getJdbcUser(dataSetProps: Map[String, Any], sparkSession: SparkSession): String = {
     // get real user of JDBC
-    sparkSession.conf.get(JdbcConstants.jdbcUserName, sparkSession.sparkContext.sparkUser)
+    val defaultValue = sparkSession.conf.get(JdbcConstants.jdbcUserName, sparkSession.sparkContext.sparkUser)
+    val username = dataSetProps.getOrElse(JdbcConstants.jdbcUserName, defaultValue).toString
+    username
   }
+
 
   /**
     * This method sets Query Band for Teradata
@@ -134,34 +141,28 @@ object JDBCCommons {
     * @param conn
     * @param actualUser
     */
-  def setQueryBand(conn: Connection, url: String, actualUser: String, jdbcPasswordStrategy: String = JdbcConstants.jdbcDefaultPasswordStrategy): Unit = {
+  def setQueryBand(conn: Connection, url: String, actualUser: String,
+                   jdbcPasswordStrategy: String = JdbcConstants.jdbcDefaultPasswordStrategy): Unit = {
 
     val jdbcSystem = getJDBCSystem(url)
 
     jdbcSystem match {
 
       case JdbcConstants.TERADATA =>
-        val queryBandStatement: String = s"""SET QUERY_BAND = 'PROXYUSER=${actualUser};' FOR SESSION;"""
+        val queryBandStatement: String = s"""SET QUERY_BAND = 'PROXYUSER=$actualUser;' FOR SESSION;"""
         jdbcPasswordStrategy match {
-          case "file" => {
-            // do nothing
-          }
-          case "inline" => {
-            // do nothing
-          }
-          case _ => {
-            logger.info(s"Setting QueryBand for ${actualUser}")
+          case "file" => // do nothing
+          case _ =>
+            logger.info(s"Setting QueryBand for $actualUser")
             try {
-              val queryBandSt: PreparedStatement = conn.prepareStatement(queryBandStatement)
-              queryBandSt.execute()
+              executeQueryStatement(queryBandStatement, conn)
             }
             catch {
-              case ex =>
-                logger.info(s"Setting QueryBand failed for --> ${actualUser}")
+              case ex: Throwable =>
+                logger.error(s"Setting QueryBand failed for --> $actualUser")
                 ex.printStackTrace()
                 throw ex
             }
-          }
         }
 
       case _ =>
@@ -170,13 +171,12 @@ object JDBCCommons {
     }
   }
 
-
   /**
     * This method resets all the configs required to be reset after action in JDBC spark Read/Write API
     *
     * @param sparkSession
     */
-  def resetDefaultConfigs(sparkSession: SparkSession): Unit = {
+  def resetPushDownConfigs(sparkSession: SparkSession): Unit = {
 
     // reset JDBC Read type to Batch
     logger.info(s"Resetting ${JdbcConfigs.teradataReadType} to ${JdbcConstants.defaultReadType}")
@@ -190,6 +190,56 @@ object JDBCCommons {
     logger.info(s"Resetting ${JdbcConfigs.jdbcInsertStrategy} to ${JdbcConstants.defaultInsertStrategy}")
     sparkSession.conf.set(JdbcConfigs.jdbcInsertStrategy, JdbcConstants.defaultInsertStrategy)
 
+    // reset JDBC pushdownflag
+    //    logger.info(s"Resetting ${JdbcConfigs.jdbcPushDownEnabled} to False")
+    //    sparkSession.conf.set(JdbcConfigs.jdbcPushDownEnabled, "false")
+
+    // unsetting the jdbc url from spark conf
+    logger.info(s"Unsetting ${JdbcConfigs.jdbcUrl} from spark conf")
+    sparkSession.conf.unset(JdbcConfigs.jdbcUrl)
+
+    // unsetting the jdbc username from spark conf
+    // logger.info(s"Unsetting ${JdbcConstants.jdbcUserName} from spark conf")
+    // sparkSession.conf.unset(JdbcConstants.jdbcUserName)
+
+    // unsetting the jdbc driver class from spark conf
+    logger.info(s"Unsetting ${JdbcConfigs.jdbcDriverClassKey} from spark conf")
+    sparkSession.conf.unset(JdbcConfigs.jdbcDriverClassKey)
+
+    // unsetting jdbc table name from spark conf
+    logger.info(s"Unsetting ${JdbcConfigs.jdbcInputTableNameKey} from spark conf")
+    sparkSession.conf.unset(JdbcConfigs.jdbcInputTableNameKey)
+
   }
+
+  /**
+    * This method resets all the configs required to be reset after action in JDBC spark Write API
+    *
+    * @param sparkSession
+    */
+  def resetWriteConfigs(sparkSession: SparkSession): Unit = {
+
+    // reset JDBC Write type to Batch
+    logger.info(s"Resetting ${JdbcConfigs.teradataWriteType} to ${JdbcConstants.defaultWriteType}")
+    sparkSession.conf.set(JdbcConfigs.teradataWriteType, JdbcConstants.defaultWriteType)
+
+    // reset JDBC default write strategy to insert
+    logger.info(s"Resetting ${JdbcConfigs.jdbcInsertStrategy} to ${JdbcConstants.defaultInsertStrategy}")
+    sparkSession.conf.set(JdbcConfigs.jdbcInsertStrategy, JdbcConstants.defaultInsertStrategy)
+
+  }
+
+  /**
+    * This method resets all the configs required to be reset after action in JDBC spark Read API
+    *
+    * @param sparkSession
+    */
+  def resetReadConfigs(sparkSession: SparkSession): Unit = {
+
+    // reset JDBC Read type to Batch
+    logger.info(s"Resetting ${JdbcConfigs.teradataReadType} to ${JdbcConstants.defaultReadType}")
+    sparkSession.conf.set(JdbcConfigs.teradataReadType, JdbcConstants.defaultReadType)
+  }
+
 
 }

@@ -17,19 +17,7 @@
  * limitations under the License.
  */
 
-package com.paypal.gimel.jdbc.utilities
+package com.paypal.gimel.jdbc.exception
 
-/**
-  * Supporting class to hold the JDBC parameters
-  */
-case class JDBCArgsHolder(dataSetProps: Map[String, Any],
-                          dataFrameColumns: Array[String],
-                          jdbcURL: String,
-                          realUser: String,
-                          jdbcPasswordStrategy: String,
-                          dbTable: String,
-                          batchSize: Int,
-                          cols: Int,
-                          setColumns: List[String] = List(),
-                          whereColumns: List[String] = List())
-  extends Serializable
+class JDBCDataTypeException(message: String) extends Exception(message)
+
