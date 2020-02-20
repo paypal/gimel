@@ -669,7 +669,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   /**
     * Utility for getting the attributes map of the storage system
     *
-    * @param storageSystemType -> Name of the storage system like `Teradata.Jackal`
+    * @param storageSystemType -> Name of the storage system like `Teradata.CLUSTER_NAME`
     * @return -> Attributes Map
     */
   def getSystemAttributesMapByName(storageSystemType: String): Map[String, String] = {

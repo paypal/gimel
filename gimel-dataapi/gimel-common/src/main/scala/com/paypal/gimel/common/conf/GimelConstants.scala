@@ -19,6 +19,8 @@
 
 package com.paypal.gimel.common.conf
 
+import scala.util.matching.Regex
+
 object GimelConstants {
 
   // COMMON CONSTANTS USED ACROSS ENTIRE GIMEL
@@ -54,6 +56,10 @@ object GimelConstants {
   val PCATALOG_STRING: String = "pcatalog"
   val UDC_STRING: String = "udc"
   val STORAGE_HANDLER: String = "storage_handler"
+  val TABLE_FILEDS: String = "gimel.table.fields"
+  val TABLE_SQL: String = "gimel.table.sql"
+  val TBL_PROPERTIES: String = "TBLPROPERTIES"
+  val CREATE_STATEMENT_IS_PROVIDED: String = "gimel.sql.create.statement.is.provided"
 
   // HTTP status codes
   val HTTP_SUCCESS_STATUS_CODE: Int = 200
@@ -94,8 +100,46 @@ object GimelConstants {
   val STORAGE_TYPE_HBASE: String = "hbase"
   val HBASE_PAGE_SIZE = "spark.hbase.connector.pageSize"
 
-  // TERA DATA RELATED CONSTANTS
+  // JDBC RELATED CONSTANTS
   val STORAGE_TYPE_JDBC = "JDBC"
+  val GIMEL_JDBC_OPTION_KEYWORD: String = "gimel.jdbc."
+  val JDBC_CHARSET_KEY: String = "charset"
+
+  // TERA DATA RELATED CONSTANTS
+  val TERA_DATA_TABLE_TYPE_COLUMN: String = "table_type"
+  val TERA_DATA_INDEX_NAME_COLUMN: String = "index_name"
+  val TERA_DATA_INDEX_COLUMN: String = "index_column"
+  val TERADATA_TABLE_IDENTIFIER: String = "udc.teradata"
+  val TERADATA_JSON_COLUMN_TYPE: String = "JSON"
+  val EXPLAIN_CONTEXT: String = "explain"
+  val ORACLE_EXPLAIN_CONTEXT: String = s"$EXPLAIN_CONTEXT plan for"
+  val ROWS_IDENTIFIER: Regex = "([\\d,]+) row".r
+  val SPACE_IDENTIFIER: Regex = "([\\d,]+) byte".r
+  val CONFIDENCE_IDENTIFIER: Regex = "(\\S+)\\s* confidence".r
+  val LOW_CONFIDENCE_IDENTIFIER: String = "low"
+  val HIGH_CONFIDENCE_IDENTIFIER: String = "high"
+  val NO_CONFIDENCE_IDENTIFIER: String = "no"
+  val INDEX_JOIN_CONFIDENCE_IDENTIFIER: String = "index join"
+
+  trait ConfidenceIdentifier {
+    def identifier: String = ""
+  }
+
+  case object NoConfidence extends ConfidenceIdentifier {
+    override def identifier: String = NO_CONFIDENCE_IDENTIFIER
+  }
+
+  case object LowConfidence extends ConfidenceIdentifier {
+    override def identifier: String = LOW_CONFIDENCE_IDENTIFIER
+  }
+
+  case object HighConfidence extends ConfidenceIdentifier {
+    override def identifier: String = HIGH_CONFIDENCE_IDENTIFIER
+  }
+
+  case object IndexJoinConfidence extends ConfidenceIdentifier {
+    override def identifier: String = INDEX_JOIN_CONFIDENCE_IDENTIFIER
+  }
 
   // spark configs
   val SPARK_SPECULATION = "spark.speculation"

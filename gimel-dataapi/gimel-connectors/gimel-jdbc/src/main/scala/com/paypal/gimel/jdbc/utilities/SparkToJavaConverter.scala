@@ -21,6 +21,8 @@ package com.paypal.gimel.jdbc.utilities
 
 import org.apache.spark.sql.types.{DataType}
 
+import com.paypal.gimel.jdbc.exception._
+
 object SparkToJavaConverter {
   /**
     * @param schemaObject type of dataframe column type
@@ -61,7 +63,7 @@ object SparkToJavaConverter {
       case "BOOLEAN" =>
         java.sql.Types.BOOLEAN
       case _ =>
-        throw new JDBCDataTypeException(s"Data Type mismatch/Not Supported for ${typeName}. Please verify the data types of dataframe and target table.")
+        throw new JDBCDataTypeException(s"Data Type mismatch/Not Supported for $typeName. Please verify the data types of dataframe and target table.")
     }
   }
 
@@ -101,7 +103,7 @@ object SparkToJavaConverter {
       case decimalRegex() => {
         val deci1: Int = typeName.substring(typeName.indexOf("(") + 1, typeName.indexOf(",")).toInt
         val deci2: Int = typeName.substring(typeName.indexOf(",") + 1, typeName.indexOf(")")).toInt
-        s"DECIMAL(${deci1},${deci2})"
+        s"DECIMAL($deci1, $deci2)"
       }
       case "BOOLEAN" =>
         "BOOLEAN"
@@ -155,20 +157,3 @@ object SparkToJavaConverter {
     }
   }
 }
-
-
-/**
-  * Custom Exception for JDBCDataType related errors
-  *
-  * @param message Message to Throw
-  * @param cause   A Throwable Cause
-  */
-private class JDBCDataTypeException(message: String, cause: Throwable)
-  extends RuntimeException(message) {
-  if (cause != null) {
-    initCause(cause)
-  }
-
-  def this(message: String) = this(message, null)
-}
-

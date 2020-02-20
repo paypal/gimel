@@ -22,23 +22,43 @@ package com.paypal.gimel.jdbc.conf
 // keys related to teradata
 object JdbcConfigs {
   // metastore properties
-  val jdbcDriverClassKey: String = "gimel.jdbc.driver.class"
-  val jdbcInputTableNameKey: String = "gimel.jdbc.input.table.name"
-  val jdbcUrl: String = "gimel.jdbc.url"
+  import com.paypal.gimel.common.conf.GimelConstants.GIMEL_JDBC_OPTION_KEYWORD
 
+  val jdbcDriverClassKey: String = s"${GIMEL_JDBC_OPTION_KEYWORD}driver.class"
+  val jdbcInputTableNameKey: String =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}input.table.name"
+  val jdbcUrl: String = s"${GIMEL_JDBC_OPTION_KEYWORD}url"
+  val jdbcDbTable: String = s"${GIMEL_JDBC_OPTION_KEYWORD}dbtable"
+  val jdbcTempTable: String = s"${GIMEL_JDBC_OPTION_KEYWORD}temp.table"
+  val jdbcTempDatabase: String = s"${GIMEL_JDBC_OPTION_KEYWORD}temp.db"
   // misc properties for read/write
-  val jdbcStorageHandler: String = "org.apache.hadoop.hive.jdbc.storagehandler.JdbcStorageHandler"
-  val teradataReadType: String = "gimel.jdbc.read.type"
-  val teradataWriteType: String = "gimel.jdbc.write.type"
-  val jdbcOutputTableNameKey: String = "gimel.jdbc.output.table.name"
-  val jdbcP: String = "gimel.jdbc.p.file"
+  val jdbcStorageHandler: String =
+    "org.apache.hadoop.hive.jdbc.storagehandler.JdbcStorageHandler"
+  val teradataReadType: String = s"${GIMEL_JDBC_OPTION_KEYWORD}read.type"
+  val teradataWriteType: String = s"${GIMEL_JDBC_OPTION_KEYWORD}write.type"
+  val jdbcOutputTableNameKey: String =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}output.table.name"
+  val jdbcP: String = s"${GIMEL_JDBC_OPTION_KEYWORD}p.file"
   val jdbcPassword: String = "gimel.jdbc.password"
-  val jdbcPushDownEnabled: String = "gimel.jdbc.enableQueryPushdown"
-  val jdbcInsertStrategy: String = "gimel.jdbc.insertStrategy"
-  val jdbcInputDataPartitionCount: String = "gimel.jdbc.inputDataPartition.count"
-  val jdbcPasswordStrategy: String = "gimel.jdbc.p.strategy"
-  val jdbcUpdateSetColumns: String = "gimel.jdbc.update.setColumns"
-  val jdbcUpdateWhereColumns: String = "gimel.jdbc.update.whereColumns"
-
+  val jdbcPushDownEnabled: String =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}enableQueryPushdown"
+  val jdbcInsertStrategy: String = s"${GIMEL_JDBC_OPTION_KEYWORD}insertStrategy"
+  val jdbcInputDataPartitionCount: String =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}inputDataPartition.count"
+  val jdbcPasswordStrategy: String = s"${GIMEL_JDBC_OPTION_KEYWORD}p.strategy"
+  val jdbcUpdateSetColumns: String =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}update.setColumns"
+  val jdbcUpdateWhereColumns: String =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}update.whereColumns"
+  val jdbcPFileSource = s"${GIMEL_JDBC_OPTION_KEYWORD}p.file.source"
+  val jdbcPartitionColumns =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}read.partition.columns"
+  val jdbcPerProcessMaxRowsThreshold =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}process.rows.maxlimit"
+  val jdbcEnableQueryRunAsIs =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}process.enable.complete.pushdown"
+  val jdbcCompletePushdownSelectEnabled =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}process.complete.pushdown.select.enabled"
+  val jdbcFastLoadErrLimit =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}write.fastload.error.limit"
 }
-

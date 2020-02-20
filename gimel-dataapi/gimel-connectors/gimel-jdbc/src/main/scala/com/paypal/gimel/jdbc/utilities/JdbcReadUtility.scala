@@ -21,56 +21,61 @@ package com.paypal.gimel.jdbc.utilities
 
 import java.sql.{Connection, JDBCType, ResultSet, ResultSetMetaData, SQLException}
 
+import scala.math.min
+
 import org.apache.spark.sql.jdbc.JdbcDialect
 import org.apache.spark.sql.types._
+import org.apache.spark.sql.types.DecimalType.{MAX_PRECISION, MAX_SCALE}
+
+import com.paypal.gimel.common.conf.GimelConstants
+import com.paypal.gimel.common.utilities.{GenericUtils, SQLDataTypesUtils}
+import com.paypal.gimel.jdbc.conf.JdbcConstants
+import com.paypal.gimel.jdbc.utilities.JdbcAuxiliaryUtilities.getJDBCSystem
+import com.paypal.gimel.logger.Logger
+import com.paypal.gimel.parser.utilities.QueryParserUtils
 
 object JdbcReadUtility {
+
+  private val GENERIC_FAILING_CONDITION_CLAUSE: String = "1=0"
+  private val logger: Logger = Logger(this.getClass.getName)
 
   /**
     *
     * @param url
-    * @param table
+    * @param selectQuery
     * @return
     */
-  def resolveTable(url: String, table: String, conn: Connection): StructType = {
-    val dialect = org.apache.spark.sql.jdbc.JdbcDialects.get(url)
-    try {
-      val statement = conn.prepareStatement(s"SELECT * FROM ${table} WHERE 1=0")
-
-      try {
-        // statement.setQueryTimeout(options.queryTimeout)
-        val rs = statement.executeQuery()
-        try {
-          getSchema(rs, dialect, alwaysNullable = true)
-        }
-        catch {
-          case e: Exception =>
-            e.printStackTrace()
-            throw e
-        }
-        finally {
-          rs.close()
-        }
-      } finally {
-        statement.close()
+  def resolveTable(url: String, selectQuery: String, conn: Connection): StructType = {
+    require(QueryParserUtils.isSelectQuery(selectQuery), s"Resolve table, " +
+      s"expects select queries given $selectQuery is not a select")
+    GenericUtils.time("ResolveTable: ", Some(logger)) {
+      val dialect = org.apache.spark.sql.jdbc.JdbcDialects.get(url)
+      import JDBCConnectionUtility.withResources
+      val mergedSqlWithFailureConditionClause = SQLDataTypesUtils.mergeConditionClause(
+        selectQuery, GENERIC_FAILING_CONDITION_CLAUSE
+      )
+      logger.info(s"In resolve table, proceeding to execute: $mergedSqlWithFailureConditionClause")
+      withResources(conn.prepareStatement(mergedSqlWithFailureConditionClause)) {
+        statement =>
+          withResources(statement.executeQuery()) {
+            resultSet => getSchema(url, resultSet, dialect, alwaysNullable = true)
+          }
       }
-    } finally {
-      conn.close()
     }
   }
 
 
   /**
-    *
+    * @param url
     * @param resultSet
     * @param dialect
     * @param alwaysNullable
     * @return
     */
-  def getSchema(
-                 resultSet: ResultSet,
-                 dialect: JdbcDialect,
-                 alwaysNullable: Boolean = false): StructType = {
+  def getSchema(url: String,
+                resultSet: ResultSet,
+                dialect: JdbcDialect,
+                alwaysNullable: Boolean = false): StructType = {
     val rsmd = resultSet.getMetaData
     val ncols = rsmd.getColumnCount
     val fields = new Array[StructField](ncols)
@@ -99,10 +104,9 @@ object JdbcReadUtility {
       val metadata = new MetadataBuilder().putLong("scale", fieldScale)
       val columnType: DataType =
         dialect.getCatalystType(dataType, typeName, fieldSize, metadata).getOrElse(
-          getCatalystType(dataType, fieldSize, fieldScale, isSigned))
+          getCatalystType(url, dataType, fieldSize, fieldScale, isSigned, typeName))
 
-      // println(s"Column: columnName = ${columnName}, dataType = ${dataType}, typeName = ${typeName} -->  columnType = ${columnType.typeName} ")
-
+      // val columnType: DataType = getCatalystType(url, dataType, fieldSize, fieldScale, isSigned)
       fields(i) = StructField(columnName, columnType, nullable)
       i = i + 1
     }
@@ -116,14 +120,19 @@ object JdbcReadUtility {
     * @param sqlType - A field of java.sql.Types
     * @return The Catalyst type corresponding to sqlType.
     */
-  def getCatalystType(
-                       sqlType: Int,
-                       precision: Int,
-                       scale: Int,
-                       signed: Boolean): DataType = {
+  def getCatalystType(url: String,
+                      sqlType: Int,
+                      precision: Int,
+                      scale: Int,
+                      signed: Boolean,
+                      typeName: String): DataType = {
     val answer = sqlType match {
       case java.sql.Types.ARRAY => null
-      case java.sql.Types.BIGINT => if (signed) { LongType } else { DecimalType(20, 0) }
+      case java.sql.Types.BIGINT => if (signed) {
+        LongType
+      } else {
+        DecimalType(20, 0)
+      }
       case java.sql.Types.BINARY => BinaryType
       case java.sql.Types.BIT => BooleanType // @see JdbcDialect for quirks
       case java.sql.Types.BLOB => BinaryType
@@ -133,12 +142,25 @@ object JdbcReadUtility {
       case java.sql.Types.DATALINK => null
       case java.sql.Types.DATE => DateType
       case java.sql.Types.DECIMAL
-        if precision != 0 || scale != 0 => DecimalType(precision, scale)
+        if precision != 0 || scale != 0 => DecimalType(min(precision, MAX_PRECISION), min(scale, MAX_SCALE))
       case java.sql.Types.DECIMAL => DecimalType.SYSTEM_DEFAULT
       case java.sql.Types.DISTINCT => null
       case java.sql.Types.DOUBLE => DoubleType
-      case java.sql.Types.FLOAT => DoubleType
-      case java.sql.Types.INTEGER => if (signed) { IntegerType } else { LongType }
+      case java.sql.Types.FLOAT => {
+        // Checking this specific case when trying for TERADATA FLOAT data types, returns DoubleType
+        val jdbcSystem = getJDBCSystem(url)
+        jdbcSystem match {
+          case JdbcConstants.TERADATA =>
+            DoubleType
+          case _ =>
+            FloatType
+        }
+      }
+      case java.sql.Types.INTEGER => if (signed) {
+        IntegerType
+      } else {
+        LongType
+      }
       case java.sql.Types.JAVA_OBJECT => null
       case java.sql.Types.LONGNVARCHAR => StringType
       case java.sql.Types.LONGVARBINARY => BinaryType
@@ -147,10 +169,15 @@ object JdbcReadUtility {
       case java.sql.Types.NCLOB => StringType
       case java.sql.Types.NULL => null
       case java.sql.Types.NUMERIC
-        if precision != 0 || scale != 0 => DecimalType(precision, scale)
+        if precision != 0 || scale != 0 => DecimalType(min(precision, MAX_PRECISION), min(scale, MAX_SCALE))
       case java.sql.Types.NUMERIC => DecimalType.SYSTEM_DEFAULT
       case java.sql.Types.NVARCHAR => StringType
-      case java.sql.Types.OTHER => null
+      // Fix for missing datatype from source, also update ExtendedJdbcRDD.resultSetToObjectArray
+      case java.sql.Types.OTHER =>
+        typeName match {
+          case GimelConstants.TERADATA_JSON_COLUMN_TYPE => StringType
+          case _ => null
+        }
       case java.sql.Types.REAL => DoubleType
       case java.sql.Types.REF => StringType
       case java.sql.Types.REF_CURSOR => null
