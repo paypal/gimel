@@ -37,15 +37,15 @@ class TeradataJDBCValidation(dataset: DataSet, sparkSession: SparkSession, gimel
   val dataSetName = s"${gimelProps.smokeTestHiveDB}.${gimelProps.smokeTestTeradataHiveTable}"
   val teradataTable = s"${gimelProps.smokeTestTeradataDB}.${gimelProps.smokeTestTeradataTable}"
   val url = s"jdbc:teradata://${gimelProps.smokeTestTeradataURL}"
-  val dataSetProps: Map[String, Any] = Map((JdbcConstants.jdbcUserName, gimelProps.smokeTestTeradataUsername), (JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile))
+  val dataSetProps: Map[String, Any] = Map((JdbcConfigs.jdbcUserName, gimelProps.smokeTestTeradataUsername), (JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile))
   val authUtilities: JDBCAuthUtilities = JDBCAuthUtilities(sparkSession)
   val (username, password) = authUtilities.getJDBCCredentials(url, dataSetProps)
   val teradataURL: String = s"$url"
   val teradataType: String = gimelProps.smokeTestTeradataWriteType
   val teradataSessions: String = gimelProps.smokeTestTeradataSessions
   val batchSize: String = gimelProps.smokeTestTeradataBatchSize
-  val writeOptionsMap: Map[String, String] = Map(("BATCHSIZE", batchSize), ("SESSIONS", teradataSessions), (JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile), (JdbcConstants.jdbcUserName, gimelProps.smokeTestTeradataUsername))
-  val readOptionsMap: Map[String, String] = Map((JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile), (JdbcConstants.jdbcUserName, gimelProps.smokeTestTeradataUsername))
+  val writeOptionsMap: Map[String, String] = Map(("BATCHSIZE", batchSize), ("SESSIONS", teradataSessions), (JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile), (JdbcConfigs.jdbcUserName, gimelProps.smokeTestTeradataUsername))
+  val readOptionsMap: Map[String, String] = Map((JdbcConfigs.jdbcP, gimelProps.smokeTestTeradataPFile), (JdbcConfigs.jdbcUserName, gimelProps.smokeTestTeradataUsername))
 
   /**
     * BootStrap Required Storage Objects

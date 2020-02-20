@@ -857,12 +857,12 @@ object JdbcAuxiliaryUtilities {
     val jdbcUrl = jdbcSystem match {
       case JdbcConstants.TERADATA =>
         val charset = GenericUtils.getConfigValueFromCaseInsensitiveKey(GimelConstants.JDBC_CHARSET_KEY,
-          dataSetProps, JdbcConstants.defaultCharset)
+          dataSetProps, JdbcConstants.DEFAULT_CHARSET)
         val teradataReadType: String = dataSetProps.getOrElse(JdbcConfigs.teradataReadType, "").toString
         val teradataWriteType: String = dataSetProps.getOrElse(JdbcConfigs.teradataWriteType, "").toString
 
         // get sessions
-        val teradataSessions: String = dataSetProps.getOrElse("SESSIONS", JdbcConstants.defaultSessions).toString
+        val teradataSessions: String = dataSetProps.getOrElse("SESSIONS", JdbcConstants.DEFAULT_SESSIONS).toString
         val urlBuilder = new StringBuilder(url.toLowerCase())
 
         if (urlBuilder.indexOf("charset") == -1) {
@@ -984,18 +984,18 @@ object JdbcAuxiliaryUtilities {
     */
   def getPartitionedDataFrame(url: String, df: DataFrame, userSpecifiedPartitions: Option[Any]): DataFrame = {
     val currentPartitions = df.rdd.getNumPartitions
-    val maxAllowedPartitions = getMaxPartitions(url, JdbcConstants.writeOperation)
+    val maxAllowedPartitions = getMaxPartitions(url, JdbcConstants.WRITE_OPERATION)
     val (partitions, partitionMethod) = userSpecifiedPartitions match {
       case None =>
-        (Math.min(maxAllowedPartitions, currentPartitions), JdbcConstants.coalesceMethod)
+        (Math.min(maxAllowedPartitions, currentPartitions), JdbcConstants.COALESCE_METHOD)
       case _ =>
         val userPartitions = Try(
           userSpecifiedPartitions.get.toString.toInt
-        ).getOrElse(JdbcConstants.defaultJDBCWritePartitions)
+        ).getOrElse(JdbcConstants.DEFAULT_JDBC_WRTIE_PARTITIONS)
         if (userPartitions > currentPartitions) {
-          (Math.min(userPartitions, maxAllowedPartitions), JdbcConstants.repartitionMethod)
+          (Math.min(userPartitions, maxAllowedPartitions), JdbcConstants.REPARTITION_METHOD)
         } else {
-          (Math.min(userPartitions, maxAllowedPartitions), JdbcConstants.coalesceMethod)
+          (Math.min(userPartitions, maxAllowedPartitions), JdbcConstants.COALESCE_METHOD)
         }
     }
 
@@ -1004,9 +1004,9 @@ object JdbcAuxiliaryUtilities {
 
     logger.info(s"Setting number of partitions of the dataFrame to ${partitionsToSet} with ${partitionMethod}")
     val partitionedDataFrame = partitionMethod match {
-      case JdbcConstants.repartitionMethod =>
+      case JdbcConstants.REPARTITION_METHOD =>
         df.repartition(partitionsToSet)
-      case JdbcConstants.coalesceMethod =>
+      case JdbcConstants.COALESCE_METHOD =>
         df.coalesce(partitionsToSet)
       case _ =>
         df
@@ -1025,21 +1025,21 @@ object JdbcAuxiliaryUtilities {
     val defaultPartitions = jdbcSystem match {
       case JdbcConstants.TERADATA =>
         operationMethod match {
-          case JdbcConstants.readOperation if url.contains(JdbcConstants.TD_FASTEXPORT_KEY) =>
+          case JdbcConstants.READ_OPERATION if url.contains(JdbcConstants.TD_FASTEXPORT_KEY) =>
             JdbcConstants.MAX_FAST_EXPORT_READ_PARTITIONS
-          case JdbcConstants.readOperation =>
+          case JdbcConstants.READ_OPERATION =>
             JdbcConstants.MAX_TD_JDBC_READ_PARTITIONS
-          case JdbcConstants.writeOperation if url.contains(JdbcConstants.TD_FASTLOAD_KEY) =>
+          case JdbcConstants.WRITE_OPERATION if url.contains(JdbcConstants.TD_FASTLOAD_KEY) =>
             JdbcConstants.MAX_FAST_LOAD_WRITE_PARTITIONS
-          case JdbcConstants.writeOperation =>
+          case JdbcConstants.WRITE_OPERATION =>
             JdbcConstants.MAX_TD_JDBC_WRITE_PARTITIONS
         }
       case _ =>
         operationMethod match {
-          case JdbcConstants.readOperation =>
-            JdbcConstants.defaultJDBCReadPartitions
-          case JdbcConstants.writeOperation =>
-            JdbcConstants.defaultJDBCWritePartitions
+          case JdbcConstants.READ_OPERATION =>
+            JdbcConstants.DEFAULT_JDBC_READ_PARTITIONS
+          case JdbcConstants.WRITE_OPERATION =>
+            JdbcConstants.DEFAULT_JDBC_WRTIE_PARTITIONS
         }
     }
     defaultPartitions
@@ -1320,7 +1320,7 @@ object JdbcAuxiliaryUtilities {
                                 overallSizeOfRecords: Long,
                                 explainPlan: String,
                                 maxReadOrWritePartitions: Int = JdbcConstants.MAX_TD_JDBC_READ_PARTITIONS,
-                                operationMethod: String = JdbcConstants.readOperation,
+                                operationMethod: String = JdbcConstants.READ_OPERATION,
                                 logger: Option[Logger] = None,
                                 confidence: ConfidenceIdentifier = GimelConstants.NoConfidence,
                                 errorLimit: Option[Int] = None
@@ -1356,9 +1356,9 @@ object JdbcAuxiliaryUtilities {
           maxReadOrWritePartitions
         ).toInt, 1)
       operationMethod match {
-        case JdbcConstants.readOperation =>
+        case JdbcConstants.READ_OPERATION =>
           ConnectionDetails(partitions, fetchSize, ConnectionDetails.FASTEXPORT_CONNECTION_URL_TYPE, errorLimit)
-        case JdbcConstants.writeOperation =>
+        case JdbcConstants.WRITE_OPERATION =>
           ConnectionDetails(partitions, fetchSize, ConnectionDetails.FASTLOAD_CONNECTION_URL_TYPE, errorLimit)
       }
     }
@@ -1372,8 +1372,8 @@ object JdbcAuxiliaryUtilities {
       val userSuppliedPerProcessMaxJdbcRowsLimit = Try(
         sparkSession.conf.get(JdbcConfigs.jdbcPerProcessMaxRowsThreshold,
           sparkSession.conf.get(s"spark.${JdbcConfigs.jdbcPerProcessMaxRowsThreshold}",
-            JdbcConstants.defaultJDBCPerProcessMaxRowsLimitString)).toLong
-      ).getOrElse(JdbcConstants.defaultJDBCPerProcessMaxRowsLimit)
+            JdbcConstants.DEFAULT_JDBC_PER_PROCESS_MAX_ROWS_LIMIT_STRING)).toLong
+      ).getOrElse(JdbcConstants.DEFAULT_JDBC_PER_PROCESS_MAX_ROWS_LIMIT)
       if (logger.isDefined) {
         logger.get.info(s"User specified per process max JDBC row limit:" +
           s" $userSuppliedPerProcessMaxJdbcRowsLimit")
@@ -1514,8 +1514,8 @@ object JdbcAuxiliaryUtilities {
     import PartitionUtils._
     val jdbcRDD: ExtendedJdbcRDD[Array[Object]] = new ExtendedJdbcRDD(sparkSession.sparkContext,
       new DbConnection(connectionUtilityPerIncomingSQL), sqlToBeExecutedInJdbcRDD, fetchSize,
-      PartitionInfoWrapper(JdbcConstants.TERADATA, partitionColumns, JdbcConstants.defaultLowerBound,
-        JdbcConstants.defaultUpperBound, numOfPartitions = numOfPartitions))
+      PartitionInfoWrapper(JdbcConstants.TERADATA, partitionColumns, JdbcConstants.DEFAULT_LOWER_BOUND,
+        JdbcConstants.DEFAULT_UPPER_BOUND, numOfPartitions = numOfPartitions))
 
     val rowRDD: RDD[Row] = jdbcRDD.map(Row.fromSeq(_))
     sparkSession.createDataFrame(rowRDD, tableSchema)

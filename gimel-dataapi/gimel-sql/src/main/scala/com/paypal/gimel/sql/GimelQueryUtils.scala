@@ -231,7 +231,7 @@ object GimelQueryUtils {
     val dataSetProps = sparkSession.conf.getAll
 
     // get jdbc Password Strategy
-    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.jdbcDefaultPasswordStrategy).toString
+    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.JDBC_DEFAULT_PASSWORD_STRATEGY).toString
     val jdbcUrl = sparkSession.conf.get(JdbcConfigs.jdbcUrl)
 
     val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps)
@@ -256,7 +256,7 @@ object GimelQueryUtils {
       sparkSession.sparkContext.setLocalProperty(JdbcConfigs.jdbcPushDownEnabled, "true")
 
       // NOTE: The number of partitions are set to 1. The pushdown query result will always be obtained through one executor. Further optimizations to be explored.
-      val jdbcRDD: ExtendedJdbcRDD[Array[Object]] = new ExtendedJdbcRDD(sparkSession.sparkContext, dbConnection, selectSQL, JdbcConstants.defaultLowerBound, JdbcConstants.defaultUpperBound, 1, JdbcConstants.defaultReadFetchSize, realUser, jdbcPasswordStrategy)
+      val jdbcRDD: ExtendedJdbcRDD[Array[Object]] = new ExtendedJdbcRDD(sparkSession.sparkContext, dbConnection, selectSQL, JdbcConstants.DEFAULT_LOWER_BOUND, JdbcConstants.DEFAULT_UPPER_BOUND, 1, JdbcConstants.DEFAULT_READ_FETCH_SIZE, realUser, jdbcPasswordStrategy)
 
       // get connection
       val conn = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()

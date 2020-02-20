@@ -19,7 +19,9 @@
 
 package com.paypal.gimel.jdbc.conf
 
-// keys related to teradata
+import com.paypal.gimel.common.conf.GimelConstants
+
+// keys related to jdbc api
 object JdbcConfigs {
   // metastore properties
   import com.paypal.gimel.common.conf.GimelConstants.GIMEL_JDBC_OPTION_KEYWORD
@@ -27,6 +29,7 @@ object JdbcConfigs {
   val jdbcDriverClassKey: String = s"${GIMEL_JDBC_OPTION_KEYWORD}driver.class"
   val jdbcInputTableNameKey: String =
     s"${GIMEL_JDBC_OPTION_KEYWORD}input.table.name"
+  val jdbcUserName: String = s"${GIMEL_JDBC_OPTION_KEYWORD}${GimelConstants.USER_NAME}"
   val jdbcUrl: String = s"${GIMEL_JDBC_OPTION_KEYWORD}url"
   val jdbcDbTable: String = s"${GIMEL_JDBC_OPTION_KEYWORD}dbtable"
   val jdbcTempTable: String = s"${GIMEL_JDBC_OPTION_KEYWORD}temp.table"
