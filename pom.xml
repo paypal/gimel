@@ -32,6 +32,7 @@ under the License.
     <modules>
         <module>gimel-logging</module>
         <module>gimel-dataapi</module>
+        <module>gimel-parser</module>
     </modules>
 
     <repositories>
@@ -69,6 +70,9 @@ under the License.
                 <hadoop.packaging.scope>provided</hadoop.packaging.scope>
                 <hive.packaging.scope>provided</hive.packaging.scope>
                 <zookeeper.version>3.4.6</zookeeper.version>
+                <scala.binary.version>2.11</scala.binary.version>
+                <scalatest.version>3.0.1</scalatest.version>
+                <scalamock.version>4.1.0</scalamock.version>
                 <gimel.version>2.0.0</gimel.version>
                 <scala.version>2.11.8</scala.version>
                 <spark.binary.version>2.3</spark.binary.version>
@@ -95,7 +99,10 @@ under the License.
                 <hive.packaging.scope>provided</hive.packaging.scope>
                 <hadoop.packaging.scope>provided</hadoop.packaging.scope>
                 <gimel.version>2.0.0</gimel.version>
+                <scala.binary.version>2.11</scala.binary.version>
                 <scala.version>2.11.8</scala.version>
+                <scalatest.version>3.0.1</scalatest.version>
+                <scalamock.version>4.1.0</scalamock.version>
                 <spark.binary.version>2.3</spark.binary.version>
                 <spark.version>2.3.0.2.6.3.11-1</spark.version>
                 <hadoop.version>2.7.3.2.6.3.11-1</hadoop.version>
@@ -120,7 +127,10 @@ under the License.
                 <hive.packaging.scope>provided</hive.packaging.scope>
                 <hadoop.packaging.scope>provided</hadoop.packaging.scope>
                 <gimel.version>2.0.0</gimel.version>
+                <scala.binary.version>2.11</scala.binary.version>
                 <scala.version>2.11.8</scala.version>
+                <scalatest.version>3.0.1</scalatest.version>
+                <scalamock.version>4.1.0</scalamock.version>
                 <spark.binary.version>2.3</spark.binary.version>
                 <spark.version>2.3.0.2.6.3.5-4</spark.version>
                 <hadoop.version>2.7.3.2.6.3.5-4</hadoop.version>
