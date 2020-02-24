@@ -24,6 +24,7 @@ import org.apache.spark.sql.SparkSession
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.security.FileHandler
 import com.paypal.gimel.common.storageadmin._
+import com.paypal.gimel.common.utilities.GenericUtils
 import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
 import com.paypal.gimel.jdbc.exception._
 import com.paypal.gimel.logger.Logger
@@ -136,11 +137,21 @@ class JDBCAuthUtilities(sparkSession: SparkSession) extends Serializable {
       case JdbcConstants.JDBC_INLINE_PASSWORD_STRATEGY => {
         logger.warning("gimel.jdbc.p.strategy=inline is NOT a secure way to supply password. " +
           "Please switch to gimel.jdbc.p.strategy=file")
-        val password = getInlinePassword(dataSetProps)
+        password = getInlinePassword(dataSetProps)
         if (password.length() == 0) {
           throw new JDBCAuthException("gimel.jdbc.p.strategy=inline was supplied, " +
             "but gimel.jdbc.password is NOT set", null)
         }
+      }
+      case JdbcConstants.JDBC_CUSTOM_PASSWORD_STRATEGY => {
+        userName = JdbcConstants.JDBC_PROXY_USERNAME
+        // Loading the custom auth provider at runtime
+        val authLoaderClassName = GenericUtils.getValueAny(dataSetProps, JdbcConfigs.jdbcAuthLoaderClass, "")
+        if (authLoaderClassName.isEmpty) {
+          throw new IllegalArgumentException(s"You need to set the property ${JdbcConfigs.jdbcAuthLoaderClass} with ${JdbcConfigs.jdbcPasswordStrategy} = ${JdbcConstants.JDBC_CUSTOM_PASSWORD_STRATEGY}")
+        }
+        val authLoader = Class.forName(authLoaderClassName).newInstance.asInstanceOf[com.paypal.gimel.common.security.AuthProvider]
+        password = authLoader.getCredentials(dataSetProps ++ Map(GimelConstants.GIMEL_AUTH_REQUEST_TYPE -> JdbcConstants.JDBC_AUTH_REQUEST_TYPE))
       }
       case _ => {
         val msg = """Invalid jdbcPasswordStrategy"""".stripMargin
