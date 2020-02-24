@@ -133,7 +133,7 @@ class JDBCAuthUtilities(sparkSession: SparkSession) extends Serializable {
           }
         }
       }
-      case "inline" => {
+      case JdbcConstants.JDBC_INLINE_PASSWORD_STRATEGY => {
         logger.warning("gimel.jdbc.p.strategy=inline is NOT a secure way to supply password. " +
           "Please switch to gimel.jdbc.p.strategy=file")
         val password = getInlinePassword(dataSetProps)
