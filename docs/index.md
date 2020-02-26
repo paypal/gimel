@@ -44,6 +44,7 @@ Contents
 | <img src="images/gimel.png" width="60" height="60" /> <img src="images/sql.png" width="60" height="60" /> | 1.0 | PRODUCTION | [GSQL Doc](gimel-sql/gimel-sql.md) | Refer link for using GSQL (Gimel SQL) API |
 | <br> <img src="images/gimel.png" width="60" height="60" /> <br>TestSuite <br> | 1.0 | PRODUCTION | [Test-Suite Doc](gimel-testsuite/testsuite.md) | Current Implementation works with CataLog Provider - Hive |
 | <br>Gimel Logging<br> | 0.4.3 | PRODUCTION | [Gimel Logging Doc](gimel-logging/gimel-logging.md) | This is the Gimel Logging Framework |
+| <br>Gimel Serde<br> | 1.0 | PRODUCTION | [Gimel Serde Doc](gimel-serde/gimel-serde.md) | Pluggable gimel serializers and deserializers |
 | <br>Unified Data Catalog<br> | 0.0.1 | PRODUCTION | [UDC Doc](udc/README.md) | This is Unified Data Catalog|
 
 _________________________________________________________________________________________

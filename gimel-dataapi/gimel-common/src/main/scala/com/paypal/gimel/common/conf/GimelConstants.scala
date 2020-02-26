@@ -151,6 +151,10 @@ object GimelConstants {
   val GTS_DEFAULT_USER = ""
   val GTS_USER_CONFIG = "gimel.gts.user"
   val GTS_IMPERSONATION_FLAG = "spark.gimel.gts.impersonation.enabled"
+
+  // Serialization/Deserialization Class
+  val GIMEL_DESERIALIZER_CLASS = "gimel.deserializer.class"
+  val GIMEL_SERIALIZER_CLASS = "gimel.serializer.class"
 }
 
 

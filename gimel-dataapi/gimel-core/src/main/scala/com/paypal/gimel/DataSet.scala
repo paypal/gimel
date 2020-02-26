@@ -31,6 +31,7 @@ import org.apache.spark.sql._
 import com.paypal.gimel.common.catalog.CatalogProvider
 import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf._
+import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
 import com.paypal.gimel.common.utilities._
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.kafka.conf.KafkaConstants
@@ -124,6 +125,17 @@ class DataSet(val sparkSession: SparkSession) {
 
       val data = this.read(systemType, dataSet, newProps)
 
+      // To deserialize the resultant Dataframe if serializer class is given (Using Class Loader)
+      val deserializerClassName = newProps.getOrElse(GimelConstants.GIMEL_DESERIALIZER_CLASS,
+        dataSetProperties.props.getOrElse(GimelConstants.GIMEL_DESERIALIZER_CLASS, "")).toString
+
+      val deserializedData = if (deserializerClassName.isEmpty) {
+        data
+      } else {
+        val deserializerObj = GimelSerdeUtils.getDeserializerObject(deserializerClassName)
+        deserializerObj.deserialize(data, dataSetProperties.props ++ newProps)
+      }
+
       // update log variables to push logs
       val endTime = gimelTimer.endTime.get
       val executionTime: Double = gimelTimer.endWithMillSecRunTime
@@ -148,7 +160,7 @@ class DataSet(val sparkSession: SparkSession) {
         , endTime
         , executionTime
       )
-      data
+      deserializedData
     }
     catch {
       case e: Throwable =>
@@ -240,7 +252,18 @@ class DataSet(val sparkSession: SparkSession) {
       // additionalPropsToLog = propsToLog
       datasetSystemType = systemType.toString
 
-      this.write(systemType, dataSet, dataFrame, newProps)
+      // To deserialize the resultant Dataframe if serializer class is given (Using Class Loader)
+      val serializerClassName = newProps.getOrElse(GimelConstants.GIMEL_SERIALIZER_CLASS,
+        dataSetProperties.props.getOrElse(GimelConstants.GIMEL_SERIALIZER_CLASS, "")).toString
+
+      val serializedData = if (serializerClassName.isEmpty) {
+        dataFrame
+      } else {
+        val serializerObj = GimelSerdeUtils.getSerializerObject(serializerClassName)
+        serializerObj.serialize(dataFrame, dataSetProperties.props ++ newProps)
+      }
+
+      this.write(systemType, dataSet, serializedData, newProps)
 
       // update log variables to push logs
       val endTime = System.currentTimeMillis()
