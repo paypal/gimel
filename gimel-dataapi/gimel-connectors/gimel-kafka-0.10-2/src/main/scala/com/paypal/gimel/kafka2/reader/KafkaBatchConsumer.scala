@@ -26,6 +26,8 @@ import org.apache.spark.sql._
 import org.apache.spark.sql.functions._
 import org.apache.spark.streaming.kafka010.OffsetRange
 
+import com.paypal.gimel.common.conf.GimelConstants
+import com.paypal.gimel.common.utilities.BindToFieldsUtils._
 import com.paypal.gimel.kafka2.conf.{KafkaClientConfiguration, KafkaConstants}
 import com.paypal.gimel.kafka2.utilities.{BrokersAndTopic, KafkaUtilitiesException}
 import com.paypal.gimel.kafka2.utilities.ImplicitKafkaConverters._
@@ -55,17 +57,25 @@ object KafkaBatchConsumer {
     val kafkaParams: Map[String, String] = conf.kafkaConsumerProps
     try {
       val (finalOffsetRanges, parallelizedRanges) = getOffsetRange(conf)
-      val kafkaDF = parallelizedRanges.map(eachOffsetRange => sparkSession.read.format(KafkaConstants.KAFKA_FORMAT)
-        .option(KafkaConstants.KAFKA_BOOTSTRAP_SERVERS, conf.kafkaHostsAndPort)
-        .option("assign", s"""{"${eachOffsetRange.topic}":[${eachOffsetRange.partition}]}""")
-        .option("startingOffsets", s"""{"${eachOffsetRange.topic}":{"${eachOffsetRange.partition}":${eachOffsetRange.fromOffset}}}""")
-        .option("endingOffsets", s"""{"${eachOffsetRange.topic}":{"${eachOffsetRange.partition}":${eachOffsetRange.untilOffset}}}""")
-        .load())
-      val finalDF = if (conf.kafkaSourceFieldsList.toLowerCase == KafkaConstants.allKafkaSourceFields) {
-        kafkaDF.reduce(_ union _)
+
+      val finalDF = if (isKafkaTopicEmpty(finalOffsetRanges) && !conf.fieldsBindToJSONString.isEmpty) {
+        logger.info("Kafka Topic is Empty.")
+        logger.info("Returning Datafame with fields in " + GimelConstants.FIELDS_BIND_TO_JSON)
+        getEmptyDFBindToFields(sparkSession, conf.fieldsBindToJSONString)
       } else {
-        val kafkaSourceFieldsList = conf.kafkaSourceFieldsList.split(",")
-        kafkaDF.reduce(_ union _).select(kafkaSourceFieldsList.map(name => col(name)): _*)
+        val kafkaDF = parallelizedRanges.map(eachOffsetRange => sparkSession.read.format(KafkaConstants.KAFKA_FORMAT)
+          .option(KafkaConstants.KAFKA_BOOTSTRAP_SERVERS, conf.kafkaHostsAndPort)
+          .option("assign", s"""{"${eachOffsetRange.topic}":[${eachOffsetRange.partition}]}""")
+          .option("startingOffsets", s"""{"${eachOffsetRange.topic}":{"${eachOffsetRange.partition}":${eachOffsetRange.fromOffset}}}""")
+          .option("endingOffsets", s"""{"${eachOffsetRange.topic}":{"${eachOffsetRange.partition}":${eachOffsetRange.untilOffset}}}""")
+          .load())
+        val finalDF = if (conf.kafkaSourceFieldsList.toLowerCase == KafkaConstants.allKafkaSourceFields) {
+          kafkaDF.reduce(_ union _)
+        } else {
+          val kafkaSourceFieldsList = conf.kafkaSourceFieldsList.split(",")
+          kafkaDF.reduce(_ union _).select(kafkaSourceFieldsList.map(name => col(name)): _*)
+        }
+        finalDF
       }
       (finalDF, finalOffsetRanges)
     } catch {
@@ -113,7 +123,7 @@ object KafkaBatchConsumer {
   /**
     * Checks if the given kafka topics are empty
     *
-    * @param offsetRanges : OffsetRanges for the topics to check
+    * @param offsetRanges : array of OffsetRanges for the topics to check
     * @return
     *
     */

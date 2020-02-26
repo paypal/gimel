@@ -39,7 +39,7 @@ object SQLDataTypesUtils {
     */
   def getFieldNameSQLDataTypes(fieldsToTypeNameMap: Map[String, String]): Map[String, DataType] = {
     fieldsToTypeNameMap.map { each =>
-      (each._1, fieldNameToType(each._2))
+      (each._1, typeNameToSQLType(each._2))
     }
   }
 
@@ -82,10 +82,10 @@ object SQLDataTypesUtils {
   /**
     * Given the string representation of a type, return its DataType
     *
-    * @param name field name
+    * @param name : type name
     * @return Spark SQL DataType
     */
-  def fieldNameToType(name: String): DataType = {
+  def typeNameToSQLType(name: String): DataType = {
     name.toLowerCase() match {
       case "decimal" => DecimalType.USER_DEFAULT
       case FIXED_DECIMAL(precision, scale) => DecimalType(precision.toInt, scale.toInt)

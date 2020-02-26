@@ -61,6 +61,10 @@ object GimelConstants {
   val TBL_PROPERTIES: String = "TBLPROPERTIES"
   val CREATE_STATEMENT_IS_PROVIDED: String = "gimel.sql.create.statement.is.provided"
 
+  // Bind to fields feature
+  val FIELDS_BIND_TO_JSON: String = "gimel.fields.bind.to.json"
+  val FIELDS_BIND_TO_DATASET: String = "gimel.fields.bind.to.dataset"
+
   // HTTP status codes
   val HTTP_SUCCESS_STATUS_CODE: Int = 200
   val HTTP_SUCCESS_RESPONSE_CODE: Int = 300

@@ -81,6 +81,30 @@ class KafkaBatchConsumerTest extends FunSpec with SharedSparkSession {
       assert(deserializedDF.except(dataFrame).count() == 0)
       assert(offsetRanges.toStringOfKafkaOffsetRanges == s"$topic,0,0,10")
     }
+
+    it ("should detect if a kafka topic is empty and return a dataframe with fields given as input") {
+      val topicName = topic + "_empty"
+      val fieldsBindToString = s"""[{"fieldName":"id","fieldType":"string","defaultValue":""},{"fieldName":"dob","fieldType":"date","defaultValue":"null"},{"fieldName":"age","fieldType":"int","defaultValue":"23"}]"""
+      val props : Map[String, String] = Map(KafkaConfigs.whiteListTopicsKey -> topicName,
+        KafkaConfigs.kafkaServerKey -> kafkaCluster.bootstrapServers(),
+        KafkaConfigs.zookeeperCheckpointHost -> kafkaCluster.zookeeperConnect(),
+        GimelConstants.FIELDS_BIND_TO_JSON -> fieldsBindToString)
+      val dataSetName = "Kafka.Local.default." + topicName
+      val dataSetProperties = DataSetProperties("KAFKA", null, null, props)
+      val datasetProps : Map[String, Any] = Map("dataSetProperties" -> dataSetProperties,
+        GimelConstants.APP_TAG -> appTag,
+        KafkaConfigs.rowCountOnFirstRunKey -> "0")
+      val dataFrame = mockDataInDataFrame(10)
+      val serializedDF = dataFrame.toJSON.toDF
+      serializedDF.show(1)
+      val dfWrite = dataSet.write(dataSetName, serializedDF, datasetProps)
+      val (df, offsetRanges) = KafkaBatchConsumer.consumeFromKakfa(spark, new KafkaClientConfiguration(datasetProps))
+      df.show
+      logger.info("consumeFromKakfa | Empty kafka topic | offsetRanges -> " + offsetRanges.toStringOfKafkaOffsetRanges)
+      assert(df.count() == 0)
+      assert(df.columns.sorted.sameElements(Array("id", "dob", "age").sorted))
+      assert(offsetRanges.toStringOfKafkaOffsetRanges == s"$topicName,0,10,10")
+    }
   }
 
   describe("getOffsetRange") {
