@@ -185,6 +185,12 @@ under the License.
       <artifactId>hive-jdbc</artifactId>
       <version>${hive.version}</version>
       <scope>${hive.packaging.scope}</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.commons</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hadoop</groupId>
