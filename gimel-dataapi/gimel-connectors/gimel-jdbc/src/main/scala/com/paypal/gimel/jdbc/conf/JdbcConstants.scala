@@ -76,4 +76,8 @@ object JdbcConstants {
   val DEFAULT_JDBC_PER_PROCESS_MAX_ROWS_LIMIT: Long = 1000000000L
   val DEFAULT_JDBC_PER_PROCESS_MAX_ROWS_LIMIT_STRING: String = DEFAULT_JDBC_PER_PROCESS_MAX_ROWS_LIMIT.toString
 
+  // pushdown constants
+  val DEF_JDBC_PUSH_DOWN_SCHEMA: StructType = new StructType(fields = Seq(
+    StructField("QUERY_EXECUTION", StringType, nullable = false)
+  ).toArray)
 }
