@@ -34,7 +34,7 @@ import com.paypal.gimel.common.conf.{CatalogProviderConfigs, GimelConstants}
 import com.paypal.gimel.common.utilities.Timer
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.datastreamfactory.{StreamingResult, StructuredStreamingResult, WrappedData}
-import com.paypal.gimel.jdbc.conf.JdbcConstants
+import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
 import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
@@ -147,7 +147,13 @@ object GimelQueryProcessor {
       logger.debug(s"Is CheckPointing Requested By User --> $isCheckPointEnabled")
       val dataSet: DataSet = DataSet(sparkSession)
 
-      val data = if (queryUtils.isUDCDataDefinition(sql)) {
+      // Identify JDBC complete pushdown
+      val (isJdbcCompletePushDownEnabled, transformedSql, jdbcOptions) =
+        GimelQueryUtils.isJdbcCompletePushDownEnabled(sparkSession, sql)
+
+      val data = if (isJdbcCompletePushDownEnabled) {
+        GimelQueryUtils.createPushDownQueryDataframe(sparkSession, transformedSql.get, jdbcOptions.get)
+      } else if (queryUtils.isUDCDataDefinition(sql)) {
         logger.info("This path is dynamic dataset creation path")
         handleDDLs(sql, sparkSession, dataSet, options)
       } else {
@@ -1255,7 +1261,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     */
   def vulnerabilityCheck(sql: String): Unit = {
 
-    val checkFlag = if (sql.toUpperCase.contains(s"SET ${JdbcConstants.jdbcUserName}".toUpperCase)) {
+    val checkFlag = if (sql.toUpperCase.contains(s"SET ${JdbcConfigs.jdbcUserName}".toUpperCase)) {
       true
     }
     else {
