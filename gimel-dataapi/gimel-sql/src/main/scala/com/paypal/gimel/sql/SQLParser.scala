@@ -33,24 +33,11 @@ object SQLParser {
     * @return - List of source table names
     */
 
+  @deprecated
   def getSourceTables(sql: String): ListBuffer[String] = {
     val parsDri = new ParseDriver()
     val ast_tree: ASTNode = parsDri.parse(sql)
     getSourceTables(ast_tree)
-  }
-
-  /**
-    * getTargetTables - Helper function to call a function which is recursive to get the Target table names from the AST
-    *
-    * @param sql to be parsed
-    * @return - List of target tables if any. If it is select only table, it returns a None.
-    */
-
-  def getTargetTables1(sql: String): Option[String] = {
-    val parsDri = new ParseDriver()
-    val ast_tree: ASTNode = parsDri.parse(sql)
-    val targetTableName = getTargetTables(ast_tree)
-    if (targetTableName.isEmpty) None else Some(targetTableName.head)
   }
 
 
@@ -94,7 +81,8 @@ object SQLParser {
     * @param from   - AST tree
     * @param myList - list of source table names
     */
-  private def getSourceTables(from: ASTNode, myList: ListBuffer[String] = new ListBuffer[String]()): ListBuffer[String] = {
+  private def getSourceTables(from: ASTNode,
+                              myList: ListBuffer[String] = new ListBuffer[String]()): ListBuffer[String] = {
     var table: String = ""
 
     if (from != null) {
@@ -116,38 +104,6 @@ object SQLParser {
         val child = from.getChild(i)
         if (child != null) {
           getSourceTables(child.asInstanceOf[ASTNode], myList)
-        }
-      }
-    }
-    myList
-  }
-
-  /**
-    * getTargetTables - Recursive function to get the target tables
-    *
-    * @param from   - AST tree
-    * @param myList - List of target tables if any.
-    */
-  private def getTargetTables(from: ASTNode, myList: ListBuffer[String] = new ListBuffer[String]()): ListBuffer[String] = {
-    var table: String = ""
-
-    if (from != null) {
-      if (HiveParser.TOK_INSERT_INTO == from.getType) {
-        val tok_tab = from.getChild(0)
-
-        if (HiveParser.TOK_TAB == tok_tab.getType) {
-          if (tok_tab.getChild(0).getChildCount == 2) {
-            val tabName = tok_tab.getChild(0)
-            table = tabName.getChild(0).getText + "." + tabName.getChild(1).getText
-            myList += table
-          }
-
-        }
-      }
-      for (i <- 0 to from.getChildCount) {
-        val child = from.getChild(i)
-        if (child != null) {
-          getTargetTables(child.asInstanceOf[ASTNode], myList)
         }
       }
     }
