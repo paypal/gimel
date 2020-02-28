@@ -46,7 +46,7 @@ import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
 import com.paypal.gimel.jdbc.utilities._
 import com.paypal.gimel.jdbc.utilities.JdbcAuxiliaryUtilities._
 import com.paypal.gimel.jdbc.utilities.PartitionUtils.ConnectionDetails
-import com.paypal.gimel.kafka.conf.KafkaConfigs
+import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
 import com.paypal.gimel.parser.utilities.{QueryParserUtils, SearchCriteria, SearchSchemaUtils, SQLNonANSIJoinParser}
@@ -380,8 +380,10 @@ object GimelQueryUtils {
           case "false" =>
             logger.info(s"Setting transformation dataset.read for ${eachSource}")
             logger.info("printing all options during read" + options.toString())
-            val df = dataSet.read(eachSource, options)
-            cacheIfRequested(df, eachSource, options)
+            val datasetProps = CatalogProvider.getDataSetProperties(eachSource, options)
+            val newOptions = setGimelDeserializer(sparkSession, datasetProps, options, false)
+            val df = dataSet.read(eachSource, newOptions)
+            cacheIfRequested(df, eachSource, newOptions)
             df.createOrReplaceTempView(tmpTableName)
           case _ =>
           // do nothing if query pushdown is true. No need to do dataset.read
@@ -447,6 +449,123 @@ object GimelQueryUtils {
    */
   def getSQLWithTmpTable(sql: String, datasetName: String, tmpTableName: String): String = {
     sql.replaceAll(regexTmpTable.replace("key", datasetName), tmpTableName)
+  }
+
+  /**
+    * Sets the appropriate Deserializer class based on the kafka.message.value.type and value.serializer properties
+    * This is mainly required for backward compatibility
+    *
+    * @param sparkSession
+    * @param datasetProps
+    * @param options
+    * @param isStream
+    * @return Map of properties with deserializer class
+    */
+  def setGimelDeserializer(sparkSession: SparkSession, datasetProps: DataSetProperties,
+                           options: Map[String, String], isStream: Boolean) : Map[String, String] = {
+    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    logger.info(" @Begin --> " + MethodName)
+
+    val kafkaApiVersion = GenericUtils.getValue(datasetProps.props,
+      GimelConstants.GIMEL_KAFKA_VERSION, defaultValue = GimelConstants.GIMEL_KAFKA_DEFAULT_VERSION)
+
+    if (datasetProps.datasetType != "KAFKA" || kafkaApiVersion.equals(GimelConstants.GIMEL_KAFKA_VERSION_ONE)) {
+      return options
+    }
+    val valueMessageType = datasetProps.props.getOrElse(KafkaConfigs.kafkaMessageValueType, "")
+    val valueSerializer = datasetProps.props.getOrElse(KafkaConfigs.serializerValue, KafkaConfigs.kafkaByteSerializer)
+    logger.info(s"kafka.message.value.type --> ${valueMessageType} \nValue Serializer --> ${valueSerializer}")
+    val deserializerClassInput = datasetProps.props.getOrElse(GimelConstants.GIMEL_DESERIALIZER_CLASS, "")
+    val avroSchemaSource: String = datasetProps.props.getOrElse(KafkaConfigs.avroSchemaSource, KafkaConstants.gimelKafkaAvroSchemaInline)
+    val deserializerClass = if (deserializerClassInput.isEmpty) {
+      (valueMessageType, valueSerializer) match {
+        // Bytes Messages
+        case ("binary", "org.apache.kafka.common.serialization.ByteArraySerializer") =>
+          sparkSession.conf.get(GimelConstants.GIMEL_BINARY_DESERIALIZER_CLASS, GimelConstants.GIMEL_BINARY_DESERIALIZER_CLASS_DEFAULT)
+        // String Messages
+        case ("string", "org.apache.kafka.common.serialization.StringSerializer") =>
+          sparkSession.conf.get(GimelConstants.GIMEL_STRING_DESERIALIZER_CLASS, GimelConstants.GIMEL_STRING_DESERIALIZER_CLASS_DEFAULT)
+        // JSON Messages
+        case ("json", "org.apache.kafka.common.serialization.StringSerializer") =>
+          if (isStream) {
+            sparkSession.conf.get(GimelConstants.GIMEL_JSON_STATIC_DESERIALIZER_CLASS, GimelConstants.GIMEL_JSON_STATIC_DESERIALIZER_CLASS_DEFAULT)
+          } else {
+            sparkSession.conf.get(GimelConstants.GIMEL_JSON_DYNAMIC_DESERIALIZER_CLASS, GimelConstants.GIMEL_JSON_DYNAMIC_DESERIALIZER_CLASS_DEFAULT)
+          }
+        // Avro - CDH | Generic Avro
+        case (_, "org.apache.kafka.common.serialization.ByteArraySerializer") =>
+          avroSchemaSource.toUpperCase() match {
+            case KafkaConstants.gimelKafkaAvroSchemaCDH => {
+              sparkSession.conf.get(GimelConstants.GIMEL_CDH_DESERIALIZER_CLASS, GimelConstants.GIMEL_CDH_DESERIALIZER_CLASS_DEFAULT)
+            }
+            case _ => sparkSession.conf.get(GimelConstants.GIMEL_AVRO_DESERIALIZER_CLASS, GimelConstants.GIMEL_AVRO_DESERIALIZER_CLASS_DEFAULT)
+          }
+        // Other Types
+        case _ => logger.warning("Unsupported/Empty Configuration or Deserialization Technique.")
+          ""
+      }
+    } else {
+      deserializerClassInput
+    }
+    if (deserializerClass.isEmpty) {
+      options
+    } else {
+      options ++ Map(GimelConstants.GIMEL_DESERIALIZER_CLASS -> deserializerClass)
+    }
+  }
+
+  /**
+    * Sets the appropriate Serializer class based on the kafka.message.value.type and value.serializer properties
+    * This is mainly required for backward compatibility
+    *
+    * @param sparkSession
+    * @param datasetProps
+    * @param options
+    * @param isStream
+    * @return Map of properties with serializer class
+    */
+  def setGimelSerializer(sparkSession: SparkSession, datasetProps: DataSetProperties,
+                         options: Map[String, String], isStream: Boolean) : Map[String, String] = {
+    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    logger.info(" @Begin --> " + MethodName)
+
+    val kafkaApiVersion = GenericUtils.getValue(datasetProps.props,
+      GimelConstants.GIMEL_KAFKA_VERSION, defaultValue = GimelConstants.GIMEL_KAFKA_DEFAULT_VERSION)
+
+    if (datasetProps.datasetType != "KAFKA" || kafkaApiVersion.equals(GimelConstants.GIMEL_KAFKA_VERSION_ONE)) {
+      return options
+    }
+    val valueMessageType = datasetProps.props.getOrElse(KafkaConfigs.kafkaMessageValueType, "")
+    val valueSerializer = datasetProps.props.getOrElse(KafkaConfigs.serializerValue, KafkaConfigs.kafkaByteSerializer)
+    logger.info(s"kafka.message.value.type --> ${valueMessageType} \nValue Serializer --> ${valueSerializer}")
+    val serializerClassInput = datasetProps.props.getOrElse(GimelConstants.GIMEL_SERIALIZER_CLASS, "")
+
+    val serializerClass = if (serializerClassInput.isEmpty) {
+      (valueMessageType, valueSerializer) match {
+        // String Messages
+        case ("string", "org.apache.kafka.common.serialization.StringSerializer") =>
+          sparkSession.conf.get(GimelConstants.GIMEL_STRING_SERIALIZER_CLASS,
+            GimelConstants.GIMEL_STRING_SERIALIZER_CLASS_DEFAULT)
+        // JSON Messages
+        case ("json", "org.apache.kafka.common.serialization.StringSerializer") =>
+          sparkSession.conf.get(GimelConstants.GIMEL_JSON_SERIALIZER_CLASS,
+            GimelConstants.GIMEL_JSON_SERIALIZER_CLASS_DEFAULT)
+        // Avro - CDH | Generic Avro
+        case (_, "org.apache.kafka.common.serialization.ByteArraySerializer") =>
+          sparkSession.conf.get(GimelConstants.GIMEL_AVRO_SERIALIZER_CLASS,
+            GimelConstants.GIMEL_AVRO_SERIALIZER_CLASS_DEFAULT)
+        // Other Types
+        case _ => logger.warning("Unsupported/Empty Configuration or Serialization Technique.")
+          ""
+      }
+    } else {
+      serializerClassInput
+    }
+    if (serializerClass.isEmpty) {
+      options
+    } else {
+      options ++ Map(GimelConstants.GIMEL_SERIALIZER_CLASS -> serializerClass)
+    }
   }
 
   /**
@@ -754,7 +873,9 @@ object GimelQueryUtils {
           case _ =>
             // If Non-HIVE
             logger.info(s"Invoking write API in gimel with queryPushDownFlag=${queryPushDownFlag}...")
-            dataset.write(dest.get, selectDF, options)
+            val datasetProps = CatalogProvider.getDataSetProperties(dest.get, options)
+            val newOptions = setGimelSerializer(sparkSession, datasetProps, options, false)
+            dataset.write(dest.get, selectDF, newOptions)
         }
 
       } match {

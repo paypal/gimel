@@ -478,7 +478,9 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
         val tmpKafkaTable = pCatalogStreamingKafkaTmpTableName
         val selectSQL = getSelectClause(sql)
         val newSQL = selectSQL.toLowerCase().replaceAll(kafkaTables.head, tmpKafkaTable)
-        val streamingResult: StructuredStreamingResult = dataStream.read(kafkaTables.head, options)
+        val datasetProps = CatalogProvider.getDataSetProperties(kafkaTables.head, options)
+        val newOptions = setGimelDeserializer(sparkSession, datasetProps, options, true)
+        val streamingResult: StructuredStreamingResult = dataStream.read(kafkaTables.head, newOptions)
         val streamingDF = streamingResult.df
         streamingDF.createOrReplaceTempView(tmpKafkaTable)
 
@@ -487,7 +489,9 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
         try {
           val datastreamWriter = targetTable match {
             case Some(target) =>
-              dataStream.write(target, streamingSQLDF, options)
+              val datasetProps = CatalogProvider.getDataSetProperties(target, options)
+              val newOptions = setGimelSerializer(sparkSession, datasetProps, options, true)
+              dataStream.write(target, streamingSQLDF, newOptions)
             case _ =>
               streamingSQLDF
                 .writeStream
