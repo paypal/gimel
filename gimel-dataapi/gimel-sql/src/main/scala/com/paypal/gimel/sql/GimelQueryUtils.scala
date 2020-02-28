@@ -36,8 +36,8 @@ import org.apache.spark.streaming.Time
 
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{GimelConstants, _}
-import com.paypal.gimel.common.utilities.DataSetUtils.resolveDataSetName
-import com.paypal.gimel.common.utilities.GenericUtils
+import com.paypal.gimel.common.utilities.{GenericUtils, RandomGenerator}
+import com.paypal.gimel.common.utilities.DataSetUtils._
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
 import com.paypal.gimel.hbase.conf.HbaseConfigs
@@ -359,11 +359,10 @@ object GimelQueryUtils {
     val pCatalogTablesToReplaceAsTmpTable: Map[String, String] = getTablesFrom(selectSQL).map {
       eachSource =>
         val options = getOptions(sparkSession)._2
-        val df = dataSet.read(eachSource, options)
-        cacheIfRequested(df, eachSource, options)
-
-        val tabNames = eachSource.split("\\.")
-        val tmpTableName = "tmp_" + tabNames(1)
+        val randomString = RandomGenerator.getRandomString(
+          RandomGenerator.getRandomInt(GimelConstants.GSQL_TMP_TABLE_RANDOM_GENERATOR_MIN,
+            GimelConstants.GSQL_TMP_TABLE_RANDOM_GENERATOR_MAX))
+        val tmpTableName = "tmp_" + eachSource.replaceAll("[^\\w\\s]", "_") + "_" + randomString
 
         // do DataSet.read() only if queryPushDownFlag is set to "false"
         queryPushDownFlag match {
@@ -399,14 +398,14 @@ object GimelQueryUtils {
           sparkSession.conf.set(JdbcConfigs.jdbcUrl, hiveTableParams(JdbcConfigs.jdbcUrl))
           logger.info(s"Setting JDBC driver Class : ${hiveTableParams(JdbcConfigs.jdbcDriverClassKey)}")
           sparkSession.conf.set(JdbcConfigs.jdbcDriverClassKey, hiveTableParams(JdbcConfigs.jdbcDriverClassKey))
-          sqlTmpString = sqlTmpString.replaceAll(s"(?i)${kv._1}", jdbcTableName)
-          sqlOriginalString = sqlOriginalString.replaceAll(s"(?i)${kv._1}", jdbcTableName)
+          sqlTmpString = sqlTmpString.replaceAll(s"(?<!\\S)(?i)${kv._1}(?=[\\n\\t \\(\\);,]|$$)", jdbcTableName)
+          sqlOriginalString = sqlOriginalString.replaceAll(s"(?<!\\S)(?i)${kv._1}(?=[\\n\\t \\(\\);,]|$$)", jdbcTableName)
         }
       case _ =>
         logger.info("PATH IS --> DEFAULT")
         pCatalogTablesToReplaceAsTmpTable.foreach { kv =>
-          sqlTmpString = sqlTmpString.replaceAll(s"(?i)${kv._1}", kv._2)
-          sqlOriginalString = sqlOriginalString.replaceAll(s"(?i)${kv._1}", kv._2)
+          sqlTmpString = sqlTmpString.replaceAll(s"(?<!\\S)(?i)${kv._1}(?=[\\n\\t \\(\\);,]|$$)", s"${kv._2}")
+          sqlOriginalString = sqlOriginalString.replaceAll(s"(?<!\\S)(?i)${kv._1}(?=[\\n\\t \\(\\);,]|$$)", s"${kv._2}")
         }
     }
 

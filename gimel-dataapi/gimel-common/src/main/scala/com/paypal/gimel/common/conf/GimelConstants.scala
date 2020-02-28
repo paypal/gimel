@@ -61,6 +61,8 @@ object GimelConstants {
   val CREATE_STATEMENT_IS_PROVIDED: String = "gimel.sql.create.statement.is.provided"
   val TABLE_FILEDS: String = "gimel.table.fields"
   val TABLE_SQL: String = "gimel.table.sql"
+  val GSQL_TMP_TABLE_RANDOM_GENERATOR_MIN = 20
+  val GSQL_TMP_TABLE_RANDOM_GENERATOR_MAX = 100
 
   // Bind to fields feature
   val FIELDS_BIND_TO_JSON: String = "gimel.fields.bind.to.json"
