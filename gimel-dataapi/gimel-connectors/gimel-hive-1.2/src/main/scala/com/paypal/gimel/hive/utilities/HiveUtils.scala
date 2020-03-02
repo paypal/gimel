@@ -19,16 +19,17 @@
 
 package com.paypal.gimel.hive.utilities
 
+import org.apache.hadoop.conf.Configuration
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
 import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf.CatalogProviderConstants
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.hdfs.conf.HdfsConfigs
+import com.paypal.gimel.hive.conf.HiveConfigs
 import com.paypal.gimel.logger.Logger
 
 class HiveUtils {
-
 
   val logger = Logger()
   logger.info(s"Initiated --> ${this.getClass.getName}")
@@ -103,6 +104,34 @@ class HiveUtils {
         ex.printStackTrace()
         throw ex
     }
+  }
+
+  /**
+    *
+    * @param dataset Name of the UDC or UDC Data Set
+    *                returns true if its a UDC or Pcatalog table
+    *
+    */
+  def checkIfCatalogTable(dataset: String): Boolean = {
+    if (dataset.startsWith(GimelConstants.PCATALOG_STRING) || dataset.startsWith(GimelConstants.UDC_STRING) || (dataset.split("\\.").length > 2)) {
+      return true
+    }
+    false
+  }
+
+  /**
+    * Returns true if cross cluster is detected
+    *
+    * @param datasetProps - set of attributes of dataset
+    */
+  def isCrossCluster(datasetProps: DataSetProperties) : Boolean = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+    logger.info(" @Begin --> " + MethodName)
+
+    val hadoopConfiguration = new Configuration()
+    val clusterUrl = hadoopConfiguration.get(GimelConstants.FS_DEFAULT_NAME)
+    val clusterName = new java.net.URI(clusterUrl).getHost
+    (clusterName.toUpperCase() != datasetProps.props(HiveConfigs.hdfsStorageNameKey).toUpperCase())
   }
 
 }

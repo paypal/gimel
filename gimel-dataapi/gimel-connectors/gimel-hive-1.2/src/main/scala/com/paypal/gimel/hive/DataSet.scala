@@ -24,6 +24,7 @@ import scala.reflect.runtime.universe._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
+import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.hive.utilities.HiveUtils
@@ -50,8 +51,21 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     if (dataSetProps.isEmpty) {
       throw new DataSetOperationException("Props Cannot Be Empty !")
     }
-    val dataSet: String = dataSetProps(GimelConstants.RESOLVED_HIVE_TABLE).toString
-    sparkSession.read.table(dataSet)
+    val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
+
+    val hiveUtils = new HiveUtils
+    val checkPCatalogDB = hiveUtils.checkIfCatalogTable(dataset);
+    if (checkPCatalogDB) {
+      if (!hiveUtils.isCrossCluster(datasetProps)) {
+        val hiveDataSetName = datasetProps.props(GimelConstants.HIVE_DATABASE_NAME) + "." + datasetProps.props(GimelConstants.HIVE_TABLE_NAME)
+        sparkSession.read.table(hiveDataSetName)
+      } else {
+        logger.info("Cross Cluster Read Detected !")
+        new com.paypal.gimel.hdfs.DataSet(sparkSession).read(dataset, dataSetProps)
+      }
+    } else {
+      sparkSession.read.table(dataset)
+    }
   }
 
   /**
