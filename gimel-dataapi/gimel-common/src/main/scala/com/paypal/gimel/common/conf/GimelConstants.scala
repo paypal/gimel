@@ -56,10 +56,11 @@ object GimelConstants {
   val PCATALOG_STRING: String = "pcatalog"
   val UDC_STRING: String = "udc"
   val STORAGE_HANDLER: String = "storage_handler"
+  val TBL_PROPERTIES: String = "TBLPROPERTIES"
+  val DEFAULT_LOG_LEVEL: String = "INFO"
+  val CREATE_STATEMENT_IS_PROVIDED: String = "gimel.sql.create.statement.is.provided"
   val TABLE_FILEDS: String = "gimel.table.fields"
   val TABLE_SQL: String = "gimel.table.sql"
-  val TBL_PROPERTIES: String = "TBLPROPERTIES"
-  val CREATE_STATEMENT_IS_PROVIDED: String = "gimel.sql.create.statement.is.provided"
 
   // Bind to fields feature
   val FIELDS_BIND_TO_JSON: String = "gimel.fields.bind.to.json"
