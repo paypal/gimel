@@ -721,7 +721,7 @@ object KafkaUtilities {
         //        rDD.cache.collect.take(10).foreach(x => logger.info(x))
         sqlContext.read.json(rDD)
       // Avro - CDH | Generic Avro
-      case (None, "org.apache.kafka.common.serialization.ByteArraySerializer") =>
+      case (_, "org.apache.kafka.common.serialization.ByteArraySerializer") =>
         val rDD = rdd.map { x => (x.key, x.value.asInstanceOf[Array[Byte]]) }
         //        logger.info("Raw Messages -->");
         //        rDD.cache.collect.take(10).foreach(x => logger.info(x))
@@ -738,7 +738,7 @@ object KafkaUtilities {
         }
         genericRecordtoDF(sqlContext, finalAvroRecord, finalSchema)
       // Other Types
-      case _ => throw new Exception("UnSupport Configuration or Serialization Techniques")
+      case _ => throw new Exception("Unsupported Configuration or Serialization Techniques")
     }
   }
 
@@ -793,13 +793,13 @@ object KafkaUtilities {
                 , kafkaParams, parallelizedRanges, LocationStrategies.PreferConsistent)
             rDDConsumerRec.map { x => (x.key(), x.value()) }
           // Avro - CDH | Generic Avro
-          case (None, "org.apache.kafka.common.serialization.ByteArraySerializer") =>
+          case (_, "org.apache.kafka.common.serialization.ByteArraySerializer") =>
             val rDDConsumerRec: RDD[ConsumerRecord[String, Array[Byte]]] =
               createRDD[String, Array[Byte]](sqlContext.sparkContext
                 , kafkaParams, parallelizedRanges, LocationStrategies.PreferConsistent)
             rDDConsumerRec.map { x => (x.key(), x.value()) }
           // Other Types
-          case _ => throw new Exception("UnSupport Configuration or Serialization Techniques")
+          case _ => throw new Exception("Unsupported Configuration or Serialization Techniques")
         }
 
       rdd.map(x => WrappedData(x._1, x._2))

@@ -114,6 +114,9 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
   val streamParallelismFactor: Int = props.getOrElse(KafkaConfigs.streamParallelKey, 10).toString.toInt
   val isStreamParallel: Boolean = props.getOrElse(KafkaConfigs.isStreamParallelKey, "false").toString.toBoolean
 
+  // Fields bind to option for empty topic
+  val fieldsBindToJSONString = tableProps.getOrElse(GimelConstants.FIELDS_BIND_TO_JSON, "")
+
   // Structured Streaming
   val streamingCheckpointLocation = tableProps.getOrElse(GimelConstants.GIMEL_STREAMING_CHECKPOINT_LOCATION,
     props.getOrElse(GimelConstants.GIMEL_STREAMING_CHECKPOINT_LOCATION, "")).toString

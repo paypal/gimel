@@ -21,10 +21,11 @@ package com.paypal.gimel.kafka.conf
 
 import java.util.Properties
 
-import io.confluent.kafka.schemaregistry.client.rest.RestService
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
 import scala.language.implicitConversions
+
+import io.confluent.kafka.schemaregistry.client.rest.RestService
 
 import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf.{CatalogProviderConstants, GimelConstants, GimelProperties}
@@ -173,6 +174,9 @@ class KafkaClientConfiguration(val props: Map[String, Any]) {
   val maxRatePerPartition: String = props.getOrElse(KafkaConfigs.maxRatePerPartitionKey, 3600).toString
   val streamParallelismFactor: Int = props.getOrElse(KafkaConfigs.streamParallelKey, 10).toString.toInt
   val isStreamParallel: Boolean = props.getOrElse(KafkaConfigs.isStreamParallelKey, "true").toString.toBoolean
+
+  // Resolve fields for empty kafka topic property
+  val fieldsBindToJSONString = tableProps.getOrElse(GimelConstants.FIELDS_BIND_TO_JSON, "")
 
   // Additional CDH Metadata Fields @todo this is not used in the code yet, KafkaUtilities implements this inside - this must superceed everywhere.
   val additionalCDHFields = scala.collection.Map("gg_commit_timestamp" -> "opTs", "opt_type" -> "opType", "trail_seq_no" -> "trailSeqno", "trail_rba" -> "trailRba")
