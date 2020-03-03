@@ -25,11 +25,12 @@ import scala.language.implicitConversions
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.streaming.kafka010.OffsetRange
 
+import com.paypal.gimel.common.conf.GimelConstants
+import com.paypal.gimel.common.utilities.BindToFieldsUtils._
 import com.paypal.gimel.kafka.conf.{KafkaClientConfiguration, KafkaConstants}
 import com.paypal.gimel.kafka.utilities.{BrokersAndTopic, KafkaUtilitiesException}
 import com.paypal.gimel.kafka.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.kafka.utilities.KafkaUtilities._
-
 
 /**
   * Implements Kafka Consumer Batch Here
@@ -72,13 +73,22 @@ object KafkaBatchConsumer {
         }
       logger.info("Offset Ranges After applying Threshold Per Partition/Custom Offsets -->")
       finalOffsetRangesForReader.foreach(x => logger.info(x.toString))
-      val parallelizedRanges: Array[OffsetRange] = finalOffsetRangesForReader.parallelizeOffsetRanges(conf.parallelsPerPartition, conf.minRowsPerParallel)
-      logger.info("Final Array of OffsetRanges to Fetch from Kafka --> ")
-      parallelizedRanges.foreach(range => logger.info(range))
-      if (parallelizedRanges.isEmpty) throw new KafkaUtilitiesException("There is an issue ! No Offset Range From Kafka ... Is the topic having any message at all ?")
-      val sqlContext = sparkSession.sqlContext
-      val data: DataFrame = getAsDFFromKafka(sqlContext, conf, parallelizedRanges)
-      (data, finalOffsetRangesForReader)
+
+      // If kafka topic is empty return empty dataframe with the columns in gimel.fields.bind.to.json prop
+      val finalDF = if (isKafkaTopicEmpty(finalOffsetRangesForReader) && !conf.fieldsBindToJSONString.isEmpty) {
+        logger.info("Kafka Topic is Empty.")
+        logger.info("Returning Datafame with fields in " + GimelConstants.FIELDS_BIND_TO_JSON)
+        getEmptyDFBindToFields(sparkSession, conf.fieldsBindToJSONString)
+      } else {
+        val parallelizedRanges: Array[OffsetRange] = finalOffsetRangesForReader.parallelizeOffsetRanges(conf.parallelsPerPartition, conf.minRowsPerParallel)
+        logger.info("Final Array of OffsetRanges to Fetch from Kafka --> ")
+        parallelizedRanges.foreach(range => logger.info(range))
+        if (parallelizedRanges.isEmpty) throw new KafkaUtilitiesException("There is an issue ! No Offset Range From Kafka ... Is the topic having any message at all ?")
+        val sqlContext = sparkSession.sqlContext
+        getAsDFFromKafka(sqlContext, conf, parallelizedRanges)
+      }
+
+      (finalDF, finalOffsetRangesForReader)
     } catch {
       case ex: Throwable =>
         ex.printStackTrace()
@@ -89,5 +99,16 @@ object KafkaBatchConsumer {
         logger.error(s"An Error While Attempting to Consume From Kafka with Parameters -->  $messageString")
         throw ex
     }
+  }
+
+  /**
+    * Checks if the given kafka topics are empty
+    *
+    * @param offsetRanges : array of OffsetRanges for the topics to check
+    * @return
+    *
+    */
+  def isKafkaTopicEmpty(offsetRanges: Array[OffsetRange]): Boolean = {
+    offsetRanges.isEmpty || offsetRanges.forall (each => (each.untilOffset - each.fromOffset) == 0)
   }
 }

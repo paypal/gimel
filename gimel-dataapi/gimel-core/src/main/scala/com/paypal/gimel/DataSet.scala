@@ -33,6 +33,7 @@ import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf._
 import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
 import com.paypal.gimel.common.utilities._
+import com.paypal.gimel.common.utilities.BindToFieldsUtils._
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.kafka.conf.KafkaConstants
 import com.paypal.gimel.logger.Logger
@@ -123,7 +124,15 @@ class DataSet(val sparkSession: SparkSession) {
       // additionalPropsToLog = propsToLog
       datasetSystemType = systemType.toString
 
-      val data = this.read(systemType, dataSet, newProps)
+      val fieldsBindToStringProp = newProps.getOrElse(GimelConstants.FIELDS_BIND_TO_JSON,
+        dataSetProperties.props.getOrElse(GimelConstants.FIELDS_BIND_TO_JSON, "")).toString
+      val fieldsBindToDataset = newProps.getOrElse(GimelConstants.FIELDS_BIND_TO_DATASET,
+        dataSetProperties.props.getOrElse(GimelConstants.FIELDS_BIND_TO_DATASET, "")).toString
+
+      val (fieldsBindTo, fieldsBindToString) = getFieldsBindTo(fieldsBindToStringProp, fieldsBindToDataset, formattedProps)
+
+      // Passing FIELDS_BIND_TO_JSON property for any other connector like kafka to reuse
+      val data = this.read(systemType, dataSet, newProps ++ Map(GimelConstants.FIELDS_BIND_TO_JSON -> fieldsBindToString))
 
       // To deserialize the resultant Dataframe if serializer class is given (Using Class Loader)
       val deserializerClassName = newProps.getOrElse(GimelConstants.GIMEL_DESERIALIZER_CLASS,
@@ -135,6 +144,8 @@ class DataSet(val sparkSession: SparkSession) {
         val deserializerObj = GimelSerdeUtils.getDeserializerObject(deserializerClassName)
         deserializerObj.deserialize(data, dataSetProperties.props ++ newProps)
       }
+
+      val finalData = getDFBindToFields(deserializedData, fieldsBindTo)
 
       // update log variables to push logs
       val endTime = gimelTimer.endTime.get
@@ -160,7 +171,7 @@ class DataSet(val sparkSession: SparkSession) {
         , endTime
         , executionTime
       )
-      deserializedData
+      finalData
     }
     catch {
       case e: Throwable =>
