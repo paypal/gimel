@@ -19,98 +19,53 @@
 
 package com.paypal.gimel.sql
 
-import java.nio.charset.StandardCharsets
 import java.sql.SQLException
 import java.text.SimpleDateFormat
 import java.util.Date
 
 import scala.collection.immutable.Map
-import scala.collection.mutable
 import scala.util.{Failure, Success, Try}
 
-import com.google.common.hash.Hashing
-import org.apache.commons.lang3.ArrayUtils
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.streaming.Time
 
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
-import com.paypal.gimel.common.conf.{GimelConstants, _}
+import com.paypal.gimel.common.conf._
 import com.paypal.gimel.common.utilities.DataSetUtils.resolveDataSetName
-import com.paypal.gimel.common.utilities.GenericUtils
-import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
 import com.paypal.gimel.hbase.conf.HbaseConfigs
-import com.paypal.gimel.hive.conf.HiveConfigs
 import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
 import com.paypal.gimel.jdbc.utilities._
-import com.paypal.gimel.jdbc.utilities.JdbcAuxiliaryUtilities._
-import com.paypal.gimel.jdbc.utilities.PartitionUtils.ConnectionDetails
 import com.paypal.gimel.kafka.conf.KafkaConfigs
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
-import com.paypal.gimel.parser.utilities.{QueryParserUtils, SearchCriteria, SearchSchemaUtils, SQLNonANSIJoinParser}
+
 
 object GimelQueryUtils {
 
   val logger: Logger = Logger(this.getClass.getName)
 
   // Holder for Run-Time Catalog Provider. Mutable at every SQL execution
-  private var catalogProvider: String = CatalogProviderConstants.UDC_PROVIDER
+  private var catalogName: String = GimelConstants.UDC_STRING
   // Holder for Run-Time Catalog Provider Name. Mutable at every SQL execution
   // Provider Name Space is like a hive DB name when Catalog Provider = HIVE
-  private var catalogProviderNameSpace: String = CatalogProviderConstants.UDC_PROVIDER
-
-  /**
-    * Gets all Source Tables from a Query String
-    *
-    * @param sql        SQL String
-    * @param searchList List[String] ->  inorder to get from all types of SQL pass searchlist
-    *                   to be List("into", "view", "table", "from", "join")
-    * @return Seq[Tables]
-    */
-
-  def getAllTableSources(sql: String,
-                         searchList: Seq[SearchCriteria] = SearchSchemaUtils.ALL_TABLES_SEARCH_CRITERIA): Seq[String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    logger.info(" @Begin --> " + MethodName)
-    val finalList = QueryParserUtils.getAllSourceTables(sql, searchList)
-    logger.info(s"Final List of Tables --> ${finalList.mkString("[", " , ", "]")}")
-    finalList
-  }
+  private var catalogProviderName: String = GimelConstants.UDC_STRING
 
   /**
     * Sets the Catalog Provider
     *
-    * @param provider Catalog Provider, say - UDC , PCATALOG , HIVE , USER
+    * @param name Catalog Provider, say - UDC , PCATALOG , HIVE , USER
     */
-  def setCatalogProvider(provider: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    logger.info(" @Begin --> " + MethodName)
-
-    logger.info(s"Supplied catalog provider --> [$provider]")
-    provider.toUpperCase() match {
-      case CatalogProviderConstants.HIVE_PROVIDER | CatalogProviderConstants.USER_PROVIDER =>
-        catalogProvider = provider
-      case CatalogProviderConstants.PCATALOG_PROVIDER =>
-        logger.warning(" ************************* WARNING ************************* ")
-        logger.warning(s"DEPRECATED Catalog Provider --> [${CatalogProviderConstants.PCATALOG_PROVIDER}]")
-        logger.warning(s"Please migrate to Catalog Provider --> [${CatalogProviderConstants.UDC_PROVIDER}]")
-        logger.warning(" ************************* WARNING ************************* ")
-        catalogProvider = provider
-        logger.info(s"Auto-Setting catalog provider Namespace to --> [${provider.toUpperCase}]")
-        setCatalogProviderName(provider.toUpperCase)
-      case CatalogProviderConstants.UDC_PROVIDER =>
-        logger.info(s"Auto-Setting catalog provider Namespace to --> [${provider.toUpperCase}]")
-        catalogProvider = provider
-        setCatalogProviderName(provider.toUpperCase)
-      case _ => logger.warning(
-        s"""
-           |Invalid Catalog Provider --> [${provider}]
-           |Valid Options --> [ ${CatalogProviderConstants.HIVE_PROVIDER}| ${CatalogProviderConstants.UDC_PROVIDER}| ${CatalogProviderConstants.PCATALOG_PROVIDER}| ${CatalogProviderConstants.USER_PROVIDER} ]
-         """.stripMargin
-      )
+  def setCatalogProvider(name: String): Unit = {
+    logger.info(s"setting catalog provider to --> [$name]")
+    if (name.equalsIgnoreCase(CatalogProviderConstants.PCATALOG_PROVIDER)) {
+      logger.warning(" ************************* WARNING ************************* ")
+      logger.warning(s"DEPRECATED Catalog Provider [${CatalogProviderConstants.PCATALOG_PROVIDER}]")
+      logger.warning(s"Please migrate to Catalog Provider --> [${CatalogProviderConstants.UDC_PROVIDER}]")
+      logger.warning(" ************************* WARNING ************************* ")
     }
+    catalogName = name
   }
 
   /**
@@ -119,31 +74,28 @@ object GimelQueryUtils {
     * @return The Catalog Provider
     */
   def getCatalogProvider(): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
-
-    catalogProvider
+    catalogName
   }
 
   /**
     * Sets the Catalog Provider Name
     *
-    * @param providerNameSpace Catalog Provider, say - default, pcatalog, udc, any_other_hive_db_name
+    * @param name Catalog Provider, say - default, pcatalog, udc, any_other_hive_db_name
     */
 
-  def setCatalogProviderName(providerNameSpace: String): Unit = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
-
-    val catalogProvider = getCatalogProvider
-    if (catalogProvider.equalsIgnoreCase(CatalogProviderConstants.HIVE_PROVIDER) |
-      catalogProvider.equalsIgnoreCase(CatalogProviderConstants.USER_PROVIDER)) {
-      logger.info(s"setting catalog provider Name to --> [$providerNameSpace]")
-      catalogProviderNameSpace = providerNameSpace
+  def setCatalogProviderName(name: String): Unit = {
+    if (getCatalogProvider.equalsIgnoreCase(CatalogProviderConstants.HIVE_PROVIDER) |
+      getCatalogProvider.equalsIgnoreCase(CatalogProviderConstants.USER_PROVIDER)) {
+      logger.info(s"setting catalog provider Name to --> [$name]")
+      catalogProviderName = name
     }
-    else catalogProviderNameSpace = catalogProvider.toLowerCase()
+    else {
+      if (!name.equalsIgnoreCase(getCatalogProvider)) {
+        logger.info(s"You may NOT override Name of Catalog Provider to [${name}] while using Provider -> [${getCatalogProvider}]")
+        logger.info(s"Library will set Name of Catalog Provider -> [${getCatalogProvider}]")
+        catalogProviderName = getCatalogProvider.toLowerCase()
+      }
+    }
   }
 
   /**
@@ -153,11 +105,7 @@ object GimelQueryUtils {
     */
 
   def getCatalogProviderName(): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
-
-    catalogProviderNameSpace
+    catalogProviderName
   }
 
   /**
@@ -166,11 +114,7 @@ object GimelQueryUtils {
     * @param sql SqlString
     * @return String tokens
     */
-  def tokenizeSql(sql: String): Array[String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    logger.info(" @Begin --> " + MethodName)
-    QueryParserUtils.tokenize(sql)
-  }
+  def tokenizeSql(sql: String): Array[String] = sql.replaceAllLiterally("\n", " ").replaceAllLiterally("\t", " ").split(" ")
 
   /**
     * This search will return true if the hive query has a partitioning criteria in it.
@@ -196,36 +140,6 @@ object GimelQueryUtils {
     * @return List of Tables
     */
   def getTablesFrom(sql: String): Array[String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
-    val otherCatalogProvider = getCatalogProviderName().toLowerCase match {
-      case GimelConstants.UDC_STRING => GimelConstants.PCATALOG_STRING
-      case GimelConstants.PCATALOG_STRING => GimelConstants.UDC_STRING
-      case _ => "hive"
-
-    }
-    val allTables = getAllTableSources(sql)
-    val finalList = allTables.filter(
-      token =>
-        token.toLowerCase.contains(s"${getCatalogProviderName().toLowerCase}.") ||
-          token.toLowerCase.contains(s"$otherCatalogProvider.")
-    )
-    logger.info(s"Source Catalog [udc/pcatalog] Tables from entire SQL --> ${finalList.mkString("[", " , ", "]")}")
-    finalList.toArray
-  }
-
-  /**
-    * Gets the Tables List from SQL
-    *
-    * @param sql SQL String
-    * @return List of Tables
-    */
-  @deprecated
-  def getTablesFrom1(sql: String): Array[String] = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
     val sqlLower = sql.toLowerCase
     val searchList = List("insert", "select", "from", "join", "where")
     var lastKey = if (searchList.contains(tokenizeSql(sqlLower).head)) {
@@ -234,44 +148,21 @@ object GimelQueryUtils {
       ""
     }
     var currentKey = ""
-    val catalogProviderNameSpace = getCatalogProviderName.toLowerCase
-    //    logger.info(s"catalogProviderNameSpace is --> [${catalogProviderNameSpace}]")
-    var catalogTables = List[String]()
-    val otherCatalogProvider = getCatalogProviderName.toLowerCase match {
-      case GimelConstants.UDC_STRING => GimelConstants.PCATALOG_STRING
-      case GimelConstants.PCATALOG_STRING => GimelConstants.UDC_STRING
-      case _ => "hive"
-
-    }
-    // Pick each catalog.table only if its appearing at specific places in the SQL String
-    // This guard necessary if someone uses "catalog" as an alias, example - udc or pcatalog
+    var pCatalogTables = List[String]()
+    // Pick each pcatalog.table only if its appearing at specific places in the SQL String
+    // This guard necessary if someone uses "pcatalog" as an alias
     tokenizeSql(sqlLower).tail.foreach {
       token =>
-
         currentKey = if (searchList.contains(token)) token else currentKey
-        val pickCriteriaMet = token.toLowerCase.contains(s"${getCatalogProviderName.toLowerCase}.") ||
-          token.toLowerCase.contains(s"${otherCatalogProvider}.")
-
+        val pickCriteriaMet = token.contains("pcatalog") && token.contains(".")
         if (pickCriteriaMet) {
-          if (lastKey == "from" & !(currentKey == "select")) catalogTables ++= List(token)
-          if (lastKey == "join" & !(currentKey == "select")) catalogTables ++= List(token)
+          if (lastKey == "from" & !(currentKey == "select")) pCatalogTables ++= List(token)
+          if (lastKey == "join" & !(currentKey == "select")) pCatalogTables ++= List(token)
         }
         lastKey = if (searchList.contains(token)) currentKey else lastKey
         currentKey = ""
     }
-
-    val nonANSIJoinTables: Seq[String] = SQLNonANSIJoinParser.getSourceTablesFromNonAnsi(sql)
-    val nonANSIJoinTablesCatalog = nonANSIJoinTables.filter(
-      token =>
-        token.toLowerCase.contains(s"${getCatalogProviderName.toLowerCase}.") ||
-          token.toLowerCase.contains(s"${otherCatalogProvider}.")
-    )
-    val finalList = (catalogTables.toArray ++ nonANSIJoinTablesCatalog).distinct
-    logger.info(s"Source Tables from Non-ANSI Join --> ${nonANSIJoinTables.mkString("[", " , ", "]")}")
-    logger.info(s"Source Catalog Tables from Non-ANSI Join --> ${nonANSIJoinTablesCatalog.mkString("[", " , ", "]")}")
-    logger.info(s"Source Catalog Tables from ANSI Join --> ${catalogTables.mkString("[", " , ", "]")}")
-    logger.info(s"Source Catalog Tables from entire SQL --> ${finalList.mkString("[", " , ", "]")}")
-    finalList
+    pCatalogTables.toArray
   }
 
 
@@ -325,10 +216,111 @@ object GimelQueryUtils {
     if (isCachingEnabled) df.cache()
   }
 
-  private def mergeAllConfs(sparkSession: SparkSession): Map[String, String] = {
-    sparkSession.conf.getAll ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER -> sparkSession.conf.get(
-      CatalogProviderConfigs.CATALOG_PROVIDER, CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER)
-    )
+  /**
+    * Push downs the SELECT query to JDBC data source and executes using JDBC read.
+    *
+    * @param selectSQL    SELECT SQL string
+    * @param sparkSession : SparkSession
+    * @return DataFrame
+    */
+
+  def executePushdownQuery(selectSQL: String, sparkSession: SparkSession): DataFrame = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+    logger.info(" @Begin --> " + MethodName)
+
+    val dataSetProps = sparkSession.conf.getAll
+
+    // get jdbc Password Strategy
+    val jdbcPasswordStrategy = dataSetProps.getOrElse(JdbcConfigs.jdbcPasswordStrategy, JdbcConstants.JDBC_DEFAULT_PASSWORD_STRATEGY).toString
+    val jdbcUrl = sparkSession.conf.get(JdbcConfigs.jdbcUrl)
+
+    val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps)
+
+    // get authUtilities object
+    val authUtilities: JDBCAuthUtilities = JDBCAuthUtilities(sparkSession)
+
+    // get real user of JDBC
+    val realUser: String = JDBCCommons.getDefaultUser(sparkSession).toString
+
+    // get connection
+    val dbConnection = new DbConnection(jdbcConnectionUtility)
+
+    logger.info(s"Final SQL for Query Push Down --> ${selectSQL}")
+    try {
+
+      // setting default values for ExtendedJdbcRDD
+
+      // set the local property to pass to executor tasks
+      logger.info(s"Setting jdbcPushDownFlag to TRUE in TaskContext for JDBCRdd")
+
+      sparkSession.sparkContext.setLocalProperty(JdbcConfigs.jdbcPushDownEnabled, "true")
+
+      // NOTE: The number of partitions are set to 1. The pushdown query result will always be obtained through one executor. Further optimizations to be explored.
+      val jdbcRDD: ExtendedJdbcRDD[Array[Object]] = new ExtendedJdbcRDD(sparkSession.sparkContext, dbConnection, selectSQL, JdbcConstants.DEFAULT_LOWER_BOUND, JdbcConstants.DEFAULT_UPPER_BOUND, 1, JdbcConstants.DEFAULT_READ_FETCH_SIZE, realUser, jdbcPasswordStrategy)
+
+      // get connection
+      val conn = jdbcConnectionUtility.getJdbcConnectionAndSetQueryBand()
+
+      // getting table schema to build final dataframe
+      val pushDownSqlAsTempTable = s"( ${selectSQL} ) as pushDownTempTable"
+      val tableSchema = JdbcReadUtility.resolveTable(jdbcUrl, pushDownSqlAsTempTable, conn)
+      val rowRDD: RDD[Row] = jdbcRDD.map(v => Row(v: _*))
+      sparkSession.createDataFrame(rowRDD, tableSchema)
+    }
+    catch {
+      case exec: SQLException =>
+        var ex: SQLException = exec
+        while (ex != null) {
+          ex.printStackTrace()
+          ex = ex.getNextException
+        }
+        throw exec
+    }
+  }
+
+  /**
+    * Returns the flag whether the query has to be pushed down to dataset or not based on dataset provided and user supplied flag for pushdown
+    *
+    * @param originalSQL  SQLString
+    * @param selectSQL    SQLString
+    * @param sparkSession : SparkSession
+    * @param dataSet      Dataset Object
+    * @return STring flag to show whether to push down query or not
+    */
+  def getQueryPushDownFlag(originalSQL: String, selectSQL: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): String = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
+    logger.info(" @Begin --> " + MethodName)
+
+    val userSuppliedPushDownFlag = sparkSession.conf.get(JdbcConfigs.jdbcPushDownEnabled, "false").toBoolean
+
+    var kafkaDataSets: List[com.paypal.gimel.datasetfactory.GimelDataSet] = List()
+    var sqlTmpString = selectSQL
+    var sqlOriginalString = originalSQL
+
+    val pCatalogTablesToReplaceAsTmpTable: Map[String, String] = getTablesFrom(selectSQL).map {
+      eachSource =>
+        val options = getOptions(sparkSession)._2
+        if (dataSet.latestKafkaDataSetReader.isDefined) {
+          logger.info(s"@$MethodName | Added Kafka Reader for Source --> $eachSource")
+          kafkaDataSets = kafkaDataSets ++ List(dataSet.latestKafkaDataSetReader.get)
+        }
+        val tabNames = eachSource.split("\\.")
+        val tmpTableName = "tmp_" + tabNames(1)
+        (eachSource, tmpTableName)
+    }.toMap
+
+    val queryPushDownFlag: String = pCatalogTablesToReplaceAsTmpTable.foldLeft(userSuppliedPushDownFlag) { (userFlag, kv) =>
+      val resolvedSourceTable: String = resolveDataSetName(kv._1)
+      val formattedProps: scala.collection.immutable.Map[String, Any] = sparkSession.conf.getAll ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
+        sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
+          CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER))
+      val dataSetProperties: DataSetProperties =
+        CatalogProvider.getDataSetProperties(resolvedSourceTable, formattedProps)
+      dataSetProperties.datasetType == GimelConstants.STORAGE_TYPE_JDBC & userFlag
+    }.toString
+    logger.info(s"queryPushDownFlag for dataset: ${queryPushDownFlag.toLowerCase}")
+    queryPushDownFlag.toLowerCase
   }
 
   /**
@@ -344,8 +336,7 @@ object GimelQueryUtils {
     * @param dataSet      Dataset Object
     * @return Tuple of (Resolved Original SQL, Resolved Select SQL, List of (KafkaDataSet)
     */
-  def resolveSQLWithTmpTables(originalSQL: String, selectSQL: String, sparkSession: SparkSession,
-                              dataSet: com.paypal.gimel.DataSet): (String, String, List[GimelDataSet], String) = {
+  def resolveSQLWithTmpTables(originalSQL: String, selectSQL: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, String, List[com.paypal.gimel.datasetfactory.GimelDataSet], String) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
@@ -353,7 +344,7 @@ object GimelQueryUtils {
     // get queryPushDown flag
     val queryPushDownFlag = getQueryPushDownFlag(originalSQL, selectSQL, sparkSession, dataSet)
 
-    var kafkaDataSets: List[GimelDataSet] = List()
+    var kafkaDataSets: List[com.paypal.gimel.datasetfactory.GimelDataSet] = List()
     var sqlTmpString = selectSQL
     var sqlOriginalString = originalSQL
     val pCatalogTablesToReplaceAsTmpTable: Map[String, String] = getTablesFrom(selectSQL).map {
@@ -361,7 +352,10 @@ object GimelQueryUtils {
         val options = getOptions(sparkSession)._2
         val df = dataSet.read(eachSource, options)
         cacheIfRequested(df, eachSource, options)
-
+        if (dataSet.latestKafkaDataSetReader.isDefined) {
+          logger.info(s"@$MethodName | Added Kafka Reader for Source --> $eachSource")
+          kafkaDataSets = kafkaDataSets ++ List(dataSet.latestKafkaDataSetReader.get)
+        }
         val tabNames = eachSource.split("\\.")
         val tmpTableName = "tmp_" + tabNames(1)
 
@@ -369,7 +363,6 @@ object GimelQueryUtils {
         queryPushDownFlag match {
           case "false" =>
             logger.info(s"Setting transformation dataset.read for ${eachSource}")
-            logger.info("printing all options during read" + options.toString())
             val df = dataSet.read(eachSource, options)
             cacheIfRequested(df, eachSource, options)
             df.createOrReplaceTempView(tmpTableName)
@@ -377,27 +370,23 @@ object GimelQueryUtils {
           // do nothing if query pushdown is true. No need to do dataset.read
         }
 
-        if (dataSet.latestKafkaDataSetReader.isDefined) {
-          logger.info(s"@$MethodName | Added Kafka Reader for Source --> $eachSource")
-          kafkaDataSets = kafkaDataSets ++ List(dataSet.latestKafkaDataSetReader.get)
-        }
+        df.createOrReplaceTempView(tmpTableName)
         (eachSource, tmpTableName)
     }.toMap
-
     // replacing the dataset names with original tables names if queryPushDown is "true"
     queryPushDownFlag match {
       case "true" =>
         logger.info("PATH IS -> QUERY PUSH DOWN")
         pCatalogTablesToReplaceAsTmpTable.foreach { kv =>
           val resolvedSourceTable = resolveDataSetName(kv._1)
+          val formattedProps: scala.collection.immutable.Map[String, Any] = sparkSession.conf.getAll ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
+            sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
+              CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER))
           val dataSetProperties: DataSetProperties =
-            CatalogProvider.getDataSetProperties(resolvedSourceTable, mergeAllConfs(sparkSession))
+            CatalogProvider.getDataSetProperties(resolvedSourceTable, formattedProps)
           val hiveTableParams = dataSetProperties.props
           val jdbcTableName: String = hiveTableParams(JdbcConfigs.jdbcInputTableNameKey)
-          logger.info(s"JDBC input table name : ${jdbcTableName}")
-          logger.info(s"Setting JDBC URL : ${hiveTableParams(JdbcConfigs.jdbcUrl)}")
           sparkSession.conf.set(JdbcConfigs.jdbcUrl, hiveTableParams(JdbcConfigs.jdbcUrl))
-          logger.info(s"Setting JDBC driver Class : ${hiveTableParams(JdbcConfigs.jdbcDriverClassKey)}")
           sparkSession.conf.set(JdbcConfigs.jdbcDriverClassKey, hiveTableParams(JdbcConfigs.jdbcDriverClassKey))
           sqlTmpString = sqlTmpString.replaceAll(s"(?i)${kv._1}", jdbcTableName)
           sqlOriginalString = sqlOriginalString.replaceAll(s"(?i)${kv._1}", jdbcTableName)
@@ -423,73 +412,11 @@ object GimelQueryUtils {
     */
   def isHavingInsert(sql: String): Boolean = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    logger.info(" @Begin --> " + MethodName)
-    QueryParserUtils.isHavingInsert(sql)
-  }
 
-  /**
-    * Checks whether the sql is of drop table/view pattern and checks whether the table/view is a temp table
-    * This will help to take a path to whether to go in livy session or normal gsql session
-    *
-    * @param sql          - incoming sql
-    * @param sparkSession - current spark session
-    * @return - true or false based on whether the dropped table/view is a temp (cached) table.
-    */
-  def isDropTableATempTable(sql: String, sparkSession: SparkSession): Boolean = {
-    val dropTableIfExistsPattern = s"DROP TABLE IF EXISTS .(.*)".r
-    val dropViewIfExistsPattern = s"DROP VIEW IF EXISTS .(.*)".r
-    val dropTablePattern = s"DROP TABLE .(.*)".r
-    val dropViewPattern = s"DROP VIEW .(.*)".r
+    logger.info(" @Begin --> " + MethodName)
+
     val uniformSQL = sql.replace("\n", " ")
-    val sqlParts: Array[String] = uniformSQL.split(" ")
-    val newSql = sqlParts.filter(x => !x.isEmpty).mkString(" ")
-    val tableName = newSql.toUpperCase() match {
-      case dropTableIfExistsPattern(_) | dropViewIfExistsPattern(_) =>
-        newSql.split(" ")(newSql.split(" ").indexWhere(_.toUpperCase() == "EXISTS") + 1)
-
-      case dropTablePattern(_) =>
-        newSql.split(" ")(newSql.split(" ").indexWhere(_.toUpperCase() == "TABLE") + 1)
-
-      case dropViewPattern(_) =>
-        newSql.split(" ")(newSql.split(" ").indexWhere(_.toUpperCase() == "VIEW") + 1)
-
-      case _ => "."
-    }
-    if (tableName.contains(".")) {
-      false
-    } else {
-      isSparkCachedTable(tableName, sparkSession)
-    }
-  }
-
-  /**
-    * This function call will check SQL is a DDL
-    *
-    * @param sql          - Incoming SQL
-    * @param sparkSession - Spark Session object
-    */
-
-  def isDDL(sql: String, sparkSession: SparkSession): Boolean = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    logger.info(" @Begin --> " + MethodName)
-
-    QueryParserUtils.isDDL(sql, isDropTableATempTable(sql, sparkSession))
-  }
-
-  /**
-    * This function call will check whether SQL is setting conf, say - "SET key=val"
-    *
-    * @param sql          - Incoming SQL
-    * @param sparkSession - Spark Session object
-    */
-
-  def isSetConf(sql: String, sparkSession: SparkSession): Boolean = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    logger.info(" @Begin --> " + MethodName)
-
-    val tokenized = GimelQueryUtils.tokenizeSql(sql)
-    val nonEmptyStrTokenized = tokenized.filter(x => !x.isEmpty)
-    nonEmptyStrTokenized.head.toUpperCase.equals("SET")
+    uniformSQL.toUpperCase().contains("INSERT")
   }
 
   /**
@@ -499,11 +426,7 @@ object GimelQueryUtils {
     * @return Resulting Boolean
     */
 
-  def isUDCDataDefinition(sql: String): Boolean = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    logger.info(" @Begin --> " + MethodName)
-
-    // Add alter table
+  def isDataDefinition(sql: String): Boolean = {
     val catalogName = getCatalogProvider.toUpperCase
     val createTablePattern = s"CREATE TABLE ${catalogName}.(.*)".r
     val createExternalTablePattern = s"CREATE EXTERNAL TABLE ${catalogName}.(.*)".r
@@ -535,24 +458,18 @@ object GimelQueryUtils {
     * @return SQL String - that has just the select clause
     */
   def getSelectClause(sql: String): String = {
-    QueryParserUtils.getSelectClause(sql)
-  }
-
-  /**
-    * Parse the SQL and get the entire select clause
-    *
-    * @param sql SQL String
-    * @return SQL String - that has just the select clause
-    */
-  def getPlainSelectClause(sql: String): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
 
     val uniformSQL = sql.replace("\n", " ")
     val sqlParts: Array[String] = uniformSQL.split(" ")
-    val index = sqlParts.indexWhere(_.toUpperCase() == "SELECT")
-    val selectClauseOnly = sqlParts.slice(index, sqlParts.length).mkString(" ")
+    val selectClauseOnly = if (isHavingInsert(sql)) {
+      val index = sqlParts.indexWhere(_.toUpperCase() == "SELECT")
+      sqlParts.slice(index, sqlParts.length).mkString(" ")
+    } else {
+      sqlParts.mkString(" ")
+    }
     selectClauseOnly
   }
 
@@ -564,7 +481,9 @@ object GimelQueryUtils {
     */
   def getTargetTables(sql: String): Option[String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
     logger.info(" @Begin --> " + MethodName)
+
     SQLParser.getTargetTables(sql)
   }
 
@@ -601,11 +520,7 @@ object GimelQueryUtils {
       , GimelConstants.DATA_CACHE_IS_ENABLED_FOR_ALL -> "true"
       , KafkaConfigs.isStreamBatchSwitchEnabledKey -> "false"
       , KafkaConfigs.streamFailureThresholdPerSecondKey -> "1500"
-      , ElasticSearchConfigs.esIsDailyIndex -> "false"
       , CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER
-      , GimelConstants.SPARK_APP_ID -> sparkSession.conf.get(GimelConstants.SPARK_APP_ID)
-      , GimelConstants.SPARK_APP_NAME -> sparkSession.conf.get(GimelConstants.SPARK_APP_NAME)
-      , GimelConstants.APP_TAG -> com.paypal.gimel.common.utilities.DataSetUtils.getAppTag(sparkSession.sparkContext)
     )
     val resolvedOptions: Map[String, String] = optionsToCheck.map { kvPair =>
       (kvPair._1, hiveConf.getOrElse(kvPair._1, kvPair._2))
@@ -623,19 +538,14 @@ object GimelQueryUtils {
     * @return DataFrame
     */
   def executeSelectClause(selectSQL: String, sparkSession: SparkSession, queryPushDownFlag: String): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-    logger.info(" @Begin --> " + MethodName)
-
     val selectDF: DataFrame = queryPushDownFlag match {
       case "true" =>
-
-        // set the SparkContext as well as TaskContext property for JdbcPushDown flag to "false"
-        //        logger.info(s"Setting jdbcPushDownFlag to false in SparkContext")
-        //        sparkSession.conf.set(JdbcConfigs.jdbcPushDownEnabled, "false")
-
         logger.info(s"Executing Pushdown Query: ${selectSQL}")
         val df = executePushdownQuery(selectSQL, sparkSession)
 
+        // set the SparkContext as well as TaskContext property for JdbcPushDown flag to "false"
+        logger.info(s"Setting jdbcPushDownFlag to false in SparkContext")
+        sparkSession.conf.set(JdbcConfigs.jdbcPushDownEnabled, "false")
         df
       case _ =>
         sparkSession.sql(selectSQL)
@@ -653,8 +563,7 @@ object GimelQueryUtils {
     * @param dataset      DataSet
     * @return Result String
     */
-  def executeResolvedQuery(clientSQL: String, dest: Option[String], selectSQL: String, sparkSession: SparkSession,
-                           dataset: com.paypal.gimel.DataSet, queryPushDownFlag: String): String = {
+  def executeResolvedQuery(clientSQL: String, dest: Option[String], selectSQL: String, sparkSession: SparkSession, dataset: com.paypal.gimel.DataSet, queryPushDownFlag: String): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
@@ -670,79 +579,26 @@ object GimelQueryUtils {
       Try {
         val options = getOptions(sparkSession)._2
         val selectDF = executeSelectClause(selectSQL, sparkSession, queryPushDownFlag)
-        // --- EXISTING LOGIC
-        // dataset.write(dest.get, selectDF, options)
-        // --- NEW LOGIC
-        // Get the DataSet Properties
-
-        val tgt = dest.get
-        (tgt.split(",").length > 2) match {
-          case true =>
-          case _ =>
-        }
-        val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(dest.get)
-        //        val dataSetProperties = GimelServiceUtilities().getDataSetProperties(dest.get)
-        dataSetProperties.datasetType.toString match {
-          case "HIVE" | "NONE" =>
-            // If Hive
-            val sqlToInsertIntoHive = queryPushDownFlag.toLowerCase match {
-              case "true" =>
-                logger.info(s"Invoking write API in gimel with queryPushDownFlag=${queryPushDownFlag}...")
-
-                // create a temp view for pushdown dataframe.
-                val jdbcPushDownTempTable = "jdbcPushDownTempTable"
-                logger.info(s"Creating temp view for pushdown query dataframe as ${jdbcPushDownTempTable}")
-                selectDF.createOrReplaceTempView(jdbcPushDownTempTable)
-
-                val pushDownSelectQuery = s"SELECT * FROM ${jdbcPushDownTempTable}"
-
-                // replace selectSQL in clientSQL with pushDownSelectQuery
-                logger.info(s"Replacing ${selectSQL} in ${clientSQL} with ${pushDownSelectQuery}")
-                val pushDownSparkSql = clientSQL.replace(selectSQL, pushDownSelectQuery)
-                // dataset.write(dest.get, selectDF, options)
-                logger.info(s"Spark SQL after Pushdown Query: ${pushDownSparkSql}")
-                pushDownSparkSql
-              case _ =>
-                logger.info(s"Invoking sparkSession.sql for write with queryPushDownFlag=${queryPushDownFlag}...")
-                // Get the DB.TBL from UDC
-                clientSQL
-            }
-            // execute on hive
-            val db = dataSetProperties.props(HiveConfigs.hiveDBName)
-            val tbl = dataSetProperties.props(HiveConfigs.hiveTableName)
-            val actual_db_tbl = s"${db}.${tbl}"
-            // Replace the SQL with DB.TBL
-            logger.info(s"Replacing ${dest.get} with ${actual_db_tbl}")
-            val sqlToExecute = sqlToInsertIntoHive.replaceAll(s"(?i)${dest.get}", actual_db_tbl)
-            logger.info(s"Passing through SQL to Spark for write since target [${actual_db_tbl}] is of data set type - HIVE ...")
-            logger.info(s"Final SQL to Run --> \n ${sqlToExecute}")
-            sparkSession.sql(sqlToExecute)
-          case _ =>
-            // If Non-HIVE
-            logger.info(s"Invoking write API in gimel with queryPushDownFlag=${queryPushDownFlag}...")
-            dataset.write(dest.get, selectDF, options)
-        }
-
+        dataset.write(dest.get, selectDF, options)
       } match {
         case Success(_) =>
           resultString = "Query Completed."
           logger.info(resultString)
         case Failure(e) =>
-          // e.printStackTrace()
+          e.printStackTrace()
           resultString =
             s"""Query Failed in function : $MethodName via path dataset.write. Error -->
                |
-               |${e.toString}""".stripMargin
-          // logger.error(resultString)
+               |${e.getStackTraceString}""".stripMargin
+          logger.error(resultString)
           throw e
       }
     } else {
       logger.info(s"EXECUTION PATH ====== DATASET SELECT ======")
       val selectDF: DataFrame = queryPushDownFlag match {
         case "true" =>
-          //          logger.info(s"Setting jdbcPushDownFlag to false in SparkContext")
-          //          sparkSession.conf.set(JdbcConfigs.jdbcPushDownEnabled, "false")
           val df = executePushdownQuery(selectSQL, sparkSession)
+          sparkSession.conf.set(JdbcConfigs.jdbcPushDownEnabled, "false")
           df
         case _ =>
           sparkSession.sql(selectSQL)
@@ -808,9 +664,8 @@ object GimelQueryUtils {
         val (_, options) = getOptions(sparkSession)
         val selectDF: DataFrame = queryPushDownFlag match {
           case "true" =>
-            //            logger.info(s"Setting jdbcPushDownFlag to false in SparkContext")
-            //            sparkSession.conf.set(JdbcConfigs.jdbcPushDownEnabled, "false")
             val df = executePushdownQuery(selectSQL, sparkSession)
+            sparkSession.conf.set(JdbcConfigs.jdbcPushDownEnabled, "false")
             df
           case _ =>
             sparkSession.sql(selectSQL)
@@ -822,10 +677,10 @@ object GimelQueryUtils {
           logger.info(resultString)
           sparkSession.read.json(sparkSession.sparkContext.parallelize(Seq(resultString))).toJSON.rdd
         case Failure(e) =>
-          // e.printStackTrace()
+          e.printStackTrace()
           resultString =
-            s"""{"Query Execution Failed":${e.toString}}"""
-          // logger.error(resultString)
+            s"""{"Query Execution Failed":${e.getStackTraceString}}"""
+          logger.error(resultString)
           sparkSession.read.json(sparkSession.sparkContext.parallelize(Seq(resultString))).toJSON.rdd
         //          throw e
       }
@@ -833,9 +688,8 @@ object GimelQueryUtils {
       logger.info(s"EXECUTION PATH ====== DATASET SELECT ======")
       val selectDF: DataFrame = queryPushDownFlag match {
         case "true" =>
-          //          logger.info(s"Setting jdbcPushDownFlag to false in SparkContext")
-          //          sparkSession.conf.set(JdbcConfigs.jdbcPushDownEnabled, "false")
           val df = executePushdownQuery(selectSQL, sparkSession)
+          sparkSession.conf.set(JdbcConfigs.jdbcPushDownEnabled, "false")
           df
         case _ =>
           sparkSession.sql(selectSQL)
@@ -846,374 +700,6 @@ object GimelQueryUtils {
       val resultSet = sparkSession.sql(s"select * from tmp_table_spark_magic limit ${rowsToShow}").toJSON.rdd
       resultSet
     }
-  }
-
-  /**
-    * Checks whether a table is cached in spark Catalog
-    *
-    * @param tableName    - incoming table name
-    * @param sparkSession - spark session
-    * @return - A boolean value to tell whether the table is cached or not
-    */
-
-  def isSparkCachedTable(tableName: String, sparkSession: SparkSession): Boolean = {
-
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
-    val isCached = Try {
-      sparkSession.catalog.isCached(tableName)
-    }
-    match {
-      case Success(result) => {
-        result match {
-          case true => true
-          case _ => false
-        }
-      }
-      case Failure(e) => false
-    }
-    isCached match {
-      case true => logger.info(tableName + "====> a Cached table")
-      case _ => logger.info(tableName + "====> NOT a Cached table")
-    }
-    isCached
-  }
-
-  /**
-    * Checks if a Query has Cache statemnt
-    *
-    * @param sql SQL String
-    * @return true - if there is an "Cache" clause, else false
-    */
-  def isHavingCache(sql: String): Boolean = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
-
-    GimelQueryUtils.tokenizeSql(sql).head.equalsIgnoreCase("cache")
-  }
-
-  /**
-    * Parse the SQL and get cache Query & select statement
-    *
-    * @param sql SQL String
-    */
-  def splitCacheQuery(sql: String): (Option[String], String) = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
-
-    val uniformSQL = sql.replace("\n", " ")
-    val sqlParts: Array[String] = uniformSQL.split(" ")
-    if (isHavingCache(sql)) {
-      logger.info("Splitting sql since it contains cache table")
-      val index = sqlParts.indexWhere(_.toUpperCase() == "SELECT")
-      (Some(sqlParts.slice(0, index).mkString(" ")), sqlParts.slice(index, sqlParts.length).mkString(" "))
-    } else {
-      (None, sqlParts.mkString(" "))
-    }
-  }
-
-  /**
-    * This method will execute the ' cache table t as...'  query
-    *
-    * @param cacheStatment cache table statement
-    * @param dataFrame     pushdown dataframe
-    * @param sparkSession  sparksesssion
-    * @return dataframe
-    */
-  def cachePushDownQuery(cacheStatment: String, dataFrame: DataFrame, sparkSession: SparkSession): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
-
-    // create a temp view for pushdown dataframe.
-    val pushDownCacheTempTable = "pushDownCacheTempTable"
-    logger.info(s"Creating temp view for pushdown query dataframe as ${pushDownCacheTempTable}")
-    dataFrame.createOrReplaceTempView(pushDownCacheTempTable)
-
-    val sql =
-      s"""
-         | ${cacheStatment} SELECT * FROM ${pushDownCacheTempTable}
-      """.stripMargin
-
-    // execute the cached statement
-    logger.info(s"Now caching dataframe for pushdown query: ${sql}")
-    sparkSession.sql(sql)
-  }
-
-  /**
-    * Push downs the SELECT query to JDBC data source and executes using JDBC read.
-    *
-    * @param inputSQL     SELECT SQL string
-    * @param sparkSession : SparkSession
-    * @return DataFrame
-    */
-
-  def executePushdownQuery(inputSQL: String, sparkSession: SparkSession): DataFrame = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
-
-    // check if SQL contains cache query
-    val (cacheStatement, selectSQL) = splitCacheQuery(inputSQL)
-
-    val dataSetProps = sparkSession.conf.getAll
-    val jdbcOptions: Map[String, String] = JdbcAuxiliaryUtilities.getJDBCOptions(dataSetProps)
-
-    if (!jdbcOptions.contains(JdbcConfigs.jdbcUrl)) {
-      throw new IllegalArgumentException("No JDBC url found. Please verify the dataset name in query")
-    }
-
-    val userSpecifiedFetchSize = dataSetProps.getOrElse("fetchSize", JdbcConstants.DEFAULT_READ_FETCH_SIZE).toString.toInt
-
-    try {
-      val jdbcSystem = getJDBCSystem(jdbcOptions(JdbcConfigs.jdbcUrl))
-      val pushDownDf = jdbcSystem match {
-        case JdbcConstants.TERADATA =>
-          executeTeradataSelectPushDownQuery(sparkSession, selectSQL, dataSetProps, jdbcOptions, userSpecifiedFetchSize)
-        case _ =>
-          val pushDownSqlAsTempTable = s"( $selectSQL ) as pushDownTempTable"
-          logger.info(s"Final SQL for Query Push Down --> $pushDownSqlAsTempTable")
-          val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps)
-          JdbcAuxiliaryUtilities.sparkJdbcRead(sparkSession, jdbcOptions(JdbcConfigs.jdbcUrl), pushDownSqlAsTempTable,
-            None, JdbcConstants.DEFAULT_LOWER_BOUND, JdbcConstants.DEFAULT_UPPER_BOUND,
-            1, userSpecifiedFetchSize, jdbcConnectionUtility.getConnectionProperties)
-      }
-
-      // cache query if inputSql contains cache query
-      cacheStatement match {
-        case Some(cacheTable) =>
-          // cache the query results from pushdown
-          logger.info(s"Now caching the dataframe for ->  $selectSQL")
-          cachePushDownQuery(cacheTable, pushDownDf, sparkSession)
-        case _ =>
-          pushDownDf
-      }
-    }
-    catch {
-      case exec: SQLException =>
-        val errors = new mutable.StringBuilder()
-        var ex: SQLException = exec
-        var lastException: SQLException = exec
-        while (ex != null) {
-          if (errors.nonEmpty) {
-            errors.append(s"${GimelConstants.COMMA} ")
-          }
-          errors.append(s = ex.getErrorCode().toString)
-          lastException = ex
-          ex = ex.getNextException
-        }
-        if (lastException != null) {
-          lastException.printStackTrace()
-        }
-        logger.error(s"SQLException: Error codes ${errors.toString()}")
-        throw exec
-      case e: Throwable =>
-        throw e
-    }
-    finally {
-      // re-setting all configs for JDBC
-      JDBCCommons.resetPushDownConfigs(sparkSession)
-    }
-  }
-
-
-  def executeTeradataSelectPushDownQuery(sparkSession: SparkSession, selectSQL: String,
-                                         dataSetProps: Map[String, String], jdbcOptions: Map[String, String],
-                                         userSpecifiedFetchSize: Int): DataFrame = {
-    logger.info(s" @Begin --> ${new Exception().getStackTrace.apply(1).getMethodName}")
-    val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps)
-    import JDBCUtilities._
-    val loggerOption = Some(logger)
-    val mutableJdbcOptions: mutable.Map[String, String] = scala.collection.mutable.Map(jdbcOptions.toSeq: _*)
-    var sqlToBeExecutedInJdbcRDD: String = selectSQL
-    logger.info(s"In query pushdown SQL to be executed --> $sqlToBeExecutedInJdbcRDD")
-
-    // Get connection details per the explain plan of the incomingSql
-    import JDBCConnectionUtility.withResources
-    var (connectionDetails, connectionUtilityPerIncomingSQL): (ConnectionDetails, JDBCConnectionUtility) =
-      (null, jdbcConnectionUtility)
-    var partitionColumns: Seq[String] = Seq.empty
-    withResources(getOrCreateConnection(connectionUtilityPerIncomingSQL, logger = loggerOption)) {
-      connection =>
-        // get the partition columns
-        partitionColumns = JdbcAuxiliaryUtilities.getAndSetPartitionParameters(
-          sparkSession, dataSetProps, userSpecifiedFetchSize, mutableJdbcOptions, connection)
-        val tuple = JdbcAuxiliaryUtilities.getConnectionInfo(sparkSession,
-          jdbcConnectionUtility, dataSetProps, sqlToBeExecutedInJdbcRDD, loggerOption, partitionColumns)
-        connectionDetails = tuple._1
-        connectionUtilityPerIncomingSQL = tuple._2
-    }
-
-    // Create a new connection as per the new config
-    withResources(getOrCreateConnection(connectionUtilityPerIncomingSQL, logger = loggerOption)) {
-      connection =>
-        // if partitions greater than 1
-        if (connectionDetails.numOfPartitions > 1) {
-          // if sql having analytical functions
-          if (QueryParserUtils.isHavingAnalyticalFunction(selectSQL)) {
-            require(dataSetProps.contains(JdbcConfigs.jdbcTempDatabase),
-              s"Expecting CONF: ${JdbcConfigs.jdbcTempDatabase} to be available")
-            val tableName =
-              s"${dataSetProps(JdbcConfigs.jdbcTempDatabase)}.gimel_push_down_${
-                Hashing.sha256().hashString(selectSQL, StandardCharsets.UTF_8)
-                  .toString.substring(0, 7)
-              }"
-            logger.info(s"Resolved temp table name: $tableName")
-            // delete the temp table if it exists
-            JdbcAuxiliaryUtilities.dropTable(tableName, connection, logger = loggerOption)
-            // create volatile table as select with data
-            // Recording the time taken for the query execution
-            val createTableStatement: String = s"CREATE TABLE $tableName AS ( ${selectSQL.trim} ) WITH DATA "
-            logger.info(s"Proceeding to execute: $createTableStatement")
-            JdbcAuxiliaryUtilities.executeQueryStatement(createTableStatement, connection,
-              incomingLogger = loggerOption, recordTimeTakenToExecute = true)
-            // rewrite the selectSql with `select * from temp_table` and set JdbcConfigs.jdbcDbTable => temp_table
-            sqlToBeExecutedInJdbcRDD = s"SELECT * from $tableName"
-            mutableJdbcOptions += (JdbcConfigs.jdbcTempTable -> tableName)
-            mutableJdbcOptions += (JdbcConfigs.jdbcDbTable -> tableName)
-            // Set the first column name as partition column if data split is needed
-            if (!dataSetProps.contains(JdbcConfigs.jdbcPartitionColumns)) {
-              val tempTableSchema = JdbcReadUtility.resolveTable(
-                mutableJdbcOptions(JdbcConfigs.jdbcUrl),
-                sqlToBeExecutedInJdbcRDD, connection
-              )
-              mutableJdbcOptions += (JdbcConfigs.jdbcPartitionColumns -> tempTableSchema.head.name)
-            }
-          }
-        }
-
-        if (!selectSQL.equals(sqlToBeExecutedInJdbcRDD)) {
-          logger.info("Re-calculating the connection info as the SQL to be executed is changed ")
-          val tuple = JdbcAuxiliaryUtilities.getConnectionInfo(sparkSession,
-            jdbcConnectionUtility, dataSetProps, sqlToBeExecutedInJdbcRDD, loggerOption, partitionColumns)
-          // below syntax to override compilation error
-          connectionDetails = tuple._1
-          connectionUtilityPerIncomingSQL = tuple._2
-        }
-
-        // create JDBC rdd
-
-        logger.info(s"Final SQL for Query Push Down --> $sqlToBeExecutedInJdbcRDD")
-        val tableSchema = JdbcReadUtility.resolveTable(
-          mutableJdbcOptions(JdbcConfigs.jdbcUrl),
-          sqlToBeExecutedInJdbcRDD,
-          connection
-        )
-
-        JdbcAuxiliaryUtilities.createJdbcDataFrame(sparkSession, sqlToBeExecutedInJdbcRDD,
-          connectionDetails.fetchSize, connectionDetails.numOfPartitions,
-          connectionUtilityPerIncomingSQL, partitionColumns, tableSchema)
-    }
-  }
-
-  def validateAllTablesAreFromSameJdbcSystem(sparkSession: SparkSession,
-                                             tables: Seq[String],
-                                             sqlToBeExecuted: String): (Boolean, Option[Map[String, String]]) = {
-    val dataSetPropertiesForAllTables: Iterable[Option[DataSetProperties]] = tables.map {
-      tableName =>
-        Try(CatalogProvider.getDataSetProperties(tableName, mergeAllConfs(sparkSession))).toOption
-    }
-    if (dataSetPropertiesForAllTables.nonEmpty && dataSetPropertiesForAllTables.head.isDefined) {
-      var queryPushDownFlag: Boolean = false
-      val headJdbcUrl = dataSetPropertiesForAllTables.head.get.props.get(JdbcConfigs.jdbcUrl)
-      if (headJdbcUrl.isDefined) {
-        queryPushDownFlag = dataSetPropertiesForAllTables.forall {
-          dataSetProperty =>
-            dataSetProperty.isDefined && dataSetProperty.get.datasetType == GimelConstants.STORAGE_TYPE_JDBC &&
-              dataSetProperty.get.props.contains(JdbcConfigs.jdbcUrl) &&
-              headJdbcUrl.get.equalsIgnoreCase(dataSetProperty.get.props(JdbcConfigs.jdbcUrl))
-        }
-      }
-      if (queryPushDownFlag && JdbcAuxiliaryUtilities.validatePushDownQuery(sparkSession,
-        tables.head, sqlToBeExecuted)) {
-        // Getting connection info from dataset properties else from the incoming properties
-        (queryPushDownFlag, Some(JdbcAuxiliaryUtilities.getJDBCOptions(
-          Map(GimelConstants.DATASET_PROPS -> dataSetPropertiesForAllTables.head.get)
-        )))
-      } else {
-        (false, None)
-      }
-    } else {
-      (false, None)
-    }
-  }
-
-  def validateAllDatasetsAreFromSameJdbcSystem(datasets: Seq[String]): Boolean = {
-    var areAllDatasetFromSameJdbcSystem: Boolean = false
-    if (datasets.nonEmpty) {
-      import com.paypal.gimel.parser.utilities.QueryParserUtils._
-      val storageSystemName = Try(extractSystemFromDatasetName(datasets.head)).toOption
-      if (storageSystemName.isDefined &&
-        CatalogProvider.getStorageSystemProperties(
-          storageSystemName.get
-        )(GimelConstants.STORAGE_TYPE) == GimelConstants.STORAGE_TYPE_JDBC) {
-        areAllDatasetFromSameJdbcSystem = datasets.forall {
-          dataset =>
-            Try {
-              val storageSystemProperties =
-                CatalogProvider.getStorageSystemProperties(extractSystemFromDatasetName(dataset))
-              storageSystemProperties(GimelConstants.STORAGE_TYPE) == GimelConstants
-                .STORAGE_TYPE_JDBC && dataset.contains(storageSystemName.get)
-            }.getOrElse(false)
-        }
-      }
-    }
-    areAllDatasetFromSameJdbcSystem
-  }
-
-  /**
-    * Returns the flag whether the query has to be pushed down to dataset or not based on dataset provided
-    * and user supplied flag for pushdown, this method is primarily called for select only clause
-    *
-    * @param originalSQL  SQLString
-    * @param selectSQL    SQLString
-    * @param sparkSession : SparkSession
-    * @param dataSet      Dataset Object
-    * @return String flag to show whether to push down query or not
-    */
-  def getQueryPushDownFlag(originalSQL: String, selectSQL: String, sparkSession: SparkSession,
-                           dataSet: com.paypal.gimel.DataSet): String = {
-    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
-    logger.info(" @Begin --> " + MethodName)
-
-    val tables = getTablesFrom(selectSQL)
-    val userSuppliedPushDownFlag: Boolean = getQueryPushDownFlagFromConf(sparkSession)
-
-    var queryPushDownFlag: Boolean = false
-    if (userSuppliedPushDownFlag && tables.nonEmpty) {
-      val (queryPushDownFlagR, jdbcOptions) = validateAllTablesAreFromSameJdbcSystem(sparkSession, tables, selectSQL)
-      if (queryPushDownFlagR) {
-        // if all the tables are from the same JDBC system then set query pushdown flag to be true
-        queryPushDownFlag = queryPushDownFlagR
-        logger.info(s"Since all the datasets are from same JDBC system overriding " +
-          s"User specified flag: $userSuppliedPushDownFlag -> true " +
-          s"with JDBC options: $jdbcOptions")
-      } else {
-        logger.info(s"Atleast one dataset is from an alternate JDBC system overriding " +
-          s"User specified flag: $userSuppliedPushDownFlag -> false")
-      }
-    }
-
-    logger.info(s"queryPushDownFlag for data sets${ArrayUtils.toString(tables)}:" +
-      s" ${queryPushDownFlag.toString}")
-    queryPushDownFlag.toString
-  }
-
-  /**
-    * Checks whether the dataSet is HIVE by scanning the pcatalog phrase and also expecting to have the db and table
-    * names to decide it is a HIVE table
-    *
-    * @param dataSet DataSet
-    * @return Boolean
-    */
-
-  def isStorageTypeUnknown
-  (dataSet: String): Boolean = {
-    dataSet.split('.').head.toLowerCase() != GimelConstants.PCATALOG_STRING && dataSet.split('.').length == 2
   }
 
   /**
@@ -1228,8 +714,7 @@ object GimelQueryUtils {
     * @param dataSet      DataSet
     * @return Tuple ( Target Table, select SQL String, List(KafkaDataSet)  )
     */
-  def resolveSQL(sql: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet):
-  (String, Option[String], String, List[GimelDataSet], String) = {
+  def resolveSQL(sql: String, sparkSession: SparkSession, dataSet: com.paypal.gimel.DataSet): (String, Option[String], String, List[com.paypal.gimel.datasetfactory.GimelDataSet], String) = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info("@Begin --> " + MethodName)
@@ -1237,8 +722,7 @@ object GimelQueryUtils {
     logger.info(s"incoming SQL --> $sql")
     val uniformSQL = sql.replace("\n", " ")
     val selectClauseOnly = getSelectClause(uniformSQL)
-    val (originalSQL, selectClause, kafkaDataSets, queryPushDownFlag) =
-      resolveSQLWithTmpTables(sql, selectClauseOnly, sparkSession, dataSet)
+    val (originalSQL, selectClause, kafkaDataSets, queryPushDownFlag) = resolveSQLWithTmpTables(sql, selectClauseOnly, sparkSession, dataSet)
     val targetTable = getTargetTables(sql)
     logger.info(s"selectClause --> $selectClause")
     logger.info(s"destination --> $targetTable")
@@ -1257,100 +741,6 @@ object GimelQueryUtils {
     sql.toUpperCase().contains(GimelConstants.HIVE_DDL_PARTITIONED_BY_CLAUSE)
   }
 
-  /**
-    * Checks the config to see if complete pushdown enabled,
-    * if enabled returns the transformed SQL and the JDBC options
-    *
-    * @param sparkSession -> Created SparkSession
-    * @param sql -> Incoming SQL to be executed
-    * @return
-    */
-  def isJdbcCompletePushDownEnabled(sparkSession: SparkSession,
-                                    sql: String): (Boolean, Option[String], Option[Map[String, String]]) = {
-    logger.info(s"@Begin --> ${new Exception().getStackTrace.apply(1).getMethodName}")
-    val userSuppliedPushDownFlag: Boolean = getQueryPushDownFlagFromConf(sparkSession)
-    val isSelectQuery = QueryParserUtils.isSelectQuery(sql)
-    logger.info(s"Is select query: $isSelectQuery")
-    var resultTuple: (Boolean, Option[String], Option[Map[String, String]]) = (false, None, None)
-    if (userSuppliedPushDownFlag && !isSelectQuery) {
-      val tables = getAllTableSources(sql)
-      //      val datasets = SQLDataTypesUtils.getDatasets(sql)
-      logger.info(s"Received tables: $tables for the query: $sql")
-      // if sql's target tables are of the same JDBC system
-      if (validateAllTablesAreFromSameJdbcSystem(sparkSession, tables, sqlToBeExecuted = sql)._1) {
-        logger.info("All datasets are from the same JDBC system")
-        // As tables emptiness is checked on the validateAllDatasetsAreFromSameJdbcSystem, getting the tables.head
-
-        val transformedSQL = QueryParserUtils.transformUdcSQLtoJdbcSQL(sql, tables)
-        import com.paypal.gimel.common.utilities.DataSetUtils._
-        val systemName = QueryParserUtils.extractSystemFromDatasetName(tables.head)
-        resultTuple = (true, Some(transformedSQL), Some(getJdbcConnectionOptions(systemName, sparkSession.conf.getAll)))
-      } else {
-        logger.info("Not all the datasets are from the same JDBC system")
-      }
-    } else if (userSuppliedPushDownFlag && isSelectQuery) {
-      // Set partitioning to be 1
-      // sparkSession.conf.set(JdbcConfigs.jdbcCompletePushdownSelectEnabled, value = true)
-      logger.info(s"As we received a select query with pushdown flag enabled: $userSuppliedPushDownFlag," +
-        s" we redirect the output to dataset reader -> Query: $sql")
-    }
-    resultTuple
-  }
-
-  private def getQueryPushDownFlagFromConf(sparkSession: SparkSession): Boolean = {
-    // User supplied push down flag  will be overridden if all the datasets are from the same JDBC system
-    val userSuppliedPushDownFlag = Try(
-      sparkSession.conf.get(JdbcConfigs.jdbcPushDownEnabled, "true").toBoolean
-    ).getOrElse(true)
-    logger.info(s"User specified pushdown flag: $userSuppliedPushDownFlag")
-    userSuppliedPushDownFlag
-  }
-
-  /**
-    * Utility for executing push down queries on the respective JDBC system, based on the incoming dataset's property
-    *
-    * @param sparkSession
-    * @param sql
-    * @param jdbcOptions
-    * @return
-    */
-  def pushDownQueryAndReturnResult(sparkSession: SparkSession,
-                                   sql: String,
-                                   jdbcOptions: Map[String, String]): String = {
-    val jdbcConnectionUtility: JDBCConnectionUtility = validateAndGetJdbcConnectionUtility(sparkSession, jdbcOptions)
-    val functionName = s"[QueryHash: ${sql.hashCode}]"
-    logger.info(s"Proceeding to execute JDBC[System: ${jdbcConnectionUtility.jdbcSystem}," +
-      s" User: ${jdbcConnectionUtility.jdbcUser}] pushdown query$functionName: $sql")
-    GenericUtils.time(functionName, Some(logger)) {
-      val queryResult: String =
-        JDBCConnectionUtility.withResources(
-          JDBCUtilities.getOrCreateConnection(jdbcConnectionUtility, logger = Some(logger))
-        ) {
-          connection => JdbcAuxiliaryUtilities.executeQueryAndReturnResultString(sql, connection)
-        }
-      queryResult
-    }
-  }
-
-  private def validateAndGetJdbcConnectionUtility(sparkSession: SparkSession,
-                                                  jdbcOptions: Map[String, String]): JDBCConnectionUtility = {
-    logger.info(s" @Begin --> ${new Exception().getStackTrace.apply(1).getMethodName}")
-    logger.info(s"Received JDBC options: $jdbcOptions")
-    if (!jdbcOptions.contains(JdbcConfigs.jdbcUrl)) {
-      throw new IllegalArgumentException("No JDBC url found. Please verify the dataset name in query")
-    }
-
-    JDBCConnectionUtility(sparkSession, jdbcOptions)
-  }
-
-  def createPushDownQueryDataframe(sparkSession: SparkSession,
-                                   sql: String,
-                                   jdbcOptions: Map[String, String]): DataFrame = {
-    val jdbcConnectionUtility: JDBCConnectionUtility = validateAndGetJdbcConnectionUtility(sparkSession, jdbcOptions)
-    val pushDownJdbcRDD =
-      new PushDownJdbcRDD(sparkSession.sparkContext, new DbConnection(jdbcConnectionUtility), sql)
-    sparkSession.createDataFrame(pushDownJdbcRDD, JdbcConstants.DEF_JDBC_PUSH_DOWN_SCHEMA)
-  }
 
   private lazy val userInfoString =
     s"""
