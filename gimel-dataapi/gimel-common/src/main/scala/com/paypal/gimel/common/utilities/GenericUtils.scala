@@ -271,6 +271,17 @@ object GenericUtils {
     }.getOrElse(defaultValue)
   }
 
+  def getValueAny[T](conf: Map[String, Any], key: String, defaultValue: T): T = {
+    Try {
+      val optionValue = if (conf.get(key).isDefined) {
+        conf.get(key)
+      } else {
+        conf.get(s"spark.$key")
+      }
+      extractValue(defaultValue, Some(optionValue.get.toString))
+    }.getOrElse(defaultValue)
+  }
+
   def getValueFailIfEmpty[T](conf: Map[String, String], key: String, msg: String): String = {
     val optionValue = conf.getOrElse(key, "").toString
     if (optionValue.isEmpty) {
