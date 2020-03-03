@@ -204,6 +204,9 @@ object GimelConstants {
   // Serialization/Deserialization Class
   val GIMEL_DESERIALIZER_CLASS = "gimel.deserializer.class"
   val GIMEL_SERIALIZER_CLASS = "gimel.serializer.class"
+
+  // Gimel Auth
+  val GIMEL_AUTH_REQUEST_TYPE = "gimel.auth.request.type"
 }
 
 

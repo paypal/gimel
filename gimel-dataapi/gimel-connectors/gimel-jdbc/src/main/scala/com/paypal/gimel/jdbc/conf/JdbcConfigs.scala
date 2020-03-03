@@ -64,4 +64,6 @@ object JdbcConfigs {
     s"${GIMEL_JDBC_OPTION_KEYWORD}process.complete.pushdown.select.enabled"
   val jdbcFastLoadErrLimit =
     s"${GIMEL_JDBC_OPTION_KEYWORD}write.fastload.error.limit"
+  val jdbcAuthLoaderClass =
+    s"${GIMEL_JDBC_OPTION_KEYWORD}auth.provider.class"
 }

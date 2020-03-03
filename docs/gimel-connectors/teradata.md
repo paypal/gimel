@@ -204,9 +204,32 @@ readdf.show()
 #### Setting password for JDBC datasource
 * Using Proxy User [Only for Teradata]
 
-[NOTE]: *ProxyUser is only available for Teradata usage.*
+[NOTE]: * ProxyUser is only available for Teradata usage.*
 
 This way will mask the spark user with Gimel's proxy user. User will not need to specify password in this case.
+
+Here, AuthProvider is required to get credentials for gimel proxy user. 
+You need to extend com.paypal.gimel.common.security.AuthProvider in gimel-commons and implement getCredentials method.
+
+```scala
+
+import org.apache.spark._
+import org.apache.spark.sql._
+import com.paypal.gimel.DataSet
+
+//Initiate DataSet
+val dataSet: DataSet = DataSet(spark)
+
+val options = Map("rest.service.method" -> "https",
+"rest.service.host" -> "udc-service-host",
+"rest.service.port" -> "443",
+"gimel.jdbc.auth.provider.class" -> "com.example.CustomAuthProvider",
+"gimel.jdbc.p.strategy" -> "custom")
+
+val df = dataset.read("UDC.Teradata.mycluster.yelpdb.YELP_TIP", options)
+
+
+```
 
 * Using Password File
 
@@ -227,8 +250,7 @@ Password for JDBC data source can be specified as agruments in the APIs in two w
 
 * API Usuage:
 
-If password file is in HDFS:
-
+ If password file is in HDFS:
 
 ```scala
 // common imports

@@ -33,6 +33,7 @@ object JdbcConstants {
   val TERADATA = "TERADATA"
   val ORCALE = "ORACLE"
   val POSTGRESQL = "POSTGRESQL"
+
   val HDFS_FILE_SOURCE = "hdfs"
   val LOCAL_FILE_SOURCE = "local"
   val DEFAULT_P_FILE_SOURCE = HDFS_FILE_SOURCE
@@ -40,6 +41,8 @@ object JdbcConstants {
   val JDBC_INLINE_PASSWORD_STRATEGY = "inline"
   val JDBC_PROXY_USERNAME = "gimelproxyuser"
   val JDBC_DEFAULT_PASSWORD_STRATEGY = JDBC_FILE_PASSWORD_STRATEGY
+  val JDBC_CUSTOM_PASSWORD_STRATEGY = "custom"
+  val JDBC_AUTH_REQUEST_TYPE = "JDBC"
 
   // default TD properties
   val DEFAULT_TD_SESSIONS = 5
