@@ -92,7 +92,7 @@ abstract class GimelDataSet(sparkSession: SparkSession) {
     *                props is the way to set various additional parameters for read and write operations in DataSet class
     *                    * @return Boolean
     */
-  def create(dataset: String, dataSetProps: Map[String, Any] = Map.empty): Boolean
+  def create(dataset: String, dataSetProps: Map[String, Any] = Map.empty): Unit
 
   /**
     * Function to drop the dataset (Currently only in the respective storages and not in the pcatalog/hive meta data)
@@ -103,7 +103,7 @@ abstract class GimelDataSet(sparkSession: SparkSession) {
     *
     * @return Boolean
     */
-  def drop(dataset: String, dataSetProps: Map[String, Any] = Map.empty): Boolean
+  def drop(dataset: String, dataSetProps: Map[String, Any] = Map.empty): Unit
 
   /**
     * Function to purge the records in the dataset
@@ -114,7 +114,7 @@ abstract class GimelDataSet(sparkSession: SparkSession) {
     *
     * @return Boolean
     */
-  def truncate(dataset: String, dataSetProps: Map[String, Any] = Map.empty): Boolean
+  def truncate(dataset: String, dataSetProps: Map[String, Any] = Map.empty): Unit
 
   /**
     * Supported Types of RDD, where RDD[T] is provided by client
@@ -127,7 +127,6 @@ abstract class GimelDataSet(sparkSession: SparkSession) {
     * Save Checkpoint
     */
   def saveCheckPoint(): Unit
-
 
   /**
     * Clear CheckPoint

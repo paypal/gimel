@@ -155,7 +155,20 @@ object GimelQueryProcessor {
         GimelQueryUtils.createPushDownQueryDataframe(sparkSession, transformedSql.get, jdbcOptions.get)
       } else if (queryUtils.isUDCDataDefinition(sql)) {
         logger.info("This path is dynamic dataset creation path")
-        handleDDLs(sql, sparkSession, dataSet, options)
+        var resultingStr = ""
+        Try(
+          handleDDLs(sql, sparkSession, dataSet, options)
+        ) match {
+          case Success(result) =>
+            resultingStr = "Query Completed."
+          case Failure(e) =>
+            resultingStr = s"Query Failed in function : $MethodName. Error --> \n\n ${
+              e.toString
+            }"
+            logger.error(resultingStr)
+            throw e
+        }
+        stringToDF(sparkSession, resultingStr)
       } else {
         val (originalSQL, destination, selectSQL, kafkaDataSets, queryPushDownFlag) =
           resolveSQL(sql, sparkSession, dataSet)
@@ -1079,20 +1092,19 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     * @param options      - List of options
     * @return
     */
-  def handleDDLs(sql: String, sparkSession: SparkSession, dataSet: DataSet, options: Map[String, String]): DataFrame = {
+  def handleDDLs(sql: String, sparkSession: SparkSession, dataSet: DataSet, options: Map[String, String]): Unit = {
     val uniformSQL = sql.replace("\n", " ")
     val sqlParts: Array[String] = uniformSQL.split(" ")
     // remove all additional white spaces in the DDL statment
     val newSql = sqlParts.filter(x => !x.isEmpty).mkString(" ")
     val newSqlParts = newSql.split(" ")
-    val result: DataFrame = sqlParts.head.toUpperCase match {
+    sqlParts.head.toUpperCase match {
       // We have two "create ddl" paths. One with full create (plain) statement provided by the user
       // the other where we have to construct from the dataframe after running select clause in given sql/ddl
       // create table db.tablename(x int, y varchar(10) will be handled by handlePlainCreateDDL funcation
       // create table db.tablename tblproperties("table_type":"SET") as select * from another_table.
       case QueryConstants.DDL_CREATE_STRING => {
         val index = sqlParts.indexWhere(_.toLowerCase().contains(GimelConstants.UDC_STRING))
-        val datasetname = sqlParts(index)
         // Find out whether select is part of the create statement
         val isHavingSelect = QueryParserUtils.isHavingSelect(sql)
         isHavingSelect match {
@@ -1103,14 +1115,12 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
       //  following case will cover DROP DDL
       case QueryConstants.DDL_DROP_STRING => {
         val dataSetName = newSqlParts(2)
-        val result = dataSet.drop(dataSetName, options)
-        boolToDF(sparkSession, result)
+        dataSet.drop(dataSetName, options)
       }
       //  following case will cover TRUNCATE DDL
       case QueryConstants.DDL_TRUNCATE_STRING => {
         val dataSetName = newSqlParts(2)
-        val result = dataSet.truncate(dataSetName, options)
-        boolToDF(sparkSession, result)
+        dataSet.truncate(dataSetName, options)
       }
       //  following case will cover both DELETE AND DELETE FROM DDL
       case QueryConstants.DDL_DELETE_STRING => {
@@ -1118,12 +1128,10 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
           case true => newSqlParts(2)
           case _ => newSqlParts(1)
         }
-        val result = dataSet.truncate(dataSetName, options)
-        boolToDF(sparkSession, result)
+        dataSet.truncate(dataSetName, options)
       }
       case _ => throw new Exception("Unexpected path at runtime. We should not arrive at this location !")
     }
-    result
   }
 
   /**
@@ -1142,7 +1150,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     * @param sparkSession - Spark session
     * @return
     */
-  def handleSelectDDL(sqlParts: Array[String], sql: String, dataSet: DataSet, options: Map[String, String], sparkSession: SparkSession): DataFrame = {
+  def handleSelectDDL(sqlParts: Array[String], sql: String, dataSet: DataSet, options: Map[String, String], sparkSession: SparkSession): Unit = {
     val selectIndex = sqlParts.indexWhere(_.toUpperCase().contains(QueryConstants.SQL_SELECT_STRING))
     val selectClause = sqlParts.slice(selectIndex, sqlParts.length).mkString(" ")
     val pcatalogIndex = sqlParts.indexWhere(_.toLowerCase().contains(GimelConstants.UDC_STRING))
@@ -1162,19 +1170,17 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
 
     // Create the table and Write data into it from the selected dataframe
     try {
-      if (dataSet.create(datasetname, newOptions)) {
+        dataSet.create(datasetname, newOptions)
         logger.info("Table/object creation success")
         dataSet.write(datasetname, selectDF, newOptions)
-      }
     } catch {
       case e: Throwable =>
         val msg = s"Error creating/writing table: ${e.getMessage}"
         throw new Exception(msg, e)
     }
-    boolToDF(sparkSession, true)
   }
 
-  def handlePlainCreateDDL(sqlParts: Array[String], dataSet: DataSet, options: Map[String, String], sparkSession: SparkSession): DataFrame = {
+  def handlePlainCreateDDL(sqlParts: Array[String], dataSet: DataSet, options: Map[String, String], sparkSession: SparkSession): Unit = {
 
     // Since select is not part of create statement it has to be full create statement
     // We need to replace the pcatalog.storagetype.storagesystem.DB.Table with DB.Table
@@ -1193,8 +1199,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     }
     ).mkString(" ")
     val newOptions = options ++ Map[String, String](GimelConstants.TABLE_SQL -> newSQL.toString, GimelConstants.CREATE_STATEMENT_IS_PROVIDED -> "true")
-    val result = dataSet.create(datasetname, newOptions)
-    boolToDF(sparkSession, result)
+    dataSet.create(datasetname, newOptions)
 
   }
 

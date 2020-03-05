@@ -161,7 +161,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @param dataSetProps
     *                * @return Boolean
     */
-  override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+  override def create(dataset: String, dataSetProps: Map[String, Any]): Unit = {
     throw new UnsupportedOperationException(s"DataSet create for hdfs/hive currently not Supported")
   }
 
@@ -171,7 +171,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @param dataSetProps
     *                * @return Boolean
     */
-  override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+  override def drop(dataset: String, dataSetProps: Map[String, Any]): Unit = {
     throw new UnsupportedOperationException(s"DataSet drop for hdfs/hive currently not Supported")
   }
 
@@ -181,7 +181,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @param dataSetProps
     *                * @return Boolean
     */
-  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Unit = {
     throw new UnsupportedOperationException(s"DataSet truncate for hdfs/hive currently not Supported")
   }
 

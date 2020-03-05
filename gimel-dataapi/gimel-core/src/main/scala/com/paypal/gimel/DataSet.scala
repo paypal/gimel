@@ -516,7 +516,7 @@ class DataSet(val sparkSession: SparkSession) {
     */
   private def create(sourceType: DataSetType.SystemType
                      , sourceName: String
-                     , props: Map[String, Any]): Boolean = {
+                     , props: Map[String, Any]): Unit = {
     latestDataSetReader = Some(getDataSet(sparkSession, sourceType))
     latestDataSetReader.get.create(sourceName, props)
   }
@@ -529,7 +529,7 @@ class DataSet(val sparkSession: SparkSession) {
     * @param props   Additional Properties for the Reader of Dataset
     * @return Boolean
     */
-  def create(dataSet: String, props: Map[String, Any]): Boolean = {
+  def create(dataSet: String, props: Map[String, Any]): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     // get start time
@@ -571,7 +571,7 @@ class DataSet(val sparkSession: SparkSession) {
       // additionalPropsToLog = propsToLog
       datasetSystemType = systemType.toString
 
-      val data = this.create(systemType, dataSet, newProps)
+      this.create(systemType, dataSet, newProps)
 
       // update log variables to push logs
       val endTime = System.currentTimeMillis()
@@ -597,8 +597,6 @@ class DataSet(val sparkSession: SparkSession) {
         , endTime
         , executionTime
       )
-
-      true
     }
     catch {
       case e: Throwable =>
@@ -649,7 +647,7 @@ class DataSet(val sparkSession: SparkSession) {
     */
   private def drop(sourceType: DataSetType.SystemType
                    , sourceName: String
-                   , props: Map[String, Any]): Boolean = {
+                   , props: Map[String, Any]): Unit = {
     latestDataSetReader = Some(getDataSet(sparkSession, sourceType))
     latestDataSetReader.get.drop(sourceName, props)
   }
@@ -662,7 +660,7 @@ class DataSet(val sparkSession: SparkSession) {
     * @param props   Additional Properties for the Reader of Dataset
     * @return Boolean
     */
-  def drop(dataSet: String, props: Map[String, Any]): Boolean = {
+  def drop(dataSet: String, props: Map[String, Any]): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     // get start time
@@ -701,7 +699,7 @@ class DataSet(val sparkSession: SparkSession) {
       // additionalPropsToLog = propsToLog
       datasetSystemType = systemType.toString
 
-      val data = this.drop(systemType, dataSet, newProps)
+      this.drop(systemType, dataSet, newProps)
 
       // update log variables to push logs
       val endTime = System.currentTimeMillis()
@@ -727,8 +725,6 @@ class DataSet(val sparkSession: SparkSession) {
         , endTime
         , executionTime
       )
-
-      true
     }
     catch {
       case e: Throwable =>
@@ -778,7 +774,7 @@ class DataSet(val sparkSession: SparkSession) {
     */
   private def truncate(sourceType: DataSetType.SystemType
                        , sourceName: String
-                       , props: Map[String, Any]): Boolean = {
+                       , props: Map[String, Any]): Unit = {
     latestDataSetReader = Some(getDataSet(sparkSession, sourceType))
     latestDataSetReader.get.truncate(sourceName, props)
   }
@@ -791,7 +787,7 @@ class DataSet(val sparkSession: SparkSession) {
     * @param props   Additional Properties for the Reader of Dataset
     * @return Boolean
     */
-  def truncate(dataSet: String, props: Map[String, Any]): Boolean = {
+  def truncate(dataSet: String, props: Map[String, Any]): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     // get start time
@@ -828,7 +824,7 @@ class DataSet(val sparkSession: SparkSession) {
       // additionalPropsToLog = propsToLog
       datasetSystemType = systemType.toString
 
-      val data = this.truncate(systemType, dataSet, newProps)
+      this.truncate(systemType, dataSet, newProps)
 
       // update log variables to push logs
       val endTime = System.currentTimeMillis()
@@ -854,8 +850,6 @@ class DataSet(val sparkSession: SparkSession) {
         , endTime
         , executionTime
       )
-
-      true
     }
     catch {
       case e: Throwable =>
