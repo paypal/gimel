@@ -137,9 +137,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @param dataSetProps
     * * @return Boolean
     */
-  override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+  override def create(dataset: String, dataSetProps: Map[String, Any]): Unit = {
     throw new UnsupportedOperationException(s"DataSet create for hbase currently not Supported")
-    true
   }
 
   /**
@@ -148,9 +147,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @param dataSetProps
     * * @return Boolean
     */
-  override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+  override def drop(dataset: String, dataSetProps: Map[String, Any]): Unit = {
     throw new UnsupportedOperationException(s"DataSet drop for hbase currently not Supported")
-    true
   }
 
   /**
@@ -159,9 +157,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @param dataSetProps
     * * @return Boolean
     */
-  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Unit = {
     throw new UnsupportedOperationException(s"DataSet truncate for hbase currently not Supported")
-    true
   }
 
   /**

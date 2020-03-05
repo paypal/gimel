@@ -36,6 +36,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   val logger = Logger()
   logger.info(s"Initiated --> ${this.getClass.getName}")
 
+  val hiveUtils = new HiveUtils
+
   /**
     *
     * @param dataset Name of the UDC Data Set
@@ -53,7 +55,6 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     }
     val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
 
-    val hiveUtils = new HiveUtils
     val checkPCatalogDB = hiveUtils.checkIfCatalogTable(dataset);
     if (checkPCatalogDB) {
       if (!hiveUtils.isCrossCluster(datasetProps)) {
@@ -61,7 +62,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
         sparkSession.read.table(hiveDataSetName)
       } else {
         logger.info("Cross Cluster Read Detected !")
-        new com.paypal.gimel.hdfs.DataSet(sparkSession).read(dataset, dataSetProps)
+        val hdfsDataSet = new com.paypal.gimel.hdfs.DataSet(sparkSession)
+        hdfsDataSet.read(dataset, dataSetProps)
       }
     } else {
       sparkSession.read.table(dataset)
@@ -89,7 +91,6 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
       throw new DataSetOperationException("Props Cannot Be Empty!")
     }
     val dataSet: String = dataSetProps(GimelConstants.RESOLVED_HIVE_TABLE).toString
-    val hiveUtils = new HiveUtils
     hiveUtils.write(dataSet, dataFrame, sparkSession, dataSetProps)
   }
 
@@ -130,13 +131,11 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @param dataSetProps
     *                * @return Boolean
     */
-  override def create(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+  override def create(dataset: String, dataSetProps: Map[String, Any]): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
     logger.info(" @Begin --> " + MethodName)
 
-    val hiveUtils = new HiveUtils
     hiveUtils.create(dataset, dataSetProps, sparkSession)
-    true
   }
 
   /**
@@ -145,13 +144,11 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @param dataSetProps
     *                * @return Boolean
     */
-  override def drop(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+  override def drop(dataset: String, dataSetProps: Map[String, Any]): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
     logger.info(" @Begin --> " + MethodName)
 
-    val hiveUtils = new HiveUtils
     hiveUtils.drop(dataset, dataSetProps, sparkSession)
-    true
   }
 
   /**
@@ -160,13 +157,11 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     * @param dataSetProps
     *                * @return Boolean
     */
-  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Boolean = {
+  override def truncate(dataset: String, dataSetProps: Map[String, Any]): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
     logger.info(" @Begin --> " + MethodName)
 
-    val hiveUtils = new HiveUtils
     hiveUtils.truncate(dataset, dataSetProps, sparkSession)
-    true
   }
 
   /**
