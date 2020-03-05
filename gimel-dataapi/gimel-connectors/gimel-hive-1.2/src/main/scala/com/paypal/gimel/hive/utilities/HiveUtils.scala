@@ -115,8 +115,8 @@ class HiveUtils {
 
   /**
     *
-    * @param dataset Name of the UDC or UDC Data Set
-    *                returns true if its a UDC or Pcatalog table
+    * @param dataset : Name of the UDC Data Set
+    * @return true if its a UDC or Pcatalog table
     *
     */
   def checkIfCatalogTable(dataset: String): Boolean = {
@@ -138,7 +138,6 @@ class HiveUtils {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
     logger.info(" @Begin --> " + MethodName)
 
-    val actualProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
     val catalogProvider = dataSetProps.get(CatalogProviderConfigs.CATALOG_PROVIDER).get.toString
     val sql = dataSetProps.get(GimelConstants.TABLE_SQL).get.toString
     val sparkSchema: Array[StructField] = dataSetProps.keySet.contains(GimelConstants.TABLE_FILEDS) match {
@@ -150,7 +149,7 @@ class HiveUtils {
       case _ => dataSetProps.get("PARTITIONS").get.asInstanceOf[Array[Field]]
     }
     val createTableStatement: Any = catalogProvider.toUpperCase() match {
-      case com.paypal.gimel.common.conf.CatalogProviderConstants.PCATALOG_PROVIDER | com.paypal.gimel.common.conf.CatalogProviderConstants.UDC_PROVIDER => {
+      case CatalogProviderConstants.PCATALOG_PROVIDER | CatalogProviderConstants.UDC_PROVIDER => {
         dataSetProps.get(GimelConstants.CREATE_STATEMENT_IS_PROVIDED).get match {
           case "true" =>
             dataSetProps.get(GimelConstants.TABLE_SQL).get.toString
@@ -158,7 +157,7 @@ class HiveUtils {
             prepareCreateStatement(sql, sparkSchema, partitionFields)
         }
       }
-      case com.paypal.gimel.common.conf.CatalogProviderConstants.HIVE_PROVIDER =>
+      case CatalogProviderConstants.HIVE_PROVIDER =>
         throw new Exception(s"HIVE Provider is NOT currently Supported")
     }
     logger.info("CREATE TABLE STATEMENT => " + createTableStatement)
@@ -217,9 +216,9 @@ class HiveUtils {
 
     // Here we inject back the columns with data types back in the SQL statemnt
     val newSqlParts = pcatSQL.split(" ")
-    val PCATindex = newSqlParts.indexWhere(_.toUpperCase().contains("TABLE"))
-    val catPrefix = newSqlParts.slice(0, PCATindex + 2).mkString(" ")
-    val catSuffix = newSqlParts.slice(PCATindex + 2, newSqlParts.length).mkString(" ")
+    val pcatIndex = newSqlParts.indexWhere(_.toUpperCase().contains("TABLE"))
+    val catPrefix = newSqlParts.slice(0, pcatIndex + 2).mkString(" ")
+    val catSuffix = newSqlParts.slice(pcatIndex + 2, newSqlParts.length).mkString(" ")
     val fullStatement = s"""${catPrefix} ${colQulifier} ${catSuffix}"""
     logger.info("the Create statement" + fullStatement)
     fullStatement
@@ -260,7 +259,7 @@ class HiveUtils {
       case _ => false
     }
     catalogProvider match {
-      case com.paypal.gimel.common.conf.CatalogProviderConstants.PCATALOG_PROVIDER | com.paypal.gimel.common.conf.CatalogProviderConstants.UDC_PROVIDER => {
+      case CatalogProviderConstants.PCATALOG_PROVIDER | CatalogProviderConstants.UDC_PROVIDER => {
         // Rename the table
         val renameTableCommand = s"""ALTER TABLE ${hiveDataSetName} RENAME TO ${hiveDataSetName}_${uniqueID}"""
         logger.info("ALTER TABLE COMMAND =>  " + renameTableCommand)
@@ -292,7 +291,7 @@ class HiveUtils {
           sparkSession.sql(renamePathCommand)
         }
       }
-      case com.paypal.gimel.common.conf.CatalogProviderConstants.HIVE_PROVIDER =>
+      case CatalogProviderConstants.HIVE_PROVIDER =>
         throw new Exception(s"HIVE Provider is NOT currently Supported")
     }
     logger.info(s""""${hiveDataSetName} got truncated and a back up table ${hiveDataSetName}_${uniqueID} got created""")
@@ -329,9 +328,9 @@ class HiveUtils {
     }
 
     val dropTableStatement = catalogProvider match {
-      case com.paypal.gimel.common.conf.CatalogProviderConstants.PCATALOG_PROVIDER | com.paypal.gimel.common.conf.CatalogProviderConstants.UDC_PROVIDER =>
+      case CatalogProviderConstants.PCATALOG_PROVIDER | CatalogProviderConstants.UDC_PROVIDER =>
         s"""ALTER TABLE ${hiveDataSetName} RENAME TO ${hiveDataSetName}_${uniqueID}"""
-      case com.paypal.gimel.common.conf.CatalogProviderConstants.HIVE_PROVIDER =>
+      case CatalogProviderConstants.HIVE_PROVIDER =>
         throw new Exception(s"HIVE Provider is NOT currently Supported")
     }
     sparkSession.sql(dropTableStatement.toString)
