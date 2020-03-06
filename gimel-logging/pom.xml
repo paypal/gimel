@@ -41,7 +41,7 @@
         <scalatest.version>2.2.4</scalatest.version>
         <scalatra.version>2.3.0</scalatra.version>
         <java.version>1.7</java.version>
-        <jackson.databind.version>2.9.10.1</jackson.databind.version>
+        <jackson.databind.version>2.9.10.3</jackson.databind.version>
         <protobuf.version>2.5.0</protobuf.version>
         <protobuf.javaformatter.version>1.4</protobuf.javaformatter.version>
         <kafka.version>0.10.2.0</kafka.version>
