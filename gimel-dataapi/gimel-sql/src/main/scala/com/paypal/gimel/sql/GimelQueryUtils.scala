@@ -929,6 +929,75 @@ object GimelQueryUtils {
   }
 
   /**
+    * For a given dataset (table) this function calls getDataSetProperties which calls catalog provider and returns the dataset properties
+    * which will be used to identify the storage of the dataset
+    *
+    * @param insertTable  - Incoming dataset
+    * @param sparkSession - spark session
+    * @param options      - Set of user options
+    * @return - Returns the storage system (hive/teradata/kafka...)
+    */
+
+  def getSystemType(insertTable: String, sparkSession: SparkSession,
+                    options: Map[String, String]): com.paypal.gimel.DataSetType.Value = {
+    logger.info("Data set name is  ==> " + insertTable)
+    val formattedProps: Map[String, Any] = com.paypal.gimel.common.utilities.DataSetUtils.getProps(options) ++
+      Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
+        sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
+          CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER))
+
+    // if storage type unknown we will default to HIVE PROVIDER
+    if (isStorageTypeUnknown(insertTable)) {
+      formattedProps ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.HIVE_PROVIDER)
+    }
+
+    val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(insertTable, options)
+    logger.info("dataSetProperties  ==> " + dataSetProperties.toString())
+    val systemType: _root_.com.paypal.gimel.DataSetType.Value = com.paypal.gimel.DataSetUtils.getSystemType(dataSetProperties)
+    systemType
+  }
+
+  /**
+    * This function tokenizes the incoming sql and parses it using GSQL parser and identify whether the query is of Select type
+    * If it is a select query, it checks whether it is of HBase and has limit clause.
+    *
+    * @param sql          - Incoming SQL
+    * @param options      - set of Options from the user
+    * @param sparkSession - spark session
+    * @return
+    */
+  def setLimitForHBase(sql: String, options: Map[String, String],
+                       sparkSession: SparkSession): Unit = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
+    logger.info(" @Begin --> " + MethodName)
+    Try {
+      val nonEmptyStrTokenized = GimelQueryUtils.tokenizeSql(sql)
+      nonEmptyStrTokenized.head.toLowerCase match {
+        case "select" =>
+          val selectTables = getAllTableSources(sql)
+          // Checks if there is more than 1 source tables
+          if (selectTables.isEmpty || selectTables.length > 1) return
+          selectTables.map(eachTable => getSystemType(eachTable, sparkSession, options) match {
+            case com.paypal.gimel.DataSetType.HBASE =>
+              logger.info("Sql contains limit clause, setting the HBase Page Size.")
+              val limit = Try(QueryParserUtils.getLimit(sql)).get
+              sparkSession.conf.set(GimelConstants.HBASE_PAGE_SIZE, limit)
+            case _ =>
+              return
+          })
+        case _ =>
+          return
+      }
+    } match {
+      case Success(_) =>
+      case Failure(exception) =>
+        logger.error(s"Exeception occurred while setting the limit for HBase -> ${exception.getMessage}")
+        throw exception
+    }
+  }
+
+  /**
     * Parse the SQL and get cache Query & select statement
     *
     * @param sql SQL String

@@ -157,6 +157,12 @@ object GimelQueryProcessor {
         logger.info("This path is dynamic dataset creation path")
         handleDDLs(sql, sparkSession, dataSet, options)
       } else {
+
+        // Set HBase Page Size for optimization if selecting from HBase with limit
+        if (QueryParserUtils.isHavingLimit(sql)) {
+          setLimitForHBase(sql, options, sparkSession)
+        }
+
         val (originalSQL, destination, selectSQL, kafkaDataSets, queryPushDownFlag) =
           resolveSQL(sql, sparkSession, dataSet)
         destination match {
