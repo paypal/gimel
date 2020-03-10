@@ -24,13 +24,13 @@ import scala.util.{Failure, Success, Try}
 import org.apache.commons.lang3.StringUtils
 import org.mockito.Mockito._
 import org.scalamock.scalatest.MockFactory
-import org.scalatest.FunSuite
+import org.scalatest._
 
 import com.paypal.gimel.common.catalog.CatalogProvider
 import com.paypal.gimel.common.gimelservices.{GimelServicesProperties, GimelServiceUtilities}
 import com.paypal.gimel.parser.utilities.{QueryParserUtils, SearchSchemaUtils}
 
-class GimelQueryUtilsTest extends FunSuite with MockFactory {
+class GimelQueryUtilsTest extends FunSuite with Matchers with MockFactory {
 
   import com.paypal.gimel.parser.utilities.QueryParserUtils._
 
@@ -270,10 +270,43 @@ class GimelQueryUtilsTest extends FunSuite with MockFactory {
     )
   }
 
-//  test("setLimitForHBase") {
-//    val tableName = "test_table"
-//    val sql = "select * from HBase.Local.default." + tableName + " limit 20"
-//    GimelQueryUtils.setLimitForHBase(sql, Map.empty, sparkSession)
-//    assert(sparkSession.conf.get(GimelConstants.HBASE_PAGE_SIZE) == 20)
-//  }
+  // Substitutes dataset name with tmp table in sql using regex
+  test ("getSQLWithTmpTable") {
+    // Should match as "udc.hive.test.flights" is preceded by space and is at end of the line
+    assert(GimelQueryUtils.getSQLWithTmpTable("select * from udc.hive.test.flights",
+      "udc.hive.test.flights",
+      "tmp_flights")
+      == "select * from tmp_flights")
+
+    // Should not match as "udc.hive.test.flights" is not preceded by any white space
+    assert(GimelQueryUtils.getSQLWithTmpTable("select * fromudc.hive.test.flights",
+      "udc.hive.test.flights",
+      "tmp_flights")
+      == "select * fromudc.hive.test.flights")
+
+    // Should not match as "udc.hive.test.flights" is not followed by any white space, ; or ,
+    assert(GimelQueryUtils.getSQLWithTmpTable("select * from udc.hive.test.flights_schedule",
+      "udc.hive.test.flights",
+      "tmp_flights")
+      == "select * from udc.hive.test.flights_schedule")
+
+    // Should match as "udc.hive.test.flights" is preceded by space and followed by new line
+    assert(GimelQueryUtils.getSQLWithTmpTable("select * from udc.hive.test.flights\n",
+      "udc.hive.test.flights",
+      "tmp_flights")
+      == "select * from tmp_flights\n")
+
+    // Should match as "udc.hive.test.flights" is preceded by space and followed by ,
+    assert(GimelQueryUtils.getSQLWithTmpTable("select * from udc.hive.test.flights, udc.hive.test.flights_schedule",
+      "udc.hive.test.flights",
+      "tmp_flights")
+      == "select * from tmp_flights, udc.hive.test.flights_schedule")
+
+    // Should match as "udc.hive.test.flights" is preceded and followed by space
+    assert(GimelQueryUtils.getSQLWithTmpTable(
+      "select * from udc.hive.test.flights where flights_id = 123",
+      "udc.hive.test.flights",
+      "tmp_flights")
+      == "select * from tmp_flights where flights_id = 123")
+  }
 }
