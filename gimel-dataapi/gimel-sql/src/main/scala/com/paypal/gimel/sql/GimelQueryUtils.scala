@@ -36,8 +36,8 @@ import org.apache.spark.streaming.Time
 
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{GimelConstants, _}
-import com.paypal.gimel.common.utilities.DataSetUtils.resolveDataSetName
-import com.paypal.gimel.common.utilities.GenericUtils
+import com.paypal.gimel.common.utilities.{GenericUtils, RandomGenerator}
+import com.paypal.gimel.common.utilities.DataSetUtils._
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
 import com.paypal.gimel.hbase.conf.HbaseConfigs
@@ -54,6 +54,16 @@ import com.paypal.gimel.parser.utilities.{QueryParserUtils, SearchCriteria, Sear
 object GimelQueryUtils {
 
   val logger: Logger = Logger(this.getClass.getName)
+  /*
+   * Regex for substituting tmp table in a sql.
+   * This regex matches if key is preceded by any whitespace character - new line, tab, space
+   * and followed by (new line, tab, space, round brackets, semi colon and comma) or is at end of line ($$)
+   * ?<! negative loohbehind operator is used for checking the character preceding
+   * ?i is used for ignore case
+   * ?= positive lookahead operator is used for checking the characters following
+   * $$ is used to check if it is at the end of line
+   */
+  val regexTmpTable = s"(?<!\\S)(?i)key(?=[\\n\\t \\(\\);,]|$$)"
 
   // Holder for Run-Time Catalog Provider. Mutable at every SQL execution
   private var catalogProvider: String = CatalogProviderConstants.UDC_PROVIDER
@@ -359,11 +369,11 @@ object GimelQueryUtils {
     val pCatalogTablesToReplaceAsTmpTable: Map[String, String] = getTablesFrom(selectSQL).map {
       eachSource =>
         val options = getOptions(sparkSession)._2
-        val df = dataSet.read(eachSource, options)
-        cacheIfRequested(df, eachSource, options)
-
-        val tabNames = eachSource.split("\\.")
-        val tmpTableName = "tmp_" + tabNames(1)
+        // Create a random string with random length for tmp table
+        val randomString = RandomGenerator.getRandomString(
+          RandomGenerator.getRandomInt(GimelConstants.GSQL_TMP_TABLE_RANDOM_GENERATOR_MIN,
+            GimelConstants.GSQL_TMP_TABLE_RANDOM_GENERATOR_MAX))
+        val tmpTableName = "tmp_" + eachSource.replaceAll("[^\\w\\s]", "_") + "_" + randomString
 
         // do DataSet.read() only if queryPushDownFlag is set to "false"
         queryPushDownFlag match {
@@ -399,20 +409,44 @@ object GimelQueryUtils {
           sparkSession.conf.set(JdbcConfigs.jdbcUrl, hiveTableParams(JdbcConfigs.jdbcUrl))
           logger.info(s"Setting JDBC driver Class : ${hiveTableParams(JdbcConfigs.jdbcDriverClassKey)}")
           sparkSession.conf.set(JdbcConfigs.jdbcDriverClassKey, hiveTableParams(JdbcConfigs.jdbcDriverClassKey))
-          sqlTmpString = sqlTmpString.replaceAll(s"(?i)${kv._1}", jdbcTableName)
-          sqlOriginalString = sqlOriginalString.replaceAll(s"(?i)${kv._1}", jdbcTableName)
+          sqlTmpString = getSQLWithTmpTable(sqlTmpString, kv._1, jdbcTableName)
+          sqlOriginalString = getSQLWithTmpTable(sqlOriginalString, kv._1, jdbcTableName)
         }
       case _ =>
         logger.info("PATH IS --> DEFAULT")
         pCatalogTablesToReplaceAsTmpTable.foreach { kv =>
-          sqlTmpString = sqlTmpString.replaceAll(s"(?i)${kv._1}", kv._2)
-          sqlOriginalString = sqlOriginalString.replaceAll(s"(?i)${kv._1}", kv._2)
+          sqlTmpString = getSQLWithTmpTable(sqlTmpString, kv._1, kv._2)
+          sqlOriginalString = getSQLWithTmpTable(sqlOriginalString, kv._1, kv._2)
         }
     }
 
     logger.info(s"incoming SQL --> $selectSQL")
     logger.info(s"resolved SQL with Temp Table(s) --> $sqlTmpString")
     (sqlOriginalString, sqlTmpString, kafkaDataSets, queryPushDownFlag)
+  }
+
+  /*
+   * Substitutes dataset name with tmp table in sql using regex
+   *
+   * @param sql
+   * @param datasetName : Mame of dataset to substitute
+   * @param tmpTableName : Temp table name to substitute
+   *
+   * Example:
+   * sql = select * from udc.hive.test.flights
+   * key = udc.hive.test.flights
+   * This should match udc.hive.test.flights in the sql string.
+   *
+   * sql = select * fromudc.hive.test.flights
+   * key = udc.hive.test.flights
+   * This should not match udc.hive.test.flights in the sql string.
+   *
+   * sql = select * from udc.hive.test.flights_schedule
+   * key = udc.hive.test.flights
+   * This should not match udc.hive.test.flights in the sql string.
+   */
+  def getSQLWithTmpTable(sql: String, datasetName: String, tmpTableName: String): String = {
+    sql.replaceAll(regexTmpTable.replace("key", datasetName), tmpTableName)
   }
 
   /**
