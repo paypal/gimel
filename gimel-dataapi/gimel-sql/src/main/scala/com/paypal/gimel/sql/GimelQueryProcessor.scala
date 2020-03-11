@@ -250,6 +250,7 @@ object GimelQueryProcessor {
     } finally {
       logger.info("Unsetting the property -> " + GimelConstants.HBASE_PAGE_SIZE)
       sparkSession.conf.unset(GimelConstants.HBASE_PAGE_SIZE)
+      CatalogProvider.clearDataSetPropertyCache()
     }
   }
 

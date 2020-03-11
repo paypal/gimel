@@ -49,6 +49,9 @@ object CatalogProvider {
   val logger = Logger(this.getClass.getName)
   val servUtils = com.paypal.gimel.common.gimelservices.GimelServiceUtilities()
 
+  // Lookup table for storing DataSetProperties objects for the datasets
+  var cachedDataSetPropsMap = scala.collection.mutable.Map.empty[String, DataSetProperties]
+
   /**
     * Creates DataSetProperties and Returns to caller
     * Properties are Fetched from specified CatalogProvider
@@ -57,11 +60,19 @@ object CatalogProvider {
     * @param options     User Props
     * @return DataSetProperties
     */
-
   def getDataSetProperties(datasetName: String,
                            options: Map[String, Any] = Map[String, Any]()): DataSetProperties = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
     logger.info(" @Begin --> " + MethodName)
+
+    // Check if DataSetProperties object for this dataset is present in cache map first
+    cachedDataSetPropsMap.get(datasetName) match {
+      case None =>
+        logger.info("Dataset not found in cache table.")
+      case dataSetProp: Option[DataSetProperties] =>
+        logger.info("Dataset found in cache.")
+        return dataSetProp.get
+    }
 
     // The user options are passed which will override the default service util properties
     if (options.nonEmpty) {
@@ -127,7 +138,18 @@ object CatalogProvider {
 
     val newProps = datasetProps.props ++
       Map("gimel.kafka.avro.schema.string" -> datasetProps.props.getOrElse("gimel.kafka.avro.schema.string", "").replace("\\", "\"")) ++ options.mapValues(_.toString)
-    DataSetProperties(datasetProps.datasetType, datasetProps.fields, datasetProps.partitionFields, newProps)
+    val dataSetProp = DataSetProperties(datasetProps.datasetType, datasetProps.fields, datasetProps.partitionFields, newProps)
+    // Update the DataSetProperties in cache
+    cachedDataSetPropsMap += (datasetName -> dataSetProp)
+    dataSetProp
+  }
+
+  /*
+   * Clear cached DataSetProperties Map
+   */
+  def clearDataSetPropertyCache(): Unit = {
+    logger.info("Clearing DataSetProperties cache.")
+    cachedDataSetPropsMap.clear()
   }
 
   /**
@@ -136,7 +158,6 @@ object CatalogProvider {
     * @param x User provided properties (DataSetProperties or Json String)
     * @return DataSetProperties
     */
-
   def getUserProps(x: Any): DataSetProperties = {
     x match {
       case str: String =>
