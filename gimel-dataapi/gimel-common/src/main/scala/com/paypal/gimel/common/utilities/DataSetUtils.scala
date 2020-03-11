@@ -26,11 +26,17 @@ import scala.collection.immutable.Map
 import scala.util.Try
 
 import org.apache.spark.SparkContext
+import org.apache.spark.sql.SparkSession
 
-import com.paypal.gimel.common.catalog.CatalogProvider
-import com.paypal.gimel.common.conf.GimelConstants
+import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
+import com.paypal.gimel.common.conf.{CatalogProviderConfigs, CatalogProviderConstants, GimelConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.parser.utilities.QueryParserUtils
+
+object DataSetType extends Enumeration {
+  type SystemType = Value
+  val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID, RESTAPI, SFTP, KAFKA2 = Value
+}
 
 object DataSetUtils {
 
@@ -226,5 +232,86 @@ object DataSetUtils {
       logger.info(s"Combined JDBC options for Storage system :$storageSystemName -> $combinedJdbcOptions")
       combinedJdbcOptions
     }.getOrElse(Map.empty)
+  }
+
+  /**
+    * Fetch the Type of DataSetType based on the DataSetProperties that is Supplied
+    *
+    * @param dataSetProperties DataSetProperties
+    * @return DataSetType
+    */
+  def getSystemType(dataSetProperties: DataSetProperties): (DataSetType.Value) = {
+    dataSetProperties.datasetType.toUpperCase() match {
+      case "HBASE" =>
+        DataSetType.HBASE
+      case "KAFKA" =>
+        val kafkaApiVersion = GenericUtils.getValue(dataSetProperties.props,
+          GimelConstants.GIMEL_KAFKA_VERSION, defaultValue = GimelConstants.GIMEL_KAFKA_DEFAULT_VERSION)
+        if (kafkaApiVersion.equals(GimelConstants.GIMEL_KAFKA_VERSION_ONE)) {
+          DataSetType.KAFKA
+        } else {
+          DataSetType.KAFKA2
+        }
+      case "ELASTIC_SEARCH" =>
+        DataSetType.ES
+      case "JDBC" =>
+        DataSetType.JDBC
+      case "CASSANDRA" =>
+        DataSetType.CASSANDRA
+      case "AEROSPIKE" =>
+        DataSetType.AEROSPIKE
+      case "DRUID" =>
+        DataSetType.DRUID
+      case "HDFS" =>
+        DataSetType.HDFS
+      case "RESTAPI" =>
+        DataSetType.RESTAPI
+      case "HIVE" =>
+        DataSetType.HIVE
+      case "SFTP" =>
+        DataSetType.SFTP
+      case _ =>
+        DataSetType.HIVE
+    }
+  }
+
+  /**
+    * Checks whether the dataSet is HIVE by scanning the pcatalog phrase and also expecting to have the db and table
+    * names to decide it is a HIVE table
+    *
+    * @param dataSet DataSet
+    * @return Boolean
+    */
+  def isStorageTypeUnknown
+  (dataSet: String): Boolean = {
+    dataSet.split('.').head.toLowerCase() != GimelConstants.PCATALOG_STRING && dataSet.split('.').length == 2
+  }
+
+  /**
+    * For a given dataset (table) this function calls getDataSetProperties which calls catalog provider and returns the dataset properties
+    * which will be used to identify the storage of the dataset
+    *
+    * @param insertTable  - Incoming dataset
+    * @param sparkSession - spark session
+    * @param options      - Set of user options
+    * @return - Returns the storage system (hive/teradata/kafka...)
+    */
+  def getSystemType(insertTable: String, sparkSession: SparkSession,
+                    options: Map[String, String]): com.paypal.gimel.common.utilities.DataSetType.Value = {
+    logger.info("Data set name is  ==> " + insertTable)
+    val formattedProps: Map[String, Any] = com.paypal.gimel.common.utilities.DataSetUtils.getProps(options) ++
+      Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
+        sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
+          CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER))
+
+    // if storage type unknown we will default to HIVE PROVIDER
+    if (isStorageTypeUnknown(insertTable)) {
+      formattedProps ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.HIVE_PROVIDER)
+    }
+
+    val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(insertTable, options)
+    logger.info("dataSetProperties  ==> " + dataSetProperties.toString())
+    val systemType = getSystemType(dataSetProperties)
+    systemType
   }
 }

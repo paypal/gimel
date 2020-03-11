@@ -31,10 +31,11 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 import com.paypal.gimel._
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{CatalogProviderConfigs, GimelConstants}
+import com.paypal.gimel.common.utilities.{DataSetType, DataSetUtils}
 import com.paypal.gimel.common.utilities.Timer
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.datastreamfactory.{StreamingResult, StructuredStreamingResult, WrappedData}
-import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
+import com.paypal.gimel.jdbc.conf.JdbcConfigs
 import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener

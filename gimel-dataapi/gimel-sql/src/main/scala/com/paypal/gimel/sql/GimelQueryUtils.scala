@@ -36,7 +36,7 @@ import org.apache.spark.streaming.Time
 
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{GimelConstants, _}
-import com.paypal.gimel.common.utilities.{GenericUtils, RandomGenerator}
+import com.paypal.gimel.common.utilities.{DataSetType, GenericUtils, RandomGenerator}
 import com.paypal.gimel.common.utilities.DataSetUtils._
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
@@ -639,7 +639,7 @@ object GimelQueryUtils {
       , CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER
       , GimelConstants.SPARK_APP_ID -> sparkSession.conf.get(GimelConstants.SPARK_APP_ID)
       , GimelConstants.SPARK_APP_NAME -> sparkSession.conf.get(GimelConstants.SPARK_APP_NAME)
-      , GimelConstants.APP_TAG -> com.paypal.gimel.common.utilities.DataSetUtils.getAppTag(sparkSession.sparkContext)
+      , GimelConstants.APP_TAG -> getAppTag(sparkSession.sparkContext)
     )
     val resolvedOptions: Map[String, String] = optionsToCheck.map { kvPair =>
       (kvPair._1, hiveConf.getOrElse(kvPair._1, kvPair._2))
@@ -929,35 +929,6 @@ object GimelQueryUtils {
   }
 
   /**
-    * For a given dataset (table) this function calls getDataSetProperties which calls catalog provider and returns the dataset properties
-    * which will be used to identify the storage of the dataset
-    *
-    * @param insertTable  - Incoming dataset
-    * @param sparkSession - spark session
-    * @param options      - Set of user options
-    * @return - Returns the storage system (hive/teradata/kafka...)
-    */
-
-  def getSystemType(insertTable: String, sparkSession: SparkSession,
-                    options: Map[String, String]): com.paypal.gimel.DataSetType.Value = {
-    logger.info("Data set name is  ==> " + insertTable)
-    val formattedProps: Map[String, Any] = com.paypal.gimel.common.utilities.DataSetUtils.getProps(options) ++
-      Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
-        sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
-          CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER))
-
-    // if storage type unknown we will default to HIVE PROVIDER
-    if (isStorageTypeUnknown(insertTable)) {
-      formattedProps ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.HIVE_PROVIDER)
-    }
-
-    val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(insertTable, options)
-    logger.info("dataSetProperties  ==> " + dataSetProperties.toString())
-    val systemType: _root_.com.paypal.gimel.DataSetType.Value = com.paypal.gimel.DataSetUtils.getSystemType(dataSetProperties)
-    systemType
-  }
-
-  /**
     * This function tokenizes the incoming sql and parses it using GSQL parser and identify whether the query is of Select type
     * If it is a select query, it checks whether it is of HBase and has limit clause.
     *
@@ -979,7 +950,7 @@ object GimelQueryUtils {
           // Checks if there is more than 1 source tables
           if (selectTables.isEmpty || selectTables.length > 1) return
           selectTables.map(eachTable => getSystemType(eachTable, sparkSession, options) match {
-            case com.paypal.gimel.DataSetType.HBASE =>
+            case DataSetType.HBASE =>
               logger.info("Sql contains limit clause, setting the HBase Page Size.")
               val limit = Try(QueryParserUtils.getLimit(sql)).get
               sparkSession.conf.set(GimelConstants.HBASE_PAGE_SIZE, limit)
@@ -1304,19 +1275,6 @@ object GimelQueryUtils {
     logger.info(s"queryPushDownFlag for data sets${ArrayUtils.toString(tables)}:" +
       s" ${queryPushDownFlag.toString}")
     queryPushDownFlag.toString
-  }
-
-  /**
-    * Checks whether the dataSet is HIVE by scanning the pcatalog phrase and also expecting to have the db and table
-    * names to decide it is a HIVE table
-    *
-    * @param dataSet DataSet
-    * @return Boolean
-    */
-
-  def isStorageTypeUnknown
-  (dataSet: String): Boolean = {
-    dataSet.split('.').head.toLowerCase() != GimelConstants.PCATALOG_STRING && dataSet.split('.').length == 2
   }
 
   /**
