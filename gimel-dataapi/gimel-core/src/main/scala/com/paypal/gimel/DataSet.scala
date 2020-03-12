@@ -200,9 +200,6 @@ class DataSet(val sparkSession: SparkSession) {
 
         val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
         throw new DataSetOperationException(e.toString + "\n" + msg, e)
-    } finally {
-      // Clearing the DataSetProperties cache as next call may be with different properties
-      CatalogProvider.clearDataSetPropertyCache()
     }
   }
 
@@ -333,9 +330,6 @@ class DataSet(val sparkSession: SparkSession) {
 
         val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
         throw new DataSetOperationException(e.toString + "\n" + msg, e)
-    } finally {
-      // Clearing the DataSetProperties cache as next call may be with different properties
-      CatalogProvider.clearDataSetPropertyCache()
     }
 
   }
@@ -448,9 +442,6 @@ class DataSet(val sparkSession: SparkSession) {
 
         val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
         throw new DataSetOperationException(msg, e)
-    } finally {
-      // Clearing the DataSetProperties cache as next call may be with different properties
-      CatalogProvider.clearDataSetPropertyCache()
     }
 
   }
@@ -635,9 +626,6 @@ class DataSet(val sparkSession: SparkSession) {
 
         val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
         throw new DataSetOperationException(e.getMessage + "\n" + msg, e)
-    } finally {
-      // Clearing the DataSetProperties cache as next call may be with different properties
-      CatalogProvider.clearDataSetPropertyCache()
     }
   }
 
@@ -765,9 +753,6 @@ class DataSet(val sparkSession: SparkSession) {
 
         val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
         throw new DataSetOperationException(e.getMessage + "\n" + msg, e)
-    } finally {
-      // Clearing the DataSetProperties cache as next call may be with different properties
-      CatalogProvider.clearDataSetPropertyCache()
     }
   }
 
@@ -894,9 +879,6 @@ class DataSet(val sparkSession: SparkSession) {
 
         val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
         throw new DataSetOperationException(e.getMessage + "\n" + msg, e)
-    } finally {
-      // Clearing the DataSetProperties cache as next call may be with different properties
-      CatalogProvider.clearDataSetPropertyCache()
     }
 
   }
