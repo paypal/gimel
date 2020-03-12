@@ -159,14 +159,6 @@ object CatalogProvider {
     }
   }
 
-  /*
-   * Clear cached DataSetProperties Map
-   */
-  def clearDataSetPropertyCache(): Unit = {
-    logger.info("Clearing DataSetProperties cache.")
-    cachedDataSetPropsMap.clear()
-  }
-
   /**
     * Creates DataSetProperties provided by user and Returns to caller
     *
