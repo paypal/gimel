@@ -49,6 +49,9 @@ object CatalogProvider {
   val logger = Logger(this.getClass.getName)
   val servUtils = com.paypal.gimel.common.gimelservices.GimelServiceUtilities()
 
+  // Lookup table for storing DataSetProperties objects for the datasets
+  var cachedDataSetPropsMap = scala.collection.mutable.Map.empty[String, DataSetProperties]
+
   /**
     * Creates DataSetProperties and Returns to caller
     * Properties are Fetched from specified CatalogProvider
@@ -57,12 +60,44 @@ object CatalogProvider {
     * @param options     User Props
     * @return DataSetProperties
     */
-
   def getDataSetProperties(datasetName: String,
                            options: Map[String, Any] = Map[String, Any]()): DataSetProperties = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
     logger.info(" @Begin --> " + MethodName)
 
+    // Check if DataSetProperties object for this dataset is present in cache map first
+    val datasetPropsObj = cachedDataSetPropsMap.get(datasetName) match {
+      case None =>
+        logger.info("Dataset not found in cache table.")
+        val dataSetPropObj = getDataSetPropertiesFromCatalog(datasetName, options)
+        // Update the DataSetProperties in cache
+        cachedDataSetPropsMap += (datasetName -> dataSetPropObj)
+        dataSetPropObj
+      case dataSetPropObj: Option[DataSetProperties] =>
+        logger.info("Dataset found in cache.")
+        dataSetPropObj.get
+    }
+
+    logger.info(s"Received Properties --> ${datasetPropsObj}")
+
+    val newProps = datasetPropsObj.props ++
+      Map("gimel.kafka.avro.schema.string" ->
+        datasetPropsObj.props.getOrElse("gimel.kafka.avro.schema.string", "").replace("\\", "\"")) ++
+      options.mapValues(_.toString)
+    // Update the DataSetProperties object with passed options
+    DataSetProperties(datasetPropsObj.datasetType, datasetPropsObj.fields, datasetPropsObj.partitionFields, newProps)
+  }
+
+  /**
+    * Creates DataSetProperties and Returns to caller
+    * Properties are Fetched from specified CatalogProvider
+    *
+    * @param datasetName DataSet Name
+    * @param options     User Props
+    * @return DataSetProperties
+    */
+  def getDataSetPropertiesFromCatalog(datasetName: String,
+                                      options: Map[String, Any] = Map[String, Any]()) : DataSetProperties = {
     // The user options are passed which will override the default service util properties
     if (options.nonEmpty) {
       servUtils.customize(options.map { x => (x._1, x._2.toString) })
@@ -92,7 +127,7 @@ object CatalogProvider {
     }
     val resolvedSourceTable = resolveDataSetName(datasetName, catalogProvider)
     logger.info(s"Resolved Catalog Provider is --> ${catalogProvider}")
-    val datasetProps = catalogProvider.toUpperCase() match {
+    catalogProvider.toUpperCase() match {
       case GimelConstants.USER =>
         logger.info(s"Resolving Catalog Via catalogProvider --> ${catalogProvider}")
         val props = getUserProps(options(datasetName + "." + GimelConstants.DATASET_PROPS))
@@ -105,8 +140,7 @@ object CatalogProvider {
           case true =>
             if (servUtils.checkIfDataSetExists(dataset)) {
               servUtils.getDataSetProperties(dataset)
-            }
-            else {
+            } else {
               servUtils.getDynamicDataSetProperties(dataset, options)
             }
           case false =>
@@ -123,11 +157,6 @@ object CatalogProvider {
       case other =>
         throw new Exception(s"Unknown CatalogProvider --> ${catalogProvider}")
     }
-    logger.info(s"Received Properties --> ${datasetProps}")
-
-    val newProps = datasetProps.props ++
-      Map("gimel.kafka.avro.schema.string" -> datasetProps.props.getOrElse("gimel.kafka.avro.schema.string", "").replace("\\", "\"")) ++ options.mapValues(_.toString)
-    DataSetProperties(datasetProps.datasetType, datasetProps.fields, datasetProps.partitionFields, newProps)
   }
 
   /**
@@ -136,7 +165,6 @@ object CatalogProvider {
     * @param x User provided properties (DataSetProperties or Json String)
     * @return DataSetProperties
     */
-
   def getUserProps(x: Any): DataSetProperties = {
     x match {
       case str: String =>
