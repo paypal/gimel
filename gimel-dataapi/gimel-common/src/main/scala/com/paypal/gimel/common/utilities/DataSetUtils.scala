@@ -291,25 +291,25 @@ object DataSetUtils {
     * For a given dataset (table) this function calls getDataSetProperties which calls catalog provider and returns the dataset properties
     * which will be used to identify the storage of the dataset
     *
-    * @param insertTable  - Incoming dataset
+    * @param datasetName  - Incoming dataset
     * @param sparkSession - spark session
     * @param options      - Set of user options
     * @return - Returns the storage system (hive/teradata/kafka...)
     */
-  def getSystemType(insertTable: String, sparkSession: SparkSession,
+  def getSystemType(datasetName: String, sparkSession: SparkSession,
                     options: Map[String, String]): com.paypal.gimel.common.utilities.DataSetType.Value = {
-    logger.info("Data set name is  ==> " + insertTable)
-    val formattedProps: Map[String, Any] = com.paypal.gimel.common.utilities.DataSetUtils.getProps(options) ++
+    logger.info("Data set name is  ==> " + datasetName)
+    val formattedProps: Map[String, Any] = getProps(options) ++
       Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
         sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
           CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER))
 
     // if storage type unknown we will default to HIVE PROVIDER
-    if (isStorageTypeUnknown(insertTable)) {
+    if (isStorageTypeUnknown(datasetName)) {
       formattedProps ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.HIVE_PROVIDER)
     }
 
-    val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(insertTable, options)
+    val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(datasetName, options)
     logger.info("dataSetProperties  ==> " + dataSetProperties.toString())
     val systemType = getSystemType(dataSetProperties)
     systemType

@@ -195,7 +195,13 @@ object GimelConstants {
   val GIMEL_AVRO_SERIALIZER_CLASS_DEFAULT = "com.paypal.gimel.serializers.generic.AvroSerializer"
   val GIMEL_JSON_SERIALIZER_CLASS_DEFAULT = "com.paypal.gimel.serializers.generic.JsonSerializer"
   val GIMEL_STRING_SERIALIZER_CLASS_DEFAULT = "com.paypal.gimel.serializers.generic.StringSerializer"
-
+  val KAFKA_MESSAGE_VALUE_TYPE: String = "gimel.kafka.message.value.type"
+  val KAFKA_BYTE_SERIALIZER: String = "org.apache.kafka.common.serialization.ByteArraySerializer"
+  val KAFKA_STRING_SERIALIZER: String = "org.apache.kafka.common.serialization.StringSerializer"
+  val KAFKA_AVRO_SCHEMA_SOURCE: String = "gimel.kafka.avro.schema.source"
+  val KAFKA_AVRO_SCHEMA_SOURCE_INLINE = "INLINE"
+  val SERIALIZER_VALUE: String = "value.serializer"
+  val KAFKA_AVRO_SCHEMA_SOURCE_CDH = "CDH"
 
   // Gimel Streaming
   val GIMEL_STREAMING_CHECKPOINT_LOCATION = "gimel.streaming.checkpoint.location"
