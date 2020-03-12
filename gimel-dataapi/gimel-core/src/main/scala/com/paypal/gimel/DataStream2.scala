@@ -255,7 +255,8 @@ class DataStream2(val sparkSession: SparkSession) {
 
       val checkpointLocation = getStructuredStreamingCheckpointLocation(sparkContext)
 
-      val systemType = getSystemType(dataSetProperties)
+      // Here fully qualified method name is present as it was conflicting with getSystemType in DataSetUtils
+      val systemType = com.paypal.gimel.StructuredDataStreamUtils.getSystemType(dataSetProperties)
       val newProps: Map[String, Any] = getProps(props) ++ Map(
         GimelConstants.DATASET_PROPS -> dataSetProperties
         , GimelConstants.DATASET -> dataSet

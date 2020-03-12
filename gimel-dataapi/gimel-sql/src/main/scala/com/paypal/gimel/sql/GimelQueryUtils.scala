@@ -36,7 +36,7 @@ import org.apache.spark.streaming.Time
 
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{GimelConstants, _}
-import com.paypal.gimel.common.utilities.{GenericUtils, RandomGenerator}
+import com.paypal.gimel.common.utilities.{DataSetType, GenericUtils, RandomGenerator}
 import com.paypal.gimel.common.utilities.DataSetUtils._
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
@@ -639,7 +639,7 @@ object GimelQueryUtils {
       , CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER
       , GimelConstants.SPARK_APP_ID -> sparkSession.conf.get(GimelConstants.SPARK_APP_ID)
       , GimelConstants.SPARK_APP_NAME -> sparkSession.conf.get(GimelConstants.SPARK_APP_NAME)
-      , GimelConstants.APP_TAG -> com.paypal.gimel.common.utilities.DataSetUtils.getAppTag(sparkSession.sparkContext)
+      , GimelConstants.APP_TAG -> getAppTag(sparkSession.sparkContext)
     )
     val resolvedOptions: Map[String, String] = optionsToCheck.map { kvPair =>
       (kvPair._1, hiveConf.getOrElse(kvPair._1, kvPair._2))
@@ -926,6 +926,46 @@ object GimelQueryUtils {
     logger.info(" @Begin --> " + MethodName)
 
     GimelQueryUtils.tokenizeSql(sql).head.equalsIgnoreCase("cache")
+  }
+
+  /**
+    * This function tokenizes the incoming sql and parses it using GSQL parser and identify whether the query is of Select type
+    * If it is a select query, it checks whether it is of HBase and has limit clause.
+    *
+    * @param sql          - Incoming SQL
+    * @param options      - set of Options from the user
+    * @param sparkSession - spark session
+    * @return
+    */
+  def setLimitForHBase(sql: String, options: Map[String, String],
+                       sparkSession: SparkSession): Unit = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
+    logger.info(" @Begin --> " + MethodName)
+    Try {
+      val nonEmptyStrTokenized = GimelQueryUtils.tokenizeSql(sql)
+      nonEmptyStrTokenized.head.toLowerCase match {
+        case "select" =>
+          val selectTables = getAllTableSources(sql)
+          // Checks if there is more than 1 source tables
+          if (selectTables.isEmpty || selectTables.length > 1) return
+          selectTables.map(eachTable => getSystemType(eachTable, sparkSession, options) match {
+            case DataSetType.HBASE =>
+              logger.info("Sql contains limit clause, setting the HBase Page Size.")
+              val limit = Try(QueryParserUtils.getLimit(sql)).get
+              sparkSession.conf.set(GimelConstants.HBASE_PAGE_SIZE, limit)
+            case _ =>
+              return
+          })
+        case _ =>
+          return
+      }
+    } match {
+      case Success(_) =>
+      case Failure(exception) =>
+        logger.error(s"Exeception occurred while setting the limit for HBase -> ${exception.getMessage}")
+        throw exception
+    }
   }
 
   /**
@@ -1235,19 +1275,6 @@ object GimelQueryUtils {
     logger.info(s"queryPushDownFlag for data sets${ArrayUtils.toString(tables)}:" +
       s" ${queryPushDownFlag.toString}")
     queryPushDownFlag.toString
-  }
-
-  /**
-    * Checks whether the dataSet is HIVE by scanning the pcatalog phrase and also expecting to have the db and table
-    * names to decide it is a HIVE table
-    *
-    * @param dataSet DataSet
-    * @return Boolean
-    */
-
-  def isStorageTypeUnknown
-  (dataSet: String): Boolean = {
-    dataSet.split('.').head.toLowerCase() != GimelConstants.PCATALOG_STRING && dataSet.split('.').length == 2
   }
 
   /**

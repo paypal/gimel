@@ -38,11 +38,6 @@ import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.kafka.conf.KafkaConstants
 import com.paypal.gimel.logger.Logger
 
-object DataSetType extends Enumeration {
-  type SystemType = Value
-  val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID, RESTAPI, SFTP, KAFKA2 = Value
-}
-
 class DataSet(val sparkSession: SparkSession) {
 
   import com.paypal.gimel.common.utilities.DataSetUtils._
@@ -105,8 +100,6 @@ class DataSet(val sparkSession: SparkSession) {
 
       val dataSetProperties: DataSetProperties =
         CatalogProvider.getDataSetProperties(dataSet, formattedProps)
-      //    dataSetProperties.
-      //    val (systemType, hiveTableProps) = getSystemType(dataSet)
       val systemType = getSystemType(dataSetProperties)
       val newProps: Map[String, Any] = getProps(props) ++ Map(
         GimelConstants.DATASET_PROPS -> dataSetProperties
@@ -935,8 +928,6 @@ private class DataSetInitializationException(message: String, cause: Throwable)
 
 object DataSetUtils {
 
-  import com.paypal.gimel.common.utilities.DataSetUtils._
-
   /**
     * Convenience Method to Get or Create Logger
     *
@@ -949,48 +940,6 @@ object DataSetUtils {
     val appTag = s"$user-$sparkAppName"
     val logger = Logger(appTag)
     logger
-  }
-
-  /**
-    * Fetch the Type of DataSetType based on the DataSetProperties that is Supplied
-    *
-    * @param dataSetProperties DataSetProperties
-    * @return DataSetType
-    */
-
-  def getSystemType(dataSetProperties: DataSetProperties): (DataSetType.Value) = {
-    dataSetProperties.datasetType.toUpperCase() match {
-      case "HBASE" =>
-        DataSetType.HBASE
-      case "KAFKA" =>
-        val kafkaApiVersion = GenericUtils.getValue(dataSetProperties.props,
-          GimelConstants.GIMEL_KAFKA_VERSION, defaultValue = GimelConstants.GIMEL_KAFKA_DEFAULT_VERSION)
-        if (kafkaApiVersion.equals(GimelConstants.GIMEL_KAFKA_VERSION_ONE)) {
-          DataSetType.KAFKA
-        } else {
-          DataSetType.KAFKA2
-        }
-      case "ELASTIC_SEARCH" =>
-        DataSetType.ES
-      case "JDBC" =>
-        DataSetType.JDBC
-      case "CASSANDRA" =>
-        DataSetType.CASSANDRA
-      case "AEROSPIKE" =>
-        DataSetType.AEROSPIKE
-      case "DRUID" =>
-        DataSetType.DRUID
-      case "HDFS" =>
-        DataSetType.HDFS
-      case "RESTAPI" =>
-        DataSetType.RESTAPI
-      case "HIVE" =>
-        DataSetType.HIVE
-      case "SFTP" =>
-        DataSetType.SFTP
-      case _ =>
-        DataSetType.HIVE
-    }
   }
 
   /**
@@ -1048,19 +997,6 @@ object DataSetUtils {
           kafka2
       }
     }.toOption
-  }
-
-  /**
-    * Checks whether the dataSet is HIVE by scanning the pcatalog phrase and also expecting to have the db and table
-    * names to decide it is a HIVE table
-    *
-    * @param dataSet DataSet
-    * @return Boolean
-    */
-
-  def isStorageTypeUnknown
-  (dataSet: String): Boolean = {
-    dataSet.split('.').head.toLowerCase() != GimelConstants.PCATALOG_STRING && dataSet.split('.').length == 2
   }
 }
 
