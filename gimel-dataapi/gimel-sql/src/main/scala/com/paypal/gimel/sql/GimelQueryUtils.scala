@@ -714,7 +714,7 @@ object GimelQueryUtils {
           case true =>
           case _ =>
         }
-        val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(dest.get)
+        val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(dest.get, options)
         //        val dataSetProperties = GimelServiceUtilities().getDataSetProperties(dest.get)
         dataSetProperties.datasetType.toString match {
           case "HIVE" | "NONE" =>
