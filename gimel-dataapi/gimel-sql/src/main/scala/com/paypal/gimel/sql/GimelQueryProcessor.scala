@@ -31,8 +31,8 @@ import org.apache.spark.streaming.{Seconds, StreamingContext}
 import com.paypal.gimel._
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{CatalogProviderConfigs, GimelConstants}
-import com.paypal.gimel.common.utilities.{DataSetType, DataSetUtils}
-import com.paypal.gimel.common.utilities.Timer
+import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
+import com.paypal.gimel.common.utilities.{DataSetType, DataSetUtils, Timer}
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.datastreamfactory.{StreamingResult, StructuredStreamingResult, WrappedData}
 import com.paypal.gimel.jdbc.conf.JdbcConfigs
@@ -315,9 +315,7 @@ object GimelQueryProcessor {
       val dataStream = DataStream(ssc)
       val sourceTables = getTablesFrom(sql)
       val kafkaTables = sourceTables.filter { table =>
-        val dataSetProperties: DataSetProperties =
-          CatalogProvider.getDataSetProperties(table, options)
-        DataSetUtils.getSystemType(dataSetProperties) == DataSetType.KAFKA
+        DataSetUtils.getSystemType(table, sparkSession, options) == DataSetType.KAFKA
       }
       if (kafkaTables.isEmpty) {
         throw new Exception("ERROR --> No Kafka Type DataSet In the Query To Stream !")
@@ -467,10 +465,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
       val sourceTables = getTablesFrom(sql)
       val targetTable = getTargetTables(sql)
       val kafkaTables = sourceTables.filter { table =>
-        val dataSetProperties: DataSetProperties =
-          CatalogProvider.getDataSetProperties(table, options)
-        (DataSetUtils.getSystemType(dataSetProperties) == DataSetType.KAFKA
-          || DataSetUtils.getSystemType(dataSetProperties) == DataSetType.KAFKA2)
+        val dataSetType = DataSetUtils.getSystemType(table, sparkSession, options)
+        (dataSetType == DataSetType.KAFKA || dataSetType == DataSetType.KAFKA2)
       }
       if (kafkaTables.isEmpty) {
         throw new Exception("ERROR --> No Kafka Type DataSet In the Query To Stream !")
@@ -478,7 +474,13 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
         val tmpKafkaTable = pCatalogStreamingKafkaTmpTableName
         val selectSQL = getSelectClause(sql)
         val newSQL = selectSQL.toLowerCase().replaceAll(kafkaTables.head, tmpKafkaTable)
-        val streamingResult: StructuredStreamingResult = dataStream.read(kafkaTables.head, options)
+        val datasetProps = CatalogProvider.getDataSetProperties(kafkaTables.head, options)
+        /*
+         * Sets the appropriate deserializer class based on the kafka.message.value.type and value.serializer properties
+         * This is mainly required for backward compatibility for KAFKA datasets
+         */
+        val newOptions = GimelSerdeUtils.setGimelDeserializer(sparkSession, datasetProps, options, true)
+        val streamingResult: StructuredStreamingResult = dataStream.read(kafkaTables.head, newOptions)
         val streamingDF = streamingResult.df
         streamingDF.createOrReplaceTempView(tmpKafkaTable)
 
@@ -487,7 +489,13 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
         try {
           val datastreamWriter = targetTable match {
             case Some(target) =>
-              dataStream.write(target, streamingSQLDF, options)
+              val datasetProps = CatalogProvider.getDataSetProperties(target, options)
+              /*
+               * Sets the appropriate serializer class based on the kafka.message.value.type and value.serializer properties
+               * This is mainly required for backward compatibility for KAFKA datasets
+              */
+              val newOptions = GimelSerdeUtils.setGimelSerializer(sparkSession, datasetProps, options, true)
+              dataStream.write(target, streamingSQLDF, newOptions)
             case _ =>
               streamingSQLDF
                 .writeStream

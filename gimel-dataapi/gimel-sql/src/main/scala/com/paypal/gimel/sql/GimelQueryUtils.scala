@@ -36,6 +36,7 @@ import org.apache.spark.streaming.Time
 
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{GimelConstants, _}
+import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
 import com.paypal.gimel.common.utilities.{DataSetType, GenericUtils, RandomGenerator}
 import com.paypal.gimel.common.utilities.DataSetUtils._
 import com.paypal.gimel.datasetfactory.GimelDataSet
@@ -46,7 +47,7 @@ import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
 import com.paypal.gimel.jdbc.utilities._
 import com.paypal.gimel.jdbc.utilities.JdbcAuxiliaryUtilities._
 import com.paypal.gimel.jdbc.utilities.PartitionUtils.ConnectionDetails
-import com.paypal.gimel.kafka.conf.KafkaConfigs
+import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
 import com.paypal.gimel.parser.utilities.{QueryParserUtils, SearchCriteria, SearchSchemaUtils, SQLNonANSIJoinParser}
@@ -380,8 +381,14 @@ object GimelQueryUtils {
           case "false" =>
             logger.info(s"Setting transformation dataset.read for ${eachSource}")
             logger.info("printing all options during read" + options.toString())
-            val df = dataSet.read(eachSource, options)
-            cacheIfRequested(df, eachSource, options)
+            val datasetProps = CatalogProvider.getDataSetProperties(eachSource, options)
+            /*
+             * Sets the appropriate deserializer class based on the kafka.message.value.type and value.serializer properties
+             * This is mainly required for backward compatibility for KAFKA datasets
+             */
+            val newOptions = GimelSerdeUtils.setGimelDeserializer(sparkSession, datasetProps, options)
+            val df = dataSet.read(eachSource, newOptions)
+            cacheIfRequested(df, eachSource, newOptions)
             df.createOrReplaceTempView(tmpTableName)
           case _ =>
           // do nothing if query pushdown is true. No need to do dataset.read
@@ -754,7 +761,12 @@ object GimelQueryUtils {
           case _ =>
             // If Non-HIVE
             logger.info(s"Invoking write API in gimel with queryPushDownFlag=${queryPushDownFlag}...")
-            dataset.write(dest.get, selectDF, options)
+            /*
+               * Sets the appropriate serializer class based on the kafka.message.value.type and value.serializer properties
+               * This is mainly required for backward compatibility for KAFKA datasets
+              */
+            val newOptions = GimelSerdeUtils.setGimelSerializer(sparkSession, dataSetProperties, options)
+            dataset.write(dest.get, selectDF, newOptions)
         }
 
       } match {
