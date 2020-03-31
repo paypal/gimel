@@ -82,12 +82,17 @@ under the License.
       <groupId>com.paypal.gimel</groupId>
       <artifactId>gimel-logger</artifactId>
       <version>${gimel.version}-SNAPSHOT</version>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.kafka</groupId>
+          <artifactId>kafka-clients</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka-clients</artifactId>
       <version>${kafka.version}</version>
-      <scope>${packaging.scope}</scope>
     </dependency>
     <dependency>
       <groupId>com.paypal.gimel</groupId>
@@ -108,21 +113,9 @@ under the License.
       <scope>${packaging.scope}</scope>
     </dependency>
     <dependency>
-      <groupId>org.apache.zookeeper</groupId>
-      <artifactId>zookeeper</artifactId>
-      <version>${zookeeper.version}</version>
-      <scope>${packaging.scope}</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>org.apache.zookeeper</groupId>
-          <artifactId>*</artifactId>
-        </exclusion>
-      </exclusions>
-    </dependency>
-    <dependency>
-      <groupId>com.twitter</groupId>
-      <artifactId>zookeeper-client_2.10</artifactId>
-      <version>${twitter.zookeeper.version}</version>
+      <groupId>org.apache.curator</groupId>
+      <artifactId>curator-framework</artifactId>
+      <version>${curator.version}</version>
       <scope>${packaging.scope}</scope>
     </dependency>
     <dependency>
@@ -269,7 +262,7 @@ under the License.
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>3.2.1</version>
         <configuration>
           <relocations>
             <relocation>

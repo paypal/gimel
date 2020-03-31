@@ -32,7 +32,7 @@ import org.apache.spark.streaming.kafka010.OffsetRange
 import com.paypal.gimel.logger.Logger
 
 /**
-  * Case Class to Represent a CheckPoint String. Example "wuser,1,1,100"
+  * Case Class to Represent a CheckPoint String. Example "flights,1,1,100"
   *
   * @param checkPoint
   */
@@ -41,8 +41,8 @@ case class CheckPointString(checkPoint: String)
 /**
   * Case Class to Represent Brokers and Topics
   *
-  * @param brokers Example : lvsdmetl01.lvs.paypal.com:8081
-  * @param topic   Example : wuser
+  * @param brokers Example : localhost:9092
+  * @param topic   Example : flights
   */
 
 case class BrokersAndTopic(brokers: String, topic: String)

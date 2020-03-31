@@ -19,11 +19,16 @@
 
 package com.paypal.gimel.common.utilities
 
+import java.io.InputStream
+
 import scala.collection.mutable
 import scala.util.Try
 import scala.util.control.NonFatal
 import scala.util.matching.Regex
 
+import com.fasterxml.jackson.core.`type`.TypeReference
+import com.fasterxml.jackson.databind.{DeserializationFeature, ObjectMapper}
+import com.fasterxml.jackson.module.scala.DefaultScalaModule
 import org.apache.commons.lang3.StringUtils
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.RuntimeConfig
@@ -411,5 +416,24 @@ object GenericUtils {
       case _ if props.contains(key.toUpperCase()) => props(key.toUpperCase()).toString
       case _ => defaultValue
     }
+  }
+
+  private lazy val scalaObjectMapper: ObjectMapper = getObjectMapper(DefaultScalaModule)
+
+  private def getObjectMapper(module: com.fasterxml.jackson.databind.Module): ObjectMapper = {
+    val mapper: ObjectMapper = new ObjectMapper()
+    if (module != null) {
+      mapper.registerModule(module)
+    }
+    mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+    mapper
+  }
+
+  def fromString[T](json: String, typeReference: TypeReference[T]): T = {
+    scalaObjectMapper.readValue(json, typeReference)
+  }
+
+  def fromString[T](inputStream: InputStream, typeReference: TypeReference[T]): T = {
+    scalaObjectMapper.readValue(inputStream, typeReference)
   }
 }

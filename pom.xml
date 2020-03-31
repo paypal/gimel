@@ -54,6 +54,11 @@ under the License.
             <name>Confluent</name>
             <url>https://packages.confluent.io/maven/</url>
         </repository>
+        <repository>
+            <id>confluent-http</id>
+            <name>Confluent</name>
+            <url>http://packages.confluent.io/maven/</url>
+        </repository>
     </repositories>
     <profiles>
         <profile>
@@ -70,7 +75,7 @@ under the License.
                 <spark.packaging.scope>compile</spark.packaging.scope>
                 <hadoop.packaging.scope>provided</hadoop.packaging.scope>
                 <hive.packaging.scope>provided</hive.packaging.scope>
-                <zookeeper.version>3.4.6</zookeeper.version>
+                <zookeeper.version>3.4.13</zookeeper.version>
                 <scala.binary.version>2.11</scala.binary.version>
                 <scalatest.version>3.0.1</scalatest.version>
                 <scalamock.version>4.1.0</scalamock.version>

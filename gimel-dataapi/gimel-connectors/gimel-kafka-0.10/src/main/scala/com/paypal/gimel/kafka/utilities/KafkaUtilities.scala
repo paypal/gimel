@@ -21,6 +21,7 @@ package com.paypal.gimel.kafka.utilities
 
 import java.io.{Closeable, Serializable}
 import java.nio.ByteBuffer
+import java.util.{Properties, UUID}
 
 import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
@@ -30,7 +31,8 @@ import scala.reflect.runtime.universe._
 import scala.util.parsing.json.JSON
 
 import org.apache.avro.generic.GenericRecord
-import org.apache.kafka.clients.consumer.ConsumerRecord
+import org.apache.kafka.clients.consumer.{ConsumerConfig, ConsumerRecord, KafkaConsumer}
+import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization._
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql._
@@ -966,6 +968,37 @@ object KafkaUtilities {
       zookKeeperHostAndPort
       , kafkaTopicName
     )
+  }
+
+  /**
+    *
+    * @param properties
+    * @return
+    */
+  def getKafkaConsumer(properties: Option[Properties] = None): KafkaConsumer[Object, Object] = {
+    val consumerProperties = new Properties()
+    if (properties.isDefined) {
+      consumerProperties.putAll(properties.get)
+    }
+    // Ensure the serializer configuration is set though its not needed
+    consumerProperties.setProperty(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, classOf[BytesDeserializer].getName)
+    consumerProperties.setProperty(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, classOf[BytesDeserializer].getName)
+    val group = consumerProperties.get(ConsumerConfig.GROUP_ID_CONFIG)
+    if (group == null) {
+      consumerProperties.put(ConsumerConfig.GROUP_ID_CONFIG, "kafka-consumer-offset-client-" + UUID.randomUUID)
+    }
+    new KafkaConsumer[Object, Object](consumerProperties)
+  }
+
+  /**
+    *
+    * @param broker
+    * @return
+    */
+  def getDefaultConsumerPropertiesPerBroker(broker: String): Properties = {
+    val props = new Properties()
+    props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, broker)
+    props
   }
 }
 
