@@ -22,6 +22,7 @@ package com.paypal.gimel.common.storageadmin
 import java.util.Properties
 
 import kafka.admin._
+import kafka.server.ConfigType
 import kafka.utils.ZkUtils
 import org.I0Itec.zkclient.{ZkClient, ZkConnection}
 import org.I0Itec.zkclient.exception.ZkMarshallingError
@@ -61,7 +62,7 @@ object KafkaAdminUtils {
     val zkUtil: ZkUtils = new ZkUtils(client, connect, isSecurityEnabled)
     if (!AdminUtils.topicExists(zkUtil, topicName)) {
       AdminUtils.createTopic(zkUtil, topicName, noOfPartitions, noOfReplication, topicConfiguration)
-      logger.info(AdminUtils.fetchTopicMetadataFromZk(kafkaTopicName, zkUtil))
+      logger.info(AdminUtils.fetchEntityConfig(zkUtil, ConfigType.Topic, topicName))
     }
     connect.close()
   }

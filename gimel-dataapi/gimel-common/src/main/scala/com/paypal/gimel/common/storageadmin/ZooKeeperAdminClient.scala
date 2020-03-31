@@ -19,8 +19,10 @@
 
 package com.paypal.gimel.common.storageadmin
 
-import com.twitter.zookeeper.ZooKeeperClient
+import org.apache.curator.framework.{CuratorFramework, CuratorFrameworkFactory}
+import org.apache.curator.retry.ExponentialBackoffRetry
 
+import com.paypal.gimel.common.utilities.GenericUtils
 import com.paypal.gimel.logger.Logger
 
 /**
@@ -34,99 +36,104 @@ object ZooKeeperAdminClient {
   /**
     * Writes a String Content to ZK Node
     *
-    * @param zNode    Fully Qualified Path of the File to Write data into
-    * @param someData Content to Write
+    * @param zkServers : Zookeeper hosts and port
+    * @param zNode :   Fully Qualified Path of the File to Write data into
+    * @param someData : Content to Write
     */
-  def writetoZK(zServers: String, zNode: String, someData: String): Unit = {
+  def writetoZK(zkServers: String, zNode: String, someData: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
 
-    logger.info(s"Zookeeper WRITE Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
-    // try-with-resources block dint work here as ZooKeeperClient does not implements AutoClosable
-    var zookeeperClient: ZooKeeperClient = null
+    logger.info(s"Zookeeper WRITE Request for --> \nzServers --> $zkServers \nzNode --> $zNode \n")
     try {
-      zookeeperClient = new ZooKeeperClient(zServers)
-      if (zookeeperClient.exists(zNode) == null) {
-        logger.warning(s"Creating Zookeeper Node --> $zNode in Host --> $zServers ")
-        zookeeperClient.createPath(zNode)
+      GenericUtils.withResources(getZKConnection(zkServers)) { zookeeperClient =>
+        zookeeperClient.start()
+        if (zookeeperClient.checkExists().forPath(zNode) == null) {
+          logger.warning(s"Creating Zookeeper Node --> $zNode in Host --> $zkServers ")
+          zookeeperClient.create().creatingParentsIfNeeded().forPath(zNode, someData.getBytes())
+        } else {
+          val bytesToWrite = someData.getBytes
+          zookeeperClient.setData().forPath(zNode, bytesToWrite)
+        }
+        logger.info(s"Persisted in Node -> $zNode in Value --> $someData")
       }
-      val bytesToWrite = someData.getBytes
-      zookeeperClient.set(zNode, bytesToWrite)
-      logger.info(s"Persisted in Node -> $zNode in Value --> $someData")
     } catch {
       case ex: Throwable =>
         throw ex
-    } finally {
-      if (zookeeperClient != null) {
-        zookeeperClient.close()
-      }
     }
   }
 
   /**
+   * Gets a connection to zookeeper through curator framework
+   *
+   * @param zkServers : Zookeeper hosts and port
+   * @return CuratorFramework
+   */
+  def getZKConnection(zkServers: String): CuratorFramework = {
+    val retryPolicy = new ExponentialBackoffRetry(1000, 3)
+    CuratorFrameworkFactory.newClient(zkServers, retryPolicy)
+  }
+
+
+  /**
     * Reads the Contents of a ZK Node
     *
-    * @param zNode Fully Qualified Path of the File to Read
+    * @param zkServers : Zookeeper hosts and port
+    * @param zNode : Fully Qualified Path of the File to Read
     * @return Content of the File
     */
-  def readFromZK(zServers: String, zNode: String): Option[String] = {
+  def readFromZK(zkServers: String, zNode: String): Option[String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
 
-    logger.info(s"Zookeeper READ Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
+    logger.info(s"Zookeeper READ Request for --> \nzServers --> $zkServers \nzNode --> $zNode \n")
     var read: Option[String] = None
-    // try-with-resources block dint work here as ZooKeeperClient does not implements AutoClosable
-    var zookeeperClient: ZooKeeperClient = null
+
     try {
-      zookeeperClient = new ZooKeeperClient(zServers)
-      if (zookeeperClient.exists(zNode) == null) {
-        logger.warning(s"Path does not exists --> $zNode ! Will return None.")
-      } else {
-        read = Some(new String(zookeeperClient.get(zNode)))
-        logger.info(s"Found value --> $read")
+      GenericUtils.withResources(getZKConnection(zkServers)) { zookeeperClient =>
+        zookeeperClient.start()
+        if (zookeeperClient.checkExists().forPath(zNode) == null) {
+          logger.warning(s"Path does not exists --> $zNode ! Will return None.")
+        } else {
+          read = Some(new String(zookeeperClient.getData().forPath(zNode)))
+          logger.info(s"Found value --> $read")
+        }
+        read
       }
-      read
     } catch {
       case ex: Throwable =>
         throw ex
-    } finally {
-      if (zookeeperClient != null) {
-        zookeeperClient.close()
-      }
     }
   }
 
   /**
     * Delete a Node on ZK
     *
-    * @param zNode Fully Qualified Path of the File to Write data into
+    * @param zkServers : Zookeeper hosts and port
+    * @param zNode : Fully Qualified Path of the File to Write data into
     */
-  def deleteNodeOnZK(zServers: String, zNode: String): Unit = {
+  def deleteNodeOnZK(zkServers: String, zNode: String): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
 
-    logger.info(s"Zookeeper DELETE Request for --> \nzServers --> $zServers \nzNode --> $zNode \n")
-    // try-with-resources block dint work here as ZooKeeperClient does not implements AutoClosable
-    var zookeeperClient: ZooKeeperClient = null
+    logger.info(s"Zookeeper DELETE Request for --> \nzServers --> $zkServers \nzNode --> $zNode \n")
     try {
-      zookeeperClient = new ZooKeeperClient(zServers)
-      if (zookeeperClient.exists(zNode) == null) {
-        logger.warning(s"Path does not exists --> $zNode ! Will delete None.")
-        None
-      } else {
-        zookeeperClient.delete(zNode)
-        logger.warning(s"Deleted Node -> $zNode")
+      GenericUtils.withResources(getZKConnection(zkServers)) { zookeeperClient =>
+        zookeeperClient.start()
+        if (zookeeperClient.checkExists().forPath(zNode) == null) {
+          logger.warning(s"Path does not exists --> $zNode ! Will delete None.")
+          None
+        } else {
+          zookeeperClient.delete.forPath(zNode)
+          logger.warning(s"Deleted Node -> $zNode")
+        }
       }
     } catch {
-      case ex: Throwable =>
-        throw ex
-    } finally {
-      if (zookeeperClient != null) {
-        zookeeperClient.close()
-      }
+         case ex: Throwable =>
+           throw ex
     }
   }
 }

@@ -698,7 +698,7 @@ public class DatasetUtil {
             final String availableSession) throws ValidationError {
         final String currentEndpoint = this.statementEndpoint.replace("$sessionName$", availableSession);
         final String postUrl = this.protocol + livyEndPoint + ":" + livyPort + currentEndpoint;
-        final String code = "com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch(\"select * from "
+        final String code = "com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(\"select * from "
                 + "udc." + datasetName.trim()
                 + " limit 5\",spark).show(5,false)";
 

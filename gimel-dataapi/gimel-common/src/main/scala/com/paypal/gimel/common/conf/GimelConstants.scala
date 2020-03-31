@@ -203,6 +203,7 @@ object GimelConstants {
   val KAFKA_AVRO_SCHEMA_SOURCE_INLINE = "INLINE"
   val SERIALIZER_VALUE: String = "value.serializer"
   val KAFKA_AVRO_SCHEMA_SOURCE_CDH = "CDH"
+  val KAFKA_TOPICS_KEY: String = "kafka_topics"
 
   // Gimel Streaming
   val GIMEL_STREAMING_CHECKPOINT_LOCATION = "gimel.streaming.checkpoint.location"

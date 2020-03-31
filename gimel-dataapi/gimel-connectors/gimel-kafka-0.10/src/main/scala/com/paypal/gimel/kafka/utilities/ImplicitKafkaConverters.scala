@@ -19,11 +19,14 @@
 
 package com.paypal.gimel.kafka.utilities
 
+import java.{lang, util}
+import java.util.{Collections, Properties}
+
 import scala.collection.mutable.ArrayBuffer
 import scala.language.implicitConversions
 
-import kafka.api.{TopicMetadata, TopicMetadataRequest, TopicMetadataResponse}
-import kafka.common.TopicAndPartition
+import org.apache.kafka.clients.admin.AdminClient
+import org.apache.kafka.common.TopicPartition
 import org.apache.spark.streaming.kafka010.OffsetRange
 
 import com.paypal.gimel.logger.Logger
@@ -50,7 +53,7 @@ case class BrokersAndTopic(brokers: String, topic: String)
 
 object ImplicitKafkaConverters {
 
-  val logger = Logger()
+  val logger: Logger = Logger()
 
   /**
     * @param offsetRanges An Array of OffsetRange
@@ -134,19 +137,29 @@ object ImplicitKafkaConverters {
       * @example val testing: Array[TopicAndPartition] = ("localhost:8080,localhost:8081", "test").toTopicAndPartitions
       * @return Array[TopicAndPartition]
       */
-    def toTopicAndPartitions: Map[TopicAndPartition, (String, Int)] = {
+    def toTopicAndPartitions: Map[TopicPartition, (String, Int)] = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
       logger.info(" @Begin --> " + MethodName)
 
-      val kafkaBrokers = kafka.client.ClientUtils.parseBrokerList(brokersAndTopic.brokers)
-      val kafkaTopics: Set[String] = brokersAndTopic.topic.split(",").toSet
-      val offsetMetadata: TopicMetadataResponse = kafka.client.ClientUtils.fetchTopicMetadata(kafkaTopics, kafkaBrokers, clientID.toString, 1000000, 0)
-      val topicAndPartitions: Map[TopicAndPartition, (String, Int)] = offsetMetadata.topicsMetadata.flatMap {
-        topicMetadata =>
-          topicMetadata.partitionsMetadata.map(x => (TopicAndPartition(topicMetadata.topic, x.partitionId), (x.leader.get.host, x.leader.get.port)))
-      }.toMap
-      topicAndPartitions
+      val client = AdminClient.create(KafkaUtilities.getDefaultConsumerPropertiesPerBroker(brokersAndTopic.brokers))
+      import scala.collection.JavaConverters._
+      try {
+        client.describeTopics(
+          Collections.singletonList(brokersAndTopic.topic)
+        ).all().get().asScala.flatMap { topicMetadata => {
+          topicMetadata._2.partitions().asScala.map {
+            partitionMetadata =>
+              partitionMetadata.isr()
+              (new TopicPartition(topicMetadata._1, partitionMetadata.partition()),
+                (partitionMetadata.leader().host(), partitionMetadata.leader().port()))
+          }
+        }
+        }.toMap
+      } finally {
+        client.close()
+      }
+
     }
 
     /**
@@ -158,29 +171,38 @@ object ImplicitKafkaConverters {
       */
     def toKafkaOffsetsPerPartition: Array[OffsetRange] = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
-
       logger.info(" @Begin --> " + MethodName)
 
-      val topicAndPartitions: Map[TopicAndPartition, (String, Int)] = brokersAndTopic.toTopicAndPartitions
+      val topicAndPartitions: Map[TopicPartition, (String, Int)] = brokersAndTopic.toTopicAndPartitions
+      import scala.collection.JavaConverters._
+      val partitions = topicAndPartitions.keySet.asJava
+
       logger.info("The Topic And Partitions are --> ")
       topicAndPartitions.foreach(println)
-      topicAndPartitions.map {
-        topicAndPartition =>
-          val (host, port) = findLeader(topicAndPartition)
-          val consumer = new kafka.consumer.SimpleConsumer(host, port, 10000, Int.MaxValue, clientID.toString)
-          val earliestOffset: Long = consumer.earliestOrLatestOffset(topicAndPartition._1, earliestTime, clientID)
-          val latestOffset: Long = consumer.earliestOrLatestOffset(topicAndPartition._1, latestTime, clientID)
-          OffsetRange(topicAndPartition._1.topic, topicAndPartition._1.partition, earliestOffset, latestOffset)
-      }.toArray
+
+      val kafkaConsumer = KafkaUtilities.getKafkaConsumer(Some(
+        KafkaUtilities.getDefaultConsumerPropertiesPerBroker(brokersAndTopic.brokers)
+      ))
+      try {
+        val beginningOffsets: util.Map[TopicPartition, lang.Long] = kafkaConsumer.beginningOffsets(partitions)
+        val endOffsets: util.Map[TopicPartition, lang.Long] = kafkaConsumer.endOffsets(partitions)
+        topicAndPartitions.map {
+          topicAndPartition =>
+            OffsetRange(topicAndPartition._1.topic, topicAndPartition._1.partition,
+              beginningOffsets.get(topicAndPartition._1), endOffsets.get(topicAndPartition._1))
+        }.toArray
+      } finally {
+        kafkaConsumer.close()
+      }
     }
 
     /**
-      * Take a TopicAndPartition and partitionLeader and Maps to each partition
+      * Take a TopicAndPartition and Returns a Tuple of leader Host & Port
       *
-      * @param topicAndPartition
+      * @param topicAndPartition Kafka TopicAndPartition
       * @return Tuple(host, port)
       */
-    private def findLeader(topicAndPartition: (TopicAndPartition, (String, Int))): (String, Int) = {
+    private def findLeader(topicAndPartition: (TopicPartition, (String, Int))): (String, Int) = {
       def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
       logger.info(" @Begin --> " + MethodName)
@@ -266,7 +288,7 @@ object ImplicitKafkaConverters {
 
       val returningRanges = offsetRanges.flatMap(erange => parallelizeOffsetRange(erange, parallelism, minRowsPerParallel))
       logger.info("Outgoing Array of OffsetRanges --> ")
-      returningRanges.foreach(println)
+      returningRanges.foreach(logger.info(_))
       returningRanges
     }
 
@@ -294,7 +316,7 @@ object ImplicitKafkaConverters {
           }
         }
         logger.info("Parallelized Ranges for the given OffsetRange ..")
-        returningRange.foreach(println)
+        returningRange.foreach(logger.info(_))
         returningRange.toArray
       } else {
         logger.info(s"Not Applying Parallelism as the total rows : $total in this Offset Range < min rows per parallel : $minRowsPerParallel ")
