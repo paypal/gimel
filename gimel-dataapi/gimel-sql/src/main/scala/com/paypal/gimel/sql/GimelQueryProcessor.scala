@@ -82,7 +82,7 @@ object GimelQueryProcessor {
     logger.info(" @Begin --> " + MethodName)
 
     val gtsUser: String = sparkSession.sparkContext.getLocalProperty(GimelConstants.GTS_USER_CONFIG)
-    val gts_default_user = sparkSession.conf.get(GimelConstants.GTS_DEFAULT_USER_FLAG, "")
+    val gts_default_user = sparkSession.conf.get(GimelConstants.GTS_DEFAULT_USER_FLAG, GimelConstants.GTS_DEFAULT_USER)
     if (gtsUser != null && originalUser.equalsIgnoreCase(gts_default_user)) {
       logger.info(s"GTS User [${gtsUser}] will be used to over ride executing user [${originalUser}] who started GTS.")
       sparkSession.sql(s"set ${GimelConstants.GTS_USER_CONFIG}=${gtsUser}")

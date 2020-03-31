@@ -50,7 +50,7 @@ python_df.show(10)
 
 ```python
 # fetch reference to GimelQueryProcessor Class in JVM
-gsql = sc._jvm.com.paypal.gimel.scaas.GimelQueryProcessor
+gsql = sc._jvm.com.paypal.gimel.sql.GimelQueryProcessor
 
 # fetch reference to java SparkSession
 jspark = spark._jsparkSession

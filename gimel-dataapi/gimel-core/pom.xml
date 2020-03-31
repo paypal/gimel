@@ -92,7 +92,7 @@ under the License.
     </dependency>
     <dependency>
       <groupId>com.paypal.gimel</groupId>
-      <artifactId>gimel-kafka-0.10-2</artifactId>
+      <artifactId>gimel-kafka-2.2</artifactId>
       <version>${gimel.version}-SNAPSHOT</version>
     </dependency>
     <dependency>

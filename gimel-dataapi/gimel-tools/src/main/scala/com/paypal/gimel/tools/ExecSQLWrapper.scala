@@ -42,14 +42,16 @@ object CopyDataSet extends App {
   import com.paypal.gimel.kafka.utilities.KafkaUtilities._
 
   val logger = Logger(this.getClass.getName)
-  val props = resolveRunTimeParameters(args)
   val user = sys.env("USER")
   val sparkConf = new SparkConf()
   val sparkSession = SparkSession
     .builder()
     .enableHiveSupport()
     .getOrCreate()
+  val props = resolveRunTimeParameters(args) ++ Map(GimelConstants.SPARK_APP_ID -> sparkSession.conf.get(GimelConstants.SPARK_APP_ID),
+    GimelConstants.SPARK_APP_NAME -> sparkSession.conf.get(GimelConstants.SPARK_APP_NAME))
   props.foreach(prop => sparkSession.conf.set(prop._1, prop._2))
+  logger.setSparkVersion(sparkSession.version)
   val resolvedProps = getOptions(sparkSession)
   val queryToExecute = getQuery(props)
   val sparkAppName = sparkSession.conf.get("spark.app.name")
@@ -58,19 +60,9 @@ object CopyDataSet extends App {
     case "stream" => KafkaConstants.gimelAuditRunTypeStream
     case "batch" => KafkaConstants.gimelAuditRunTypeBatch
     case "intelligent" => KafkaConstants.gimelAuditRunTypeIntelligent
-    case _ => "unknown"
+    case _ => GimelConstants.UNKNOWN_STRING.toLowerCase
   }
-  logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
-    , sparkSession.conf.get("spark.app.name")
-    , this.getClass.getName
-    , runMode
-    , yarnCluster
-    , user
-    , s"${yarnCluster}/${user}/${sparkAppName}".replaceAllLiterally("/", "_").replaceAllLiterally(" ", "-")
-    , "copyDataSet"
-    , s"${queryToExecute}"
-    , scala.collection.mutable.Map("sql" -> queryToExecute)
-  )
+
   val hiveStagingDir = props.getOrElse("hiveStagingDir", "")
   try {
     props("mode").toLowerCase() match {
@@ -142,11 +134,47 @@ object CopyDataSet extends App {
         GimelQueryProcessor.executeStream(queryToExecute, sparkSession)
       case _ => throw new Exception("Invalid Mode of Execution Must be one of these <batch|stream>")
     }
+
+    // push logs to KAFKA
+    logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+      , sparkSession.conf.get("spark.app.name")
+      , this.getClass.getName
+      , runMode
+      , yarnCluster
+      , user
+      , s"${yarnCluster}/${user}/${sparkAppName}".replaceAllLiterally("/", "_").replaceAllLiterally(" ", "-")
+      , "copyDataSet"
+      , s"${queryToExecute}"
+      , scala.collection.mutable.Map("sql" -> queryToExecute)
+      , GimelConstants.SUCCESS
+      , GimelConstants.EMPTY_STRING
+      , GimelConstants.EMPTY_STRING
+    )
   }
   catch {
-    case ex: Throwable => {
-      ex.printStackTrace()
-      throw ex
+    case e: Throwable => {
+      e.printStackTrace()
+
+      // push logs to KAFKA
+      logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+        , sparkSession.conf.get("spark.app.name")
+        , this.getClass.getName
+        , runMode
+        , yarnCluster
+        , user
+        , s"${yarnCluster}/${user}/${sparkAppName}".replaceAllLiterally("/", "_").replaceAllLiterally(" ", "-")
+        , "copyDataSet"
+        , s"${queryToExecute}"
+        , scala.collection.mutable.Map("sql" -> queryToExecute)
+        , GimelConstants.FAILURE
+        , e.toString + "\n" + e.getStackTraceString
+        , GimelConstants.UNKNOWN_STRING
+      )
+
+      // throw error to console
+      logger.throwError(e.toString)
+
+      throw e
     }
   }
 
@@ -157,11 +185,11 @@ object CopyHelperUtils {
   val logger = Logger(this.getClass.getName)
 
   /**
-    * Resolves RunTime Params
-    *
-    * @param allParams args
-    * @return Map[String, String]
-    */
+   * Resolves RunTime Params
+   *
+   * @param allParams args
+   * @return Map[String, String]
+   */
   def resolveRunTimeParameters(allParams: Array[String]): Map[String, String] = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
 
@@ -193,11 +221,11 @@ object CopyHelperUtils {
   }
 
   /**
-    * getOptions - read the hive context options that was set by the user else add the default values
-    *
-    * @param sparkSession SparkSession
-    * @return - Tuple ( String with concatenated options read from the hivecontext , Same Props as a Map[String,String] )
-    */
+   * getOptions - read the hive context options that was set by the user else add the default values
+   *
+   * @param sparkSession SparkSession
+   * @return - Tuple ( String with concatenated options read from the hivecontext , Same Props as a Map[String,String] )
+   */
 
   def getOptions(sparkSession: SparkSession): (String, Map[String, String]) = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
@@ -249,10 +277,10 @@ object CopyHelperUtils {
   }
 
   /**
-    * getYarnClusterName - gets the yarn cluster from the hadoop config file
-    *
-    * @return
-    */
+   * getYarnClusterName - gets the yarn cluster from the hadoop config file
+   *
+   * @return
+   */
   def getYarnClusterName(): String = {
     val hadoopConfiguration = new org.apache.hadoop.conf.Configuration()
     val cluster = hadoopConfiguration.get(GimelConstants.FS_DEFAULT_NAME)
