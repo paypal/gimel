@@ -32,7 +32,8 @@ Contents
 | <img src="images/csv.png" width="60" height="60" /> | 2.7.3 | PRODUCTION | [CSV Reader Doc](gimel-connectors/hdfs-csv.md) | CSV Reader & Writer for HDFS |
 | <img src="images/restapi.png" width="150" height="60" /> | 2.7.3 | PRODUCTION WITH LIMITATIONS | [Restful/Web-API Doc](gimel-connectors/restapi.md) | <br>Allows Accessing Data<br>- to any source supporting<br>- Rest API<br> |
 | <img src="images/alluxio.png" width="120" height="40" /> | 2.7.3 | PRODUCTION WITH LIMITATIONS | [Cross-Cluster Doc](gimel-connectors/hdfs-crosscluster.md) | <br>Allows Accessing Data<br>- Across Clusters<br>- Allxio<br> |
-| <img src="images/kafka.png" width="100" height="40" /> | 0.10.2 | PRODUCTION | [Kafka Doc](gimel-connectors/kafka.md) | V0.10.2 is the PayPal's Supported Version of Kafka|
+| <img src="images/kafka.png" width="100" height="40" /> | 0.10.2 | PRODUCTION | [Kafka Doc](gimel-connectors/kafka.md) | V0.10.2 is the old PayPal's Version of Kafka|
+| <img src="images/kafka.png" width="100" height="40" /> | 2.2.1 | PRODUCTION | [Kafka 2.2 Doc](gimel-connectors/kafka2.md) | V2.2.1 is the PayPal's Supported Version of Kafka|
 | <img src="images/hbase.png" width="100" height="35" />  | 1.2 | PRODUCTION WITH LIMITATIONS | [HBASE Doc](gimel-connectors/hbase.md) | Leverages SHC Connector internally & also supports Batch/Get/Puts |
 | <img src="images/aerospike.png" width="120" height="40" /> | 3.14 | EXPERIMENTAL | [Aerospike Doc](gimel-connectors/aerospike.md) | Experimental API for Aerospike reads / writes |
 | <img src="images/cassandra.png" width="100" height="60" /> | 2.0 | EXPERIMENTAL | [Cassandra Doc](gimel-connectors/cassandra.md) | <br>Experimental API for Cassandra reads / writes<br>Leverages DataStax Connector<br> |

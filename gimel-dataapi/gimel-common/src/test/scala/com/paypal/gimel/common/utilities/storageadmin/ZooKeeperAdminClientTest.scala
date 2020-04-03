@@ -21,6 +21,7 @@ package com.paypal.gimel.common.utilities.storageadmin
 
 import org.scalatest._
 
+import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.common.storageadmin.ZooKeeperAdminClient
 import com.paypal.gimel.common.utilities.zookeeper.ZooKeeperEmbedded
 import com.paypal.gimel.logger.Logger
@@ -29,8 +30,7 @@ class ZooKeeperAdminClientTest extends FunSpec with Matchers with BeforeAndAfter
 
   val DEFAULT_ZK_PORT = 2181
   var zookeeper: ZooKeeperEmbedded = _
-  val checkpointRoot = "/pcatalog/kafka_consumer/checkpoint"
-  val zkNode = checkpointRoot + "/test_cluster/test_user/test_app"
+  val zkNode = GimelConstants.DEFAULT_ZOOKEEPER_CHECKPOINT_PATH + "/test_cluster/test_user/test_app"
   val logger = Logger()
   logger.setLogLevel("INFO")
   logger.consolePrintEnabled = true
