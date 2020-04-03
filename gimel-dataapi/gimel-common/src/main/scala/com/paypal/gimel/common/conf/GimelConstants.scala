@@ -204,6 +204,7 @@ object GimelConstants {
   val SERIALIZER_VALUE: String = "value.serializer"
   val KAFKA_AVRO_SCHEMA_SOURCE_CDH = "CDH"
   val KAFKA_TOPICS_KEY: String = "kafka_topics"
+  val DEFAULT_ZOOKEEPER_CHECKPOINT_PATH = "/pcatalog/kafka_consumer/checkpoint"
 
   // Gimel Streaming
   val GIMEL_STREAMING_CHECKPOINT_LOCATION = "gimel.streaming.checkpoint.location"

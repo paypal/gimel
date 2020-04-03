@@ -23,6 +23,7 @@ import org.apache.kafka.streams.integration.utils.EmbeddedKafkaCluster
 import org.apache.spark.streaming.kafka010.OffsetRange
 import org.scalatest.{BeforeAndAfterAll, FunSpec, Matchers}
 
+import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.kafka2.conf.KafkaConstants
 import com.paypal.gimel.kafka2.utilities.ImplicitKafkaConverters._
 import com.paypal.gimel.logger.Logger
@@ -33,8 +34,7 @@ class KafkaUtilitiesTest extends FunSpec with Matchers with BeforeAndAfterAll {
   val logger = Logger()
   logger.setLogLevel("INFO")
   logger.consolePrintEnabled = true
-  val checkpointRoot = "/pcatalog/kafka_consumer/checkpoint"
-  val zkNode = checkpointRoot + "/test_cluster/test_user/test_app/"
+  val zkNode = GimelConstants.DEFAULT_ZOOKEEPER_CHECKPOINT_PATH + "/test_cluster/test_user/test_app/"
   val fetchRowsOnFirstRun = 100000
 
   protected override def beforeAll(): Unit = {
