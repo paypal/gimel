@@ -227,6 +227,8 @@ object GimelConstants {
   // CONDITIONAL FLAGS
   val FALSE = "false"
 
+  val NOT_APPLICABLE = "N/A"
+
   // Connection timeout for requests in seconds
   val CONNECTION_TIMEOUT = 180
 

@@ -47,6 +47,7 @@ object PCatalogUrlConfigs {
   val USER_BY_NAME: String = "api.user.by.name"
   val STORAGE_SYSTEM_CONTAINERS = "api.storage.system.containers"
   val DATASET_BY_NAME: String = "api.dataset.by.name"
+  val RANGER_POLICIES_BY_LOCATION: String = "api.ranger.policies.by.location"
   val STORAGE_TYPES = "api.storage.types"
   val ZONE_BY_NAME = "api.zone.name"
   val POST_STORAGE_SYSTEM = "api.post.storage.system"

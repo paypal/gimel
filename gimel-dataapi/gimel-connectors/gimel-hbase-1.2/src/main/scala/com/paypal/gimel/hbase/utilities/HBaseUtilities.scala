@@ -24,6 +24,9 @@ import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.types.StringType
 
+import com.paypal.gimel.common.catalog.DataSetProperties
+import com.paypal.gimel.common.conf.GimelConstants
+import com.paypal.gimel.common.security.AuthHandler
 import com.paypal.gimel.hbase.conf.HbaseConfigs
 import com.paypal.gimel.logger.Logger
 
@@ -118,6 +121,31 @@ class HBaseUtilities(sparkSession: SparkSession) {
       case ex: IllegalArgumentException =>
         logger.warning(ex.getMessage)
         Map.empty[String, Array[String]]
+    }
+  }
+
+  /**
+   * Authenticate Read/Write with HBASE Policies
+   *
+   * @param dataset
+   * @param operation
+   * @param dataSetProps
+   */
+  def authenticateThroughRangerPolicies(dataset: String, operation: String, dataSetProps: Map[String, Any]): Unit = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+    logger.info(" @Begin --> " + MethodName)
+
+    val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
+    val tableProperties = datasetProps.props
+    val hbaseTable = dataSetProps.getOrElse(HbaseConfigs.hbaseTableKey, tableProperties.getOrElse(HbaseConfigs.hbaseTableKey, "")).asInstanceOf[String]
+    val hbaseNameSpace = dataSetProps.getOrElse(GimelConstants.HBASE_NAMESPACE, tableProperties.getOrElse(GimelConstants.HBASE_NAMESPACE, "default")).asInstanceOf[String]
+    val hbaseTableName = hbaseTable.split(":")(1)
+    val hBaseNameSpaceAndTable = hbaseNameSpace + ":" + hbaseTableName
+    val clusterName = com.paypal.gimel.common.utilities.DataSetUtils.getYarnClusterName()
+    logger.info("hBaseNameSpaceAndTable and clusterName" + hBaseNameSpaceAndTable + clusterName)
+    val currentUser = datasetProps.props.getOrElse(GimelConstants.GTS_USER_CONFIG, sparkSession.sparkContext.sparkUser)
+    if (AuthHandler.isAuthRequired(sparkSession)) {
+      AuthHandler.authenticateHbasePolicy(currentUser, operation, hBaseNameSpaceAndTable, dataset, clusterName)
     }
   }
 }

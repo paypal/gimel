@@ -41,7 +41,7 @@ import com.paypal.gimel.common.gimelservices.payload.GimelJsonProtocol._
 import com.paypal.gimel.common.utilities.GenericUtils
 import com.paypal.gimel.logger.Logger
 
-object GimelServiceUtilities {
+object  GimelServiceUtilities {
 
   def apply(): GimelServiceUtilities = new GimelServiceUtilities()
 
@@ -677,6 +677,54 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       case Some(x) =>
         isContainerObjectExists(x.storageSystemId, containerName, objectName)
     }
+  }
+
+  /**
+   * Gets ranger policies for a given HDFS location, file type (hdfs), and cluster ID
+   *
+   * @param location  - HDFS location
+   * @param fileType  - the term hdfs to tell it is a hdfs file type
+   * @param clusterId - cluster id
+   * @return - returns the ranger policies
+   */
+
+  def getRangerPoliciesByLocation(location: String, fileType: String, clusterId: Int): Seq[PolicyDetails] = {
+    val responseObject: Seq[JsObject] = getAsObjectList(s"${serviceProperties.urlRangerPoliciesByLocation}?location=${location}&type=${fileType}&cluster=${clusterId}")
+    val rangerPolicies = responseObject.map(_.convertTo[PolicyDetails])
+    rangerPolicies
+  }
+
+
+  /**
+   * Gets ranger policies for a given hBase table, file type (hbase), and cluster ID
+   *
+   * @param table     - hBase table
+   * @param fileType  - the term hdfs to tell it is a hdfs file type
+   * @param clusterId - cluster id
+   * @return - returns the ranger policies
+   */
+
+  def getRangerPoliciesByHbaseTable(table: String, fileType: String, clusterId: Int): Seq[PolicyDetails] = {
+    val responseObject: Seq[JsObject] = getAsObjectList(s"${serviceProperties.urlRangerPoliciesByLocation}?table=${table}&type=${fileType}&cluster=${clusterId}")
+    val rangerPolicies = responseObject.map(_.convertTo[PolicyDetails])
+    rangerPolicies
+  }
+
+  /**
+   * Gets ranger policies for a given hive Database and hive table, file type (hive), and cluster ID
+   *
+   * @param database  - hive DB
+   * @param table     - hive table
+   * @param fileType  - the term hdfs to tell it is a hdfs file type
+   * @param clusterId - cluster id
+   * @return - returns the ranger policies
+   */
+
+
+  def getRangerPoliciesByHive(database: String, table: String, fileType: String, clusterId: Int): Seq[PolicyDetails] = {
+    val responseObject: Seq[JsObject] = getAsObjectList(s"${serviceProperties.urlRangerPoliciesByLocation}?database=${database}&table=${table}&type=${fileType}&cluster=${clusterId}")
+    val rangerPolicies = responseObject.map(_.convertTo[PolicyDetails])
+    rangerPolicies
   }
 
   /**

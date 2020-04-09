@@ -20,6 +20,7 @@
 package com.paypal.gimel.common.storageadmin
 
 import java.io.{BufferedReader, InputStreamReader}
+import java.net.URI
 
 import org.apache.hadoop.fs.{FileSystem, FSDataInputStream, Path}
 import org.apache.hadoop.security.UserGroupInformation
@@ -90,6 +91,28 @@ object HDFSAdminClient {
     } catch {
       case ex: Throwable =>
         throw ex
+    }
+  }
+
+  /**
+   * hdfsFolderExists checks whether the HDFS folder exists or not.
+   *
+   * @param incomingFolder - HDFS folder name
+   * @return returns a boolean based on whether the hdfs folder exists or not
+   */
+  def hdfsFolderExists(incomingFolder: String): Boolean = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
+    logger.info(s" @Begin -->  + $MethodName")
+
+    val conf = new org.apache.hadoop.conf.Configuration()
+    val fs = FileSystem.get(new URI(incomingFolder), conf)
+    val hdfsPath = new Path(incomingFolder)
+    if (fs.exists(hdfsPath)) {
+      true
+    }
+    else {
+      false
     }
   }
 

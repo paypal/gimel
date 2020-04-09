@@ -32,6 +32,7 @@ import com.paypal.gimel._
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{CatalogProviderConfigs, GimelConstants}
 import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
+import com.paypal.gimel.common.security.AuthHandler
 import com.paypal.gimel.common.utilities.{DataSetType, DataSetUtils, GenericUtils, Timer}
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.datastreamfactory.{StreamingResult, StructuredStreamingResult, WrappedData}
@@ -173,6 +174,14 @@ object GimelQueryProcessor {
       logger.debug(s"Is CheckPointing Requested By User --> $isCheckPointEnabled")
       val dataSet: DataSet = DataSet(sparkSession)
 
+      // Query is via GTS
+      val isGTSImpersonated = AuthHandler.isAuthRequired(sparkSession)
+
+      // Query has Hive / HBASE related DML that requires authentication.
+      lazy val isDMLHiveOrHbase = queryUtils.isHiveHbaseDMLAndGTSUser(sql, options, sparkSession)
+      // Query is a DDL operation
+      lazy val isDDL = queryUtils.isDDL(sql, sparkSession)
+
       // Identify JDBC complete pushdown
       val (isJdbcCompletePushDownEnabled, transformedSql, jdbcOptions) =
         GimelQueryUtils.isJdbcCompletePushDownEnabled(sparkSession, sql)
@@ -196,6 +205,13 @@ object GimelQueryProcessor {
         }
         stringToDF(sparkSession, resultingStr)
       } else {
+        // Allow thrift server to execute the Query for all other cases.
+        val isSelectFromHiveOrHBase = queryUtils.isSelectFromHiveHbaseAndGTSUser(sql, options, sparkSession)
+        logger.info(s"isSelectFromHiveOrHBase -> $isSelectFromHiveOrHBase")
+        if (isSelectFromHiveOrHBase) {
+          logger.info("Select query consists of Hive or HBase dataset, authenticating access through ranger.")
+          queryUtils.authenticateAccess(sql, sparkSession, options)
+        }
 
         // Set HBase Page Size for optimization if selecting from HBase with limit
         if (QueryParserUtils.isHavingLimit(sql)) {

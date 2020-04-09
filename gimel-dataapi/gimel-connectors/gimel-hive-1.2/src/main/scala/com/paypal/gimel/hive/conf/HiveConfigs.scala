@@ -20,6 +20,7 @@
 package com.paypal.gimel.hive.conf
 
 object HiveConfigs {
+  val dataLocation = "gimel.hdfs.data.location"
   val hiveDBName = "gimel.hive.db.name"
   val hiveTableName = "gimel.hive.table.name"
   val hdfsStorageNameKey = "gimel.hdfs.storage.name"
