@@ -38,6 +38,7 @@ import com.paypal.gimel.common.catalog.{DataSetProperties, Field}
 import com.paypal.gimel.common.conf.{CatalogProviderConstants, GimelConstants, PCatalogPayloadConstants}
 import com.paypal.gimel.common.gimelservices.payload._
 import com.paypal.gimel.common.gimelservices.payload.GimelJsonProtocol._
+import com.paypal.gimel.common.utilities.GenericUtils
 import com.paypal.gimel.logger.Logger
 
 object GimelServiceUtilities {
@@ -56,21 +57,58 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   private var serviceProperties: GimelServicesProperties = GimelServicesProperties(userProps)
   // Check for gracefully exit
   private val exitCondition = userProps.getOrElse(GimelConstants.EXIT_CONDITION, GimelConstants.FALSE).toBoolean
-  private var headerMap = getHeader(userProps)
+  private var headerMap = Map.empty[String, String]
 
   /**
-    * Get the map with initial header values to be passed to UDC API
+    * Get the map with header values to be passed to UDC API
     *
+    * @param props : Map of dataset properties
     */
-  def getHeader(props: Map[String, String]): Map[String, String] = {
+  def getUDCHeader(props: Map[String, String]): Map[String, String] = {
     val userName = System.getenv(GimelConstants.USER)
     val hostName = System.getenv(GimelConstants.HOST_NAME)
+    val udcAppName = props.getOrElse(GimelConstants.UDC_APP_NAME_KEY, GimelConstants.UDC_GIMEL_DEFAULT_APP_NAME)
     val headerMap = Map(GimelConstants.APP_NAME -> serviceProperties.appName,
       GimelConstants.USER_NAME -> userName,
       GimelConstants.HOST_NAME -> hostName,
       GimelConstants.APP_ID -> serviceProperties.appId,
-      GimelConstants.APP_TAG -> serviceProperties.appTag.replaceAllLiterally("/", "_"))
-    headerMap
+      GimelConstants.APP_TAG -> serviceProperties.appTag.replaceAllLiterally("/", "_"),
+      GimelConstants.UDC_APP_NAME_HEADER_KEY -> udcAppName)
+    val udcAuthEnabled = GenericUtils.getValueAny(props, GimelConstants.UDC_AUTH_ENABLED, "true").toBoolean
+    if (udcAuthEnabled) {
+      try {
+        val udcAuthToken = getUDCAuthToken(props)
+        logger.info("Initial Header Map excluding " + GimelConstants.UDC_AUTH_HEADER_KEY + " -> " + headerMap)
+        headerMap ++ Map(GimelConstants.UDC_AUTH_HEADER_KEY -> udcAuthToken)
+      } catch {
+        case e: Throwable =>
+          val msg = "Failed to get key from KeyMaker. Reason -> " + e
+          e.printStackTrace()
+          val newHeaderMap = headerMap ++ Map(GimelConstants.UDC_AUTH_HEADER_KEY -> "",
+            GimelConstants.UDC_COMMENT_HEADER_KEY -> msg)
+          logger.info("Failed to get UDC Auth Token. New Header Map " + " -> " + newHeaderMap)
+          newHeaderMap
+      }
+    } else {
+      headerMap
+    }
+  }
+
+  /**
+   * Get the UDC auth token from auth provider class
+   *
+   * @param props : Map of dataset properties
+   */
+  def getUDCAuthToken(props: Map[String, String]) : String = {
+    // Loading the custom auth provider at runtime
+    val authLoaderClassName = GenericUtils.getValueAny(props, GimelConstants.UDC_AUTH_PROVIDER_CLASS, "")
+    if (authLoaderClassName.isEmpty) {
+      throw new IllegalArgumentException(s"You need to set the property ${GimelConstants.UDC_AUTH_PROVIDER_CLASS} " +
+        s"with ${GimelConstants.UDC_AUTH_ENABLED} = true, " +
+        s"Please set ${GimelConstants.UDC_AUTH_ENABLED} to false in order to turn off udc auth.")
+    }
+    val authLoader = Class.forName(authLoaderClassName).newInstance.asInstanceOf[com.paypal.gimel.common.security.AuthProvider]
+    authLoader.getCredentials(props ++ Map(GimelConstants.GIMEL_AUTH_REQUEST_TYPE -> GimelConstants.UDC_AUTH_REQUEST_TYPE))
   }
 
   /**
@@ -81,7 +119,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   def customize(props: Map[String, String]): Unit = {
     serviceProperties = GimelServicesProperties(userProps ++ props)
     logger.info("Updating Header Map with new props.")
-    headerMap = getHeader(userProps ++ props)
+    headerMap = getUDCHeader(userProps ++ props)
   }
 
   /**
