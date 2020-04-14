@@ -188,7 +188,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
    *                props is the way to set various additional parameters for read and write operations in DataSet class
    *                Example Usecase : to read kafka from-to a certain offset range : One can set something like below -
    *                val props = Map("fromOffset" -> 10, "toOffset" -> 20)
-   *                val data = Dataset(sc).read("wuser.topic", props)
+   *                val data = Dataset(sc).read("flights.topic", props)
    * @return Boolean -> ToBeAuthenticated
    */
   override def authenticate(dataset: String, dataSetProps: Map[String, Any]): Unit = {

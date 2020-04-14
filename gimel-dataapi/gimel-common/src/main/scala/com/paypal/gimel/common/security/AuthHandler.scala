@@ -41,7 +41,7 @@ object AuthHandler {
   val logger = Logger(this.getClass)
 
   /**
-    * This block allows entry for impersonation only if user is livy, in all other cases impersonation is not required.
+    * This block allows entry for impersonation only if user is generic_user, in all other cases impersonation is not required.
     * Also, if GTS is started with spark.gimel.gts.impersonation.enabled=false, then this whole block must not execute.
     *
     * @param sparkSession Spark Session
@@ -50,7 +50,10 @@ object AuthHandler {
 
   def isAuthRequired(sparkSession: SparkSession): Boolean = {
 
-    val authRequired = (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER) &&
+    val gtsDefaultUserOption = sparkSession.conf.getOption(GimelConstants.GTS_DEFAULT_USER_FLAG)
+    assert(gtsDefaultUserOption.isDefined,
+      s"Expecting the configuration: ${GimelConstants.GTS_DEFAULT_USER_FLAG} to be defined")
+    val authRequired = (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(gtsDefaultUserOption.get) &&
       sparkSession.conf.get(GimelConstants.GTS_IMPERSONATION_FLAG, "true").toBoolean)
 
     logger.info(s"GTS - AUTH REQUIRED : ${authRequired}")
@@ -78,7 +81,7 @@ object AuthHandler {
     val batchUsers = new ListBuffer[String]()
     val groupUsers = new ListBuffer[String]()
     logger.info(" authenticateRangerLocationPolicy args" + currentUser + ":" + operation + ":" + hdfsLocation + ":" + dataSet + ":" + clusterName + ":" + clusterNameNode)
-    // The policies will not have the hdfs and cluster like hdfs://horton/table...
+    // The policies will not have the hdfs and cluster like hdfs://test_cluster/table...
     // It will have like /sys/user/tablename
     // So we need to strip the hdfs cluster name from it to send the correct location so that REST call won't fail.
 
@@ -122,7 +125,6 @@ object AuthHandler {
            |- You have to be a part of one of these accounts [${accounts}]
            |- Or, have one of the following roles [${roles}]
            |
-           |Please use the following link for access requests : https://identityhub.paypalcorp.com/dashboard .
            |""".stripMargin
 
       logger.info(errorMessage)
@@ -315,7 +317,6 @@ object AuthHandler {
            |- You have to be a part of one of these accounts [${accounts}]
            |- Or, have one of the following roles [${roles}]
            |
-           |Please use the following link for access requests : https://identityhub.paypalcorp.com/dashboard .
            |""".stripMargin
 
       logger.info(errorMessage)
@@ -389,8 +390,7 @@ object AuthHandler {
         case _ => s""" OR you need to have the role[s] [${groupUsers.mkString(",")}]"""
 
       }
-      val thirdPart = s"""\nPlease use https://identityhub.paypalcorp.com/dashboard link for access requests""".stripMargin
-      val errorMessage = firstPart + secondPart + thirdPart
+      val errorMessage = firstPart + secondPart
       logger.info(errorMessage)
       throw new DataSetAccessException(errorMessage)
     }
@@ -445,7 +445,7 @@ object AuthHandler {
     val newUserSet = users.contains(",") match {
       case true => val usersSet = users.split(',')
         val firstItem = usersSet(0)
-        // result of the getent group <groupname> => PP_POD_Timel_Notebooks_Users:*:57816:ROB,TOM,GARRY
+        // result of the getent group <groupname> => sample_user_group:*:57816:ROB,TOM,GARRY
         // The first item ROB needed a special handling to trim till the last colon and take the rest till first comma
         val fixedFirstItem = firstItem.substring(firstItem.lastIndexOf(':') + 1, firstItem.length)
         val newUserSet: Array[String] = usersSet.slice(1, usersSet.length) :+ fixedFirstItem.toString

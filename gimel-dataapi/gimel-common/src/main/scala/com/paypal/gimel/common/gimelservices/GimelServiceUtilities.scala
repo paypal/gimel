@@ -333,7 +333,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   /**
     * Gets the Cluster Details for a Given Cluster Name
     *
-    * @param name Name of Cluster -- Sample : horton
+    * @param name Name of Cluster -- Sample : test_cluster
     * @return ClusterInfo
     */
   def getClusterInfo(name: String): ClusterInfo = {
@@ -438,7 +438,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   }
 
   /**
-    * Get Storage Type Name based on storage system name (e.g. Horton:Hive -> Hive)
+    * Get Storage Type Name based on storage system name (e.g. test_cluster:Hive -> Hive)
     *
     * @param storageSystemName
     * @return String
@@ -874,7 +874,6 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
           s"""
              |[The dataset ${dataset} does not exist. Please check if the dataset name is correct.
              |It may not exist in UDC (if you've set gimel.catalog.provider=UDC)
-             |Solutions for common exceptions are documented here : http://go/gimel/exceptions"
              |""".stripMargin
         throw new Exception(errorMessage)
       }

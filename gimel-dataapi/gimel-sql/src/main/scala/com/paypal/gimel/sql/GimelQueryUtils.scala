@@ -34,11 +34,10 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.streaming.Time
 
-import com.paypal.gimel.DataSetUtils
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{GimelConstants, _}
 import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
-import com.paypal.gimel.common.utilities.{DataSetType, GenericUtils, RandomGenerator}
+import com.paypal.gimel.common.utilities.{DataSetType, DataSetUtils, GenericUtils, RandomGenerator}
 import com.paypal.gimel.common.utilities.DataSetUtils._
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
@@ -472,35 +471,6 @@ object GimelQueryUtils {
   }
 
   /**
-   * For a given dataset (table) this function calls getDataSetProperties which calls catalog provider and returns the dataset properties
-   * which will be used to identify the storage of the dataset
-   *
-   * @param insertTable  - Incoming dataset
-   * @param sparkSession - spark session
-   * @param options      - Set of user options
-   * @return - Returns the storage system (hive/teradata/kafka...)
-   */
-
-  def getSystemType(insertTable: String, sparkSession: SparkSession,
-                    options: Map[String, String]): com.paypal.gimel.DataSetType.Value = {
-    logger.info("Data set name is  ==> " + insertTable)
-    val formattedProps: Map[String, Any] = com.paypal.gimel.common.utilities.DataSetUtils.getProps(options) ++
-      Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
-        sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
-          CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER))
-
-    // if storage type unknown we will default to HIVE PROVIDER
-    if (DataSetUtils.isStorageTypeUnknown(insertTable)) {
-      formattedProps ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.HIVE_PROVIDER)
-    }
-
-    val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(insertTable, options)
-    logger.info("dataSetProperties  ==> " + dataSetProperties.toString())
-    val systemType: _root_.com.paypal.gimel.DataSetType.Value = com.paypal.gimel.DataSetUtils.getSystemType(dataSetProperties)
-    systemType
-  }
-
-  /**
    * This function tokenize the incoming sql and parses it using JSQL parser and identify whether the query is of Insert type
    * If it is a insert query, it checks whether it is of HIVE insert, which the caller will use it decide whether to execute it through Livy.
    *
@@ -518,7 +488,7 @@ object GimelQueryUtils {
       case "insert" => {
         val insertTable = getTargetTables(sql)
         getSystemType(insertTable.get, sparkSession, options) match {
-          case com.paypal.gimel.DataSetType.HIVE => {
+          case DataSetType.HIVE => {
             if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER)) {
               logger.info("Hive insert query and comes from GTS")
               true
@@ -527,7 +497,7 @@ object GimelQueryUtils {
               false
             }
           }
-          case com.paypal.gimel.DataSetType.HBASE => {
+          case DataSetType.HBASE => {
             if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER)) {
               logger.info("hBase insert query and comes from GTS")
               true
@@ -567,14 +537,14 @@ object GimelQueryUtils {
           val selectTables = getAllTableSources(sql)
           if (selectTables.isEmpty) return false
           selectTables.map(eachTable => getSystemType(eachTable, sparkSession, options) match {
-            case com.paypal.gimel.DataSetType.HIVE =>
+            case DataSetType.HIVE =>
               if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER)) {
                 logger.info("Hive select query and comes from GTS")
                 true
               } else {
                 false
               }
-            case com.paypal.gimel.DataSetType.HBASE =>
+            case DataSetType.HBASE =>
               if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER)) {
                 logger.info("hBase select query and comes from GTS")
                 true
@@ -1143,7 +1113,7 @@ object GimelQueryUtils {
     logger.info("@Begin --> " + MethodName)
 
     logger.info("Data set name is  --> " + dataSet)
-    val formattedProps: Map[String, Any] = com.paypal.gimel.common.utilities.DataSetUtils.getProps(options) ++
+    val formattedProps: Map[String, Any] = DataSetUtils.getProps(options) ++
       Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
         sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
           CatalogProviderConstants.PRIMARY_CATALOG_PROVIDER))
@@ -1155,15 +1125,15 @@ object GimelQueryUtils {
 
     val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(dataSet, options)
     logger.info("dataSetProperties  ==> " + dataSetProperties.toString())
-    val systemType = com.paypal.gimel.DataSetUtils.getSystemType(dataSetProperties)
+    val systemType = DataSetUtils.getSystemType(dataSetProperties)
 
-    val newProps: Map[String, Any] = com.paypal.gimel.common.utilities.DataSetUtils.getProps(options) ++ Map(
+    val newProps: Map[String, Any] = DataSetUtils.getProps(options) ++ Map(
       GimelConstants.DATASET_PROPS -> dataSetProperties
       , GimelConstants.DATASET -> dataSet
       , GimelConstants.RESOLVED_HIVE_TABLE -> resolveDataSetName(dataSet))
 
     systemType match {
-      case com.paypal.gimel.DataSetType.HIVE =>
+      case DataSetType.HIVE =>
         val hiveUtils = new HiveUtils
 
         // If its cross cluster access, do not allow dynamic dataset access as it would mean the dataset is not present in UDC
@@ -1175,8 +1145,7 @@ object GimelQueryUtils {
             throw new Exception(
               s"""
                  | Cross Cluster Access Detected. Cannot read dynamic dataset.
-                 | This means the dataset does not exist in UDC. Please visit http://go/udc to create it.
-                 | Solutions for common exceptions are documented here : http://go/gimel/exceptions"
+                 | This means the dataset does not exist in UDC.
                """.stripMargin)
           }
 
@@ -1186,7 +1155,6 @@ object GimelQueryUtils {
               s"""
                  | Cross Cluster Access Detected. Cannot find ${HiveConfigs.dataLocation} property.
                  | Please check if it is a view as Gimel currently does not support cross cluster view access.
-                 | Solutions for common exceptions are documented here : http://go/gimel/exceptions"
                """.stripMargin)
           }
           hiveUtils.authenticateTableAndLocationPolicy(dataSet, options, sparkSession, GimelConstants.READ_OPERATION)
@@ -1207,7 +1175,7 @@ object GimelQueryUtils {
             hiveUtils.authenticateTableAndLocationPolicy(dataSet, options, sparkSession, GimelConstants.READ_OPERATION)
           }
         }
-      case com.paypal.gimel.DataSetType.HBASE =>
+      case DataSetType.HBASE =>
         val hBASEUtilities = HBaseUtilities(sparkSession)
         hBASEUtilities.authenticateThroughRangerPolicies(dataSet, GimelConstants.READ_OPERATION, newProps)
       case _ => None
@@ -1250,8 +1218,9 @@ object GimelQueryUtils {
           val selectTables = getAllTableSources(sql)
           // Checks if there is more than 1 source tables
           if (selectTables.isEmpty || selectTables.length > 1) return
-          selectTables.map(eachTable => getSystemType(eachTable, sparkSession, options) match {
-            case com.paypal.gimel.DataSetType.HBASE =>
+          selectTables.map(eachTable => DataSetUtils.getSystemType(
+            eachTable, sparkSession, options) match {
+            case DataSetType.HBASE =>
               logger.info("Sql contains limit clause, setting the HBase Page Size.")
               val limit = Try(QueryParserUtils.getLimit(sql)).get
               sparkSession.conf.set(GimelConstants.HBASE_PAGE_SIZE, limit)
