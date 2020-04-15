@@ -73,7 +73,7 @@ class AppTimer[T](spark: SparkSession, incomingLogger: Option[Logger] = None)
   }
 
   override protected def onReceive(event: QueryGuardDelayedEvent): Unit = {
-    // TODO once this app crosses the timeline kill the application, by publishing it to app kill
+    // once this app crosses the timeline kill the application, by publishing it to app kill
     event match {
       case job: JobSubmitted =>
         logger.info(s"${HEADER}Received job: $job")

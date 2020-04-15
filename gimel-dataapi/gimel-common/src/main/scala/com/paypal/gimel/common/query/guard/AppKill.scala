@@ -36,7 +36,7 @@ class AppKill[E](spark: SparkSession, incomingLogger: Option[Logger] = None)
   }
 
   override protected def onReceive(event: E): Unit = {
-    // TODO kill the received job
+    // kill the received job
     event match {
       case jobKill: JobKill if jobKill.jobType == "job" =>
         val jobInfo = spark.sparkContext.statusTracker.getJobInfo(jobKill.jobId)
