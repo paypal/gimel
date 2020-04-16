@@ -41,6 +41,7 @@ import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
 import com.paypal.gimel.parser.utilities.{QueryConstants, QueryParserUtils}
+import com.paypal.gimel.sql.livy.LivyGimelWrapper
 
 object GimelQueryProcessor {
 
@@ -166,10 +167,12 @@ object GimelQueryProcessor {
       val options = queryUtils.getOptions(sparkSession)._2
 
       var resultingString = ""
-      val queryTimer = Timer()
-      //      val startTime = queryTimer.start
+      // val queryTimer = Timer()
+      // val startTime = queryTimer.start
       val isCheckPointEnabled = options(KafkaConfigs.kafkaConsumerReadCheckpointKey).toBoolean
       //      val isClearCheckPointEnabled = options(KafkaConfigs.kafkaConsumerClearCheckpointKey).toBoolean
+
+      val sessionID = sparkSession.sparkContext.getLocalProperty(GimelConstants.GTS_GIMEL_LIVY_SESSION_ID)
 
       logger.debug(s"Is CheckPointing Requested By User --> $isCheckPointEnabled")
       val dataSet: DataSet = DataSet(sparkSession)
@@ -188,6 +191,11 @@ object GimelQueryProcessor {
 
       val data = if (isJdbcCompletePushDownEnabled) {
         GimelQueryUtils.createPushDownQueryDataframe(sparkSession, transformedSql.get, jdbcOptions.get)
+      } else if (isGTSImpersonated && (isDDL || isDMLHiveOrHbase)) {
+        queryUtils.authenticateAccess(sql, sparkSession, options)
+        logger.info("Route DDL & DML for [Hive | HBASE] to dedicated livy session")
+        val res = LivyGimelWrapper.execute(sql, user, sparkSession)
+        boolToDFWithErrorString(sparkSession, res._1, res._2)
       } else if (queryUtils.isUDCDataDefinition(sql)) {
         logger.info("This path is dynamic dataset creation path")
         var resultingStr = ""
@@ -211,6 +219,17 @@ object GimelQueryProcessor {
         if (isSelectFromHiveOrHBase) {
           logger.info("Select query consists of Hive or HBase dataset, authenticating access through ranger.")
           queryUtils.authenticateAccess(sql, sparkSession, options)
+        }
+
+        // This is required to ensure we pass the confs to Livy session as well as the existing GTS threadpool.
+        // This edge case is required when a user is about to execute an impersonation related query next,
+        // and that is going to go to Livy session
+        if (isGTSImpersonated && queryUtils.isSetConf(sql, sparkSession)) {
+          val livyEndPoint = sparkSession.conf.get(GimelConstants.LIVY_SPARK_ENDPOINT_KEY)
+          if (LivyGimelWrapper.isSessionIdle(user, sessionID, livyEndPoint)) {
+            logger.info("Allow thrift server to execute the Query for all other cases.")
+            LivyGimelWrapper.execute(sql, user, sparkSession)
+          }
         }
 
         // Set HBase Page Size for optimization if selecting from HBase with limit
