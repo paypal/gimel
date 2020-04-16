@@ -96,6 +96,9 @@ class DataStream2(val sparkSession: SparkSession) {
 
     try {
 
+      // Set gimel log level and flag to audit logs to kafka
+      setGimelLogLevel(sparkSession, logger)
+
       // Get catalog provider from run time hive context (1st Preference)
       // if not available - check user props (2nd Preference)
       // if not available - check Primary Provider of Catalog (Default)
@@ -236,6 +239,9 @@ class DataStream2(val sparkSession: SparkSession) {
     val startTime = gimelTimer.start.get
 
     try {
+
+      // Set gimel log level and flag to audit logs to kafka
+      setGimelLogLevel(sparkSession, logger)
 
       // Get catalog provider from run time hive context (1st Preference)
       // if not available - check user props (2nd Preference)

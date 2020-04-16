@@ -82,6 +82,9 @@ class DataSet(val sparkSession: SparkSession) {
 
     try {
 
+      // Set gimel log level and flag to audit logs to kafka
+      setGimelLogLevel(sparkSession, logger)
+
       // Get catalog provider from run time hive context (1st Preference)
       // if not available - check user props (2nd Preference)
       // if not available - check Primary Provider of Catalog (Default)
@@ -219,6 +222,10 @@ class DataSet(val sparkSession: SparkSession) {
     val startTime = gimelTimer.start.get
 
     try {
+
+      // Set gimel log level and flag to audit logs to kafka
+      setGimelLogLevel(sparkSession, logger)
+
       // Get catalog provider from run time hive context (1st Preference)
       // if not available - check user props (2nd Preference)
       // if not available - check Primary Provider of Catalog (Default)
@@ -351,6 +358,10 @@ class DataSet(val sparkSession: SparkSession) {
     val startTime = gimelTimer.start.get
 
     try {
+
+      // Set gimel log level and flag to audit logs to kafka
+      setGimelLogLevel(sparkSession, logger)
+
       // Get catalog provider from run time hive context (1st Preference)
       // if not available - check user props (2nd Preference)
       // if not available - check Primary Provider of Catalog (Default)
@@ -530,6 +541,9 @@ class DataSet(val sparkSession: SparkSession) {
 
     try {
 
+      // Set gimel log level and flag to audit logs to kafka
+      setGimelLogLevel(sparkSession, logger)
+
       // Get catalog provider from run time hive context (1st Preference)
       // if not available - check user props (2nd Preference)
       // if not available - check Primary Provider of Catalog (Default)
@@ -660,6 +674,9 @@ class DataSet(val sparkSession: SparkSession) {
 
     try {
 
+      // Set gimel log level and flag to audit logs to kafka
+      setGimelLogLevel(sparkSession, logger)
+
       val formattedProps: Map[String, Any] = getProps(props) ++
         Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
           sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
@@ -786,6 +803,9 @@ class DataSet(val sparkSession: SparkSession) {
     val startTime = gimelTimer.start.get
 
     try {
+
+      // Set gimel log level and flag to audit logs to kafka
+      setGimelLogLevel(sparkSession, logger)
 
       val formattedProps: Map[String, Any] = getProps(props) ++
         Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
