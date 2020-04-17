@@ -95,13 +95,11 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     // logger.setLogLevel("CONSOLE")
     // sparkSession.conf.set("gimel.logging.level", "CONSOLE")
 
-    val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps)
-
     val jdbcOptions: Map[String, String] = JdbcAuxiliaryUtilities.getJDBCOptions(dataSetProps)
-    logger.info(s"Received JDBC options: $jdbcOptions and dataset options: $dataSetProps")
-
     val jdbcURL = jdbcOptions(JdbcConfigs.jdbcUrl)
     val dbtable = jdbcOptions(JdbcConfigs.jdbcDbTable)
+    val jdbcConnectionUtility: JDBCConnectionUtility = JDBCConnectionUtility(sparkSession, dataSetProps ++ jdbcOptions)
+    logger.info(s"Received JDBC options: $jdbcOptions and dataset options: $dataSetProps")
 
     // get connection
     val conn: Connection = getOrCreateConnection(jdbcConnectionUtility)
@@ -198,7 +196,7 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
       if (mergedJdbcOptions.nonEmpty) {
         mergedJdbcOptions
       } else {
-        dataSetProps
+        dataSetProps ++ jdbcConnectionOptions
       }
     )
     val jdbc_url = mergedJdbcOptions(JdbcConfigs.jdbcUrl)

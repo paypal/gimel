@@ -72,9 +72,11 @@ class JDBCConnectionUtility(sparkSession: SparkSession,
 
   val jdbcPasswordStrategy: String = JDBCConnectionUtility.getJdbcPasswordStrategy(dataSetProps)
 
+  val gts_default_user = sparkSession.conf.get(GimelConstants.GTS_DEFAULT_USER_FLAG, "")
+
   // get actual JDBC user
   // Negating with file strategy, as in many places other than "file" default case is handled!
-  var jdbcUser: String = if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER)
+  var jdbcUser: String = if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(gts_default_user)
     && !JdbcConstants.JDBC_FILE_PASSWORD_STRATEGY.equals(jdbcPasswordStrategy)) {
     // Validate incoming user to be able to set query band
     val gtsUser: String = sparkSession.sparkContext.getLocalProperty(GimelConstants.GTS_USER_CONFIG)
@@ -153,7 +155,7 @@ class JDBCConnectionUtility(sparkSession: SparkSession,
         if (jdbcPasswordStrategy.equalsIgnoreCase(JdbcConstants.JDBC_DEFAULT_PASSWORD_STRATEGY)) {
           // check For GTS queries
           // If sparkUser = livy AND GTS user != jdbcUser, then throw exception.
-          if (sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER)) {
+          if (sparkUser.equalsIgnoreCase(gts_default_user)) {
             // GTS Block
             val gtsUser: String = sparkSession.sparkContext.getLocalProperty(GimelConstants.GTS_USER_CONFIG)
             if (!user.equalsIgnoreCase(gtsUser)) {
