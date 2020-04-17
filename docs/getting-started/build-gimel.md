@@ -39,7 +39,8 @@ Run below command to build
 | -------- | -------- | -------- |
 | Default | ```build/gimel install -T 8 -B``` | Recommended. Builds with all dependencies pulled from maven central - profile general |
 | General | ```build/gimel install -T 8 -B -Pgeneral``` | Builds with all dependencies pulled from maven central |
-| HWX releases | ```build/gimel clean install -T 8 -B -Phwx-2.6.3.11-1``` | Builds with all dependencies pulled from cluster1 works repo if available |
+| HWX release hwx-2.6.3.11-1 | ```build/gimel clean install -T 8 -B -Phwx-2.6.3.11-1``` | Builds with all dependencies pulled from horton works repo if available |
+| HWX release hwx-2.6.5.0-292 | ```build/gimel clean install -T 8 -B -Phwx-2.6.5.0-292``` | Builds with all dependencies pulled from horton works repo if available |
 | Stand Alone | ```build/gimel clean install -T 8 -B -Pstandalone``` | Builds gimel with scala packages bundled in jar, used for standalone execution of gimel jar / polling services |
 
 --------------------------------------------------------------------------------------------------------------------

@@ -34,49 +34,12 @@
 
     <properties>
         <confluent.version>3.3.0</confluent.version>
-        <java.version>1.8</java.version>
-        <scala.version>2.11.8</scala.version>
-        <spark.binary.version>2.3</spark.binary.version>
-        <spark.version>2.3.0</spark.version>
         <spray.json.version>1.3.3</spray.json.version>
-        <scala.binary.version>2.11</scala.binary.version>
-        <scalatest.version>3.0.1</scalatest.version>
-        <gimel.logging.spark.binary.version>2.3</gimel.logging.spark.binary.version>
-        <gimel.logging.version>0.4.3-SNAPSHOT</gimel.logging.version>
         <!-- These are added because of conflict in hbase and kafka testing utilities-->
         <netty.hadoop.version>3.9.9.Final</netty.hadoop.version>
         <netty.all.hadoop.version>4.1.17.Final</netty.all.hadoop.version>
-        <kafka.version>0.10.2.1</kafka.version>
+        <kafka.version>2.2.1</kafka.version>
     </properties>
-
-    <profiles>
-        <profile>
-            <id>general</id>
-            <activation>
-                <property>
-                    <name>general</name>
-                </property>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <packaging.scope>compile</packaging.scope>
-                <scala.packaging.scope>provided</scala.packaging.scope>
-                <spark.packaging.scope>compile</spark.packaging.scope>
-                <hive.packaging.scope>provided</hive.packaging.scope>
-                <hadoop.packaging.scope>provided</hadoop.packaging.scope>
-                <scala.version>2.11.8</scala.version>
-                <spark.binary.version>2.3</spark.binary.version>
-                <scaas.logger.spark.binary.version>2.3</scaas.logger.spark.binary.version>
-                <spark.version>2.3.0</spark.version>
-                <hadoop.version>2.7.3</hadoop.version>
-                <hive.version>1.2.1000</hive.version>
-                <hbase.version>1.1.2</hbase.version>
-                <zookeeper.version>3.4.6</zookeeper.version>
-                <hwx.version>hwx-2.6.5.0-292_s-${spark.binary.version}</hwx.version>
-                <packaging.tag/>
-            </properties>
-        </profile>
-    </profiles>
 
     <dependencies>
         <dependency>
