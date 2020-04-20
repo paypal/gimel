@@ -82,6 +82,7 @@ under the License.
                 <hive.version>1.2.1000</hive.version>
                 <hbase.version>1.1.2</hbase.version>
                 <java.version>1.8</java.version>
+                <gimel.version>2.0.0</gimel.version>
                 <packaging.tag />
             </properties>
         </profile>
@@ -103,7 +104,6 @@ under the License.
                 <scala.binary.version>2.11</scala.binary.version>
                 <scala.version>2.11.8</scala.version>
                 <scalatest.version>3.0.1</scalatest.version>
-                <scalamock.version>4.1.0</scalamock.version>
                 <spark.binary.version>2.3</spark.binary.version>
                 <spark.version>2.3.0.2.6.3.11-1</spark.version>
                 <hadoop.version>2.7.3.2.6.3.11-1</hadoop.version>
@@ -131,6 +131,7 @@ under the License.
                 <scala.binary.version>2.11</scala.binary.version>
                 <scala.version>2.11.8</scala.version>
                 <scalatest.version>3.0.1</scalatest.version>
+                <scalatest.version>3.0.1</scalatest.version>
                 <scalamock.version>4.1.0</scalamock.version>
                 <spark.binary.version>2.3</spark.binary.version>
                 <spark.version>2.3.0.2.6.3.5-4</spark.version>
@@ -139,6 +140,35 @@ under the License.
                 <hbase.version>1.1.2.2.6.3.5-4</hbase.version>
                 <zookeeper.version>3.4.6.2.6.3.5-4</zookeeper.version>
                 <packaging.tag />
+            </properties>
+        </profile>
+        <profile>
+            <id>hwx-2.6.5.0-292</id>
+            <activation>
+                <property>
+                    <name>hortonworks-2.6.5.0-292_spark-2.3.0</name>
+                </property>
+            </activation>
+            <properties>
+                <packaging.scope>compile</packaging.scope>
+                <scala.packaging.scope>provided</scala.packaging.scope>
+                <spark.packaging.scope>compile</spark.packaging.scope>
+                <hive.packaging.scope>provided</hive.packaging.scope>
+                <hadoop.packaging.scope>provided</hadoop.packaging.scope>
+                <scala.version>2.11.8</scala.version>
+                <scala.binary.version>2.11</scala.binary.version>
+                <scalamock.version>4.1.0</scalamock.version>
+                <spark.binary.version>2.3</spark.binary.version>
+                <scaas.logger.spark.binary.version>2.3</scaas.logger.spark.binary.version>
+                <spark.version>2.3.0.2.6.5.0-292</spark.version>
+                <hadoop.version>2.7.3.2.6.5.0-292</hadoop.version>
+                <hive.version>1.2.1000.2.6.5.0-292</hive.version>
+                <hbase.version>1.1.2.2.6.5.0-292</hbase.version>
+                <zookeeper.version>3.4.13.2.6.5.0-292</zookeeper.version>
+                <hwx.version>hwx-2.6.5.0-292_s-${spark.binary.version}</hwx.version>
+                <gimel.version>2.0.0</gimel.version>
+                <scalatest.version>3.0.1</scalatest.version>
+                <packaging.tag/>
             </properties>
         </profile>
         <profile>
