@@ -112,7 +112,7 @@ object APIUsageKafkaProduceConsume extends App {
   val df: DataFrame = sqlContext.read.json(rdd)
 
   // Get a List of Supported Systems for DataSet Operations
-  val systemType = DataSetType
+  // val systemType = DataSetType
 
   // DataSet Write API Call
   dataSet.write(datasetName, df)

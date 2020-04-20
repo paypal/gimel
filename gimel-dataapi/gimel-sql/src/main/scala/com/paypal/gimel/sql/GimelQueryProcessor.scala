@@ -35,7 +35,7 @@ import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
 import com.paypal.gimel.common.utilities.{DataSetType, DataSetUtils, Timer}
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.datastreamfactory.{StreamingResult, StructuredStreamingResult, WrappedData}
-import com.paypal.gimel.jdbc.conf.JdbcConfigs
+import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
 import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
@@ -51,6 +51,7 @@ object GimelQueryProcessor {
 
   val originalUser = sys.env("USER")
   var user = originalUser
+  var isQueryFromGTS = false
   val yarnCluster = com.paypal.gimel.common.utilities.DataSetUtils.getYarnClusterName()
 
   /**
@@ -68,6 +69,33 @@ object GimelQueryProcessor {
     logger.info(s"Catalog Provider --> [${catalogProvider}] | Catalog Provider Name --> [${catalogProviderName}] ")
     setCatalogProvider(catalogProvider)
     setCatalogProviderName(catalogProviderName)
+  }
+
+  /**
+   * Sets Spark GTS User Name if available
+   *
+   * @param sparkSession SparkSession
+   */
+  def setGtsUser(sparkSession: SparkSession): Unit = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
+    logger.info(" @Begin --> " + MethodName)
+
+    val gtsUser: String = sparkSession.sparkContext.getLocalProperty(GimelConstants.GTS_USER_CONFIG)
+    val gts_default_user = sparkSession.conf.get(GimelConstants.GTS_USER_DEFAULT_KEY, "")
+    if (gtsUser != null && originalUser.equalsIgnoreCase(gts_default_user)) {
+      logger.info(s"GTS User [${gtsUser}] will be used to over ride executing user [${originalUser}] who started GTS.")
+      sparkSession.sql(s"set ${GimelConstants.GTS_USER_CONFIG}=${gtsUser}")
+
+      // set jdbc username,if already not set in sparkconf
+      val jdbcUser: Option[String] = sparkSession.conf.getOption(JdbcConfigs.jdbcUserName)
+      if (jdbcUser.isEmpty) {
+        logger.info(s"Setting ${JdbcConfigs.jdbcUserName}=${gtsUser}")
+        sparkSession.sql(s"set ${JdbcConfigs.jdbcUserName}=${gtsUser}")
+      }
+      user = gtsUser
+      isQueryFromGTS = true
+    }
   }
 
   /**
@@ -126,6 +154,9 @@ object GimelQueryProcessor {
 
       // At Run Time - Set the Catalog Provider and The Name Space of the Catalog (like the Hive DB Name when catalog Provider = HIVE)
       setCatalogProviderInfo(sparkSession)
+
+      // If query comes from GTS - interpret the GTS user and set it
+      setGtsUser(sparkSession)
 
       val options = queryUtils.getOptions(sparkSession)._2
 
@@ -217,7 +248,7 @@ object GimelQueryProcessor {
         , toLogFriendlyString(s"${yarnCluster}/${user}/${sparkAppName}")
         , MethodName
         , sql
-        , scala.collection.mutable.Map("sql" -> sql, "originalUser" -> originalUser)
+        , scala.collection.mutable.Map("sql" -> sql, "isQueryFromGTS" -> isQueryFromGTS.toString, "originalUser" -> originalUser)
         , GimelConstants.SUCCESS
         , GimelConstants.EMPTY_STRING
         , GimelConstants.EMPTY_STRING
@@ -237,7 +268,7 @@ object GimelQueryProcessor {
           , toLogFriendlyString(s"${yarnCluster}/${user}/${sparkAppName}")
           , MethodName
           , sql
-          , scala.collection.mutable.Map("sql" -> sql, "originalUser" -> originalUser)
+          , scala.collection.mutable.Map("sql" -> sql, "isQueryFromGTS" -> isQueryFromGTS.toString, "originalUser" -> originalUser)
           , GimelConstants.FAILURE
           , e.toString + "\n" + e.getStackTraceString
           , GimelConstants.UNKNOWN_STRING
