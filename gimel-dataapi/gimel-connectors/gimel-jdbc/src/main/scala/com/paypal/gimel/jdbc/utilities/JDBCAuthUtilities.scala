@@ -148,7 +148,8 @@ class JDBCAuthUtilities(sparkSession: SparkSession) extends Serializable {
         // Loading the custom auth provider at runtime
         val authLoaderClassName = GenericUtils.getValueAny(dataSetProps, JdbcConfigs.jdbcAuthLoaderClass, "")
         if (authLoaderClassName.isEmpty) {
-          throw new IllegalArgumentException(s"You need to set the property ${JdbcConfigs.jdbcAuthLoaderClass} with ${JdbcConfigs.jdbcPasswordStrategy} = ${JdbcConstants.JDBC_CUSTOM_PASSWORD_STRATEGY}")
+          throw new IllegalArgumentException(s"You need to set the property ${JdbcConfigs.jdbcAuthLoaderClass} " +
+            s"with ${JdbcConfigs.jdbcPasswordStrategy} = ${JdbcConstants.JDBC_CUSTOM_PASSWORD_STRATEGY}")
         }
         val authLoader = Class.forName(authLoaderClassName).newInstance.asInstanceOf[com.paypal.gimel.common.security.AuthProvider]
         password = authLoader.getCredentials(dataSetProps ++ Map(GimelConstants.GIMEL_AUTH_REQUEST_TYPE -> JdbcConstants.JDBC_AUTH_REQUEST_TYPE))
