@@ -21,6 +21,8 @@ package com.paypal.gimel.common.conf
 
 import scala.util.matching.Regex
 
+import org.apache.spark.sql.RuntimeConfig
+
 object GimelConstants {
 
   // COMMON CONSTANTS USED ACROSS ENTIRE GIMEL
@@ -234,7 +236,7 @@ object GimelConstants {
 
   // GTS
   val GTS_DEFAULT_USER_FLAG = "spark.gimel.gts.default.user"
-  val GTS_DEFAULT_USER = "livy"
+  def GTS_DEFAULT_USER(conf: RuntimeConfig): String = conf.get(GimelConstants.GTS_DEFAULT_USER_FLAG, EMPTY_STRING)
   val GTS_USER_CONFIG = "gimel.gts.user"
   val GTS_DEFAULT_USER_FLAG = "spark.gimel.gts.default.user"
   val GTS_IMPERSONATION_FLAG = "spark.gimel.gts.impersonation.enabled"
@@ -246,7 +248,6 @@ object GimelConstants {
   val LIVY_STATUS_IDLE = "idle"
   val LIVY_STATUS_BUSY = "busy"
   val LIVY_STATUS_DEAD = "dead"
-  val GIMEL_LIVY_INTERACTIVE_HORTON = "gimel.livy.scala.client.interactive.horton"
   val GTS_LIVY_DML_SESSION_KEYWORD = "_GIMEL_THRIFT_SERVER_GSQL_DML_LIVY_SESSION"
 
   val LIVY_PARAM_APPLICATION_NAME_KEY = "applicationName"

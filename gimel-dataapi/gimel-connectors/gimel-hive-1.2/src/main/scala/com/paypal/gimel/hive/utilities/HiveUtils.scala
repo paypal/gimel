@@ -392,7 +392,7 @@ class HiveUtils {
     val datasetProps = CatalogProvider.getDataSetProperties(dataset, options)
     val currentUser = datasetProps.props.getOrElse(GimelConstants.GTS_USER_CONFIG, sparkSession.sparkContext.sparkUser)
     if (AuthHandler.isAuthRequired(sparkSession)) {
-      logger.info(s"Detected super user [${GimelConstants.GTS_DEFAULT_USER}]. Operation [${operation}]")
+      logger.info(s"Detected super user [${GimelConstants.GTS_DEFAULT_USER(sparkSession.conf)}]. Operation [${operation}]")
       val isCataloguedTable = datasetProps.props.getOrElse(CatalogProviderConstants.DYNAMIC_DATASET, "true")
       val hdfsLocation = isCataloguedTable match {
         case "true" =>

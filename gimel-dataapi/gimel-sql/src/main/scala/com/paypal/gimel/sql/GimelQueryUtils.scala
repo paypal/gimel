@@ -489,20 +489,22 @@ object GimelQueryUtils {
         val insertTable = getTargetTables(sql)
         getSystemType(insertTable.get, sparkSession, options) match {
           case DataSetType.HIVE => {
-            if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER)) {
+            if (
+              sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER(sparkSession.conf))
+            ) {
               logger.info("Hive insert query and comes from GTS")
               true
-            }
-            else {
+            } else {
               false
             }
           }
           case DataSetType.HBASE => {
-            if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER)) {
+            if (
+              sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER(sparkSession.conf))
+            ) {
               logger.info("hBase insert query and comes from GTS")
               true
-            }
-            else {
+            } else {
               false
             }
           }
@@ -538,14 +540,16 @@ object GimelQueryUtils {
           if (selectTables.isEmpty) return false
           selectTables.map(eachTable => getSystemType(eachTable, sparkSession, options) match {
             case DataSetType.HIVE =>
-              if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER)) {
+              if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(
+                GimelConstants.GTS_DEFAULT_USER(sparkSession.conf))) {
                 logger.info("Hive select query and comes from GTS")
                 true
               } else {
                 false
               }
             case DataSetType.HBASE =>
-              if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER)) {
+              if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(
+                GimelConstants.GTS_DEFAULT_USER(sparkSession.conf))) {
                 logger.info("hBase select query and comes from GTS")
                 true
               } else {
