@@ -52,9 +52,7 @@ under the License.
         <module>gimel-core</module>
         <module>gimel-sql</module>
         <module>gimel-tools</module>
-        <module>gimel-testsuite</module>
         <module>gimel-examples</module>
-        <module>gimel-benchmarksuite</module>
     </modules>
 
     <properties>
