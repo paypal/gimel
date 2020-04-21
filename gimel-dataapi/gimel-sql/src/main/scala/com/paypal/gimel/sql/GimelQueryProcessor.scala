@@ -32,7 +32,7 @@ import com.paypal.gimel._
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{CatalogProviderConfigs, GimelConstants}
 import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
-import com.paypal.gimel.common.utilities.{DataSetType, DataSetUtils, Timer}
+import com.paypal.gimel.common.utilities.{DataSetType, DataSetUtils, GenericUtils, Timer}
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.datastreamfactory.{StreamingResult, StructuredStreamingResult, WrappedData}
 import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
@@ -106,6 +106,7 @@ object GimelQueryProcessor {
     * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
     */
   def executeBatch(sql: String, sparkSession: SparkSession): DataFrame = {
+
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
@@ -147,7 +148,10 @@ object GimelQueryProcessor {
     logger.info(" @Begin --> " + MethodName)
 
     logger.setSparkVersion(sparkSession.version)
-    sparkSession.sparkContext.setLogLevel("ERROR")
+
+    // Set gimel log level and flag to audit logs to kafka
+    DataSetUtils.setGimelLogLevel(sparkSession, logger)
+
     val sparkAppName = sparkSession.conf.get("spark.app.name")
 
     try {
@@ -159,16 +163,6 @@ object GimelQueryProcessor {
       setGtsUser(sparkSession)
 
       val options = queryUtils.getOptions(sparkSession)._2
-
-      val gimelLoggingLevel: String = options.getOrElse(GimelConstants.LOG_LEVEL,
-        GimelConstants.DEFAULT_LOG_LEVEL).toUpperCase()
-      logger.setLogLevel(gimelLoggingLevel)
-      gimelLoggingLevel match {
-        case "DEBUG" | "CONSOLE" =>
-          logger.consolePrintEnabled = true
-        case _ =>
-          logger.consolePrintEnabled = false
-      }
 
       var resultingString = ""
       val queryTimer = Timer()
@@ -300,19 +294,13 @@ object GimelQueryProcessor {
     logger.setSparkVersion(sparkSession.version)
     val sparkAppName = sparkSession.conf.get("spark.app.name")
 
+    // Set gimel log level and flag to audit logs to kafka
+    DataSetUtils.setGimelLogLevel(sparkSession, logger)
+
     // At Run Time - Set the Catalog Provider and The Name Space of the Catalog (like the Hive DB Name when catalog Provider = HIVE)
     setCatalogProviderInfo(sparkSession)
 
     try {
-
-      sparkSession.sparkContext.setLogLevel("ERROR")
-
-      val defaultGimelLogLevel = sparkSession.conf.get(GimelConstants.LOG_LEVEL, "ERROR").toString
-      if (defaultGimelLogLevel == "CONSOLE") {
-        logger.setLogLevel("INFO")
-        logger.consolePrintEnabled = true
-      }
-      else logger.setLogLevel(defaultGimelLogLevel)
 
       sparkSession.conf.set(GimelConstants.GIMEL_KAFKA_VERSION, GimelConstants.GIMEL_KAFKA_VERSION_ONE)
       val options = queryUtils.getOptions(sparkSession)._2
@@ -469,19 +457,13 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     logger.setSparkVersion(sparkSession.version)
     val sparkAppName = sparkSession.conf.get("spark.app.name")
 
+    // Set gimel log level and flag to audit logs to kafka
+    DataSetUtils.setGimelLogLevel(sparkSession, logger)
+
     // At Run Time - Set the Catalog Provider and The Name Space of the Catalog (like the Hive DB Name when catalog Provider = HIVE)
     setCatalogProviderInfo(sparkSession)
 
     try {
-
-      sparkSession.sparkContext.setLogLevel("ERROR")
-
-      val defaultGimelLogLevel = sparkSession.conf.get(GimelConstants.LOG_LEVEL, "ERROR").toString
-      if (defaultGimelLogLevel == "CONSOLE") {
-        logger.setLogLevel("INFO")
-        logger.consolePrintEnabled = true
-      }
-      else logger.setLogLevel(defaultGimelLogLevel)
 
       val options = queryUtils.getOptions(sparkSession)._2
       val batchInterval = options(KafkaConfigs.defaultBatchInterval).toInt
@@ -624,7 +606,10 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
 
     logger.info(" @Begin --> " + MethodName)
     logger.setSparkVersion(sparkSession.version)
-    sparkSession.sparkContext.setLogLevel("ERROR")
+
+    // Set gimel log level and flag to audit logs to kafka
+    DataSetUtils.setGimelLogLevel(sparkSession, logger)
+
     val sparkAppName = sparkSession.conf.get("spark.app.name")
 
     // At Run Time - Set the Catalog Provider and The Name Space of the Catalog (like the Hive DB Name when catalog Provider = HIVE)
@@ -633,11 +618,6 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     try {
 
       val options = queryUtils.getOptions(sparkSession)._2
-      if (options(GimelConstants.LOG_LEVEL).toString == "CONSOLE") {
-        logger.setLogLevel("INFO")
-        logger.consolePrintEnabled = true
-      }
-      else logger.setLogLevel(options(GimelConstants.LOG_LEVEL).toString)
 
       var resultingRDD: RDD[String] = sparkSession.sparkContext.parallelize(Seq(""))
       val queryTimer = Timer()
@@ -744,7 +724,10 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
 
     logger.info(" @Begin --> " + MethodName)
     logger.setSparkVersion(sparkSession.version)
-    sparkSession.sparkContext.setLogLevel("ERROR")
+
+    // Set gimel log level and flag to audit logs to kafka
+    DataSetUtils.setGimelLogLevel(sparkSession, logger)
+
     val sparkAppName = sparkSession.conf.get("spark.app.name")
 
     // At Run Time - Set the Catalog Provider and The Name Space of the Catalog (like the Hive DB Name when catalog Provider = HIVE)
@@ -752,16 +735,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
 
     try {
 
-      sparkSession.sparkContext.setLogLevel("ERROR")
       sparkSession.conf.set(GimelConstants.GIMEL_KAFKA_VERSION, GimelConstants.GIMEL_KAFKA_VERSION_ONE)
       val options = getOptions(sparkSession)._2
-
-      val defaultGimelLogLevel = sparkSession.conf.get(GimelConstants.LOG_LEVEL, "ERROR").toString
-      if (defaultGimelLogLevel == "CONSOLE") {
-        logger.setLogLevel("INFO")
-        logger.consolePrintEnabled = true
-      }
-      else logger.silence
 
       val batchInterval = options(KafkaConfigs.defaultBatchInterval).toInt
       val streamRate = options(KafkaConfigs.maxRatePerPartitionKey)
@@ -898,9 +873,11 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     logger.info(" @Begin --> " + MethodName)
     val sparkAppName = sparkSession.conf.get("spark.app.name")
 
+    // Set gimel log level and flag to audit logs to kafka
+    DataSetUtils.setGimelLogLevel(sparkSession, logger)
+
     try {
       val options = queryUtils.getOptions(sparkSession)._2
-      logger.setLogLevel(options(GimelConstants.LOG_LEVEL).toString)
       var resultSet = ""
       val queryTimer = Timer()
       val startTime = queryTimer.start
@@ -993,10 +970,10 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     val sparkAppName = sparkSession.conf.get("spark.app.name")
     var returnMsg = ""
 
-    try {
+    // Set gimel log level and flag to audit logs to kafka
+    DataSetUtils.setGimelLogLevel(sparkSession, logger)
 
-      sparkSession.sparkContext.setLogLevel("ERROR")
-      logger.setLogLevel(sparkSession.conf.get(GimelConstants.LOG_LEVEL, "ERROR").toString)
+    try {
       sparkSession.conf.set(GimelConstants.GIMEL_KAFKA_VERSION, GimelConstants.GIMEL_KAFKA_VERSION_ONE)
       val options = queryUtils.getOptions(sparkSession)._2
       val batchInterval = options(KafkaConfigs.defaultBatchInterval).toInt

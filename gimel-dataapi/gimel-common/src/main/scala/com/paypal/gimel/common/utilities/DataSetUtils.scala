@@ -314,4 +314,30 @@ object DataSetUtils {
     val systemType = getSystemType(dataSetProperties)
     systemType
   }
+
+  /**
+   * Sets log level based on the input from user
+   *
+   * @param sparkSession
+   * @param logger
+   */
+  def setGimelLogLevel(sparkSession: SparkSession, logger: Logger) : Unit = {
+    var gimelLoggingLevel = GenericUtils.getValue(sparkSession.conf.getAll,
+      GimelConstants.LOG_LEVEL, GimelConstants.DEFAULT_LOG_LEVEL)
+    logger.setLogAudit(GenericUtils.getValue(sparkSession.conf.getAll,
+      GimelConstants.LOG_AUDIT_ENABLED, "false").toBoolean)
+    gimelLoggingLevel = gimelLoggingLevel match {
+      case "INFO" | "CONSOLE" =>
+        logger.consolePrintEnabled = true
+        "INFO"
+      case "DEBUG" =>
+        logger.consolePrintEnabled = true
+        gimelLoggingLevel
+      case _ =>
+        logger.consolePrintEnabled = false
+        gimelLoggingLevel
+    }
+
+    logger.setLogLevel(gimelLoggingLevel)
+  }
 }
