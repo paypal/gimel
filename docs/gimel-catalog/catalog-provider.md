@@ -4,7 +4,7 @@
     * [GSQL](#gsql)
     * [Data API Usage](#data-api-usage)
   * [Catalog Provider - HIVE](#catalog-provider-as-hive)
-  * [Catalog Provider - PCATALOG](#catalog-provider-as-pcatalog)
+  * [Catalog Provider - UDC](#catalog-provider-as-udc-unified-data-catalog)
   
   
  --------------------------------------------------------------------------------------------------------------------
@@ -16,7 +16,7 @@
 
 * Provides different ways to specify DataSet Properties to Read/Write Data API
 * Can be set using gimel.catalog.provider property
-* Can be set to USER/HIVE/PCATALOG
+* Can be set to USER/HIVE/UDC
 
 ## Catalog Provider as USER
 
@@ -166,18 +166,81 @@ set gimel.catalog.provider=HIVE
 
 You can find hive table templates for each storage in their docs [Stack & Version Compatibility](../README.md#stack-&-version-compatibility)
 
-## Catalog Provider as PCATALOG
+## Catalog Provider as UDC (Unified Data Catalog)
 
 ### Note
 
-* Uses DataSetProperties from the PCatalog
-* In order to use this, storage system of the Dataset should be onborded in Pcatalog
-* Set the catalog provider property to PCATALOG
+* Uses DataSetProperties from the UDC
+* In order to use this, storage system of the Dataset should be onboarded in UDC
+* Set the catalog provider property to UDC
 
 ```
 %%sql 
-set gimel.catalog.provider=PCATALOG
+set gimel.catalog.provider=UDC
 ```
 
+### UDC parameters
+
+| Property | Mandatory? | Description | Example | Default |
+|----------|------------|-------------|------------|-------------------|
+| rest.service.method or spark.rest.service.method | Y | UDC Rest service protocol  | http/https | https |
+| rest.service.host	or spark.rest.service.host| Y | UDC Rest service host name  | my-udc.example.com | None|
+| rest.service.port or spark.rest.service.port | Y | UDC Rest service port  | 80 | 443 |
+| gimel.udc.auth.enabled or spark.gimel.udc.auth.enabled | N | UDC auth enabled flag  | true/false | true |
+| gimel.udc.auth.provider.class or spark.gimel.udc.auth.provider.class | N | This is a Must if `gimel.udc.auth.enabled=true`  | com.example.MyAuthProvider | None |
+
+### UDC Auth
+
+* In order to connect to UDC for getting DatasetProperties, UDC-APP-NAME and UDC-AUTH-KEY has to be set in header for GET calls.
+* Add a custom AuthProvider in order to retrieve the Auth token (UDC-AUTH-KEY value) from any service or key store.
+* Add gimel-common dependency in your project
+ 
+ ```xml
+  <dependency>
+    <groupId>com.paypal.gimel</groupId>
+    <artifactId>gimel-common</artifactId>
+    <version>${gimel.version}</version>
+   </dependency>
+ ```
+
+* Extend com.paypal.gimel.common.security.AuthProvider in gimel-common and implement getCredentials method which should return the auth token.
+Example:
+
+```scala
+package com.example
+
+import com.paypal.gimel.common.security._
+
+class MyAuthProvider extends AuthProvider {
+
+  override def getCredentials(props: Map[String, Any]): String = {
+    /*
+     * Implement your own logic here
+     */
+  }
+}
+```
+
+Here props are the gimel properties passed at runtime. 
+
+```scala
+import org.apache.spark.sql.{Column, Row, SparkSession,DataFrame}
+import org.apache.spark.sql.functions._
+
+// Create Gimel SQL reference
+val gsql: (String) => DataFrame = com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(_: String, spark)
+gsql("set gimel.logging.level=CONSOLE")
+
+val options = Map("rest.service.method" -> "https",
+"rest.service.host" -> "my-udc.example.com",
+"rest.service.port" -> "443",
+"gimel.deserializer.class" -> "com.paypal.gimel.deserializers.generic.JsonDynamicDeserializer",
+"gimel.kafka.throttle.batch.fetchRowsOnFirstRun" -> "1",
+"gimel.udc.auth.provider.class" -> "com.example.MyAuthProvider")
+
+val df = dataset.read("udc.Kafka.Gimel_Dev.default.flights", options)
+df.show
+
+```
 
 

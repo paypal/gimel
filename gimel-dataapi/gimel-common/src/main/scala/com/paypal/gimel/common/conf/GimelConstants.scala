@@ -240,6 +240,14 @@ object GimelConstants {
 
   // Gimel Auth
   val GIMEL_AUTH_REQUEST_TYPE = "gimel.auth.request.type"
+  val UDC_APP_NAME_KEY = "gimel.auth.udc.appname"
+  val UDC_GIMEL_DEFAULT_APP_NAME = "UDC-GIMEL-INTEGRATION"
+  val UDC_APP_NAME_HEADER_KEY = "UDC-APP-NAME"
+  val UDC_AUTH_HEADER_KEY = "UDC-AUTH-KEY"
+  val UDC_COMMENT_HEADER_KEY = "COMMENT"
+  val UDC_AUTH_REQUEST_TYPE = "UDC_GIMEL"
+  val UDC_AUTH_PROVIDER_CLASS = "gimel.udc.auth.provider.class"
+  val UDC_AUTH_ENABLED = "gimel.udc.auth.enabled"
 }
 
 
