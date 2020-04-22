@@ -51,10 +51,12 @@ object AuthHandler {
   def isAuthRequired(sparkSession: SparkSession): Boolean = {
 
     val gtsDefaultUserOption = sparkSession.conf.getOption(GimelConstants.GTS_DEFAULT_USER_FLAG)
-    assert(gtsDefaultUserOption.isDefined,
-      s"Expecting the configuration: ${GimelConstants.GTS_DEFAULT_USER_FLAG} to be defined")
-    val authRequired = (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(gtsDefaultUserOption.get) &&
-      sparkSession.conf.get(GimelConstants.GTS_IMPERSONATION_FLAG, "true").toBoolean)
+    // Commenting out assertion error when `spark.gimel.gts.default.user` is not defined
+//    assert(gtsDefaultUserOption.isDefined,
+//      s"Expecting the configuration: ${GimelConstants.GTS_DEFAULT_USER_FLAG} to be defined")
+    val authRequired = gtsDefaultUserOption.isDefined && sparkSession.sparkContext.
+  sparkUser.equalsIgnoreCase(gtsDefaultUserOption.get) && sparkSession
+  .conf.get(GimelConstants.GTS_IMPERSONATION_FLAG, "true").toBoolean
 
     logger.info(s"GTS - AUTH REQUIRED : ${authRequired}")
     authRequired
