@@ -209,7 +209,7 @@ readdf.show()
 This way will mask the spark user with Gimel's proxy user. User will not need to specify password in this case.
 
 Here, AuthProvider is required to get credentials for gimel proxy user. 
-You need to extend com.paypal.gimel.common.security.AuthProvider in gimel-commons and implement getCredentials method.
+You need to extend com.paypal.gimel.common.security.AuthProvider in gimel-common and implement getCredentials method.
 
 ```scala
 
