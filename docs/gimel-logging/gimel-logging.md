@@ -60,3 +60,46 @@ object SparkWordCount {
 }
 ```
 
+## Enable log auditing in Gimel
+
+- Sending logs related to Data API access and spark listener metrics to Kafka.
+- In order to configure log auditing, following steps are required:
+    - Enable flag gimel.logging.audit.enabled or spark.gimel.logging.audit.enabled to true/false.
+    - Configure the property file by following one of the following steps:
+        1. System parameter -> gimel.logger.properties.filepath
+            - Add it to spark distributed cache through "spark.files" conf or "--files" option in spark-submit or spark-shell.
+            - Mention the file name through system parameter -> gimel.logger.properties.filepath
+        2. Resource file
+            - Add the file in resources folder in gimel-logging module and rebuild the jar. 
+    
+Example:
+
+```shell script
+spark-shell --jars gimel-tools-2.0.0-SNAPSHOT-uber.jar \
+--conf spark.driver.extraJavaOptions="-Dgimel.logger.properties.filepath=gimelLoggerConfig.properties" \
+--conf spark.executor.extraJavaOptions="-Dgimel.logger.properties.filepath=gimelLoggerConfig.properties" \
+--conf spark.files=/path/to/gimelLoggerConfig.properties \
+--conf spark.gimel.logging.audit.enabled=true
+```
+
+Here, "/path/to/gimelLoggerConfig.properties" is the path to the property file which can be local or in hdfs.
+Example: 
+Local -> /home/gimeluser/gimelLoggerConfig.properties
+HDFS -> hdfs://namenode:8082/user/gimeluser/gimelLoggerConfig.properties
+
+**Sample gimelLoggerConfig.properties file:**
+
+```text
+# kafka
+gimel.logger.system.topic=gimel_logging_kafka_topic
+gimel.logger.appMetrics.topic=gimel_app_metrics_kafka_topic
+
+# Kafka connection properties.
+gimel.logger.kafka.bootstrap.servers = kafka_broker_1:9092,kafka_broker_2:9092
+gimel.logger.kafka.key.serializer=com.paypal.shaded.org.apache.kafka.common.serialization.ByteArraySerializer
+gimel.logger.kafka.value.serializer=com.paypal.shaded.org.apache.kafka.common.serialization.ByteArraySerializer
+gimel.logger.kafka.acks=0
+gimel.logger.kafka.retries=3
+```
+
+Data API access logs and spark listener metrics will be pushed to the kafka cluster specified in this file.
