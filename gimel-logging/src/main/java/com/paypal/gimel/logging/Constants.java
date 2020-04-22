@@ -23,6 +23,7 @@ public class Constants {
   public final static String GIMEL_LOGGER_PROPERTY_PREFIX = "gimel.logger.kafka";
   public final static String GIMEL_LOGGER_SYSTEM_TOPIC_KEY = "gimel.logger.system.topic";
   public final static String GIMEL_LOGGER_APPMETRICS_TOPIC_KEY = "gimel.logger.appMetrics.topic";
+  public final static String GIMEL_LOGGER_PROPERTIES_FILEPATH_KEY = "gimel.logger.properties.filepath";
   // The messages types which shall be passed into google proto as the object type
   // So deserializer can know the type of message
   public enum MessageType {
