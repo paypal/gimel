@@ -20,6 +20,7 @@
 package com.paypal.gimel.common.security
 
 import java.nio.file._
+import java.security.AccessControlException
 
 import scala.collection.JavaConverters._
 
@@ -33,12 +34,12 @@ object FileHandler {
   val logger = Logger(this.getClass)
 
   /**
-    * For both Local and HDFS file system, this function checks whether the file is protected with "700" mode.
-    * If the file HAS one of READ, WRITE, EXECUTE permissions for either GROUP or OTHERS, we will post a warning to the user to protect the file
-    * @param filePath - The path of the file
-    * @param source - Tells whether it is a local or hadoop file system
-    */
-  def warnIfFileAccessibleByOthers(filePath: String, source: String): Unit = {
+   * For both Local and HDFS file system, this function checks whether the file is protected with "700" mode.
+   * If the file HAS one of READ, WRITE, EXECUTE permissions for either GROUP or OTHERS, we will post a warning to the user to protect the file
+   * @param filePath - The path of the file
+   * @param source - Tells whether it is a local or hadoop file system
+   */
+  def checkIfFileAccessibleByOthers(filePath: String, source: String, fail: Boolean): Unit = {
     source.toLowerCase() match {
       case GimelConstants.HADDOP_FILE_SYSTEM =>
         val conf = new org.apache.hadoop.conf.Configuration()
@@ -48,8 +49,9 @@ object FileHandler {
           val permission = fs.getFileStatus(hdfsPath).getPermission.toString
           if (permission.substring(3, permission.length) != "------") {
             val message = s"FILE IS NOT PROTECTED. PLEASE PROTECT THE FILE WITH PROPER PERMISSIONS (700) : ${filePath}"
-            logger.warning(message)
-
+            if (fail) {
+              throw new AccessControlException(message)
+            }
           }
         }
       case GimelConstants.LOCAL_FILE_SYSTEM =>
@@ -58,11 +60,11 @@ object FileHandler {
           val p = Files.getPosixFilePermissions(path)
           if (p.asScala.exists(x => x.toString.startsWith("OTHER") || x.toString.startsWith("GROUP"))) {
             val message = s"FILE IS NOT PROTECTED. PLEASE PROTECT THE FILE WITH PROPER PERMISSIONS (700) : ${filePath}"
-            logger.warning(message)
+            if (fail) {
+              throw new AccessControlException(message)
+            }
           }
         }
-
     }
   }
-
 }
