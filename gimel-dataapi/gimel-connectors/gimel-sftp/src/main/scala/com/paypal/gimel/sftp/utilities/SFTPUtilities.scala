@@ -33,7 +33,7 @@ object SFTPUtilities {
     * @return - returns the password
     */
   def getPasswordFromHDFS(filePath: String): String = {
-    FileHandler.warnIfFileAccessibleByOthers(filePath, GimelConstants.HADDOP_FILE_SYSTEM)
+    FileHandler.checkIfFileAccessibleByOthers(filePath, GimelConstants.HADDOP_FILE_SYSTEM, true)
     HDFSAdminClient.readHDFSFile(filePath).trim
   }
 
@@ -44,7 +44,7 @@ object SFTPUtilities {
     * @return - returns the password
     */
   def getPasswordFromLocal(filePath: String): String = {
-    FileHandler.warnIfFileAccessibleByOthers(filePath, GimelConstants.LOCAL_FILE_SYSTEM)
+    FileHandler.checkIfFileAccessibleByOthers(filePath, GimelConstants.LOCAL_FILE_SYSTEM, true)
     scala.io.Source.fromFile(filePath).getLines.mkString
   }
 }

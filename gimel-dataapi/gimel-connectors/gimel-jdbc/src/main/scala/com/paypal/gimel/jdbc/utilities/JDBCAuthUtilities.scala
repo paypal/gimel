@@ -105,18 +105,31 @@ class JDBCAuthUtilities(sparkSession: SparkSession) extends Serializable {
             password = JDBCCommons.getJdbcP(passwordFile, "", "", url, userName)
           }
           case _ => {
-            FileHandler.warnIfFileAccessibleByOthers(passwordFile, GimelConstants.HADDOP_FILE_SYSTEM)
+            FileHandler.checkIfFileAccessibleByOthers(passwordFile, GimelConstants.HADDOP_FILE_SYSTEM, true)
             val fileContent = HDFSAdminClient.readHDFSFile(passwordFile)
             val lines: Array[String] = fileContent.split("\n")
             var flag: Boolean = false
+            var dataSourceURL = ""
+            var actualUser = ""
             lines.foreach { line =>
-              // get the url for data source in the password file to verify with the actual table url
-              val userURL = line.split(",")(0)
-              val dataSourceURL = userURL.split("/")(0)
-              // get the actual user in the password file to verify with the actual spark user
-              val urlLength = userURL.split("/").length
-              val actualUser = userURL.split("/")(urlLength - 1)
-              password = line.split(",")(1)
+              try {
+                // get the url for data source in the password file to verify with the actual table url
+                val userURL = line.split(",")(0)
+                dataSourceURL = userURL.split("/")(0)
+                // get the actual user in the password file to verify with the actual spark user
+                val urlLength = userURL.split("/").length
+                actualUser = userURL.split("/")(urlLength - 1)
+                password = line.split(",")(1)
+              } catch {
+                case ex: Throwable => {
+                  val msg =
+                    s"""Unable to parse the password file -> $passwordFile !\n
+                       | Check the format or configuration parameters provided in API.
+                       | Please specify password in file as: jdbc_url/username,PASSWORD
+              """.stripMargin
+                  throw new JdbcAuthenticationException(msg + ex)
+                }
+              }
               // Verify the URL and Username in passwordFile with spark user
               if (url.contains(dataSourceURL) && actualUser.equalsIgnoreCase(userName)) {
                 flag = true
