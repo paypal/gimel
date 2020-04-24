@@ -32,6 +32,7 @@ import com.paypal.gimel.common.catalog.CatalogProvider
 import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf._
 import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
+import com.paypal.gimel.common.security.ColumnClassHandler
 import com.paypal.gimel.common.utilities._
 import com.paypal.gimel.common.utilities.BindToFieldsUtils._
 import com.paypal.gimel.common.utilities.DataSetUtils.propStringToMap
@@ -124,6 +125,8 @@ class DataSet(val sparkSession: SparkSession) {
       // additionalPropsToLog = propsToLog
       datasetSystemType = systemType.toString
 
+      ColumnClassHandler.warnIfColumnsRestricted(newProps)
+
       val fieldsBindToStringProp = newProps.getOrElse(GimelConstants.FIELDS_BIND_TO_JSON,
         dataSetProperties.props.getOrElse(GimelConstants.FIELDS_BIND_TO_JSON, "")).toString
       val fieldsBindToDataset = newProps.getOrElse(GimelConstants.FIELDS_BIND_TO_DATASET,
@@ -151,6 +154,9 @@ class DataSet(val sparkSession: SparkSession) {
       val endTime = gimelTimer.endTime.get
       val executionTime: Double = gimelTimer.endWithMillSecRunTime
 
+      val restrictedColumns = ColumnClassHandler.getRestrictedColumns(newProps)
+      val newPropsToLog = additionalPropsToLog ++ restrictedColumns
+
       // post audit logs to KAFKA
       logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkAppName
@@ -163,7 +169,7 @@ class DataSet(val sparkSession: SparkSession) {
         , dataSet
         , datasetSystemType
         , ""
-        , additionalPropsToLog
+        , newPropsToLog
         , GimelConstants.SUCCESS
         , GimelConstants.EMPTY_STRING
         , GimelConstants.EMPTY_STRING

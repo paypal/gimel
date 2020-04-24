@@ -36,7 +36,9 @@ case class Field(fieldName: String,
                  fieldType: String = "string",
                  isFieldNullable: Boolean = true,
                  partitionStatus: Boolean = false,
-                 columnIndex: Int = 0)
+                 columnIndex: Int = 0,
+                 columnClass: String = PCatalogPayloadConstants.COLUMN_DEFAULT_RESTRICTED,
+                 restrictionStatus: Boolean = false)
 
 case class DataSetProperties(datasetType: String,
                              fields: Array[Field],
