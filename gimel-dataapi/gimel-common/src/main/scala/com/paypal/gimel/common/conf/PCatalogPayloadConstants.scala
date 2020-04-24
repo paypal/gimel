@@ -34,6 +34,7 @@ object PCatalogPayloadConstants {
   val COLUMN_TYPE: String = "columnType"
   val COLUMN_INDEX: String = "columnIndex"
   val COLUMN_PARTITION_STATUS: String = "partitionStatus"
+  val COLUMN_DEFAULT_RESTRICTED: String = "restricted_columns_class5"
   val ACTIVE_FLAG: String = "Y"
   val INACTIVE_FLAG: String = "N"
 }
