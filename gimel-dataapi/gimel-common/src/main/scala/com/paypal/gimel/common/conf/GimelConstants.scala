@@ -238,7 +238,6 @@ object GimelConstants {
   val GTS_DEFAULT_USER_FLAG = "spark.gimel.gts.default.user"
   def GTS_DEFAULT_USER(conf: RuntimeConfig): String = conf.get(GimelConstants.GTS_DEFAULT_USER_FLAG, EMPTY_STRING)
   val GTS_USER_CONFIG = "gimel.gts.user"
-  val GTS_DEFAULT_USER_FLAG = "spark.gimel.gts.default.user"
   val GTS_IMPERSONATION_FLAG = "spark.gimel.gts.impersonation.enabled"
   val GTS_GIMEL_LIVY_SESSION_ID = "gimel.gts.livy.session.id"
   val GTS_DDL_TIMEOUT_MILLISEC = "gimel.gts.ddl.session.creation.timeout.sec"
