@@ -92,6 +92,15 @@ object GimelConstants {
   val ONE_BIGINT: BigInt = BigInt(1)
   val UNKNOWN_STRING = "unknown"
 
+  val GIMEL_SECURITY_ACCESS_AUDIT_CLASS_LEVEL: String = "gimel.security.access.audit.class.level"
+  val GIMEL_SECURITY_ACCESS_AUDIT_CLASS_DEFAULT_LEVEL: String = "3"
+  val GIMEL_SECURITY_ACCESS_AUDIT_CLASS_PROVIDER: String = "gimel.security.access.audit.class.provider"
+  val GIMEL_SECURITY_ACCESS_RESTRICTED_RAISE_EXCEPTION_ENABLED: String =
+    "gimel.security.access.restricted.raise.exception.enabled"
+  val GIMEL_SECURITY_ACCESS_RESTRICTED_RAISE_EXCEPTION_ENABLED_DEFAULT: Boolean = false
+  val GIMEL_SECURITY_ACCESS_RESTRICTED_RAISE_EXCEPTION_ENABLED_DEFAULT_STRING: String =
+    GIMEL_SECURITY_ACCESS_RESTRICTED_RAISE_EXCEPTION_ENABLED_DEFAULT.toString
+
   // HIVE
   val HIVE_DATABASE_NAME: String = "gimel.hive.db.name"
   val HIVE_TABLE_NAME: String = "gimel.hive.table.name"
