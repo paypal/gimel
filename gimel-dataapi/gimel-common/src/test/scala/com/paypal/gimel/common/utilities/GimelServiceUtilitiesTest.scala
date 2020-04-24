@@ -46,8 +46,8 @@ class GimelServiceUtilitiesTest extends FunSuite {
       .sameElements(scala.collection.mutable.Map[String, String]("es.resource" -> "default/gimel_tau_flights",
         "es.index.auto.create" -> "true")))
 
-    println("5. storageTypeName=HBASE, dataset=Hbase.Horton.default.test_table")
-    assert(gimelServices.getObjectPropertiesForSystem("HBASE", "Hbase.Horton.default.test_table")
+    println("5. storageTypeName=HBASE, dataset=Hbase.test_cluster.default.test_table")
+    assert(gimelServices.getObjectPropertiesForSystem("HBASE", "Hbase.test_cluster.default.test_table")
       .sameElements(scala.collection.mutable.Map[String, String]("gimel.hbase.namespace.name" -> "default",
         "gimel.hbase.table.name" -> "test_table")))
 

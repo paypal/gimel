@@ -130,7 +130,6 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
         val errorMessage =
           s"""
              |Writing to dynamic dataset with partitioned index is not currently supported
-             |Solutions for common exceptions are documented here : http://go/gimel/exceptions"
              |""".stripMargin
         throw new Exception(errorMessage)
 

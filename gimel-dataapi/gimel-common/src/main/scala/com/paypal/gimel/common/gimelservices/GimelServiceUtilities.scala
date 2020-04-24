@@ -41,7 +41,7 @@ import com.paypal.gimel.common.gimelservices.payload.GimelJsonProtocol._
 import com.paypal.gimel.common.utilities.GenericUtils
 import com.paypal.gimel.logger.Logger
 
-object GimelServiceUtilities {
+object  GimelServiceUtilities {
 
   def apply(): GimelServiceUtilities = new GimelServiceUtilities()
 
@@ -333,7 +333,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   /**
     * Gets the Cluster Details for a Given Cluster Name
     *
-    * @param name Name of Cluster -- Sample : horton
+    * @param name Name of Cluster -- Sample : test_cluster
     * @return ClusterInfo
     */
   def getClusterInfo(name: String): ClusterInfo = {
@@ -438,7 +438,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   }
 
   /**
-    * Get Storage Type Name based on storage system name (e.g. Horton:Hive -> Hive)
+    * Get Storage Type Name based on storage system name (e.g. test_cluster:Hive -> Hive)
     *
     * @param storageSystemName
     * @return String
@@ -680,6 +680,54 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
   }
 
   /**
+   * Gets ranger policies for a given HDFS location, file type (hdfs), and cluster ID
+   *
+   * @param location  - HDFS location
+   * @param fileType  - the term hdfs to tell it is a hdfs file type
+   * @param clusterId - cluster id
+   * @return - returns the ranger policies
+   */
+
+  def getRangerPoliciesByLocation(location: String, fileType: String, clusterId: Int): Seq[PolicyDetails] = {
+    val responseObject: Seq[JsObject] = getAsObjectList(s"${serviceProperties.urlRangerPoliciesByLocation}?location=${location}&type=${fileType}&cluster=${clusterId}")
+    val rangerPolicies = responseObject.map(_.convertTo[PolicyDetails])
+    rangerPolicies
+  }
+
+
+  /**
+   * Gets ranger policies for a given hBase table, file type (hbase), and cluster ID
+   *
+   * @param table     - hBase table
+   * @param fileType  - the term hdfs to tell it is a hdfs file type
+   * @param clusterId - cluster id
+   * @return - returns the ranger policies
+   */
+
+  def getRangerPoliciesByHbaseTable(table: String, fileType: String, clusterId: Int): Seq[PolicyDetails] = {
+    val responseObject: Seq[JsObject] = getAsObjectList(s"${serviceProperties.urlRangerPoliciesByLocation}?table=${table}&type=${fileType}&cluster=${clusterId}")
+    val rangerPolicies = responseObject.map(_.convertTo[PolicyDetails])
+    rangerPolicies
+  }
+
+  /**
+   * Gets ranger policies for a given hive Database and hive table, file type (hive), and cluster ID
+   *
+   * @param database  - hive DB
+   * @param table     - hive table
+   * @param fileType  - the term hdfs to tell it is a hdfs file type
+   * @param clusterId - cluster id
+   * @return - returns the ranger policies
+   */
+
+
+  def getRangerPoliciesByHive(database: String, table: String, fileType: String, clusterId: Int): Seq[PolicyDetails] = {
+    val responseObject: Seq[JsObject] = getAsObjectList(s"${serviceProperties.urlRangerPoliciesByLocation}?database=${database}&table=${table}&type=${fileType}&cluster=${clusterId}")
+    val rangerPolicies = responseObject.map(_.convertTo[PolicyDetails])
+    rangerPolicies
+  }
+
+  /**
     * Gets the DataSet PayLoad by DataSet Name
     *
     * @param dataset Name of DataSet
@@ -826,7 +874,6 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
           s"""
              |[The dataset ${dataset} does not exist. Please check if the dataset name is correct.
              |It may not exist in UDC (if you've set gimel.catalog.provider=UDC)
-             |Solutions for common exceptions are documented here : http://go/gimel/exceptions"
              |""".stripMargin
         throw new Exception(errorMessage)
       }

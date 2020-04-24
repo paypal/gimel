@@ -34,8 +34,12 @@ import com.paypal.gimel.common.conf._
 import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
 import com.paypal.gimel.common.utilities._
 import com.paypal.gimel.common.utilities.BindToFieldsUtils._
+import com.paypal.gimel.common.utilities.DataSetUtils.propStringToMap
 import com.paypal.gimel.datasetfactory.GimelDataSet
-import com.paypal.gimel.kafka.conf.KafkaConstants
+import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
+import com.paypal.gimel.hbase.conf.HbaseConfigs
+import com.paypal.gimel.jdbc.conf.JdbcConfigs
+import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 
 class DataSet(val sparkSession: SparkSession) {
@@ -201,7 +205,7 @@ class DataSet(val sparkSession: SparkSession) {
         // throw error to console
         logger.throwError(e.toString)
 
-        val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
+        val msg = s"Error in DataSet ${MethodName} Operation."
         throw new DataSetOperationException(e.toString + "\n" + msg, e)
     }
   }
@@ -335,7 +339,7 @@ class DataSet(val sparkSession: SparkSession) {
         // throw error to console
         logger.throwError(e.toString)
 
-        val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
+        val msg = s"Error in DataSet ${MethodName} Operation."
         throw new DataSetOperationException(e.toString + "\n" + msg, e)
     }
 
@@ -451,7 +455,7 @@ class DataSet(val sparkSession: SparkSession) {
         // throw error to console
         logger.throwError(e.toString)
 
-        val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
+        val msg = s"Error in DataSet ${MethodName} Operation."
         throw new DataSetOperationException(msg, e)
     }
 
@@ -638,7 +642,7 @@ class DataSet(val sparkSession: SparkSession) {
         // throw error to console
         logger.throwError(e.toString)
 
-        val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
+        val msg = s"Error in DataSet ${MethodName} Operation."
         throw new DataSetOperationException(e.getMessage + "\n" + msg, e)
     }
   }
@@ -768,7 +772,7 @@ class DataSet(val sparkSession: SparkSession) {
 
         logger.throwError(e.toString)
 
-        val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
+        val msg = s"Error in DataSet ${MethodName} Operation."
         throw new DataSetOperationException(e.getMessage + "\n" + msg, e)
     }
   }
@@ -897,7 +901,7 @@ class DataSet(val sparkSession: SparkSession) {
         // throw error to console
         logger.throwError(e.toString)
 
-        val msg = s"Error in DataSet ${MethodName} Operation. Common Gimel 'Exceptions' are explained here : http://go/gimel/exceptions"
+        val msg = s"Error in DataSet ${MethodName} Operation."
         throw new DataSetOperationException(e.getMessage + "\n" + msg, e)
     }
 
@@ -947,6 +951,8 @@ private class DataSetInitializationException(message: String, cause: Throwable)
   */
 
 object DataSetUtils {
+
+  private val logger: Logger = Logger(this.getClass.getName)
 
   /**
     * Convenience Method to Get or Create Logger
@@ -1018,6 +1024,7 @@ object DataSetUtils {
       }
     }.toOption
   }
+
 }
 
 /**
@@ -1031,3 +1038,4 @@ private class DataSetOperationException(message: String, cause: Throwable)
 
   def this(message: String) = this(message, null)
 }
+

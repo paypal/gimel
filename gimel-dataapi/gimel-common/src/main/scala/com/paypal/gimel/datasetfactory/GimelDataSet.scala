@@ -134,4 +134,19 @@ abstract class GimelDataSet(sparkSession: SparkSession) {
     */
 
   def clearCheckPoint(): Unit
+
+  /**
+   * Function authenticates access to the dataset and provides a boolean result
+   *
+   * @param dataset Name of the UDC Data Set
+   * @param dataSetProps
+   *                props is the way to set various additional parameters for read and write operations in DataSet class
+   *                Example Usecase : to read kafka from-to a certain offset range : One can set something like below -
+   *                val props = Map("fromOffset" -> 10, "toOffset" -> 20)
+   *                val data = Dataset(sc).read("flights.topic", props)
+   * @return Unit => Empty implementation
+   */
+  def authenticate(dataset: String, dataSetProps: Map[String, Any] = Map.empty): Unit = {
+    throw new IllegalAccessException(s"No valid authentication mechanism available to authenticate the dataset: $dataset")
+  }
 }

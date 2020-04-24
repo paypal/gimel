@@ -91,6 +91,8 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
       throw new DataSetOperationException("Props Cannot Be Empty!")
     }
     val dataSet: String = dataSetProps(GimelConstants.RESOLVED_HIVE_TABLE).toString
+    // Authenticate the incoming user per HIVE's access provider/ ranger policy via UDC
+    authenticate(dataSet, dataSetProps)
     hiveUtils.write(dataSet, dataFrame, sparkSession, dataSetProps)
   }
 
@@ -176,6 +178,22 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     */
   override  def saveCheckPoint(): Unit = {
     logger.info(s"Save check Point functionality is not available for Hive Dataset")
+  }
+
+  /**
+   * Function authenticates access to the dataset and provides a boolean result
+   *
+   * @param dataset Name of the UDC Data Set
+   * @param dataSetProps
+   *                props is the way to set various additional parameters for read and write operations in DataSet class
+   *                Example Usecase : to read kafka from-to a certain offset range : One can set something like below -
+   *                val props = Map("fromOffset" -> 10, "toOffset" -> 20)
+   *                val data = Dataset(sc).read("flights.topic", props)
+   * @return Boolean -> ToBeAuthenticated
+   */
+  override def authenticate(dataset: String, dataSetProps: Map[String, Any]): Unit = {
+    // Authenticate the incoming user per HIVE's access provider/ ranger policy via UDC
+    hiveUtils.authenticateTableAndLocationPolicy(dataset, dataSetProps, sparkSession, GimelConstants.WRITE_OPERATION)
   }
 }
 

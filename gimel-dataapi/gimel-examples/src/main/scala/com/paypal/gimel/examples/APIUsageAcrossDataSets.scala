@@ -22,7 +22,7 @@ package com.paypal.gimel.examples
 import org.apache.spark.sql._
 import org.apache.spark.streaming.{Seconds, StreamingContext}
 
-import com.paypal.gimel.{DataSet}
+import com.paypal.gimel.DataSet
 import com.paypal.gimel.logger.Logger
 
 object APIUsageAcrossDataSets {
