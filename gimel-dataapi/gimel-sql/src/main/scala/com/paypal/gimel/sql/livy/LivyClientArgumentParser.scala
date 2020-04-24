@@ -17,11 +17,11 @@
  * limitations under the License.
  */
 
-package com.paypal.gimel.hive.conf
+package com.paypal.gimel.sql.livy
 
-object HiveConfigs {
-  val dataLocation = "gimel.hdfs.data.location"
-  val hiveDBName = "gimel.hive.db.name"
-  val hiveTableName = "gimel.hive.table.name"
-  val hdfsStorageNameKey = "gimel.hdfs.storage.name"
+object LivyClientArgumentParser {
+
+  type ArgumentMap = Map[Symbol, Any]
+  type ClientOptions = Map[Enumeration, Any]
+
 }

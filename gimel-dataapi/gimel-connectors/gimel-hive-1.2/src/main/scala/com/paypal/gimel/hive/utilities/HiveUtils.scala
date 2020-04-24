@@ -29,8 +29,9 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.{DataFrame, SparkSession}
 import org.apache.spark.sql.types.StructField
 
-import com.paypal.gimel.common.catalog.{DataSetProperties, Field}
+import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties, Field}
 import com.paypal.gimel.common.conf.{CatalogProviderConfigs, CatalogProviderConstants, GimelConstants}
+import com.paypal.gimel.common.security.AuthHandler
 import com.paypal.gimel.hdfs.conf.HdfsConfigs
 import com.paypal.gimel.hive.conf.{HiveConfigs, HiveConstants}
 import com.paypal.gimel.logger.Logger
@@ -372,6 +373,39 @@ class HiveUtils {
     val uniqueID = s"""${action}_${currentTime}_${sparkUser}"""
     val hiveTableLen = hiveDataSetName.length
     uniqueID.take(HiveConstants.HIVE_MAX_TABLE_NAME_SIZE - hiveTableLen)
+  }
+
+  /**
+   * call authHandler authentication module to check whether impersonated user has respective access to drop/truncate (write permission)
+   *
+   * @param dataset      - dataset name
+   * @param options - set of attributes of dataset
+   * @param sparkSession - spark session
+   * @param operation    - read or write operation
+   */
+
+  def authenticateTableAndLocationPolicy(dataset: String, options: Map[String, Any], sparkSession: SparkSession, operation: String): Unit = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+    logger.info(" @Begin --> " + MethodName)
+
+    // val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
+    val datasetProps = CatalogProvider.getDataSetProperties(dataset, options)
+    val currentUser = datasetProps.props.getOrElse(GimelConstants.GTS_USER_CONFIG, sparkSession.sparkContext.sparkUser)
+    if (AuthHandler.isAuthRequired(sparkSession)) {
+      logger.info(s"Detected super user [${GimelConstants.GTS_DEFAULT_USER(sparkSession.conf)}]. Operation [${operation}]")
+      val isCataloguedTable = datasetProps.props.getOrElse(CatalogProviderConstants.DYNAMIC_DATASET, "true")
+      val hdfsLocation = isCataloguedTable match {
+        case "true" =>
+          val hiveDataSetName = datasetProps.props(GimelConstants.HIVE_DATABASE_NAME) + "." + datasetProps.props(GimelConstants.HIVE_TABLE_NAME)
+          CatalogProvider.getHiveTable(hiveDataSetName).getSd.getLocation
+        case _ => datasetProps.props.getOrElse(HiveConfigs.dataLocation, datasetProps.props.get(CatalogProviderConstants.PROPS_LOCATION).get)
+      }
+      val clusterNameNode = datasetProps.props.getOrElse(GimelConstants.hdfsNameNodeKey, "")
+      val clusterName = datasetProps.props.getOrElse(GimelConstants.hdfsStorageNameKey, "")
+      val hiveDB = datasetProps.props(GimelConstants.HIVE_DATABASE_NAME)
+      val hiveTable = datasetProps.props(GimelConstants.HIVE_TABLE_NAME)
+      AuthHandler.authenticateRangerHiveTableAndLocationPolicy(currentUser, operation, hiveDB, hiveTable, hdfsLocation, clusterName, clusterNameNode, dataset)
+    }
   }
 
   /**

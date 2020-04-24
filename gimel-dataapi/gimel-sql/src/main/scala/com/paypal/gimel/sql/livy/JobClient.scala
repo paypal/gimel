@@ -17,11 +17,19 @@
  * limitations under the License.
  */
 
-package com.paypal.gimel.hive.conf
+package com.paypal.gimel.sql.livy
 
-object HiveConfigs {
-  val dataLocation = "gimel.hdfs.data.location"
-  val hiveDBName = "gimel.hive.db.name"
-  val hiveTableName = "gimel.hive.table.name"
-  val hdfsStorageNameKey = "gimel.hdfs.storage.name"
+import org.apache.http.auth.Credentials
+
+class JobClient {
+
+  def userCredentials(inputOptions: LivyClientArgumentParser.ArgumentMap): Credentials = {
+    // This may seem odd, but specifying 'null' as principal tells java to use the logged in user's credentials
+    new Credentials() {
+      def getPassword() = null
+
+      def getUserPrincipal() = null
+    }
+  }
+
 }

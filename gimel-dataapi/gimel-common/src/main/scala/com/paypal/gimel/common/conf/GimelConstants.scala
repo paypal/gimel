@@ -21,6 +21,8 @@ package com.paypal.gimel.common.conf
 
 import scala.util.matching.Regex
 
+import org.apache.spark.sql.RuntimeConfig
+
 object GimelConstants {
 
   // COMMON CONSTANTS USED ACROSS ENTIRE GIMEL
@@ -227,14 +229,50 @@ object GimelConstants {
   // CONDITIONAL FLAGS
   val FALSE = "false"
 
+  val NOT_APPLICABLE = "N/A"
+
   // Connection timeout for requests in seconds
   val CONNECTION_TIMEOUT = 180
 
   // GTS
-  val GTS_DEFAULT_USER = ""
-  val GTS_USER_CONFIG = "gimel.gts.user"
   val GTS_DEFAULT_USER_FLAG = "spark.gimel.gts.default.user"
+  def GTS_DEFAULT_USER(conf: RuntimeConfig): String = conf.get(GimelConstants.GTS_DEFAULT_USER_FLAG, EMPTY_STRING)
+  val GTS_USER_CONFIG = "gimel.gts.user"
   val GTS_IMPERSONATION_FLAG = "spark.gimel.gts.impersonation.enabled"
+  val GTS_GIMEL_LIVY_SESSION_ID = "gimel.gts.livy.session.id"
+  val GTS_DDL_TIMEOUT_MILLISEC = "gimel.gts.ddl.session.creation.timeout.sec"
+
+  // livy
+  val LIVY_STATUS_STARTING = "starting"
+  val LIVY_STATUS_IDLE = "idle"
+  val LIVY_STATUS_BUSY = "busy"
+  val LIVY_STATUS_DEAD = "dead"
+  val GTS_LIVY_DML_SESSION_KEYWORD = "_GIMEL_THRIFT_SERVER_GSQL_DML_LIVY_SESSION"
+
+  val LIVY_PARAM_APPLICATION_NAME_KEY = "applicationName"
+  val LIVY_PARAM_APPLICATION_KIND_KEY = "kind"
+  val LIVY_PARAM_PROXY_USER_KEY = "proxyUser"
+  val LIVY_PARAM_INTERACTIVE_JOB_KEY = "interactiveMode"
+  val LIVY_PARAM_CODE_KEY = "code"
+  val LIVY_PARAM_STATEMENTS_KEY = "statements"
+  val LIVY_PARAM_JARS_KEY = "jars"
+  val LIVY_PARAM_CLUSTER_KEY = "cluster"
+  val LIVY_PARAM_CONF_KEY = "conf"
+  val LIVY_PARAM_SPARK_DRIVER_EXTRA_CLASS_PATH_KEY = "spark.driver.extraClassPath"
+  val LIVY_PARAM_SPARK_EXECUTOR_EXTRA_CLASS_PATH_KEY = "spark.executor.extraClassPath"
+  val LIVY_PARAM_SPARK_YARN_ACCESS_NAMENODES = "spark.yarn.access.namenodes"
+  val LIVY_PARAM_SPARK_YARN_ACCESS_HADOOPFILESYSTEMS = "spark.yarn.access.hadoopFileSystems"
+  val LIVY_PARAM_SPARK_HADOOP_MAPREDUCE_INPUT_DIR_RECURSIVE = "spark.hadoop.mapreduce.input.fileinputformat.input.dir.recursive"
+
+  val LIVY_PARAM_APPLICATION_KIND_SCALA_VALUE = "scala"
+  val LIVY_PARAM_INTERACTIVE_JOB_TRUE_VALUE = "true"
+  val LIVY_PARAM_START_SESSION_KEY = "start"
+  val LIVY_PARAM_WAIT_SESSION_KEY = "wait"
+
+  val LIVY_SPARK_ENDPOINT_KEY = "spark.livy.endpoint"
+  val LIVY_SPARK_GIMEL_JARS = "spark.gimel.jars"
+  val LIVY_GIMEL_EXTRA_CLASS_PATH = "spark.livy.gimel.extra.class.path"
+  val LIVY_SPARK_CONF = "spark.livy.conf"
 
   // Serialization/Deserialization Class
   val GIMEL_DESERIALIZER_CLASS = "gimel.deserializer.class"

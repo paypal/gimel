@@ -72,12 +72,11 @@ class JDBCConnectionUtility(sparkSession: SparkSession,
 
   val jdbcPasswordStrategy: String = JDBCConnectionUtility.getJdbcPasswordStrategy(dataSetProps)
 
-  val gts_default_user = sparkSession.conf.get(GimelConstants.GTS_DEFAULT_USER_FLAG, "")
-
   // get actual JDBC user
   // Negating with file strategy, as in many places other than "file" default case is handled!
-  var jdbcUser: String = if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(gts_default_user)
-    && !JdbcConstants.JDBC_FILE_PASSWORD_STRATEGY.equals(jdbcPasswordStrategy)) {
+  var jdbcUser: String = if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(
+    GimelConstants.GTS_DEFAULT_USER(sparkSession.conf)) && !JdbcConstants.JDBC_FILE_PASSWORD_STRATEGY.equals(
+    jdbcPasswordStrategy)) {
     // Validate incoming user to be able to set query band
     val gtsUser: String = sparkSession.sparkContext.getLocalProperty(GimelConstants.GTS_USER_CONFIG)
     if (Option(gtsUser).isEmpty){
@@ -155,7 +154,7 @@ class JDBCConnectionUtility(sparkSession: SparkSession,
         if (jdbcPasswordStrategy.equalsIgnoreCase(JdbcConstants.JDBC_DEFAULT_PASSWORD_STRATEGY)) {
           // check For GTS queries
           // If sparkUser = livy AND GTS user != jdbcUser, then throw exception.
-          if (sparkUser.equalsIgnoreCase(gts_default_user)) {
+          if (sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER(sparkSession.conf))) {
             // GTS Block
             val gtsUser: String = sparkSession.sparkContext.getLocalProperty(GimelConstants.GTS_USER_CONFIG)
             if (!user.equalsIgnoreCase(gtsUser)) {
@@ -168,7 +167,8 @@ class JDBCConnectionUtility(sparkSession: SparkSession,
           }
           // check for non-GTS queries
           // If sparkUser != livy AND jdbcUser != sparkUser, then throw exception.
-          if (!sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER) && !user.equalsIgnoreCase(sparkUser)) {
+          if (!sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER(sparkSession.conf)) && !user.equalsIgnoreCase(
+            sparkUser)) {
             throw new IllegalAccessException(
               s"""
                  |SECURITY VIOLATION | [${sparkUser}] attempting Teradata Query Band Via JDBC User [${user}]
