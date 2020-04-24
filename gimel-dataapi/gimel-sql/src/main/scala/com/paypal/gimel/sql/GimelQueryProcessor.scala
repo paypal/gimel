@@ -32,11 +32,12 @@ import com.paypal.gimel._
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{CatalogProviderConfigs, GimelConstants}
 import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
+import com.paypal.gimel.common.query.guard.QueryGuard
 import com.paypal.gimel.common.security.AuthHandler
-import com.paypal.gimel.common.utilities.{DataSetType, DataSetUtils, GenericUtils, Timer}
+import com.paypal.gimel.common.utilities.{DataSetType, DataSetUtils, Timer}
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.datastreamfactory.{StreamingResult, StructuredStreamingResult, WrappedData}
-import com.paypal.gimel.jdbc.conf.{JdbcConfigs, JdbcConstants}
+import com.paypal.gimel.jdbc.conf.JdbcConfigs
 import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
@@ -55,12 +56,13 @@ object GimelQueryProcessor {
   var user = originalUser
   var isQueryFromGTS = false
   val yarnCluster = com.paypal.gimel.common.utilities.DataSetUtils.getYarnClusterName()
+  var queryGuard: Option[QueryGuard] = None
 
   /**
-    * At Run Time - Set the Catalog Provider and The Name Space of the Catalog (like the Hive DB Name when catalog Provider = HIVE)
-    *
-    * @param sparkSession Spark Session
-    */
+   * At Run Time - Set the Catalog Provider and The Name Space of the Catalog (like the Hive DB Name when catalog Provider = HIVE)
+   *
+   * @param sparkSession Spark Session
+   */
   def setCatalogProviderInfo(sparkSession: SparkSession): Unit = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
@@ -101,12 +103,73 @@ object GimelQueryProcessor {
   }
 
   /**
-    * Core Function that will be called from SCAAS for executing a SQL
-    *
-    * @param sql          SQL String supplied by client
-    * @param sparkSession : SparkSession
-    * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
-    */
+   * This function guards any runtime changes attempted by users to override GTS specific configurations.
+   *
+   * @param sql
+   * @param sparkSession
+   */
+  def guardGTSStatements(sql: String, sparkSession: SparkSession): Unit = {
+    def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
+
+    logger.info(" @Begin --> " + MethodName)
+
+    // Guard only if user is GTS Super User
+    if (sparkSession.sparkContext.sparkUser.equalsIgnoreCase(GimelConstants.GTS_DEFAULT_USER(sparkSession.conf))) {
+
+      val checkFlag =
+      // Impersonation Flag is not allowed to be set in GSQL
+        sql.toLowerCase.contains(GimelConstants.GTS_IMPERSONATION_FLAG) ||
+          // JDBC User is not alloweed to be set in GSQL
+          // sql.toLowerCase.contains(JdbcConstants.jdbcUserName) ||
+          // GTS User should not be overridded
+          sql.toLowerCase.contains(GimelConstants.GTS_USER_CONFIG)
+
+      if (checkFlag) throw new Exception(s"SECURITY VIOLATION | Execution of this statement is not allowed: ${sql}")
+    }
+
+    // Enable or stop query guard based on user config
+    // switchQueryGuard(sparkSession)
+  }
+
+  /**
+   *
+   * @param sparkSession
+   */
+  def switchQueryGuard(sparkSession: SparkSession): Unit = {
+    if (queryGuard.isEmpty) {
+      queryGuard = Some(new QueryGuard(sparkSession))
+    }
+    // Turn ON and OFF Query guard
+    val queryGuardControl = if (sparkSession.conf.getOption(GimelConstants.GTS_SPARK_QUERY_GUARD).isDefined) {
+      sparkSession.conf.getOption(GimelConstants.GTS_SPARK_QUERY_GUARD)
+    } else if (sparkSession.conf.getOption(GimelConstants.GTS_QUERY_GUARD).isDefined) {
+      sparkSession.conf.getOption(GimelConstants.GTS_QUERY_GUARD)
+    } else {
+      None
+    }
+    queryGuardControl.foreach {
+      case control: String if control.toLowerCase == "true" =>
+        // start
+        logger.info("Starting query guard")
+        queryGuard.get.start()
+      case control: String if control.toLowerCase == "false" =>
+        // stop
+        logger.info("Starting query guard")
+        queryGuard.get.stop()
+      case _ =>
+        // wrong config received do nothing
+        logger.info(s"Wrong config: $queryGuardControl received. So, stopping query guard")
+        queryGuard.get.stop()
+    }
+  }
+
+  /**
+   * Core Function that will be called from SCAAS for executing a SQL
+   *
+   * @param sql          SQL String supplied by client
+   * @param sparkSession : SparkSession
+   * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
+   */
   def executeBatch(sql: String, sparkSession: SparkSession): DataFrame = {
 
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
@@ -139,12 +202,12 @@ object GimelQueryProcessor {
   }
 
   /**
-    * This method will process one statement from executebatch
-    *
-    * @param sql          SQL String supplied by client
-    * @param sparkSession : SparkSession
-    * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
-    */
+   * This method will process one statement from executebatch
+   *
+   * @param sql          SQL String supplied by client
+   * @param sparkSession : SparkSession
+   * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
+   */
   def executeBatchStatement(sql: String, sparkSession: SparkSession): DataFrame = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
     logger.info(" @Begin --> " + MethodName)
@@ -153,6 +216,8 @@ object GimelQueryProcessor {
 
     // Set gimel log level and flag to audit logs to kafka
     DataSetUtils.setGimelLogLevel(sparkSession, logger)
+    guardGTSStatements(sql, sparkSession)
+    switchQueryGuard(sparkSession)
 
     val sparkAppName = sparkSession.conf.get("spark.app.name")
 
@@ -314,13 +379,13 @@ object GimelQueryProcessor {
   }
 
   /**
-    * Core Function that will be called from SCAAS for executing a SQL
-    * Executes the executeBatch function in streaming window
-    *
-    * @param sql          SQL String from client
-    * @param sparkSession : SparkSession
-    * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
-    */
+   * Core Function that will be called from SCAAS for executing a SQL
+   * Executes the executeBatch function in streaming window
+   *
+   * @param sql          SQL String from client
+   * @param sparkSession : SparkSession
+   * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
+   */
 
   def executeStream(sql: String, sparkSession: SparkSession): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
@@ -477,13 +542,13 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
   /**
-    * Core Function that will be called from SCAAS for executing a SQL
-    * Executes the executeBatch function in streaming window
-    *
-    * @param sql          SQL String from client
-    * @param sparkSession : SparkSession
-    * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
-    */
+   * Core Function that will be called from SCAAS for executing a SQL
+   * Executes the executeBatch function in streaming window
+   *
+   * @param sql          SQL String from client
+   * @param sparkSession : SparkSession
+   * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
+   */
 
   def executeStream2(sql: String, sparkSession: SparkSession): String = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
@@ -615,27 +680,27 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
   /**
-    * Core Function that will be called from SCAAS for executing a SQL
-    *
-    * @return RDD[Resulting String < either sample data for select queries, or "success" / "failed" for insert queries]
-    */
+   * Core Function that will be called from SCAAS for executing a SQL
+   *
+   * @return RDD[Resulting String < either sample data for select queries, or "success" / "failed" for insert queries]
+   */
   def executeBatchSparkMagic: (String, SparkSession) => RDD[String] = executeBatchSparkMagicRDD
 
   /**
-    * Core Function that will be called from SCAAS for executing a SQL
-    * Executes the executeBatchSparkMagicRDD function in streaming window
-    *
-    * @return RDD[Resulting String] < either sample data for select queries, or "success" / "failed" for insert queries
-    */
+   * Core Function that will be called from SCAAS for executing a SQL
+   * Executes the executeBatchSparkMagicRDD function in streaming window
+   *
+   * @return RDD[Resulting String] < either sample data for select queries, or "success" / "failed" for insert queries
+   */
   def executeStreamSparkMagic: (String, SparkSession) => RDD[String] = executeStreamSparkMagicRDD
 
   /**
-    * Core Function that will be called from SCAAS for executing a SQL
-    *
-    * @param sql          SQL String supplied by client
-    * @param sparkSession : SparkSession
-    * @return RDD[Resulting String < either sample data for select queries, or "success" / "failed" for insert queries]
-    */
+   * Core Function that will be called from SCAAS for executing a SQL
+   *
+   * @param sql          SQL String supplied by client
+   * @param sparkSession : SparkSession
+   * @return RDD[Resulting String < either sample data for select queries, or "success" / "failed" for insert queries]
+   */
   def executeBatchSparkMagicRDD(sql: String, sparkSession: SparkSession): RDD[String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
@@ -746,13 +811,13 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
   /**
-    * Core Function that will be called from SCAAS for executing a SQL
-    * Executes the executeBatchSparkMagicRDD function in streaming window
-    *
-    * @param sql          SQL String from client
-    * @param sparkSession : SparkSession
-    * @return RDD[Resulting String] < either sample data for select queries, or "success" / "failed" for insert queries
-    */
+   * Core Function that will be called from SCAAS for executing a SQL
+   * Executes the executeBatchSparkMagicRDD function in streaming window
+   *
+   * @param sql          SQL String from client
+   * @param sparkSession : SparkSession
+   * @return RDD[Resulting String] < either sample data for select queries, or "success" / "failed" for insert queries
+   */
 
   def executeStreamSparkMagicRDD(sql: String, sparkSession: SparkSession): RDD[String] = {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
@@ -894,12 +959,12 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
   /**
-    * Core Function that will be called from SCAAS for executing a SQL
-    *
-    * @param sql          SQL String supplied by client
-    * @param sparkSession : SparkSession
-    * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
-    */
+   * Core Function that will be called from SCAAS for executing a SQL
+   *
+   * @param sql          SQL String supplied by client
+   * @param sparkSession : SparkSession
+   * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
+   */
 
   @deprecated
   def executeBatchSparkMagicJSON(sql: String, sparkSession: SparkSession): String = {
@@ -989,13 +1054,13 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
   /**
-    * Core Function that will be called from SCAAS for executing a SQL
-    * Executes the @executeBatchSparkMagicJSON function in streaming window
-    *
-    * @param sql          SQL String from client
-    * @param sparkSession : SparkSession
-    * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
-    */
+   * Core Function that will be called from SCAAS for executing a SQL
+   * Executes the @executeBatchSparkMagicJSON function in streaming window
+   *
+   * @param sql          SQL String from client
+   * @param sparkSession : SparkSession
+   * @return Resulting String < either sample data for select queries, or "success" / "failed" for insert queries
+   */
 
   @deprecated
   def executeStreamSparkMagicJSON(sql: String, sparkSession: SparkSession): String = {
@@ -1142,14 +1207,14 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
   /**
-    * handleDDLs will direct to respective data set create/drop/truncate based on the incoming DDL
-    *
-    * @param sql          - SQL that is passed to create/drop/delete
-    * @param sparkSession - spark session
-    * @param dataSet      - dataset name
-    * @param options      - List of options
-    * @return
-    */
+   * handleDDLs will direct to respective data set create/drop/truncate based on the incoming DDL
+   *
+   * @param sql          - SQL that is passed to create/drop/delete
+   * @param sparkSession - spark session
+   * @param dataSet      - dataset name
+   * @param options      - List of options
+   * @return
+   */
   def handleDDLs(sql: String, sparkSession: SparkSession, dataSet: DataSet, options: Map[String, String]): Unit = {
     val uniformSQL = sql.replace("\n", " ")
     val sqlParts: Array[String] = uniformSQL.split(" ")
@@ -1193,21 +1258,21 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
   /**
-    * handleSelectDDL -
-    * Strip out the the select statement
-    * Run the sql using executeBatch and get the data frame back
-    * Get the schema from data frame and pass it in options
-    * Strip out the table properties and pass it in options
-    * Create the object/table
-    * Call dataSet.Write to the object/table that got created
-    *
-    * @param sqlParts     - each word in the sql comes as array
-    * @param sql          - the full sql query
-    * @param dataSet      - dataset Object itself
-    * @param options      - options comings from user
-    * @param sparkSession - Spark session
-    * @return
-    */
+   * handleSelectDDL -
+   * Strip out the the select statement
+   * Run the sql using executeBatch and get the data frame back
+   * Get the schema from data frame and pass it in options
+   * Strip out the table properties and pass it in options
+   * Create the object/table
+   * Call dataSet.Write to the object/table that got created
+   *
+   * @param sqlParts     - each word in the sql comes as array
+   * @param sql          - the full sql query
+   * @param dataSet      - dataset Object itself
+   * @param options      - options comings from user
+   * @param sparkSession - Spark session
+   * @return
+   */
   def handleSelectDDL(sqlParts: Array[String], sql: String, dataSet: DataSet, options: Map[String, String], sparkSession: SparkSession): Unit = {
     val selectIndex = sqlParts.indexWhere(_.toUpperCase().contains(QueryConstants.SQL_SELECT_STRING))
     val selectClause = sqlParts.slice(selectIndex, sqlParts.length).mkString(" ")
@@ -1228,9 +1293,9 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
 
     // Create the table and Write data into it from the selected dataframe
     try {
-        dataSet.create(datasetname, newOptions)
-        logger.info("Table/object creation success")
-        dataSet.write(datasetname, selectDF, newOptions)
+      dataSet.create(datasetname, newOptions)
+      logger.info("Table/object creation success")
+      dataSet.write(datasetname, selectDF, newOptions)
     } catch {
       case e: Throwable =>
         val msg = s"Error creating/writing table: ${e.getMessage}"
@@ -1262,11 +1327,11 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
   /** booltoDF will convert the boolean result to a dataframe
-    *
-    * @param spark  - sparksessionboolToDF
-    * @param result - boolean return from the create/drop/truncate methods
-    * @return
-    */
+   *
+   * @param spark  - sparksessionboolToDF
+   * @param result - boolean return from the create/drop/truncate methods
+   * @return
+   */
   def boolToDFWithErrorString(spark: SparkSession, result: Boolean, addOnString: String): DataFrame = {
     val resultStr = if (result) "success" else "failure"
     import spark.implicits._
@@ -1277,11 +1342,11 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
   /** booltoDF will convert the boolean result to a dataframe
-    *
-    * @param spark  - sparksession
-    * @param result - boolean return from the create/drop/truncate methods
-    * @return
-    */
+   *
+   * @param spark  - sparksession
+   * @param result - boolean return from the create/drop/truncate methods
+   * @return
+   */
   def boolToDF(spark: SparkSession, result: Boolean): DataFrame = {
     val resultStr = if (result) "success" else "failure"
     import spark.implicits._
@@ -1289,22 +1354,22 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
   /** stringToDF will convert the string result to a dataframe
-    *
-    * @param spark  - sparksession
-    * @param result - boolean return from the create/drop/truncate methods
-    * @return
-    */
+   *
+   * @param spark  - sparksession
+   * @param result - boolean return from the create/drop/truncate methods
+   * @return
+   */
   def stringToDF(spark: SparkSession, result: String): DataFrame = {
     import spark.implicits._
     Seq(result).toDF("Query Execution")
   }
 
   /**
-    * From the create table SQL, parse the partitioned by clause and get all the partitions
-    *
-    * @param sql - Incoming sql
-    * @return - Array of Fields which has partition column name with data type hard coded as String for now as it is not going to be used elsewhere
-    */
+   * From the create table SQL, parse the partitioned by clause and get all the partitions
+   *
+   * @param sql - Incoming sql
+   * @return - Array of Fields which has partition column name with data type hard coded as String for now as it is not going to be used elsewhere
+   */
   def getPartitionsFields(sql: String): Array[com.paypal.gimel.common.catalog.Field] = {
     val pattern = """^.+PARTITIONED BY \((.*?)\).+""".r
     val pattern(partitions) = sql.toUpperCase()
@@ -1316,12 +1381,12 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
 
 
   /**
-    *
-    * Method to check in special checks in SQL string
-    *
-    * @param sql
-    * @return
-    */
+   *
+   * Method to check in special checks in SQL string
+   *
+   * @param sql
+   * @return
+   */
   def vulnerabilityCheck(sql: String): Unit = {
 
     val checkFlag = if (sql.toUpperCase.contains(s"SET ${JdbcConfigs.jdbcUserName}".toUpperCase)) {
@@ -1340,3 +1405,4 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
   }
 
 }
+
