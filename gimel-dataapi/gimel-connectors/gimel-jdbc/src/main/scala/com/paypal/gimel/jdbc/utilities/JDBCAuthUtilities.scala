@@ -165,7 +165,8 @@ class JDBCAuthUtilities(sparkSession: SparkSession) extends Serializable {
             s"with ${JdbcConfigs.jdbcPasswordStrategy} = ${JdbcConstants.JDBC_CUSTOM_PASSWORD_STRATEGY}")
         }
         val authLoader = Class.forName(authLoaderClassName).newInstance.asInstanceOf[com.paypal.gimel.common.security.AuthProvider]
-        password = authLoader.getCredentials(dataSetProps ++ Map(GimelConstants.GIMEL_AUTH_REQUEST_TYPE -> JdbcConstants.JDBC_AUTH_REQUEST_TYPE))
+        password = authLoader.getCredentials(dataSetProps ++ Map(GimelConstants.GIMEL_AUTH_REQUEST_TYPE -> JdbcConstants.JDBC_AUTH_REQUEST_TYPE,
+          JdbcConfigs.jdbcUrl -> url))
       }
       case _ => {
         val msg = """Invalid jdbcPasswordStrategy"""".stripMargin

@@ -145,7 +145,7 @@ class HBaseUtilities(sparkSession: SparkSession) {
     logger.info("hBaseNameSpaceAndTable and clusterName" + hBaseNameSpaceAndTable + clusterName)
     val currentUser = datasetProps.props.getOrElse(GimelConstants.GTS_USER_CONFIG, sparkSession.sparkContext.sparkUser)
     if (AuthHandler.isAuthRequired(sparkSession)) {
-      AuthHandler.authenticateHbasePolicy(currentUser, operation, hBaseNameSpaceAndTable, dataset, clusterName)
+      AuthHandler.authenticateHbasePolicy(currentUser, operation, hBaseNameSpaceAndTable, dataset, clusterName, dataSetProps)
     }
   }
 }

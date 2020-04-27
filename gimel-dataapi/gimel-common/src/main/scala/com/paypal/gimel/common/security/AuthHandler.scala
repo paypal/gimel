@@ -21,7 +21,7 @@ package com.paypal.gimel.common.security
 
 import java.net.URI
 
-import scala.collection.immutable.{Iterable, Seq}
+import scala.collection.immutable.{Iterable, Map, Seq}
 import scala.collection.mutable.ListBuffer
 import scala.sys.process._
 import scala.util.control.Breaks._
@@ -29,12 +29,11 @@ import scala.util.control.Breaks._
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.sql.SparkSession
 
-import com.paypal.gimel.common.catalog.CatalogProvider
 import com.paypal.gimel.common.conf.GimelConstants
+import com.paypal.gimel.common.gimelservices.GimelServiceUtilities
 import com.paypal.gimel.common.gimelservices.payload.{PolicyDetails, PolicyItem}
 import com.paypal.gimel.common.storageadmin.HDFSAdminClient
 import com.paypal.gimel.logger.Logger
-
 
 object AuthHandler {
 
@@ -232,7 +231,7 @@ object AuthHandler {
     * @param clusterNameNode - The Name node of the cluster
     * @param dataSet         - data set name
     */
-  def authenticateRangerHiveTableAndLocationPolicy(currentUser: String, operation: String, database: String, table: String, hdfsLocation: String, clusterName: String, clusterNameNode: String, dataSet: String): Unit = {
+  def authenticateRangerHiveTableAndLocationPolicy(currentUser: String, operation: String, database: String, table: String, hdfsLocation: String, clusterName: String, clusterNameNode: String, dataSet: String, options: Map[String, Any]): Unit = {
     logger.info(
       s"""
          |Incoming params for authenticateRangerHiveTableAndLocationPolicy -->
@@ -247,14 +246,14 @@ object AuthHandler {
          |
       """.stripMargin
     )
-    val allPolicies: Map[String, Seq[PolicyDetails]] = getAllPolicies(currentUser, operation, database, table, hdfsLocation, clusterName, clusterNameNode, dataSet)
+    val allPolicies: Map[String, Seq[PolicyDetails]] = getAllPolicies(currentUser, operation, database, table, hdfsLocation, clusterName, clusterNameNode, dataSet, options)
 
     authenticateHiveTablePolicy(currentUser, operation, database, table, dataSet, clusterName, allPolicies)
     authenticateRangerLocationPolicy(currentUser, operation, hdfsLocation, dataSet, clusterName, clusterNameNode, allPolicies)
   }
 
-  def getAllPolicies(currentUser: String, operation: String, database: String, table: String, hdfsLocation: String, clusterName: String, clusterNameNode: String, dataSet: String): Map[String, Seq[PolicyDetails]] = {
-    val servUtils = com.paypal.gimel.common.gimelservices.GimelServiceUtilities()
+  def getAllPolicies(currentUser: String, operation: String, database: String, table: String, hdfsLocation: String, clusterName: String, clusterNameNode: String, dataSet: String, options: Map[String, Any]): Map[String, Seq[PolicyDetails]] = {
+    val servUtils = new GimelServiceUtilities(options.map { x => (x._1, x._2.toString)})
     val clusterInfo = servUtils.getClusterInfo(clusterName)
     val clusterID = clusterInfo.clusterId
     val rangerPoliciesHive: Seq[PolicyDetails] = servUtils.getRangerPoliciesByHive(database, table, GimelConstants.STORAGE_TYPE_HIVE, clusterID);
@@ -336,11 +335,11 @@ object AuthHandler {
     * @param clusterName       - cluster the dataset belongs to
     */
 
-  def authenticateHbasePolicy(currentUser: String, operation: String, nameSpaceAndTable: String, dataSet: String, clusterName: String): Unit = {
+  def authenticateHbasePolicy(currentUser: String, operation: String, nameSpaceAndTable: String, dataSet: String, clusterName: String, dataSetProps: Map[String, Any]): Unit = {
     var canAccess = false
 
     // Once we get the cluster name we need to use Rest API to get the cluster ID
-    val servUtils = com.paypal.gimel.common.gimelservices.GimelServiceUtilities()
+    val servUtils = new GimelServiceUtilities(dataSetProps.map { x => (x._1, x._2.toString)})
     val clusterInfo = servUtils.getClusterInfo(clusterName)
     val clusterID = clusterInfo.clusterId
 
