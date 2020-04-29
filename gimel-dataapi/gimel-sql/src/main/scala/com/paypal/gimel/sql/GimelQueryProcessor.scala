@@ -42,7 +42,6 @@ import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 import com.paypal.gimel.logging.GimelStreamingListener
 import com.paypal.gimel.parser.utilities.{QueryConstants, QueryParserUtils}
-import com.paypal.gimel.sql.livy.LivyGimelWrapper
 
 object GimelQueryProcessor {
 
@@ -257,10 +256,11 @@ object GimelQueryProcessor {
       val data = if (isJdbcCompletePushDownEnabled) {
         GimelQueryUtils.createPushDownQueryDataframe(sparkSession, transformedSql.get, jdbcOptions.get)
       } else if (isGTSImpersonated && (isDDL || isDMLHiveOrHbase)) {
-        queryUtils.authenticateAccess(sql, sparkSession, options)
-        logger.info("Route DDL & DML for [Hive | HBASE] to dedicated livy session")
-        val res = LivyGimelWrapper.execute(sql, user, sparkSession)
-        boolToDFWithErrorString(sparkSession, res._1, res._2)
+        throw new UnsupportedOperationException(
+          s"""
+             | DDL or DML for [Hive | HBASE] are not supported in GTS (Gimel thrift server).
+             | Please run the query in separate spark session.
+             |""".stripMargin)
       } else if (queryUtils.isUDCDataDefinition(sql)) {
         logger.info("This path is dynamic dataset creation path")
         var resultingStr = ""
@@ -284,17 +284,6 @@ object GimelQueryProcessor {
         if (isSelectFromHiveOrHBase) {
           logger.info("Select query consists of Hive or HBase dataset, authenticating access through ranger.")
           queryUtils.authenticateAccess(sql, sparkSession, options)
-        }
-
-        // This is required to ensure we pass the confs to Livy session as well as the existing GTS threadpool.
-        // This edge case is required when a user is about to execute an impersonation related query next,
-        // and that is going to go to Livy session
-        if (isGTSImpersonated && queryUtils.isSetConf(sql, sparkSession)) {
-          val livyEndPoint = sparkSession.conf.get(GimelConstants.LIVY_SPARK_ENDPOINT_KEY)
-          if (LivyGimelWrapper.isSessionIdle(user, sessionID, livyEndPoint)) {
-            logger.info("Allow thrift server to execute the Query for all other cases.")
-            LivyGimelWrapper.execute(sql, user, sparkSession)
-          }
         }
 
         // Set HBase Page Size for optimization if selecting from HBase with limit

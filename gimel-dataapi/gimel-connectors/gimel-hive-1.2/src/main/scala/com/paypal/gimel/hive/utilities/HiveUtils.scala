@@ -404,7 +404,7 @@ class HiveUtils {
       val clusterName = datasetProps.props.getOrElse(GimelConstants.hdfsStorageNameKey, "")
       val hiveDB = datasetProps.props(GimelConstants.HIVE_DATABASE_NAME)
       val hiveTable = datasetProps.props(GimelConstants.HIVE_TABLE_NAME)
-      AuthHandler.authenticateRangerHiveTableAndLocationPolicy(currentUser, operation, hiveDB, hiveTable, hdfsLocation, clusterName, clusterNameNode, dataset)
+      AuthHandler.authenticateRangerHiveTableAndLocationPolicy(currentUser, operation, hiveDB, hiveTable, hdfsLocation, clusterName, clusterNameNode, dataset, options)
     }
   }
 

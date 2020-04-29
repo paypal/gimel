@@ -84,7 +84,7 @@ under the License.
                 <spark.binary.version>2.3</spark.binary.version>
                 <spark.version>2.3.0</spark.version>
                 <hadoop.version>2.7.3</hadoop.version>
-                <hive.version>1.2.1000</hive.version>
+                <hive.version>1.2.1</hive.version>
                 <hbase.version>1.1.2</hbase.version>
                 <java.version>1.8</java.version>
                 <gimel.version>2.0.0</gimel.version>
