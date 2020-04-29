@@ -88,6 +88,7 @@ under the License.
                 <hbase.version>1.1.2</hbase.version>
                 <java.version>1.8</java.version>
                 <gimel.version>2.0.0</gimel.version>
+                <hadoop.aws.version>2.8.0</hadoop.aws.version>
                 <packaging.tag />
             </properties>
         </profile>
@@ -115,6 +116,7 @@ under the License.
                 <hive.version>1.2.1000.2.6.3.11-1</hive.version>
                 <hbase.version>1.1.2.2.6.3.11-1</hbase.version>
                 <zookeeper.version>3.4.6.2.6.3.12-2</zookeeper.version>
+                <hadoop.aws.version>2.8.0</hadoop.aws.version>
                 <packaging.tag />
             </properties>
         </profile>
@@ -144,6 +146,7 @@ under the License.
                 <hive.version>1.2.1000.2.6.3.5-4</hive.version>
                 <hbase.version>1.1.2.2.6.3.5-4</hbase.version>
                 <zookeeper.version>3.4.6.2.6.3.5-4</zookeeper.version>
+                <hadoop.aws.version>2.8.0</hadoop.aws.version>
                 <packaging.tag />
             </properties>
         </profile>
@@ -173,6 +176,7 @@ under the License.
                 <hwx.version>hwx-2.6.5.0-292_s-${spark.binary.version}</hwx.version>
                 <gimel.version>2.0.0</gimel.version>
                 <scalatest.version>3.0.1</scalatest.version>
+                <hadoop.aws.version>2.8.0</hadoop.aws.version>
                 <packaging.tag/>
             </properties>
         </profile>
