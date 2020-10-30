@@ -75,7 +75,7 @@ object SparkWordCount {
 Example:
 
 ```shell script
-spark-shell --jars gimel-tools-2.0.0-SNAPSHOT-uber.jar \
+spark-shell --jars gimel-tools-2.4.7-SNAPSHOT-uber.jar \
 --conf spark.driver.extraJavaOptions="-Dgimel.logger.properties.filepath=gimelLoggerConfig.properties" \
 --conf spark.executor.extraJavaOptions="-Dgimel.logger.properties.filepath=gimelLoggerConfig.properties" \
 --conf spark.files=/path/to/gimelLoggerConfig.properties \

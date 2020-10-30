@@ -57,7 +57,7 @@ Example:
 spark-shell --jars \
 generic-deserializers-1.0-SNAPSHOT-uber.jar,\
 generic-serializers-1.0-SNAPSHOT-uber.jar,\
-gimel-tools-2.0.0-SNAPSHOT-uber.jar
+gimel-tools-2.4.7-SNAPSHOT-uber.jar
 ```
 
 ## Generic Deserializers

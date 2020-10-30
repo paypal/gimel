@@ -5,14 +5,14 @@
   <parent>
     <groupId>com.paypal.gimel</groupId>
     <artifactId>gimel-serde</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>2.4.7-SNAPSHOT</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
   <groupId>com.paypal.gimel</groupId>
   <artifactId>generic-deserializers</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>2.4.7-SNAPSHOT</version>
 
   <dependencies>
     <dependency>
@@ -57,6 +57,12 @@
       <groupId>org.apache.kafka</groupId>
       <artifactId>kafka_${scala.binary.version}</artifactId>
       <version>${kafka.version}</version>
+      <exclusions>
+        <exclusion>
+          <groupId>com.fasterxml.jackson.*</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
       <scope>test</scope>
     </dependency>
     <dependency>
@@ -79,24 +85,24 @@
       </exclusions>
       <scope>test</scope>
     </dependency>
-    <dependency>
-      <groupId>io.confluent</groupId>
-      <artifactId>kafka-schema-registry</artifactId>
-      <version>${confluent.version}</version>
-      <!-- Required for e.g. schema registry's RestApp -->
-      <classifier>tests</classifier>
-      <exclusions>
-        <exclusion>
-          <groupId>javax.ws.rs</groupId>
-          <artifactId>javax.ws.rs-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.glassfish.jersey.containers</groupId>
-          <artifactId>jersey-container-servlet</artifactId>
-        </exclusion>
-      </exclusions>
-      <scope>test</scope>
-    </dependency>
+<!--    <dependency>-->
+<!--      <groupId>io.confluent</groupId>-->
+<!--      <artifactId>kafka-schema-registry</artifactId>-->
+<!--      <version>${confluent.version}</version>-->
+<!--      &lt;!&ndash; Required for e.g. schema registry's RestApp &ndash;&gt;-->
+<!--      <classifier>tests</classifier>-->
+<!--      <exclusions>-->
+<!--        <exclusion>-->
+<!--          <groupId>javax.ws.rs</groupId>-->
+<!--          <artifactId>javax.ws.rs-api</artifactId>-->
+<!--        </exclusion>-->
+<!--        <exclusion>-->
+<!--          <groupId>org.glassfish.jersey.containers</groupId>-->
+<!--          <artifactId>jersey-container-servlet</artifactId>-->
+<!--        </exclusion>-->
+<!--      </exclusions>-->
+<!--      <scope>test</scope>-->
+<!--    </dependency>-->
     <dependency>
       <groupId>org.apache.curator</groupId>
       <artifactId>curator-test</artifactId>
