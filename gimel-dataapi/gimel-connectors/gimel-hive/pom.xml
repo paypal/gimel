@@ -28,7 +28,7 @@ under the License.
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>gimel-hive-1.2</artifactId>
+  <artifactId>gimel-hive</artifactId>
   <version>2.4.7-SNAPSHOT</version>
 
   <dependencies>

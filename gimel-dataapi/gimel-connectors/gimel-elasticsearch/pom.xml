@@ -28,7 +28,7 @@ under the License.
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>gimel-elasticsearch-6.2</artifactId>
+  <artifactId>gimel-elasticsearch</artifactId>
   <version>2.4.7-SNAPSHOT</version>
 
   <dependencies>

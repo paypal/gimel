@@ -39,10 +39,10 @@ under the License.
         <module>gimel-logger</module>
         <module>gimel-common</module>
         <module>gimel-connectors/gimel-sftp</module>
-        <module>gimel-connectors/gimel-elasticsearch-6.2</module>
+        <module>gimel-connectors/gimel-elasticsearch</module>
+        <module>gimel-connectors/gimel-hive</module>
         <module>gimel-connectors/gimel-jdbc</module>
-        <module>gimel-connectors/gimel-hive-1.2</module>
-        <module>gimel-connectors/gimel-hbase-1.2</module>
+        <module>gimel-connectors/gimel-hbase</module>
         <module>gimel-connectors/gimel-cassandra-2.0</module>
         <module>gimel-connectors/gimel-aerospike-3.14</module>
         <module>gimel-connectors/gimel-kafka-2.2</module>
