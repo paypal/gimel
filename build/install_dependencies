@@ -19,7 +19,7 @@
 this_script=`pwd`/$BASH_SOURCE
 this_dir=`dirname $this_script`
 # Source reusable functions
-source ${this_dir}/gimel_functions
+. ./${this_dir}/gimel_functions
 
 #--------------------------------Begin execution of Steps------------------------------------------------#
 

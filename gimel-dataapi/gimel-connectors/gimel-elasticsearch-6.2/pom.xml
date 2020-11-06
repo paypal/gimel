@@ -45,9 +45,23 @@ under the License.
     </dependency>
     <dependency>
       <groupId>org.elasticsearch</groupId>
-      <artifactId>elasticsearch-spark-20_${scala.binary.version}</artifactId>
+      <artifactId>elasticsearch-spark-20_${elastic.scala.binary.version}</artifactId>
       <version>${elasticsearch.version}</version>
       <scope>${packaging.scope}</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>log4j-over-slf4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.elasticsearch</groupId>
@@ -78,7 +92,7 @@ under the License.
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>${maven.shade.plugin.version}</version>
         <configuration>
           <relocations>
             <relocation>
