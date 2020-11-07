@@ -98,7 +98,11 @@ class ExtendedJdbcRDD[T: ClassTag](
     protected var finished = false
     val logger = Logger(this.getClass.getName)
 
-    context.addTaskCompletionListener { context => closeIfNeeded() }
+    context.addTaskCompletionListener{
+      (context: org.apache.spark.TaskContext) =>
+        closeIfNeeded()
+        "dummy"
+    }
 
     val conn: Connection = getConnection()
 

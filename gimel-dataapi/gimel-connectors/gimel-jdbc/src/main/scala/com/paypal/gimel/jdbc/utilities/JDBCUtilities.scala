@@ -349,6 +349,9 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     st
   }
 
+//  private def handlePartition(partition:Iterator[Row]):Unit = {
+//
+//  }
   /**
     * This method inserts into given table in given mode
     *
@@ -374,10 +377,8 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
         }
       case _ => // do nothing
     }
-
-
     // For each partition create a temp table to insert
-    dataFrame.foreachPartition { batch =>
+    dataFrame.foreachPartition { batch: Iterator[Row] =>
 
       // create logger inside the executor
       val logger = Logger(this.getClass.getName)
@@ -572,7 +573,7 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     */
   private def updateTable(dataFrame: DataFrame, jdbcConnectionUtility: JDBCConnectionUtility,
                           jdbcHolder: JDBCArgsHolder) {
-    dataFrame.foreachPartition { batch =>
+    dataFrame.foreachPartition { batch: Iterator[Row] =>
       if (batch.nonEmpty) {
         // create logger inside the executor
         val logger = Logger(this.getClass.getName)
@@ -630,7 +631,7 @@ class JDBCUtilities(sparkSession: SparkSession) extends Serializable {
     */
   private def upsertTable(dataFrame: DataFrame, jDBCConnectionUtility: JDBCConnectionUtility,
                           jdbcHolder: JDBCArgsHolder) {
-    dataFrame.foreachPartition { batch =>
+    dataFrame.foreachPartition { batch: Iterator[Row] =>
       // create logger inside the executor
       val logger = Logger(this.getClass.getName)
       if (batch.nonEmpty) {

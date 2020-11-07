@@ -150,7 +150,7 @@ under the License.
     </dependency>
     <dependency>
       <groupId>org.apache.spark</groupId>
-      <artifactId>spark-streaming-kafka-${kafka.binary.version}_${scala.binary.version}</artifactId>
+      <artifactId>spark-streaming-kafka-${spark.kafka.connector.version}</artifactId>
       <version>${spark.version}</version>
       <scope>${spark.packaging.scope}</scope>
     </dependency>

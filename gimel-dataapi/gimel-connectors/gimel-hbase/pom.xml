@@ -47,8 +47,18 @@ under the License.
     <dependency>
       <groupId>com.hortonworks</groupId>
       <artifactId>shc-core</artifactId>
-      <version>${hortonworks.shc.version}-${spark.binary.version}-s_${scala.binary.version}</version>
+      <version>1.1.1-2.1-s_2.11</version>
       <scope>${packaging.scope}</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
     </dependency>
     <dependency>
       <groupId>org.apache.hbase</groupId>
@@ -179,7 +189,7 @@ under the License.
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>${maven.shade.plugin.version}</version>
         <configuration>
           <relocations>
             <relocation>
