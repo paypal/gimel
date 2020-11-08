@@ -45,8 +45,8 @@ under the License.
         <module>gimel-connectors/gimel-s3</module>
         <module>gimel-connectors/gimel-kafka</module>
         <module>gimel-connectors/gimel-jdbc</module>
+        <module>gimel-connectors/gimel-cassandra</module>
         <module>gimel-connectors/gimel-hbase</module>
-        <module>gimel-connectors/gimel-cassandra-2.0</module>
         <module>gimel-connectors/gimel-aerospike-3.14</module>
         <module>gimel-connectors/gimel-druid-0.82</module>
         <module>gimel-core</module>
@@ -57,7 +57,7 @@ under the License.
 
     <properties>
         <aerospike.version>3.1.5</aerospike.version>
-        <cassandra.spark.version>2.0.6</cassandra.spark.version>
+        <cassandra.spark.version>2.4.3</cassandra.spark.version>
         <confluent.version>3.3.0</confluent.version>
         <elasticsearch.version>6.2.1</elasticsearch.version>
         <guava.version>16.0</guava.version>
@@ -214,7 +214,7 @@ under the License.
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>${maven.shade.plugin.version}</version>
                 <configuration>
                     <relocations>
                         <!--<relocation>-->
