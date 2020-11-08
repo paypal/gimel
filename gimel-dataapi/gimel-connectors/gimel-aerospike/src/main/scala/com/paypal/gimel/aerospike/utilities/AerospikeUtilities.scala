@@ -57,7 +57,7 @@ object AerospikeUtilities {
       val aerospikeSet = conf.aerospikeSet
       val aerospikeRowKey = conf.aerospikeRowKey
       // For each partition of Dataframe, aerospike client is created and is used to write data to aerospike
-      dataFrame.foreachPartition { partition =>
+      dataFrame.foreachPartition { partition: Iterator[Row] =>
         val client = AerospikeAdminClient.createClientConnection(aerospikeHosts, aerospikePort.toInt)
         partition.foreach { row =>
           val bins = columns.map(eachCol => new Bin(eachCol.toString, row.getAs(eachCol).toString)).toArray

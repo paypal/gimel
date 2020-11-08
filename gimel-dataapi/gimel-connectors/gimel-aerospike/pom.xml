@@ -28,7 +28,7 @@ under the License.
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>gimel-aerospike-3.14</artifactId>
+  <artifactId>gimel-aerospike</artifactId>
   <version>2.4.7-SNAPSHOT</version>
 
   <dependencies>
@@ -58,7 +58,7 @@ under the License.
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-shade-plugin</artifactId>
-        <version>3.0.0</version>
+        <version>${maven.shade.plugin.version}</version>
         <configuration>
           <relocations>
             <relocation>

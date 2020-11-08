@@ -47,7 +47,7 @@ under the License.
         <module>gimel-connectors/gimel-jdbc</module>
         <module>gimel-connectors/gimel-cassandra</module>
         <module>gimel-connectors/gimel-hbase</module>
-        <module>gimel-connectors/gimel-aerospike-3.14</module>
+        <module>gimel-connectors/gimel-aerospike</module>
         <module>gimel-connectors/gimel-druid-0.82</module>
         <module>gimel-core</module>
         <module>gimel-sql</module>
