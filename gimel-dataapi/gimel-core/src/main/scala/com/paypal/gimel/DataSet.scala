@@ -38,9 +38,8 @@ import com.paypal.gimel.common.utilities.BindToFieldsUtils._
 import com.paypal.gimel.common.utilities.DataSetUtils.propStringToMap
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.elasticsearch.conf.ElasticSearchConfigs
-import com.paypal.gimel.hbase.conf.HbaseConfigs
 import com.paypal.gimel.jdbc.conf.JdbcConfigs
-import com.paypal.gimel.kafka.conf.{KafkaConfigs, KafkaConstants}
+import com.paypal.gimel.kafka2.conf.{KafkaConfigs, KafkaConstants}
 import com.paypal.gimel.logger.Logger
 
 class DataSet(val sparkSession: SparkSession) {
@@ -160,7 +159,7 @@ class DataSet(val sparkSession: SparkSession) {
       logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkAppName
         , this.getClass.getName
-        , KafkaConstants.gimelAuditRunTypeBatch
+        , "BATCH"
         , clusterName
         , user
         , appTag.replaceAllLiterally("/", "_")
@@ -190,7 +189,7 @@ class DataSet(val sparkSession: SparkSession) {
         logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkAppName
           , this.getClass.getName
-          , KafkaConstants.gimelAuditRunTypeBatch
+          , "BATCH"
           , clusterName
           , user
           , appTag.replaceAllLiterally("/", "_")
@@ -293,7 +292,7 @@ class DataSet(val sparkSession: SparkSession) {
       logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkAppName
         , this.getClass.getName
-        , KafkaConstants.gimelAuditRunTypeBatch
+        , "BATCH"
         , clusterName
         , user
         , appTag.replaceAllLiterally("/", "_")
@@ -324,7 +323,7 @@ class DataSet(val sparkSession: SparkSession) {
         logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkAppName
           , this.getClass.getName
-          , KafkaConstants.gimelAuditRunTypeBatch
+          , "BATCH"
           , clusterName
           , user
           , appTag.replaceAllLiterally("/", "_")
@@ -411,7 +410,7 @@ class DataSet(val sparkSession: SparkSession) {
       logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkAppName
         , this.getClass.getName
-        , KafkaConstants.gimelAuditRunTypeBatch
+        , "BATCH"
         , clusterName
         , user
         , appTag.replaceAllLiterally("/", "_")
@@ -440,7 +439,7 @@ class DataSet(val sparkSession: SparkSession) {
         logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkAppName
           , this.getClass.getName
-          , KafkaConstants.gimelAuditRunTypeBatch
+          , "BATCH"
           , clusterName
           , user
           , appTag.replaceAllLiterally("/", "_")
@@ -597,7 +596,7 @@ class DataSet(val sparkSession: SparkSession) {
       logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkAppName
         , this.getClass.getName
-        , KafkaConstants.gimelAuditRunTypeBatch
+        , "BATCH"
         , clusterName
         , user
         , appTag.replaceAllLiterally("/", "_")
@@ -627,7 +626,7 @@ class DataSet(val sparkSession: SparkSession) {
         logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkAppName
           , this.getClass.getName
-          , KafkaConstants.gimelAuditRunTypeBatch
+          , "BATCH"
           , clusterName
           , user
           , appTag.replaceAllLiterally("/", "_")
@@ -727,7 +726,7 @@ class DataSet(val sparkSession: SparkSession) {
       logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkAppName
         , this.getClass.getName
-        , KafkaConstants.gimelAuditRunTypeBatch
+        , "BATCH"
         , clusterName
         , user
         , appTag.replaceAllLiterally("/", "_")
@@ -758,7 +757,7 @@ class DataSet(val sparkSession: SparkSession) {
         logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkAppName
           , this.getClass.getName
-          , KafkaConstants.gimelAuditRunTypeBatch
+          , "BATCH"
           , clusterName
           , user
           , appTag.replaceAllLiterally("/", "_")
@@ -855,7 +854,7 @@ class DataSet(val sparkSession: SparkSession) {
       logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkAppName
         , this.getClass.getName
-        , KafkaConstants.gimelAuditRunTypeBatch
+        , "BATCH"
         , clusterName
         , user
         , appTag.replaceAllLiterally("/", "_")
@@ -886,7 +885,7 @@ class DataSet(val sparkSession: SparkSession) {
         logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkAppName
           , this.getClass.getName
-          , KafkaConstants.gimelAuditRunTypeBatch
+          , "BATCH"
           , clusterName
           , user
           , appTag.replaceAllLiterally("/", "_")
@@ -983,10 +982,6 @@ object DataSetUtils {
 
   def getDataSet(sparkSession: SparkSession, sourceType: DataSetType.SystemType): GimelDataSet = {
     sourceType match {
-      case DataSetType.KAFKA =>
-        new com.paypal.gimel.kafka.DataSet(sparkSession)
-      case DataSetType.HBASE =>
-        new com.paypal.gimel.hbase.DataSet(sparkSession)
       case DataSetType.HDFS =>
         new com.paypal.gimel.hdfs.DataSet(sparkSession)
       case DataSetType.ES =>
@@ -999,12 +994,8 @@ object DataSetUtils {
         new com.paypal.gimel.cassandra.DataSet(sparkSession)
       case DataSetType.AEROSPIKE =>
         new com.paypal.gimel.aerospike.DataSet(sparkSession)
-      case DataSetType.HDFS =>
-        new com.paypal.gimel.hdfs.DataSet(sparkSession)
       case DataSetType.RESTAPI =>
         new com.paypal.gimel.restapi.DataSet(sparkSession)
-      case DataSetType.DRUID =>
-        new com.paypal.gimel.druid.DataSet(sparkSession)
       case DataSetType.SFTP =>
         new com.paypal.gimel.sftp.DataSet(sparkSession)
       case DataSetType.KAFKA2 =>
@@ -1022,8 +1013,8 @@ object DataSetUtils {
   def getLatestKafkaDataSetReader(dataSet: DataSet): Option[GimelDataSet] = {
     Try {
       dataSet.latestDataSetReader.get match {
-        case kafka: com.paypal.gimel.kafka.DataSet =>
-          kafka
+//        case kafka: com.paypal.gimel.kafka.DataSet =>
+//          kafka
         case kafka2: com.paypal.gimel.kafka2.DataSet =>
           kafka2
       }

@@ -40,12 +40,16 @@ under the License.
     <!--Druid Libraries-->
     <dependency>
       <groupId>io.druid</groupId>
-      <artifactId>tranquility-core_${scala.binary.version}</artifactId>
+      <artifactId>tranquility-core_2.11</artifactId>
       <version>${tranquility.version}</version>
       <exclusions>
         <exclusion>
           <groupId>com.fasterxml.jackson.core</groupId>
           <artifactId>jackson-databind</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.scala-lang</groupId>
+          <artifactId>*</artifactId>
         </exclusion>
         <exclusion>
           <groupId>com.fasterxml.jackson.core</groupId>
