@@ -29,4 +29,4 @@ before_install:
 
 # Build
 install: 
-- sh -x build/gimel | egrep -iv "Download|Copy|Including|WARNING" 
+- sh -x build/gimel -Dmaven.test.skip=true -pl gimel-dataapi | egrep -iv "Download|Copy|Including|WARNING" 
