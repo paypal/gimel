@@ -29,4 +29,4 @@ before_install:
 
 # Build
 install: 
-- sh -x build/gimel | egrep -iv "Download|Copy|Including|WARNING" | egrep -i "error|build|success"
+- sh -x build/gimel | egrep -iv "Download|Copy|Including|WARNING" 
