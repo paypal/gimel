@@ -19,6 +19,7 @@
       <groupId>com.paypal.gimel</groupId>
       <artifactId>serde-common</artifactId>
       <version>2.4.7-SNAPSHOT</version>
+      <scope>${packaging.scope}</scope>
     </dependency>
     <dependency>
       <groupId>org.scala-lang</groupId>
@@ -69,18 +70,12 @@
       <groupId>io.confluent</groupId>
       <artifactId>kafka-schema-registry</artifactId>
       <version>${confluent.version}</version>
+      <!-- Required for e.g. schema registry's RestApp -->
+      <classifier>tests</classifier>
       <exclusions>
         <exclusion>
           <groupId>javax.ws.rs</groupId>
           <artifactId>javax.ws.rs-api</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.glassfish.jersey.containers</groupId>
-          <artifactId>jersey-container-servlet</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.glassfish.jersey.core</groupId>
-          <artifactId>jersey-server</artifactId>
         </exclusion>
       </exclusions>
       <scope>test</scope>
@@ -89,8 +84,6 @@
 <!--      <groupId>io.confluent</groupId>-->
 <!--      <artifactId>kafka-schema-registry</artifactId>-->
 <!--      <version>${confluent.version}</version>-->
-<!--      &lt;!&ndash; Required for e.g. schema registry's RestApp &ndash;&gt;-->
-<!--      <classifier>tests</classifier>-->
 <!--      <exclusions>-->
 <!--        <exclusion>-->
 <!--          <groupId>javax.ws.rs</groupId>-->
@@ -99,6 +92,10 @@
 <!--        <exclusion>-->
 <!--          <groupId>org.glassfish.jersey.containers</groupId>-->
 <!--          <artifactId>jersey-container-servlet</artifactId>-->
+<!--        </exclusion>-->
+<!--        <exclusion>-->
+<!--          <groupId>org.glassfish.jersey.core</groupId>-->
+<!--          <artifactId>jersey-server</artifactId>-->
 <!--        </exclusion>-->
 <!--      </exclusions>-->
 <!--      <scope>test</scope>-->
@@ -198,7 +195,7 @@
           <execution>
             <id>test</id>
             <goals>
-              <goal>test</goal>
+<!--              <goal>test</goal>-->
             </goals>
           </execution>
         </executions>
