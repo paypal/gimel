@@ -24,7 +24,7 @@ under the License.
     <parent>
         <artifactId>gimel</artifactId>
         <groupId>com.paypal.gimel</groupId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.4.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -34,31 +34,25 @@ under the License.
     <name>Gimel Data API</name>
     <inceptionYear>2017</inceptionYear>
 
-    <version>2.0.0-SNAPSHOT</version>
+    <version>2.4.7-SNAPSHOT</version>
     <modules>
         <module>gimel-logger</module>
         <module>gimel-common</module>
         <module>gimel-connectors/gimel-sftp</module>
-        <module>gimel-connectors/gimel-elasticsearch-6.2</module>
-        <module>gimel-connectors/gimel-jdbc</module>
-        <module>gimel-connectors/gimel-hive-1.2</module>
-        <module>gimel-connectors/gimel-hbase-1.2</module>
-        <module>gimel-connectors/gimel-cassandra-2.0</module>
-        <module>gimel-connectors/gimel-aerospike-3.14</module>
-        <module>gimel-connectors/gimel-kafka-0.10</module>
-        <module>gimel-connectors/gimel-kafka-2.2</module>
-        <module>gimel-connectors/gimel-druid-0.82</module>
+        <module>gimel-connectors/gimel-elasticsearch</module>
+        <module>gimel-connectors/gimel-hive</module>
         <module>gimel-connectors/gimel-restapi</module>
         <module>gimel-connectors/gimel-s3</module>
+        <module>gimel-connectors/gimel-kafka</module>
+        <module>gimel-connectors/gimel-jdbc</module>
+        <module>gimel-connectors/gimel-cassandra</module>
+        <module>gimel-connectors/gimel-aerospike</module>
         <module>gimel-core</module>
-        <module>gimel-sql</module>
-        <module>gimel-tools</module>
-        <module>gimel-examples</module>
     </modules>
 
     <properties>
         <aerospike.version>3.1.5</aerospike.version>
-        <cassandra.spark.version>2.0.6</cassandra.spark.version>
+        <cassandra.spark.version>2.4.3</cassandra.spark.version>
         <confluent.version>3.3.0</confluent.version>
         <elasticsearch.version>6.2.1</elasticsearch.version>
         <guava.version>16.0</guava.version>
@@ -68,20 +62,20 @@ under the License.
         <jackson.version>2.6.7</jackson.version>
         <java.version>1.8</java.version>
         <jersey.version>1.19.4</jersey.version>
-        <kafka.paypal.monitoring.version>1.3.2</kafka.paypal.monitoring.version>
-        <kafka.version>2.2.1</kafka.version>
-        <kafka.binary.version>0-10</kafka.binary.version>
+<!--        <kafka.paypal.monitoring.version>1.3.2</kafka.paypal.monitoring.version>-->
+        <kafka.version>2.1.1</kafka.version>
+<!--        <kafka.binary.version>0-10</kafka.binary.version>-->
         <protobuf.javaformatter.version>1.4</protobuf.javaformatter.version>
         <gimel.logging.spark.binary.version>2.3</gimel.logging.spark.binary.version>
         <gimel.logging.version>0.4.3-SNAPSHOT</gimel.logging.version>
-        <tranquility.version>0.8.2</tranquility.version>
+        <tranquility.version>0.8.3</tranquility.version>
         <mockito.version>2.13.0</mockito.version>
         <qubole.hive.jdbc.version>0.0.7</qubole.hive.jdbc.version>
         <spray.json.version>1.3.3</spray.json.version>
         <teradata.version>15.10.00.22</teradata.version>
         <zookeeper.version>3.4.13</zookeeper.version>
         <curator.version>2.13.0</curator.version>
-        <spark.kafka.connector.version>0-10_2.11</spark.kafka.connector.version>
+        <spark.kafka.connector.version>0-10_2.12</spark.kafka.connector.version>
         <spark.sftp.version>1.1.3</spark.sftp.version>
         <!-- These are added because of conflict in hbase-testing-utility-->
         <netty.hadoop.version>3.9.9.Final</netty.hadoop.version>
@@ -215,7 +209,7 @@ under the License.
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>${maven.shade.plugin.version}</version>
                 <configuration>
                     <relocations>
                         <!--<relocation>-->

@@ -15,9 +15,81 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+echo "Present Working Dir"
+echo $PWD
+
 this_dir=`dirname build/install_dependencies`
-# Source reusable functions
-source ${this_dir}/gimel_functions
+
+#----------------------------function will check for error code & exit if failure, else proceed further----------------------------#
+
+#usage : check_error <$?> <custom_error_code>
+#Example: Check_error < pass $? from the shell command > < Custom Message for errorcode -gt 0 >
+
+check_error()
+{
+	cmd_error_code=$1
+	custom_message=$2
+	if  [ ${cmd_error_code} -gt 0 ]; then
+	  write_log "Error    | Stage |  ${custom_message}"
+	  exit ${cmd_error_code}
+	else
+	  write_log "Success  | Stage | ${custom_message}"
+	fi
+}
+
+#----------------------------function will check for error code & warn if failure----------------------------#
+
+#usage : check_warning <$?> <custom_error_code>
+#Example: Check_warning < pass $? from the shell command > < Custom Message for errorcode -gt 0 >
+
+
+check_warning()
+{
+
+        cmd_error_code=$1
+        pgm_exit_code=$2
+        pgm_exit_msg=$3
+        if  [ ${cmd_error_code} -gt 0 ]; then
+                write_log "WARNING ! ${cmd_error_code} ${pgm_exit_code} ${pgm_exit_msg}"
+        else
+                echo ""
+        fi
+}
+
+
+
+#----------------------------function will write the message to Console / Log File----------------------------#
+
+#Usage : write_log < Whatever message you need to log >
+
+write_log()
+{
+        msg=$1
+        to_be_logged="$(date '+%Y%m%d %H:%M:%S') | $msg"
+        echo ${to_be_logged}
+}
+
+#-----------------------------------Executes a Command--------------------------------------------------------#
+
+
+
+#Usage : run_cmd < The command to execute > 
+
+run_cmd()
+{
+       cmd=$1
+       if [ -z $2 ]; then 
+         fail_on_error="break_code"
+       else
+         fail_on_error=$2
+       fi 
+       write_log "Executing Command --> $1"
+       $cmd
+       error_code=$?
+       if [ ! $fail_on_error = "ignore_errors" ]; then
+           check_error $error_code "$cmd"
+       fi
+}
 
 #--------------------------------Begin execution of Steps------------------------------------------------#
 
@@ -34,9 +106,29 @@ else
 fi
 
 
-build/install_dependencies
-check_error $? "build/install_dependencies"
+write_log "Installing dependencies [sh -x build/install_dependencies]"
 
+# All jars below are not present in maven central or any public repository, thats why they are added manually while building gimel.
+
+mvn install:install-file -DgroupId=qubole-hive-JDBC -DartifactId=qubole-hive-JDBC -Dversion=0.0.7 -Dpackaging=jar -Dfile=${this_dir}/../lib/qubole-hive-JDBC.jar 1>>/dev/null 2>&1
+check_error $? "install qubole-hive-JDBC"
+
+mvn install:install-file -DgroupId=com.hortonworks -DartifactId=shc-core -Dversion=1.1.2-2.3-s_2.11 -Dpackaging=jar -Dfile=${this_dir}/../lib/shc-core.jar 1>>/dev/null 2>&1
+check_error $? "install shc-core"
+
+mvn install:install-file -DgroupId=com.osscube -DartifactId=aerospike-spark -Dversion=0.3-SNAPSHOT -Dpackaging=jar -Dfile=${this_dir}/../lib/aerospike-spark.jar 1>>/dev/null 2>&1
+check_error $? "install aerospike-spark"
+
+mvn install:install-file -DgroupId=com.twitter -DartifactId=zookeeper-client_2.10 -Dversion=2.0.0_fs-b -Dpackaging=jar -Dfile=${this_dir}/../lib/zookeeper-client_2.10-2.0.0_fs-b.jar 1>>/dev/null 2>&1
+check_error $? "install zookeeper-client"
+
+mvn install:install-file -DgroupId=com.teradata.jdbc -DartifactId=terajdbc4 -Dversion=15.10.00.22 -Dpackaging=jar -Dfile=${this_dir}/../lib/terajdbc4-15.10.00.22.jar 1>>/dev/null 2>&1
+check_error $? "install terajdbc4"
+
+mvn install:install-file -DgroupId=com.teradata.jdbc -DartifactId=tdgssconfig -Dversion=15.10.00.22 -Dpackaging=jar -Dfile=${this_dir}/../lib/tdgssconfig-15.10.00.22.jar 1>>/dev/null 2>&1
+check_error $? "install tdgssconfig"
+
+write_log "Building the project [mvn install ${user_args}]"
 mvn install "$@"
 check_error $? "mvn install $@"
 

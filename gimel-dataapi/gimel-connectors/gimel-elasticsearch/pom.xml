@@ -28,7 +28,7 @@ under the License.
   </parent>
   <modelVersion>4.0.0</modelVersion>
 
-  <artifactId>gimel-restapi</artifactId>
+  <artifactId>gimel-elasticsearch</artifactId>
   <version>2.4.7-SNAPSHOT</version>
 
   <dependencies>
@@ -43,10 +43,51 @@ under the License.
       <version>${scalatest.version}</version>
       <scope>test</scope>
     </dependency>
+    <dependency>
+      <groupId>org.elasticsearch</groupId>
+      <artifactId>elasticsearch-spark-20_${elastic.scala.binary.version}</artifactId>
+      <version>${elasticsearch.version}</version>
+      <scope>${packaging.scope}</scope>
+      <exclusions>
+        <exclusion>
+          <groupId>org.apache.spark</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>log4j-over-slf4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
+    <dependency>
+      <groupId>org.elasticsearch</groupId>
+      <artifactId>elasticsearch-hadoop</artifactId>
+      <version>${elasticsearch.version}</version>
+      <scope>${packaging.scope}</scope>
+      <exclusions>
+          <exclusion>
+            <groupId>org.apache.spark</groupId>
+            <artifactId>*</artifactId>
+          </exclusion>
+        <exclusion>
+          <groupId>org.slf4j</groupId>
+          <artifactId>log4j-over-slf4j</artifactId>
+        </exclusion>
+        <exclusion>
+          <groupId>org.apache.hive</groupId>
+          <artifactId>*</artifactId>
+        </exclusion>
+      </exclusions>
+    </dependency>
   </dependencies>
 
   <build>
     <sourceDirectory>src/main/scala</sourceDirectory>
+    <!--<testSourceDirectory>src/test/scala</testSourceDirectory>-->
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -63,7 +104,6 @@ under the License.
               <shadedPattern>gimel-shaded.com.sun.jersey</shadedPattern>
             </relocation>
             <relocation>
-              <!-- Shading hadoop transitive dependency packages -->
               <pattern>org.apache.hadoop</pattern>
               <shadedPattern>gimel-shaded.org.apache.hadoop</shadedPattern>
             </relocation>
