@@ -136,6 +136,11 @@ under the License.
       <version>${gimel.version}-SNAPSHOT</version>
     </dependency>
     <dependency>
+      <groupId>com.paypal.gimel</groupId>
+      <artifactId>gimel-bigquery</artifactId>
+      <version>${gimel.version}-SNAPSHOT</version>
+    </dependency>
+    <dependency>
       <groupId>xerces</groupId>
       <artifactId>xercesImpl</artifactId>
       <version>2.12.0</version>
