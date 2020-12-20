@@ -117,7 +117,7 @@
 
 ```bash
 spark-shell --jars 
-gimel-tools-2.0.0-SNAPSHOT-uber.jar,
+gimel-tools-2.4.7-SNAPSHOT-uber.jar,
 generic-deserializers-1.0-SNAPSHOT-uber.jar,
 generic-serializers-1.0-SNAPSHOT-uber.jar
 
@@ -510,7 +510,7 @@ Users can implement their own logic for getting the kafka properties which will 
      <dependency>
         <groupId>com.paypal.gimel</groupId>
         <artifactId>gimel-common</artifactId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.4.7-SNAPSHOT</version>
         <scope>provided</scope>
      </dependency>
     ```

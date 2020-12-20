@@ -5,7 +5,7 @@
     <parent>
         <artifactId>gimel</artifactId>
         <groupId>com.paypal.gimel</groupId>
-        <version>2.0.0-SNAPSHOT</version>
+        <version>2.4.7-SNAPSHOT</version>
         <relativePath>../pom.xml</relativePath>
     </parent>
     <modelVersion>4.0.0</modelVersion>
@@ -13,11 +13,11 @@
     <groupId>com.paypal.gimel</groupId>
     <artifactId>gimel-serde</artifactId>
     <packaging>pom</packaging>
-    <version>1.0-SNAPSHOT</version>
+    <version>2.4.7-SNAPSHOT</version>
     <modules>
+        <module>serde-common</module>
         <module>gimel-deserializers/generic-deserializers</module>
         <module>gimel-serializers/generic-serializers</module>
-        <module>serde-common</module>
     </modules>
 
     <repositories>
@@ -38,7 +38,7 @@
         <!-- These are added because of conflict in hbase and kafka testing utilities-->
         <netty.hadoop.version>3.9.9.Final</netty.hadoop.version>
         <netty.all.hadoop.version>4.1.17.Final</netty.all.hadoop.version>
-        <kafka.version>2.2.1</kafka.version>
+        <kafka.version>2.1.1</kafka.version>
     </properties>
 
     <dependencies>
@@ -98,14 +98,6 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.apache.avro</groupId>
-                <artifactId>avro-maven-plugin</artifactId>
-                <configuration>
-                    <!-- Avro string compiled to java.lang.String instead of CharSequence -->
-                    <stringType>String</stringType>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
             </plugin>
@@ -117,7 +109,7 @@
                     <execution>
                         <goals>
                             <goal>compile</goal>
-                            <goal>testCompile</goal>
+<!--                            <goal>testCompile</goal>-->
                         </goals>
                     </execution>
                 </executions>
@@ -164,7 +156,7 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-shade-plugin</artifactId>
-                <version>3.0.0</version>
+                <version>${maven.shade.plugin.version}</version>
                 <configuration>
                     <relocations>
                         <!--<relocation>-->

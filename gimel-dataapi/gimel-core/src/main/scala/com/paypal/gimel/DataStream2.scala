@@ -184,7 +184,7 @@ class DataStream2(val sparkSession: SparkSession) {
         logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkContext.getConf.get("spark.app.name")
           , this.getClass.getName
-          , KafkaConstants.gimelAuditRunTypeStream
+          , "STREAM"
           , getYarnClusterName()
           , user
           , appTag.replaceAllLiterally("/", "_")
@@ -300,7 +300,7 @@ class DataStream2(val sparkSession: SparkSession) {
       logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkContext.getConf.get("spark.app.name")
         , this.getClass.getName
-        , KafkaConstants.gimelAuditRunTypeStream
+        , "STREAM"
         , getYarnClusterName()
         , user
         , appTag.replaceAllLiterally("/", "_")
@@ -330,7 +330,7 @@ class DataStream2(val sparkSession: SparkSession) {
         logger.logApiAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkContext.getConf.get("spark.app.name")
           , this.getClass.getName
-          , KafkaConstants.gimelAuditRunTypeStream
+          , "STREAM"
           , getYarnClusterName()
           , user
           , appTag.replaceAllLiterally("/", "_")

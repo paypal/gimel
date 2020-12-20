@@ -25,16 +25,15 @@ import scala.collection.JavaConverters._
 import scala.collection.immutable.Map
 import scala.collection.mutable
 
-import com.databricks.spark.avro.SchemaConverters._
 import org.apache.avro.Schema
 import org.apache.avro.generic.{GenericData, GenericRecord}
 import org.apache.avro.io.DecoderFactory
 import org.apache.avro.io.EncoderFactory
 import org.apache.avro.specific.SpecificDatumWriter
 import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.{DataFrame, Row, SparkSession}
-import org.apache.spark.sql.catalyst.encoders.RowEncoder
-import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.sql.avro._
+import org.apache.spark.sql.functions._
 import spray.json._
 import spray.json.DefaultJsonProtocol._
 import spray.json.JsValue
@@ -107,6 +106,26 @@ object AvroUtils extends Serializable {
     val newGenericRec: GenericRecord = new GenericData.Record(newAvroSchema)
     existingFields.foreach(field => newGenericRec.put(field, genericRecord.get(field)))
     newGenericRec
+  }
+
+  /**
+   * Takes An Avro Schema String and Returns the list of field names in the "fields" list
+   * @param schemaString
+   * @return List(fieldNames)
+   */
+  def getTopLevelFieldNamesFromAvro(schemaString: String): Seq[String] = {
+    // Parse as JsValue
+    val schemaAsJsVal = schemaString.parseJson
+    // Convert to JsObject
+    val schemaAsJsObject = schemaAsJsVal.asJsObject
+    // Get the Map of each element & Value
+    val schemaElementsMap: Map[String, JsValue] = schemaAsJsObject.fields
+    // These fields will be added with "to-add" fields
+    val schemaFields: Seq[JsValue] = schemaAsJsObject.getFields("fields").head.convertTo[Seq[JsValue]]
+    schemaFields.map{ x =>
+      x.asJsObject.fields.head._2.toString().replace(""""""", "")
+    }
+
   }
 
   /**
@@ -189,39 +208,24 @@ object AvroUtils extends Serializable {
     */
   def getDeserializedDataFrame(dataframe: DataFrame, columnToDeserialize: String, avroSchemaString: String): DataFrame = {
     val originalFields: Array[String] = dataframe.columns.filter(field => field != columnToDeserialize)
-    val newAvroSchemaString = addAdditionalFieldsToSchema(originalFields.toList, avroSchemaString)
 
-    try {
-      dataframe.map { eachRow =>
-        val recordToDeserialize: Array[Byte] = eachRow.getAs(columnToDeserialize).asInstanceOf[Array[Byte]]
-        val originalColumnsMap = originalFields.map {
-          field => {
-            val index = eachRow.fieldIndex(field)
-            if (eachRow.isNullAt(index)) {
-              (field -> "null")
-            } else {
-              (field -> eachRow.getAs(field).toString)
-            }
-          }
-        }
-        val deserializedGenericRecord: GenericRecord = bytesToGenericRecordWithSchemaRecon(recordToDeserialize, avroSchemaString, avroSchemaString)
-        val newDeserializedGenericRecord: GenericRecord = copyToGenericRecord(deserializedGenericRecord, avroSchemaString, newAvroSchemaString)
-        originalColumnsMap.foreach { kv => newDeserializedGenericRecord.put(kv._1, kv._2) }
-        val avroSchemaObj: Schema = (new Schema.Parser).parse(newAvroSchemaString)
-        val converter = AvroToSQLSchemaConverter.createConverterToSQL(avroSchemaObj)
-        converter(newDeserializedGenericRecord).asInstanceOf[Row]
-      } {
-        val avroSchema: Schema = (new Schema.Parser).parse(newAvroSchemaString)
-        val schemaType: SchemaType = toSqlType(avroSchema)
-        val encoder = RowEncoder(schemaType.dataType.asInstanceOf[StructType])
-        encoder
-      }.toDF
-    } catch {
-      case ex: Throwable => {
-        ex.printStackTrace()
-        throw ex
-      }
-    }
+    logger.debug(s"Original Fields \n${originalFields}")
+    logger.debug(s"schema \n${avroSchemaString}")
+    val fieldsInAvro = getTopLevelFieldNamesFromAvro(avroSchemaString )
+    logger.debug(s"Avro Fields \n${fieldsInAvro}")
+    logger.debug(s"**************** schema before deserialize ************************")
+    dataframe.printSchema()
+    val op = dataframe.withColumn("avro", from_avro(col(columnToDeserialize), avroSchemaString) )
+    logger.debug(s"**************** schema after deserialize ************************")
+    op.printSchema()
+    op.show(2)
+    logger.debug(s"**************** Fields in avro that will be projected in dataFrame  ************************")
+    logger.debug(fieldsInAvro.mkString(","))
+    val colsToSelect: Seq[String] = fieldsInAvro.map{ x => s"avro.${x}"}
+    logger.debug(colsToSelect.mkString(","))
+    val k = op.select(colsToSelect.head, colsToSelect.tail: _*)
+    k
+
   }
 
   /**
