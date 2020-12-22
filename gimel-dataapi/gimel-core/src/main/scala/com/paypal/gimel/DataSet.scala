@@ -1009,6 +1009,8 @@ object DataSetUtils {
         new com.paypal.gimel.sftp.DataSet(sparkSession)
       case DataSetType.KAFKA2 =>
         new com.paypal.gimel.kafka2.DataSet(sparkSession)
+      case DataSetType.BIGQUERY =>
+        new com.paypal.gimel.bigquery.DataSet(sparkSession)
     }
   }
 

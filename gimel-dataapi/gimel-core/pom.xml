@@ -87,6 +87,11 @@ under the License.
     </dependency>
     <dependency>
       <groupId>com.paypal.gimel</groupId>
+      <artifactId>gimel-bigquery</artifactId>
+      <version>${gimel.version}-SNAPSHOT</version>
+    </dependency>
+    <dependency>
+      <groupId>com.paypal.gimel</groupId>
       <artifactId>gimel-kafka-0.10</artifactId>
       <version>${gimel.version}-SNAPSHOT</version>
     </dependency>
