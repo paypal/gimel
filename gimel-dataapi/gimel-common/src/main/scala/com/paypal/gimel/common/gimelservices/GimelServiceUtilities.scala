@@ -869,6 +869,12 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
         objProps += ("gimel.hbase.namespace.name" -> container)
         objProps += ("gimel.hbase.table.name" -> table)
       }
+      case "BIGQUERY" => {
+        val projectidContainerTable = dataset.split('.').tail.mkString(".")
+        val Array(projectID, container, table) = projectidContainerTable.split('.')
+        objProps += ("parentProject" -> projectID)
+        objProps += ("gimel.bigquery.table" -> projectidContainerTable)
+      }
       case _ => {
         val errorMessage =
           s"""
