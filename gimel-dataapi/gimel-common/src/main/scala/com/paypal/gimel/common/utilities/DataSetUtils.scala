@@ -35,7 +35,7 @@ import com.paypal.gimel.parser.utilities.QueryParserUtils
 
 object DataSetType extends Enumeration {
   type SystemType = Value
-  val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID, RESTAPI, SFTP, KAFKA2 = Value
+  val KAFKA, HBASE, HDFS, ES, HIVE, JDBC, CASSANDRA, AEROSPIKE, DRUID, RESTAPI, SFTP, KAFKA2, BIGQUERY = Value
 }
 
 object DataSetUtils {
@@ -270,6 +270,8 @@ object DataSetUtils {
         DataSetType.HIVE
       case "SFTP" =>
         DataSetType.SFTP
+      case "BIGQUERY" =>
+        DataSetType.BIGQUERY
       case _ =>
         DataSetType.HIVE
     }

@@ -39,6 +39,7 @@ under the License.
         <module>gimel-logger</module>
         <module>gimel-common</module>
         <module>gimel-connectors/gimel-sftp</module>
+        <module>gimel-connectors/gimel-bigquery</module>
         <module>gimel-connectors/gimel-elasticsearch-6.2</module>
         <module>gimel-connectors/gimel-jdbc</module>
         <module>gimel-connectors/gimel-hive-1.2</module>
@@ -58,6 +59,7 @@ under the License.
 
     <properties>
         <aerospike.version>3.1.5</aerospike.version>
+        <big.query.version>0.17.3</big.query.version>
         <cassandra.spark.version>2.0.6</cassandra.spark.version>
         <confluent.version>3.3.0</confluent.version>
         <elasticsearch.version>6.2.1</elasticsearch.version>

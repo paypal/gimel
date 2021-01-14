@@ -45,7 +45,7 @@ dataset.write("elastic_dataset",df)
 /* GSQL Reference */
 
 // Create Gimel SQL reference
-val gsql: (String) => DataFrame = com.paypal.gimel.scaas.GimelQueryProcessor.executeBatch(_: String, spark)
+val gsql: (String) => DataFrame = com.paypal.gimel.sql.GimelQueryProcessor.executeBatch(_: String, spark)
 
 // your SQL
 val sql = """
