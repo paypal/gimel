@@ -266,4 +266,13 @@ object GimelConstants {
   val UDC_AUTH_REQUEST_TYPE = "UDC_GIMEL"
   val UDC_AUTH_PROVIDER_CLASS = "gimel.udc.auth.provider.class"
   val UDC_AUTH_ENABLED = "gimel.udc.auth.enabled"
+
+  val RSA = "RSA"
+  val AUTHORIZED_USER = "authorized_user"
+  val CLIEND_ID = "client_id"
+  val CLIENT_SECRET = "client_secret"
+  val REFRESH_TOKEN = "refresh_token"
+  val TYPE = "type"
+  val DEFAULT_AUTH_PROVIDER_CLASS = "com.paypal.gimel.keymaker.KeymakerAuthProvider"
+
 }

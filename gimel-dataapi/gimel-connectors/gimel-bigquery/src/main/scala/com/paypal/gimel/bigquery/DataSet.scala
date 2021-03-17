@@ -33,7 +33,6 @@ import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.logger.Logger
 
 
-
 class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
 
   // GET LOGGER
@@ -54,7 +53,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     if (dataSetProps.isEmpty) {
       throw new IllegalArgumentException("Props Map Cannot be empty for BigQuery Dataset Read.")
     }
-    val options: Map[String, String] = datasetProps.props
+    val options: Map[String, String] = BigQueryUtilities.withCred(datasetProps.props)
     try {
       val bigQueryTable: Option[String] = options.get(BigQueryConfigs.bigQueryTable)
       utils.failIfTableNotSpecified(bigQueryTable)
@@ -85,7 +84,7 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
     if (dataSetProps.isEmpty) {
       throw new IllegalArgumentException("Props Map Cannot be empty for BigQuery Dataset Read.")
     }
-    val options: Map[String, String] = datasetProps.props
+    val options: Map[String, String] = BigQueryUtilities.withCred(datasetProps.props)
     logger.info(s"Parameters Passed --> ${options}")
     try {
       val bigQueryTable: Option[String] = options.get(BigQueryConfigs.bigQueryTable)
