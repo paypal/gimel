@@ -35,7 +35,7 @@ object BigQueryUtilities {
   val logger = Logger()
 
   logger.info("DYNAMIC")
-  println("DYNAMIC")
+  println("DYNAMIC ")
 
   /**
    * Check if Big Query Table name is supplied. If not supplied : fail.
