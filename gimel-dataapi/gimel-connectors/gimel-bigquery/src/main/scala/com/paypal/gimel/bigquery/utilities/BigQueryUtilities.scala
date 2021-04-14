@@ -24,22 +24,46 @@ import java.util.Base64
 import org.apache.commons.lang3.CharEncoding.UTF_8
 
 import com.paypal.gimel.bigquery.conf.{BigQueryConfigs, BigQueryConstants}
+import com.paypal.gimel.common.catalog.DataSetProperties
 import com.paypal.gimel.common.conf.GimelConstants
+import com.paypal.gimel.common.security.CipherUtils
+import com.paypal.gimel.common.storageadmin.HDFSAdminClient
 import com.paypal.gimel.logger.Logger
 
 object BigQueryUtilities {
 
   val logger = Logger()
 
+  logger.info("DYNAMIC")
+  println("DYNAMIC")
+
   /**
    * Check if Big Query Table name is supplied. If not supplied : fail.
    * @param bigQueryTable The Big Query Table Name in the form of "gimel.bigquery.table"
    */
   def failIfTableNotSpecified(bigQueryTable: Option[String]): Unit = {
+    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    logger.info(" @Begin --> " + MethodName)
+
     bigQueryTable match {
       case Some(tbl) => logger.info(s"Found Table ${bigQueryTable.get}")
       case _ => throw new IllegalArgumentException(
         s"""Big Query Connector Requires Table Name. Please pass the option [${BigQueryConfigs.bigQueryTable}] in the write API.""")
+    }
+  }
+
+  /**
+   * Check if Big Query Compute Project name is supplied. If not supplied : fail.
+   * @param bigComputeProject The Big Query Table Name in the form of "gimel.bigquery.table"
+   */
+  def failIfComputeProjectNotSpecified(bigComputeProject: Option[String]): Unit = {
+    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    logger.info(" @Begin --> " + MethodName)
+
+    bigComputeProject match {
+      case Some(tbl) => logger.info(s"Found Compute or Parent Project ${bigComputeProject.get}")
+      case _ => throw new IllegalArgumentException(
+        s"""Big Query Connector Requires Parent / Compute project to be specified . Please pass the option [${BigQueryConfigs.bigQueryComputeProject}] in the write API.""")
     }
   }
 
@@ -49,6 +73,9 @@ object BigQueryUtilities {
    * @param bigQueryTable The Big Query Table Name in the form of "gimel.bigquery.table"
    */
   def parseSaveMode(saveMode: String, bigQueryTable: String): Unit = {
+    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    logger.info(" @Begin --> " + MethodName)
+
     saveMode match {
       case BigQueryConstants.saveModeAppend =>
         logger.info(s"Appending to Big Query table [${bigQueryTable}]")
@@ -66,49 +93,87 @@ object BigQueryUtilities {
   }
 
   def withCred(options: Map[String, String]): Map[String, String] = {
+    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    logger.info(" @Begin --> " + MethodName)
 
     val json = new GenericJson()
     // @todo Move "gimel.bigquery.auth.provider.class" to GimelConf
-    val authProviderClass = options.getOrElse("gimel.bigquery.auth.provider.class", GimelConstants.DEFAULT_AUTH_PROVIDER_CLASS)
+    val authProviderClass = options.getOrElse(BigQueryConfigs.bigQueryAuthProviderClass, GimelConstants.DEFAULT_AUTH_PROVIDER_CLASS)
     var authLoader: com.paypal.gimel.common.security.AuthProvider = null
-    if (options.getOrElse("gimel.load.auth.provider","FALSE").toUpperCase().equals("TRUE")) {
+    if (options.getOrElse(BigQueryConfigs.bigQueryAuthProviderToBeLoaded, GimelConstants.TRUE_UPPER).toUpperCase().equals(GimelConstants.TRUE_UPPER)) {
       logger.info("LOADING AUTH PROVIDER")
       authLoader = Class.forName(authProviderClass).newInstance.asInstanceOf[com.paypal.gimel.common.security.AuthProvider]
     } else logger.info("NOT LOADING AUTH PROVIDER")
 
-    // @todo Remove Hardcoding of token
-    val appToken = ""
+    val clientIdName = options.getOrElse(BigQueryConfigs.bigQueryKmsClientIdName, BigQueryConstants.notebooksClientId)
+    val clientSecretName = options.getOrElse(BigQueryConfigs.bigQuerykmsClientSecretName, BigQueryConstants.notebooksClientSecret)
+    val decrKeyName = options.getOrElse(BigQueryConfigs.bigQuerykmsDecrKeyName, GimelConstants.NOTEBOOKS_KEY_MAKER_KEY)
+    val requestType = Map(GimelConstants.UDC_AUTH_REQUEST_TYPE -> GimelConstants.UDC_GIMEL)
+    val kmsOptionsClientId = Map(GimelConstants.GIMEL_KEY_MAKER_APP_KEY -> clientIdName) ++ requestType
+    val kmsOptionsClientSecret = Map(GimelConstants.GIMEL_KEY_MAKER_APP_KEY -> clientSecretName) ++ requestType
+    val kmsOptionsDecrKey = Map(GimelConstants.GIMEL_KEY_MAKER_APP_KEY -> decrKeyName) ++ requestType
+    logger.debug("Fetching clientId, clientSecret & decryption Key from Keymaker...")
+    val clientId = authLoader.getCredentials(kmsOptionsClientId)
+    val clientSecret = authLoader.getCredentials(kmsOptionsClientSecret)
+    val privateKey = authLoader.getCredentials(kmsOptionsDecrKey)
+    logger.debug("Success with keymaker fetch.")
 
-    val keyMakerOptionsClientId = Map("gimel.keymaker.appkey" -> options.getOrElse("gimel.keymaker.appkey", ""),
-      "gimel.keymaker.apptoken" -> options.getOrElse("gimel.keymaker.apptoken", ""),
-      "gimel.keymaker.url" -> options.getOrElse("gimel.keymaker.url", "")
-    )
-    val keyMakerOptionsClientSecret = keyMakerOptionsClientId ++ Map("gimel.keymaker.appkey" -> options.getOrElse("gimel.keymaker.appkey", ""))
-    val keyMakerOptionsClientPrivateKey = keyMakerOptionsClientId ++ Map("gimel.keymaker.appkey" -> options.getOrElse("gimel.keymaker.appkey", ""))
+    val rfrshTknEnc: Option[String] = options.get(BigQueryConfigs.bigQueryRefreshToken)
+    logger.info(s"REFRESH TOKEN -> ${rfrshTknEnc}")
+    val rfrshTkn: String = rfrshTknEnc match {
+      case Some(token) =>
+        logger.info(s"Decrypting [${rfrshTknEnc}]")
+        CipherUtils.decrypt(privateKey, token)
+      case None =>
+        logger.info(s"Using Hardcoded Token !")
+        "XXX"
+    }
 
-    // val clntId = authLoader.getCredentials(keyMakerOptionsClientId)
-    // val clntS = authLoader.getCredentials(keyMakerOptionsClientSecret)
-    // val privateKey = authLoader.getCredentials(keyMakerOptionsClientPrivateKey)
-
-    // @todo replace with keymaker call
-    val clntId: String = "878933003531-dnr2loiobiddo04fr37nh73h0pv9gip2.apps.googleusercontent.com"
-    val clntS: String = "CQCLgC0aZHywfsFpOMhE8is3"
-    val privateKey = "MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCQb4C0wLOIAWo9eC779CS/ViZRvias2H/7+aBkAieCKhayJJyVzRed7BkYTw59Mkd6hFtFuiTtDDZRv6v6UuHFr4w1go+X3WTTBtAtIi3gSW7LP1PLb4r/ryboiby0JrcOPfgsuEOu/b1ccxri+nHB1o7wZEuwCrcS4QYMFjPFx4ru1BCua0zUBSVn/kw0bStVYzzKdSRJ3iKNtbAcQcOuInci/ejVnXmG4YiXiayyo2XWAYgxzPyl+4Fpu/CiegxK85jGtQDxFdLuAaFaB7AtswbQs3yKPHtclXlnhBb3BGubVrvbBM9DqyKNTLgr7W9aIJTI0jzPR9bqpaNikSANAgMBAAECggEAWK39Sf1evUyRHDikMFHQFiIg2ON0/37V5bF4hq7D7ylEUhAki90mePGy3rf7X2b1eAW3vHHzpg9vcnXKc6FbuXJ1FY2Z+FYYR3DRdESeAi1T9zpkim1r3Fx/+RpIYBu9HONzcpGYDOMB1rdddKrsGWVQ0cvipK2PhenfOqCPHQjZ0QtCz/IrrZQaCvlVq9O7qzVyvgXNzQaiPLvTli4ti7S2ZQEDPYl8UZ4BiSw+Dbav+shPZyhLSDT32itD6XAUTGLP2BCm3H1NGCWGsHTAekaVWGzwj/mcRyGgX7gS02qpKA3Te69vAoh5YvLSCsEplEuDnc7khtQRVcWH5iBowQKBgQD1gpYxBjAERpP52+z8EkgENEPAHKMFGZntk4Y/fj4N3lycBfe937NmIeUN6dLSWEaP1lF3ezHwtirnhiLmoa8pLTQNZX535dDL7GZXlo+op6azvjCXRC/gLaHL0vum429eFFhFOsZggP2bI1pgyjxI9xq8LghTJ3to5RdzDhIXRQKBgQCWm1pWvHG4Zo7buIe/IfiE7UbyA1ZXT2Mk9iA4OSAGA3hTf+vJ7zQ73QmxQh58BzEkhhRyL0wnOilJ/6xXYAIpxW9Asf8TtMGTS4sivP7p5RrE2/Xg9EtpY3czD+rlF6G/f1cnlfTyCYRq03fGUI60AvkSTQb/+cPAMjmTCNkuKQKBgQDSM+zELLgP8R3hYBuX908Rym33no01YKYac6UN19jppulD7RggydegKoUjVH/c+RfxL16xHhm0L0Ss1nwrW2PNrZZTogKWRX5wGwfFFnQJwwFIBB82ZHtZRbix+wLb8P75XhH1tE0Fc2uv2KUZGg5jqq6JUCBwke1n8j4RlIqIwQKBgBbL7SCz5YLEA1u+0s1blwKH5/U6DBerLJarqrTX8MD4RX5eHpKyYnWtP4pVN8gOTqH4qZ+fCSfm5dkNmkiff7RS7kQcrT+OXL6u8KCRewRsaWDi6pTiZYfORny0LBoBObqCy+5yBGGejyycVcTu7KrSyGC8yBJ2++pbr9tRu44BAoGAbGj1a5iD1EJ/SYoiDO0TgKvP67D8JctLbOvaeY5JW17PZdGbecOPFtnDH70Djq7NlCA49COinLgXnaVBPvvwxrKDUIweuFK53wFvgdXetAWVgWYnk8d7fuXsj2Tj76ux60yTpUKcTHTPg7BO0VKRdw0AwhoWxMTMZONdqHAalVM="
-
-    // @todo make this generic to work access token
-    // @todo token encrypted / decrypted
-    val rfrshTknEnc = options.get("gimel.bigquery.refresh.token").get
-
-    // @todo replace with keymaker call
-    val rfrshTkn: String = "1//06DLndNxPJQDBCgYIARAAGAYSNwF-L9Ir2SG0DRbeHzUb6hhyyYyu3c0CXAeDRcr13LolG1wIb4SWOouvu7Vgn8XUTJIb7H56Af0"
-    // val rfrshTkn = CypherUtils.decrD(privateKey, rfrshTknEnc)
-
-    json.put(GimelConstants.CLIEND_ID, clntId); // Get from keymaker and decode
-    json.put(GimelConstants.CLIENT_SECRET, clntS) // Get from keymaker and decode
+    json.put(GimelConstants.CLIEND_ID, clientId); // Get from keymaker and decode
+    json.put(GimelConstants.CLIENT_SECRET, clientSecret) // Get from keymaker and decode
     json.put(GimelConstants.REFRESH_TOKEN, rfrshTkn)
     json.put(GimelConstants.TYPE, GimelConstants.AUTHORIZED_USER)
     val credKey: String = Base64.getEncoder().encodeToString(json.toString().getBytes(UTF_8))
     options ++ Map("credentials" -> credKey)
+  }
+
+  def getResolvedProperties(dataSetProps: Map[String, Any]): Map[String, String] = {
+    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    logger.info(" @Begin --> " + MethodName)
+
+    val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
+    if (dataSetProps.isEmpty) throw new IllegalArgumentException("Props Map Cannot be empty for BigQuery Dataset Read.")
+
+    logger.debug("Merging DataSet Properties with RunTime options ...")
+    var options: Map[String, String] = datasetProps.props ++ dataSetProps.map(x => (x._1, x._2.toString))
+
+    logger.debug("Adding Credentials to Query parameters...")
+    options ++= withCred(options)
+
+    val bigQueryTable: Option[String] = options.get(BigQueryConfigs.bigQueryTable)
+    failIfTableNotSpecified(bigQueryTable)
+    logger.debug("Adding Parent Project to Query parameters ...")
+    options ++= Map(BigQueryConstants.bigQueryTable -> bigQueryTable.get)
+
+    val bigQueryParentProject: Option[String] = options.get(BigQueryConfigs.bigQueryComputeProject)
+    failIfComputeProjectNotSpecified(bigQueryParentProject)
+    logger.debug("Adding Parent Project to Query parameters ...")
+    options ++= Map(BigQueryConstants.parentProject -> bigQueryParentProject.get)
+
+    logger.debug(s"Resolved Parameters --> ${options}")
+    options
+  }
+
+  def getTokenFromHDFS(tokeName: String, options: Map[String, String]): String = {
+    def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
+    logger.info(" @Begin --> " + MethodName)
+
+    val resolvedTokenName = s"gimel.bigquery.${tokeName.toLowerCase}.source.file"
+    val sourceFile = options.get(resolvedTokenName) match {
+      case Some(file) => file
+      case _ => throw new Exception(s"Missing [${resolvedTokenName}] for HDFS")
+    }
+    HDFSAdminClient.readHDFSFile(sourceFile).replaceAllLiterally("\n", "")
   }
 
 }

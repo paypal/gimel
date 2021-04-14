@@ -845,6 +845,9 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     */
   def getObjectPropertiesForSystem(storageTypeName: String, dataset: String): scala.collection.mutable.Map[String, String] = {
 
+    logger.info(s"DYNAMIC | getObjectPropertiesForSystem | ${storageTypeName} | ${dataset}")
+    println(s"DYNAMIC | getObjectPropertiesForSystem | ${storageTypeName} | ${dataset}")
+
     var objProps = scala.collection.mutable.Map[String, String]()
     storageTypeName.toUpperCase() match {
       case "HIVE" => {
@@ -878,7 +881,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       case _ => {
         val errorMessage =
           s"""
-             |[The dataset ${dataset} does not exist. Please check if the dataset name is correct.
+             |[The dataset ${dataset} does not exist. Please check if the dataset name is correct. !!
              |It may not exist in UDC (if you've set gimel.catalog.provider=UDC)
              |""".stripMargin
         throw new Exception(errorMessage)
@@ -894,6 +897,9 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     * @return Boolean
     */
   def getDynamicDataSetProperties(dataset: String, options: Map[String, Any]): DataSetProperties = {
+
+    logger.info(s"DYNAMIC | getDynamicDataSetProperties | ${dataset} | ${options}")
+    println(s"DYNAMIC | getDynamicDataSetProperties | ${dataset} | ${options}")
 
     val storageType = dataset.split('.').head
     val storageSystemTypeName: String = storageType + "." + dataset.split('.').tail.mkString(".").split('.').head

@@ -49,6 +49,9 @@ object GimelQueryProcessor {
   lazy val pCatalogStreamingKafkaTmpTableName = "pcatalog_streaming_kafka_tmp_table"
   val queryUtils = GimelQueryUtils
 
+  logger.info("DYNAMIC")
+  println("DYNAMIC")
+
   import queryUtils._
 
   val originalUser = sys.env("USER")

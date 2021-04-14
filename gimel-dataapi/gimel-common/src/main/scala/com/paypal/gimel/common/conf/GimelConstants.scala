@@ -84,13 +84,14 @@ object GimelConstants {
   val SPACE_CHAR: String = " "
 
   // Common string constants
-  val SUCCESS = "success"
-  val FAILURE = "failure"
-  val EMPTY_STRING = ""
-  val READ_OPERATION = "read"
-  val WRITE_OPERATION = "write"
+  val SUCCESS: String = "success"
+  val FAILURE: String = "failure"
+  val EMPTY_STRING: String = ""
+  val READ_OPERATION: String = "read"
+  val WRITE_OPERATION: String = "write"
   val ONE_BIGINT: BigInt = BigInt(1)
-  val UNKNOWN_STRING = "unknown"
+  val UNKNOWN_STRING: String = "unknown"
+  val TRUE_UPPER: String = "TRUE"
 
   val GIMEL_SECURITY_ACCESS_AUDIT_CLASS_LEVEL: String = "gimel.security.access.audit.class.level"
   val GIMEL_SECURITY_ACCESS_AUDIT_CLASS_DEFAULT_LEVEL: String = "3"
@@ -263,7 +264,7 @@ object GimelConstants {
   val UDC_APP_NAME_HEADER_KEY = "UDC-APP-NAME"
   val UDC_AUTH_HEADER_KEY = "UDC-AUTH-KEY"
   val UDC_COMMENT_HEADER_KEY = "COMMENT"
-  val UDC_AUTH_REQUEST_TYPE = "UDC_GIMEL"
+  val UDC_AUTH_REQUEST_TYPE = "gimel.auth.request.type"
   val UDC_AUTH_PROVIDER_CLASS = "gimel.udc.auth.provider.class"
   val UDC_AUTH_ENABLED = "gimel.udc.auth.enabled"
 
@@ -274,5 +275,8 @@ object GimelConstants {
   val REFRESH_TOKEN = "refresh_token"
   val TYPE = "type"
   val DEFAULT_AUTH_PROVIDER_CLASS = "com.paypal.gimel.keymaker.KeymakerAuthProvider"
+  val GIMEL_KEY_MAKER_APP_KEY = "gimel.keymaker.appkey"
+  val NOTEBOOKS_KEY_MAKER_KEY = "notebooks_key"
+  val UDC_GIMEL = "UDC_GIMEL"
 
 }
