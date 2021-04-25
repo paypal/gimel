@@ -278,5 +278,7 @@ object GimelConstants {
   val GIMEL_KEY_MAKER_APP_KEY = "gimel.keymaker.appkey"
   val NOTEBOOKS_KEY_MAKER_KEY = "notebooks_key"
   val UDC_GIMEL = "UDC_GIMEL"
+  val GIMEL_KEYMAKER_APPTOKEN = "gimel.keymaker.apptoken"
+  val DO_NOT_LOG_CONF = "gimel.logging.no.audit.props"
 
 }

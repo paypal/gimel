@@ -67,6 +67,8 @@ object CatalogProvider {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
     logger.info(" @Begin --> " + MethodName)
 
+    println("DYNAMIC 1 | getDataSetProperties")
+
     // Check if DataSetProperties object for this dataset is present in cache map first
     val datasetPropsObj = cachedDataSetPropsMap.get(datasetName) match {
       case None =>
@@ -100,6 +102,10 @@ object CatalogProvider {
     */
   def getDataSetPropertiesFromCatalog(datasetName: String,
                                       options: Map[String, Any] = Map[String, Any]()) : DataSetProperties = {
+
+    logger.info("DYNAMIC 1 | getDataSetPropertiesFromCatalog")
+    println("DYNAMIC 1 | getDataSetPropertiesFromCatalog")
+
     // The user options are passed which will override the default service util properties
     if (options.nonEmpty) {
       servUtils.customize(options.map { x => (x._1, x._2.toString) })

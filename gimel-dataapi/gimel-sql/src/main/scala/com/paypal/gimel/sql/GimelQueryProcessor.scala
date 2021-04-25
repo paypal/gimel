@@ -49,8 +49,8 @@ object GimelQueryProcessor {
   lazy val pCatalogStreamingKafkaTmpTableName = "pcatalog_streaming_kafka_tmp_table"
   val queryUtils = GimelQueryUtils
 
-  logger.info("DYNAMIC")
-  println("DYNAMIC")
+  logger.info("DYNAMIC 1 | GimelQueryProcessor")
+  println("DYNAMIC 1 | GimelQueryProcessor")
 
   import queryUtils._
 
@@ -178,6 +178,9 @@ object GimelQueryProcessor {
 
     logger.info(" @Begin --> " + MethodName)
 
+    logger.info("DYNAMIC 1 | executeBatch")
+    println("DYNAMIC 1 | executeBatch")
+
     val uniformSQL = sql.replace("\n", " ").trim
     val sqlArray: Array[String] = uniformSQL.split(";")
     val totalStatements = sqlArray.length
@@ -220,6 +223,9 @@ object GimelQueryProcessor {
     DataSetUtils.setGimelLogLevel(sparkSession, logger)
     guardGTSStatements(sql, sparkSession)
     switchQueryGuard(sparkSession)
+
+    print("DYNAMIC 1 | executeBatchStatement")
+    logger.info("DYNAMIC 1 | executeBatchStatement")
 
     val sparkAppName = sparkSession.conf.get("spark.app.name")
 
@@ -282,6 +288,8 @@ object GimelQueryProcessor {
         stringToDF(sparkSession, resultingStr)
       } else {
         // Allow thrift server to execute the Query for all other cases.
+        logger.info("DYNAMIC 1 | executeBatchStatement2")
+        println("DYNAMIC 1 | executeBatchStatement2")
         val isSelectFromHiveOrHBase = queryUtils.isSelectFromHiveHbaseAndGTSUser(sql, options, sparkSession)
         logger.info(s"isSelectFromHiveOrHBase -> $isSelectFromHiveOrHBase")
         if (isSelectFromHiveOrHBase) {
@@ -325,7 +333,8 @@ object GimelQueryProcessor {
       }
 
       // pushing logs to ES
-      logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+      if (!doNotLog(sql, sparkSession)) {
+        logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkSession.conf.get("spark.app.name")
         , this.getClass.getName
         , KafkaConstants.gimelAuditRunTypeBatch
@@ -338,14 +347,16 @@ object GimelQueryProcessor {
         , GimelConstants.SUCCESS
         , GimelConstants.EMPTY_STRING
         , GimelConstants.EMPTY_STRING
-      )
+        )
+      }
 
       data
 
     } catch {
       case e: Throwable =>
 
-        logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+        if (!doNotLog(sql, sparkSession)) {
+          logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkSession.conf.get("spark.app.name")
           , this.getClass.getName
           , KafkaConstants.gimelAuditRunTypeBatch
@@ -358,7 +369,8 @@ object GimelQueryProcessor {
           , GimelConstants.FAILURE
           , e.toString + "\n" + e.getStackTraceString
           , GimelConstants.UNKNOWN_STRING
-        )
+          )
+        }
 
         // throw error to console
         logger.throwError(e.toString)
@@ -489,7 +501,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
         dataStream.streamingContext.stop(false, true)
 
         // push to logger
-        logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+        if (!doNotLog(sql, sparkSession)) {
+          logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkSession.conf.get("spark.app.name")
           , this.getClass.getName
           , KafkaConstants.gimelAuditRunTypeStream
@@ -502,7 +515,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
           , GimelConstants.SUCCESS
           , GimelConstants.EMPTY_STRING
           , GimelConstants.EMPTY_STRING
-        )
+          )
+        }
         "Success"
       }
 
@@ -510,7 +524,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     catch {
       case e: Throwable =>
 
-        logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+        if (!doNotLog(sql, sparkSession)) {
+          logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkSession.conf.get("spark.app.name")
           , this.getClass.getName
           , KafkaConstants.gimelAuditRunTypeStream
@@ -523,7 +538,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
           , GimelConstants.FAILURE
           , e.toString + "\n" + e.getStackTraceString
           , GimelConstants.UNKNOWN_STRING
-        )
+          )
+        }
 
         // throw error to console
         logger.throwError(e.toString)
@@ -627,7 +643,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
         }
 
         // push to logger
-        logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+        if (!doNotLog(sql, sparkSession)) {
+          logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkSession.conf.get("spark.app.name")
           , this.getClass.getName
           , KafkaConstants.gimelAuditRunTypeStream
@@ -640,7 +657,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
           , GimelConstants.SUCCESS
           , GimelConstants.EMPTY_STRING
           , GimelConstants.EMPTY_STRING
-        )
+          )
+        }
         "Success"
       }
 
@@ -648,7 +666,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
     catch {
       case e: Throwable =>
 
-        logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+        if (!doNotLog(sql, sparkSession)) {
+          logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkSession.conf.get("spark.app.name")
           , this.getClass.getName
           , KafkaConstants.gimelAuditRunTypeStream
@@ -661,7 +680,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
           , GimelConstants.FAILURE
           , e.toString + "\n" + e.getStackTraceString
           , GimelConstants.UNKNOWN_STRING
-        )
+          )
+        }
 
         // throw error to console
         logger.throwError(e.toString)
@@ -741,7 +761,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
       }
 
       // push logs to ES
-      logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+      if (!doNotLog(sql, sparkSession)) {
+        logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkSession.conf.get("spark.app.name")
         , this.getClass.getName
         , KafkaConstants.gimelAuditRunTypeStream
@@ -754,13 +775,15 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
         , GimelConstants.SUCCESS
         , GimelConstants.EMPTY_STRING
         , GimelConstants.EMPTY_STRING
-      )
+        )
+      }
       resultingRDD
     }
     catch {
       case e: Throwable =>
 
-        logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+        if (!doNotLog(sql, sparkSession)) {
+          logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkSession.conf.get("spark.app.name")
           , this.getClass.getName
           , KafkaConstants.gimelAuditRunTypeStream
@@ -773,7 +796,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
           , GimelConstants.FAILURE
           , e.toString + "\n" + e.getStackTraceString
           , GimelConstants.UNKNOWN_STRING
-        )
+          )
+        }
         // throw error to console
         logger.throwError(e.toString)
 
@@ -907,7 +931,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
       }
 
       // push logs to ES
-      logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+      if (!doNotLog(sql, sparkSession)) {
+        logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
         , sparkSession.conf.get("spark.app.name")
         , this.getClass.getName
         , KafkaConstants.gimelAuditRunTypeStream
@@ -920,14 +945,16 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
         , GimelConstants.SUCCESS
         , GimelConstants.EMPTY_STRING
         , GimelConstants.EMPTY_STRING
-      )
+        )
+      }
 
       data
     }
     catch {
       case e: Throwable =>
 
-        logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
+        if (!doNotLog(sql, sparkSession)) {
+          logger.logMethodAccess(sparkSession.sparkContext.getConf.getAppId
           , sparkSession.conf.get("spark.app.name")
           , this.getClass.getName
           , KafkaConstants.gimelAuditRunTypeStream
@@ -940,7 +967,8 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
           , GimelConstants.FAILURE
           , e.toString + "\n" + e.getStackTraceString
           , GimelConstants.UNKNOWN_STRING
-        )
+          )
+        }
 
         // throw error to console
         logger.throwError(e.toString)

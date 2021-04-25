@@ -34,6 +34,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.streaming.Time
 
+import com.paypal.gimel.bigquery.conf.BigQueryConfigs
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{GimelConstants, _}
 import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
@@ -531,6 +532,10 @@ object GimelQueryUtils {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
+
+    logger.info("DYNAMIC 1 | isSelectFromHiveHbaseAndGTSUser")
+    println("DYNAMIC 1 | isSelectFromHiveHbaseAndGTSUser")
+
     var isHiveHbase: Boolean = false
     Try {
       val nonEmptyStrTokenized = GimelQueryUtils.tokenizeSql(sql)
@@ -1665,6 +1670,17 @@ object GimelQueryUtils {
         }
       queryResult
     }
+  }
+
+  def doNotLog(statement: String, sparkSession: SparkSession): Boolean = {
+    logger.info(s" @Begin --> ${new Exception().getStackTrace.apply(1).getMethodName}")
+    // Get the list of properties that are NOT to be audited. Just in case these statements contain credentials
+    val defaultNoAuditProps = JdbcConfigs.jdbcPassword + "," + BigQueryConfigs.bigQueryRefreshToken + "," + GimelConstants.GIMEL_KEYMAKER_APPTOKEN
+    val doNotLogProps = sparkSession.conf.get(GimelConstants.DO_NOT_LOG_CONF, defaultNoAuditProps).split(",")
+    // Check if the property is mentioned in the statement
+    val propInSql: Array[String] = doNotLogProps.filter(statement.toLowerCase.contains(_))
+    // If the property is mentioned in the statement, then return FLAG = True for DoNotLog, else return False
+    propInSql.nonEmpty
   }
 
   private def validateAndGetJdbcConnectionUtility(sparkSession: SparkSession,

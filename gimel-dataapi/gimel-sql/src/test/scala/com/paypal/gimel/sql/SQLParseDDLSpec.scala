@@ -21,6 +21,8 @@ package com.paypal.gimel.sql
 
 import org.scalatest.{BeforeAndAfterEach, FunSpec, Matchers}
 
+import com.paypal.gimel.common.conf.GimelConstants
+
 class SQLParseDDLSpec
     extends FunSpec
     with SharedSparkSession
@@ -168,5 +170,60 @@ class SQLParseDDLSpec
       )
     }
   }
+
+  describe(s"${GimelConstants.DO_NOT_LOG_CONF} - default behavior") {
+    it("It should return return the right filter flag (true | false)") {
+
+      spark.conf.unset(GimelConstants.DO_NOT_LOG_CONF)
+
+      GimelQueryUtils.doNotLog("set gimel.bigquery.refresh.token=XXX", spark) should be(
+        true
+      )
+      GimelQueryUtils.doNotLog("set gimel.jdbc.password=XXX", spark) should be(
+        true
+      )
+      GimelQueryUtils.doNotLog("set gimel.jdbc.user=XXX", spark) should be(
+        false
+      )
+    }
+  }
+
+  describe(s"${GimelConstants.DO_NOT_LOG_CONF} - runtime behavior") {
+    it("It should return return the right filter flag (true | false)") {
+
+      // User supplied behavior
+      spark.sql(s"set ${GimelConstants.DO_NOT_LOG_CONF}=gimel.jdbc.user,gimel.some.other.key")
+
+      GimelQueryUtils.doNotLog("set gimel.bigquery.refresh.token=XXX", spark) should be(
+        false
+      )
+      GimelQueryUtils.doNotLog("set gimel.jdbc.password=XXX", spark) should be(
+        false
+      )
+      GimelQueryUtils.doNotLog("set gimel.jdbc.user=XXX", spark) should be(
+        true
+      )
+      GimelQueryUtils.doNotLog("set gimel.some.other.key=XXX", spark) should be(
+        true
+      )
+      GimelQueryUtils.doNotLog("set gimel.one.more.key=XXX", spark) should be(
+        false
+      )
+
+      // Switch back to default behavior in the code
+      spark.conf.unset("gimel.logging.no.audit.props")
+
+      GimelQueryUtils.doNotLog("set gimel.bigquery.refresh.token=XXX", spark) should be(
+        true
+      )
+      GimelQueryUtils.doNotLog("set gimel.jdbc.password=XXX", spark) should be(
+        true
+      )
+      GimelQueryUtils.doNotLog("set gimel.jdbc.user=XXX", spark) should be(
+        false
+      )
+    }
+  }
+
 
 }
