@@ -112,11 +112,17 @@ object BigQueryUtilities {
     val kmsOptionsClientId = Map(GimelConstants.GIMEL_KEY_MAKER_APP_KEY -> clientIdName) ++ requestType
     val kmsOptionsClientSecret = Map(GimelConstants.GIMEL_KEY_MAKER_APP_KEY -> clientSecretName) ++ requestType
     val kmsOptionsDecrKey = Map(GimelConstants.GIMEL_KEY_MAKER_APP_KEY -> decrKeyName) ++ requestType
-    logger.debug("Fetching clientId, clientSecret & decryption Key from Keymaker...")
+    logger.info("Fetching clientId, clientSecret & decryption Key from Keymaker...")
     val clientId = authLoader.getCredentials(kmsOptionsClientId)
+    logger.info("Successfully fetched - clientId")
+    logger.info("Sleeping for a second to avoid being rate limited...")
+    Thread.sleep(1000)
     val clientSecret = authLoader.getCredentials(kmsOptionsClientSecret)
+    logger.info("Successfully fetched - clientSecret")
+    logger.info("Sleeping for a second to avoid being rate limited...")
+    Thread.sleep(1000)
     val privateKey = authLoader.getCredentials(kmsOptionsDecrKey)
-    logger.debug("Success with keymaker fetch.")
+    logger.info("Successfully fetched - privateKey")
 
     val rfrshTknEnc: Option[String] = options.get(BigQueryConfigs.bigQueryRefreshToken)
     logger.info(s"REFRESH TOKEN -> ${rfrshTknEnc}")
