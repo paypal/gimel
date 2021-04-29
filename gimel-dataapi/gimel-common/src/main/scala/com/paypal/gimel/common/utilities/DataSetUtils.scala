@@ -302,9 +302,6 @@ object DataSetUtils {
                     options: Map[String, String]): com.paypal.gimel.common.utilities.DataSetType.Value = {
     logger.info("Data set name is  ==> " + datasetName)
 
-    logger.info("DYNAMIC 1 | getSystemType")
-    println("DYNAMIC 1 | getSystemType")
-
     val formattedProps: Map[String, Any] = getProps(options) ++
       Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
         sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
@@ -315,11 +312,6 @@ object DataSetUtils {
       formattedProps ++ Map(CatalogProviderConfigs.CATALOG_PROVIDER -> CatalogProviderConstants.HIVE_PROVIDER)
     }
 
-    logger.info("DYNAMIC 1 | getSystemType just before getDataSetProperties")
-    println("DYNAMIC 1 | getSystemType just before getDataSetProperties")
-    println("--------------")
-    options.foreach(println)
-    println("--------------")
     val dataSetProperties: DataSetProperties = CatalogProvider.getDataSetProperties(datasetName, options)
     logger.info("dataSetProperties  ==> " + dataSetProperties.toString())
     val systemType = getSystemType(dataSetProperties)

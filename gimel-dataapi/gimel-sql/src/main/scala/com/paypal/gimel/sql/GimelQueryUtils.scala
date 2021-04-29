@@ -533,9 +533,6 @@ object GimelQueryUtils {
 
     logger.info(" @Begin --> " + MethodName)
 
-    logger.info("DYNAMIC 1 | isSelectFromHiveHbaseAndGTSUser")
-    println("DYNAMIC 1 | isSelectFromHiveHbaseAndGTSUser")
-
     var isHiveHbase: Boolean = false
     Try {
       val nonEmptyStrTokenized = GimelQueryUtils.tokenizeSql(sql)

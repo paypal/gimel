@@ -49,9 +49,6 @@ object GimelQueryProcessor {
   lazy val pCatalogStreamingKafkaTmpTableName = "pcatalog_streaming_kafka_tmp_table"
   val queryUtils = GimelQueryUtils
 
-  logger.info("DYNAMIC 1 | GimelQueryProcessor")
-  println("DYNAMIC 1 | GimelQueryProcessor")
-
   import queryUtils._
 
   val originalUser = sys.env("USER")
@@ -178,9 +175,6 @@ object GimelQueryProcessor {
 
     logger.info(" @Begin --> " + MethodName)
 
-    logger.info("DYNAMIC 1 | executeBatch")
-    println("DYNAMIC 1 | executeBatch")
-
     val uniformSQL = sql.replace("\n", " ").trim
     val sqlArray: Array[String] = uniformSQL.split(";")
     val totalStatements = sqlArray.length
@@ -223,9 +217,6 @@ object GimelQueryProcessor {
     DataSetUtils.setGimelLogLevel(sparkSession, logger)
     guardGTSStatements(sql, sparkSession)
     switchQueryGuard(sparkSession)
-
-    print("DYNAMIC 1 | executeBatchStatement")
-    logger.info("DYNAMIC 1 | executeBatchStatement")
 
     val sparkAppName = sparkSession.conf.get("spark.app.name")
 
@@ -288,8 +279,6 @@ object GimelQueryProcessor {
         stringToDF(sparkSession, resultingStr)
       } else {
         // Allow thrift server to execute the Query for all other cases.
-        logger.info("DYNAMIC 1 | executeBatchStatement2")
-        println("DYNAMIC 1 | executeBatchStatement2")
         val isSelectFromHiveOrHBase = queryUtils.isSelectFromHiveHbaseAndGTSUser(sql, options, sparkSession)
         logger.info(s"isSelectFromHiveOrHBase -> $isSelectFromHiveOrHBase")
         if (isSelectFromHiveOrHBase) {

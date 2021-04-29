@@ -34,9 +34,6 @@ object BigQueryUtilities {
 
   val logger = Logger()
 
-  logger.info("DYNAMIC")
-  println("DYNAMIC ")
-
   /**
    * Check if Big Query Table name is supplied. If not supplied : fail.
    * @param bigQueryTable The Big Query Table Name in the form of "gimel.bigquery.table"
@@ -97,7 +94,6 @@ object BigQueryUtilities {
     logger.info(" @Begin --> " + MethodName)
 
     val json = new GenericJson()
-    // @todo Move "gimel.bigquery.auth.provider.class" to GimelConf
     val authProviderClass = options.getOrElse(BigQueryConfigs.bigQueryAuthProviderClass, GimelConstants.DEFAULT_AUTH_PROVIDER_CLASS)
     var authLoader: com.paypal.gimel.common.security.AuthProvider = null
     if (options.getOrElse(BigQueryConfigs.bigQueryAuthProviderToBeLoaded, GimelConstants.TRUE_UPPER).toUpperCase().equals(GimelConstants.TRUE_UPPER)) {
@@ -125,18 +121,18 @@ object BigQueryUtilities {
     logger.info("Successfully fetched - privateKey")
 
     val rfrshTknEnc: Option[String] = options.get(BigQueryConfigs.bigQueryRefreshToken)
-    logger.info(s"REFRESH TOKEN -> ${rfrshTknEnc}")
+    logger.debug(s"REFRESH TOKEN -> ${rfrshTknEnc}")
     val rfrshTkn: String = rfrshTknEnc match {
       case Some(token) =>
-        logger.info(s"Decrypting [${rfrshTknEnc}]")
+        logger.debug(s"Decrypting [${rfrshTknEnc}]")
         CipherUtils.decrypt(privateKey, token)
       case None =>
         logger.info(s"Using Hardcoded Token !")
         "XXX"
     }
 
-    json.put(GimelConstants.CLIEND_ID, clientId); // Get from keymaker and decode
-    json.put(GimelConstants.CLIENT_SECRET, clientSecret) // Get from keymaker and decode
+    json.put(GimelConstants.CLIEND_ID, clientId);
+    json.put(GimelConstants.CLIENT_SECRET, clientSecret) /
     json.put(GimelConstants.REFRESH_TOKEN, rfrshTkn)
     json.put(GimelConstants.TYPE, GimelConstants.AUTHORIZED_USER)
     val credKey: String = Base64.getEncoder().encodeToString(json.toString().getBytes(UTF_8))
