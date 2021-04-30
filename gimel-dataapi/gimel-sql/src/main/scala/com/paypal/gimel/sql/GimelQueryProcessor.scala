@@ -280,15 +280,14 @@ object GimelQueryProcessor {
       } else {
         // Allow thrift server to execute the Query for all other cases.
         val isSelectFromHiveOrHBase = queryUtils.isSelectFromHiveHbaseAndGTSUser(sql, options, sparkSession)
-        logger.info(s"isSelectFromHiveOrHBase -> $isSelectFromHiveOrHBase")
         if (isSelectFromHiveOrHBase) {
           logger.info("Select query consists of Hive or HBase dataset, authenticating access through ranger.")
           queryUtils.authenticateAccess(sql, sparkSession, options)
-        }
 
-        // Set HBase Page Size for optimization if selecting from HBase with limit
-        if (QueryParserUtils.isHavingLimit(sql)) {
-          setLimitForHBase(sql, options, sparkSession)
+          // Set HBase Page Size for optimization if selecting from HBase with limit
+          if (QueryParserUtils.isHavingLimit(sql)) {
+            setLimitForHBase(sql, options, sparkSession)
+          }
         }
 
         val (originalSQL, destination, selectSQL, kafkaDataSets, queryPushDownFlag) =
@@ -317,6 +316,7 @@ object GimelQueryProcessor {
 
           case _ =>
             logger.info(s"No Target, returning DataFrame back to client.")
+            logger.info(s"selectSQL -> ${selectSQL}")
             executeSelectClause(selectSQL, sparkSession, queryPushDownFlag)
         }
       }

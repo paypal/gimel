@@ -820,10 +820,6 @@ object GimelQueryUtils {
       Try {
         val options = getOptions(sparkSession)._2
         val selectDF = executeSelectClause(selectSQL, sparkSession, queryPushDownFlag)
-        // --- EXISTING LOGIC
-        // dataset.write(dest.get, selectDF, options)
-        // --- NEW LOGIC
-        // Get the DataSet Properties
 
         val tgt = dest.get
         (tgt.split(",").length > 2) match {

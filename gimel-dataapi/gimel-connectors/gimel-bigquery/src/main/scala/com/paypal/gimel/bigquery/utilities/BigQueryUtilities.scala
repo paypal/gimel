@@ -131,8 +131,8 @@ object BigQueryUtilities {
         "XXX"
     }
 
-    json.put(GimelConstants.CLIEND_ID, clientId);
-    json.put(GimelConstants.CLIENT_SECRET, clientSecret) /
+    json.put(GimelConstants.CLIEND_ID, clientId)
+    json.put(GimelConstants.CLIENT_SECRET, clientSecret)
     json.put(GimelConstants.REFRESH_TOKEN, rfrshTkn)
     json.put(GimelConstants.TYPE, GimelConstants.AUTHORIZED_USER)
     val credKey: String = Base64.getEncoder().encodeToString(json.toString().getBytes(UTF_8))
