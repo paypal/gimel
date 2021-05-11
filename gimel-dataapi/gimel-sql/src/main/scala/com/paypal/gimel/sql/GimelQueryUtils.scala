@@ -793,6 +793,19 @@ object GimelQueryUtils {
     selectDF
   }
 
+  def getExceptionMessage(e: Throwable): String = {
+
+    s"""
+       |~~~~~~~~~~~~~~~~~~
+       |${e.toString}
+       |~~~~~~~~~~~~~~~~~~
+       |${e.getStackTraceString}
+       |~~~~~~~~~~~~~~~~~~
+       |${e.getStackTrace.mkString("\n")}
+       |~~~~~~~~~~~~~~~~~~
+       |""".stripMargin
+  }
+
   /**
     * Executes the Resolved SQL Query by calling the DataSet code that has been generated
     *
@@ -880,12 +893,18 @@ object GimelQueryUtils {
           logger.info(resultString)
         case Failure(e) =>
           // e.printStackTrace()
-          resultString =
-            s"""Query Failed in function : $MethodName via path dataset.write. Error -->
-               |
-               |${e.toString}""".stripMargin
+          resultString = getExceptionMessage(e)
+//            s"""Query Failed in function : $MethodName via path dataset.write. Error -->
+//               |~~~~~~~~~~~~~~~~~~
+//               |${e.toString}
+//               |~~~~~~~~~~~~~~~~~~
+//               |${e.getStackTraceString}
+//               |~~~~~~~~~~~~~~~~~~
+//               |${e.getStackTrace.mkString("\n")}
+//               |~~~~~~~~~~~~~~~~~~
+//               |""".stripMargin
           // logger.error(resultString)
-          throw e
+          throw new Exception(resultString)
       }
     } else {
       logger.info(s"EXECUTION PATH ====== DATASET SELECT ======")

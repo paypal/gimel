@@ -192,8 +192,8 @@ object GimelQueryProcessor {
                | Statements[${index}/${totalStatements}] successfully executed.
                | Statement[${index + 1}] execution failed --> ${sqlString}
             """.stripMargin
-          logger.throwError(s"${errorMsg}")
-          throw e
+          logger.throwError(getExceptionMessage(e))
+          throw new Exception(getExceptionMessage(e))
       }
     })
     logger.info(s"${totalStatements}/${totalStatements} statements successfully executed.")
@@ -356,15 +356,24 @@ object GimelQueryProcessor {
           , sql
           , scala.collection.mutable.Map("sql" -> sql, "isQueryFromGTS" -> isQueryFromGTS.toString, "originalUser" -> originalUser)
           , GimelConstants.FAILURE
-          , e.toString + "\n" + e.getStackTraceString
+          , getExceptionMessage(e)
           , GimelConstants.UNKNOWN_STRING
           )
         }
 
+//        s"""Query Failed in function : $MethodName via path dataset.write. Error -->
+//           |~~~~~~~~~~~~~~~~~~
+//           |${e.toString}
+//           |~~~~~~~~~~~~~~~~~~
+//           |${e.getStackTraceString}
+//           |~~~~~~~~~~~~~~~~~~
+//           |${e.getStackTrace.mkString("\n")}
+//           |~~~~~~~~~~~~~~~~~~
+//           |""".stripMargin
         // throw error to console
-        logger.throwError(e.toString)
+        logger.throwError(getExceptionMessage(e))
 
-        throw new Exception(s"${e.getMessage}\n", e)
+        throw new Exception(getExceptionMessage(e))
     } finally {
       logger.info("Unsetting the property -> " + GimelConstants.HBASE_PAGE_SIZE)
       sparkSession.conf.unset(GimelConstants.HBASE_PAGE_SIZE)
@@ -525,15 +534,15 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
           , sql
           , scala.collection.mutable.Map("sql" -> sql)
           , GimelConstants.FAILURE
-          , e.toString + "\n" + e.getStackTraceString
+          , getExceptionMessage(e)
           , GimelConstants.UNKNOWN_STRING
           )
         }
 
         // throw error to console
-        logger.throwError(e.toString)
+        logger.throwError(getExceptionMessage(e))
 
-        throw e
+        throw new Exception(getExceptionMessage(e))
     }
 
   }
@@ -628,7 +637,7 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
             if (writer != null) {
               writer.stop
             }
-            throw ex
+            throw new Exception(getExceptionMessage(ex))
         }
 
         // push to logger
@@ -673,9 +682,9 @@ If mode=intelligent, then Restarting will result in Batch Mode Execution first f
         }
 
         // throw error to console
-        logger.throwError(e.toString)
+        logger.throwError(getExceptionMessage(e))
 
-        throw e
+        throw new Exception(getExceptionMessage(e))
     }
 
   }
