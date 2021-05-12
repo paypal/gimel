@@ -793,15 +793,17 @@ object GimelQueryUtils {
     selectDF
   }
 
+  /**
+   * Message formatting for exceptions
+   * @param e Throwable
+   * @return Formatted message string
+   */
   def getExceptionMessage(e: Throwable): String = {
 
-    s"""
+    s"""~~~~~~~~~~~~~~~~~~
+       |[1] ${e.toString}
        |~~~~~~~~~~~~~~~~~~
-       |${e.toString}
-       |~~~~~~~~~~~~~~~~~~
-       |${e.getStackTraceString}
-       |~~~~~~~~~~~~~~~~~~
-       |${e.getStackTrace.mkString("\n")}
+       |[2] ${e.getStackTrace.mkString("\n")}
        |~~~~~~~~~~~~~~~~~~
        |""".stripMargin
   }
