@@ -21,5 +21,12 @@ package com.paypal.gimel.bigquery.conf
 
 object BigQueryConfigs {
   val bigQueryTable: String = "gimel.bigquery.table"
+  val bigQueryRefreshToken: String = "gimel.bigquery.refresh.token"
+  val bigQueryComputeProject: String = "gimel.bigquery.compute.project"
+  val bigQueryAuthProviderClass: String = "gimel.bigquery.auth.provider.class"
+  val bigQueryAuthProviderToBeLoaded: String = "gimel.auth.provider.is.load"
+  val bigQueryKmsClientIdName: String = "gimel.bigquery.kms.client.id.name"
+  val bigQuerykmsClientSecretName: String = "gimel.bigquery.kms.secret.id.name"
+  val bigQuerykmsDecrKeyName: String = "gimel.bigquery.kms.decr.key.name"
 }
 

@@ -32,11 +32,8 @@ import com.paypal.gimel.common.conf.GimelConstants
 import com.paypal.gimel.datasetfactory.GimelDataSet
 import com.paypal.gimel.logger.Logger
 
-
-
 class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: SparkSession) {
 
-  // GET LOGGER
   val logger = Logger()
 
   val utils = BigQueryUtilities
@@ -50,19 +47,15 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   override def read(dataset: String, dataSetProps: Map[String, Any]): DataFrame = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
     logger.info(" @Begin --> " + MethodName)
-    val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
-    if (dataSetProps.isEmpty) {
-      throw new IllegalArgumentException("Props Map Cannot be empty for BigQuery Dataset Read.")
-    }
-    val options: Map[String, String] = datasetProps.props
+
+    val options = BigQueryUtilities.getResolvedProperties(dataSetProps)
+
     try {
-      val bigQueryTable: Option[String] = options.get(BigQueryConfigs.bigQueryTable)
-      utils.failIfTableNotSpecified(bigQueryTable)
       val initDfReader: DataFrameReader = sparkSession.read.format(BigQueryConstants.bigQuery)
-      logger.info("Applying all the supplied options from catalog + runtime to the bigquery connector...")
-      logger.info(options.mkString("\n"))
+      logger.debug("Applying all the supplied options from catalog + runtime to the bigquery connector...")
+      logger.debug(options.mkString("\n"))
       val dfReader: DataFrameReader = options.foldLeft(initDfReader)((initDfReader, each) => initDfReader.option(each._1, each._2))
-      dfReader.load(bigQueryTable.get)
+      dfReader.load(options(BigQueryConfigs.bigQueryTable))
     } catch {
       case e: Throwable =>
         logger.error(s"${BigQueryConstants.bigQueryDocUrl}")
@@ -81,22 +74,17 @@ class DataSet(sparkSession: SparkSession) extends GimelDataSet(sparkSession: Spa
   override def write(dataset: String, dataFrame: DataFrame, dataSetProps: Map[String, Any]): DataFrame = {
     def MethodName: String = new Exception().getStackTrace().apply(1).getMethodName()
     logger.info(" @Begin --> " + MethodName)
-    val datasetProps: DataSetProperties = dataSetProps(GimelConstants.DATASET_PROPS).asInstanceOf[DataSetProperties]
-    if (dataSetProps.isEmpty) {
-      throw new IllegalArgumentException("Props Map Cannot be empty for BigQuery Dataset Read.")
-    }
-    val options: Map[String, String] = datasetProps.props
-    logger.info(s"Parameters Passed --> ${options}")
+
+    val options = BigQueryUtilities.getResolvedProperties(dataSetProps)
+
+    val saveMode = options.getOrElse(BigQueryConstants.saveMode, BigQueryConstants.saveModeAppend)
+    utils.parseSaveMode(saveMode, options(BigQueryConfigs.bigQueryTable))
     try {
-      val bigQueryTable: Option[String] = options.get(BigQueryConfigs.bigQueryTable)
-      utils.failIfTableNotSpecified(bigQueryTable)
-      val saveMode = options.getOrElse(BigQueryConstants.saveMode, BigQueryConstants.saveModeAppend)
-      utils.parseSaveMode(saveMode, bigQueryTable.get)
       val outDf: DataFrameWriter[Row] = dataFrame.write.format(BigQueryConstants.bigQuery)
-      logger.info("Applying all the supplied options from catalog + runtime to the bigquery connector...")
-      logger.info(options.mkString("\n"))
+      logger.debug("Applying all the supplied options from catalog + runtime to the bigquery connector...")
+      logger.debug(options.mkString("\n"))
       val dfWriter: DataFrameWriter[Row] = options.foldLeft(outDf)((initDfReader, each) => initDfReader.option(each._1, each._2))
-      dfWriter.mode(saveMode).save(bigQueryTable.get)
+      dfWriter.mode(saveMode).save(options(BigQueryConfigs.bigQueryTable))
       dataFrame
     } catch {
       case e: Throwable =>

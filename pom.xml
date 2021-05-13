@@ -67,7 +67,7 @@ under the License.
                 <property>
                     <name>general</name>
                 </property>
-                <activeByDefault>true</activeByDefault>
+                <activeByDefault>false</activeByDefault>
             </activation>
             <properties>
                 <packaging.scope>compile</packaging.scope>
@@ -156,6 +156,7 @@ under the License.
                 <property>
                     <name>hortonworks-2.6.5.0-292_spark-2.3.0</name>
                 </property>
+                <activeByDefault>true</activeByDefault>
             </activation>
             <properties>
                 <packaging.scope>compile</packaging.scope>

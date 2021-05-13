@@ -878,7 +878,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       case _ => {
         val errorMessage =
           s"""
-             |[The dataset ${dataset} does not exist. Please check if the dataset name is correct.
+             |[The dataset ${dataset} does not exist. Please check if the dataset name is correct. !!
              |It may not exist in UDC (if you've set gimel.catalog.provider=UDC)
              |""".stripMargin
         throw new Exception(errorMessage)
