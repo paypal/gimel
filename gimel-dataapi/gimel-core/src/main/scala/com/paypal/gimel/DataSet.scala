@@ -73,6 +73,21 @@ class DataSet(val sparkSession: SparkSession) {
   }
 
   /**
+   * Message formatting for exceptions
+   * @param e Throwable
+   * @return Formatted message string
+   */
+  private def getExceptionMessage(e: Throwable): String = {
+
+    s"""------------------
+       |[1] ${e.toString}
+       |------------------
+       |[2] ${e.getStackTrace.mkString("\n")}
+       |------------------
+       |""".stripMargin
+  }
+
+  /**
     * Client API : for read
     *
     * @param dataSet DataSet Name | DB.TABLE | Example : default.temp
@@ -200,7 +215,7 @@ class DataSet(val sparkSession: SparkSession) {
           , ""
           , additionalPropsToLog
           , GimelConstants.FAILURE
-          , e.toString + "\n" + e.getStackTraceString
+          , getExceptionMessage(e)
           , GimelConstants.UNKNOWN_STRING
           , startTime
           , endTime
@@ -208,10 +223,9 @@ class DataSet(val sparkSession: SparkSession) {
         )
 
         // throw error to console
-        logger.throwError(e.toString)
+        logger.throwError(getExceptionMessage(e))
+        throw e
 
-        val msg = s"Error in DataSet ${MethodName} Operation."
-        throw new DataSetOperationException(e.toString + "\n" + msg, e)
     }
   }
 
@@ -334,7 +348,7 @@ class DataSet(val sparkSession: SparkSession) {
           , ""
           , additionalPropsToLog
           , GimelConstants.FAILURE
-          , e.toString + "\n" + e.getStackTraceString
+          , getExceptionMessage(e)
           , GimelConstants.UNKNOWN_STRING
           , startTime
           , endTime
@@ -342,10 +356,9 @@ class DataSet(val sparkSession: SparkSession) {
         )
 
         // throw error to console
-        logger.throwError(e.toString)
+        logger.throwError(getExceptionMessage(e))
+        throw e
 
-        val msg = s"Error in DataSet ${MethodName} Operation."
-        throw new DataSetOperationException(e.toString + "\n" + msg, e)
     }
 
   }

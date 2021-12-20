@@ -28,4 +28,9 @@ object BigQueryConstants {
   val saveModeOverwrite: String = "Overwrite"
   val saveModeIgnore: String = "Ignore"
   val bigQueryDocUrl: String = "Please refer docs for Big Query specific params in spark [https://github.com/GoogleCloudDataproc/spark-bigquery-connector]"
+  val notebooksClientId: String = "notebooks_client_id"
+  val notebooksClientSecret: String = "notebooks_client_secret"
+  val parentProject: String = "parentProject"
+  val bigQueryTable: String = "bigQueryTable"
+
 }

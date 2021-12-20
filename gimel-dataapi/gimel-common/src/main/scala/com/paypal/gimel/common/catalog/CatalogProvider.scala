@@ -100,6 +100,7 @@ object CatalogProvider {
     */
   def getDataSetPropertiesFromCatalog(datasetName: String,
                                       options: Map[String, Any] = Map[String, Any]()) : DataSetProperties = {
+
     // The user options are passed which will override the default service util properties
     if (options.nonEmpty) {
       servUtils.customize(options.map { x => (x._1, x._2.toString) })

@@ -59,7 +59,8 @@ under the License.
 
     <properties>
         <aerospike.version>3.1.5</aerospike.version>
-        <big.query.version>0.17.3</big.query.version>
+        <big.query.version>0.19.1</big.query.version>
+        <gcs.connector.version>hadoop2-2.1.6</gcs.connector.version>
         <cassandra.spark.version>2.0.6</cassandra.spark.version>
         <confluent.version>3.3.0</confluent.version>
         <elasticsearch.version>6.2.1</elasticsearch.version>

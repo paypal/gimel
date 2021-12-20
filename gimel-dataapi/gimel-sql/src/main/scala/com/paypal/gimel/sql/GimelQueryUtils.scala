@@ -34,6 +34,7 @@ import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{DataFrame, Row, SparkSession}
 import org.apache.spark.streaming.Time
 
+import com.paypal.gimel.bigquery.conf.BigQueryConfigs
 import com.paypal.gimel.common.catalog.{CatalogProvider, DataSetProperties}
 import com.paypal.gimel.common.conf.{GimelConstants, _}
 import com.paypal.gimel.common.gimelserde.GimelSerdeUtils
@@ -531,6 +532,7 @@ object GimelQueryUtils {
     def MethodName: String = new Exception().getStackTrace.apply(1).getMethodName
 
     logger.info(" @Begin --> " + MethodName)
+
     var isHiveHbase: Boolean = false
     Try {
       val nonEmptyStrTokenized = GimelQueryUtils.tokenizeSql(sql)
@@ -792,6 +794,21 @@ object GimelQueryUtils {
   }
 
   /**
+   * Message formatting for exceptions
+   * @param e Throwable
+   * @return Formatted message string
+   */
+  def getExceptionMessage(e: Throwable): String = {
+
+    s"""~~~~~~~~~~~~~~~~~~
+       |[1] ${e.toString}
+       |~~~~~~~~~~~~~~~~~~
+       |[2] ${e.getStackTrace.mkString("\n")}
+       |~~~~~~~~~~~~~~~~~~
+       |""".stripMargin
+  }
+
+  /**
     * Executes the Resolved SQL Query by calling the DataSet code that has been generated
     *
     * @param clientSQL    Original SQL String submitted by Client
@@ -818,10 +835,6 @@ object GimelQueryUtils {
       Try {
         val options = getOptions(sparkSession)._2
         val selectDF = executeSelectClause(selectSQL, sparkSession, queryPushDownFlag)
-        // --- EXISTING LOGIC
-        // dataset.write(dest.get, selectDF, options)
-        // --- NEW LOGIC
-        // Get the DataSet Properties
 
         val tgt = dest.get
         (tgt.split(",").length > 2) match {
@@ -882,12 +895,18 @@ object GimelQueryUtils {
           logger.info(resultString)
         case Failure(e) =>
           // e.printStackTrace()
-          resultString =
-            s"""Query Failed in function : $MethodName via path dataset.write. Error -->
-               |
-               |${e.toString}""".stripMargin
+          resultString = getExceptionMessage(e)
+//            s"""Query Failed in function : $MethodName via path dataset.write. Error -->
+//               |~~~~~~~~~~~~~~~~~~
+//               |${e.toString}
+//               |~~~~~~~~~~~~~~~~~~
+//               |${e.getStackTraceString}
+//               |~~~~~~~~~~~~~~~~~~
+//               |${e.getStackTrace.mkString("\n")}
+//               |~~~~~~~~~~~~~~~~~~
+//               |""".stripMargin
           // logger.error(resultString)
-          throw e
+          throw new Exception(resultString)
       }
     } else {
       logger.info(s"EXECUTION PATH ====== DATASET SELECT ======")
@@ -1665,6 +1684,17 @@ object GimelQueryUtils {
         }
       queryResult
     }
+  }
+
+  def doNotLog(statement: String, sparkSession: SparkSession): Boolean = {
+    logger.info(s" @Begin --> ${new Exception().getStackTrace.apply(1).getMethodName}")
+    // Get the list of properties that are NOT to be audited. Just in case these statements contain credentials
+    val defaultNoAuditProps = JdbcConfigs.jdbcPassword + "," + BigQueryConfigs.bigQueryRefreshToken + "," + GimelConstants.GIMEL_KEYMAKER_APPTOKEN
+    val doNotLogProps = sparkSession.conf.get(GimelConstants.DO_NOT_LOG_CONF, defaultNoAuditProps).split(",")
+    // Check if the property is mentioned in the statement
+    val propInSql: Array[String] = doNotLogProps.filter(statement.toLowerCase.contains(_))
+    // If the property is mentioned in the statement, then return FLAG = True for DoNotLog, else return False
+    propInSql.nonEmpty
   }
 
   private def validateAndGetJdbcConnectionUtility(sparkSession: SparkSession,

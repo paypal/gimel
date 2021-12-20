@@ -301,6 +301,7 @@ object DataSetUtils {
   def getSystemType(datasetName: String, sparkSession: SparkSession,
                     options: Map[String, String]): com.paypal.gimel.common.utilities.DataSetType.Value = {
     logger.info("Data set name is  ==> " + datasetName)
+
     val formattedProps: Map[String, Any] = getProps(options) ++
       Map(CatalogProviderConfigs.CATALOG_PROVIDER ->
         sparkSession.conf.get(CatalogProviderConfigs.CATALOG_PROVIDER,
