@@ -71,7 +71,7 @@ object BenchMarkKafkaDataSetAPI extends App {
 
   val executorMemoryStatus = sc.getExecutorMemoryStatus.mkString("\n")
   val totalExecutors = sc.getExecutorMemoryStatus.size
-  val executorStorageStatus = sc.getExecutorStorageStatus.map(x => "blockManagerId:" + x.blockManagerId + "|maxMem:" + x.maxMem + "|memUsed:" + x.memUsed + "|memRemaining:" + x.memRemaining).mkString("\n")
+  // val executorStorageStatus = sc.getExecutorStorageStatus.map(x => "blockManagerId:" + x.blockManagerId + "|maxMem:" + x.maxMem + "|memUsed:" + x.memUsed + "|memRemaining:" + x.memRemaining).mkString("\n")
 
   val allConfs = sc.getConf.getAll.mkString("\n")
 
