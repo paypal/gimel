@@ -26,12 +26,6 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>gimel-logging_2.2</artifactId>
-    <properties>
-        <spark.version>2.4.8</spark.version>
-        <spark.binary.version>2.2</spark.binary.version>
-        <scala.version>2.11.8</scala.version>
-        <scala.binary.version>2.11</scala.binary.version>
-    </properties>
     <dependencies>
         <dependency>
             <groupId>org.apache.spark</groupId>
