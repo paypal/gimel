@@ -898,10 +898,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     val storageType = dataset.split('.').head
     val storageSystemTypeName: String = storageType + "." + dataset.split('.').tail.mkString(".").split('.').head
     val storageSystemProps = getSystemAttributesMapByName(storageSystemTypeName)
-    val storageSystemID = storageSystemProps(PCatalogPayloadConstants.STORAGE_SYSTEM_ID).toInt
-    val storage = getStorageSystem(storageSystemID)
-    val storageTypeName = storage.storageType.storageTypeName
-    val objProps: scala.collection.mutable.Map[String, String] = getObjectPropertiesForSystem(storageTypeName, dataset)
+    val objProps: scala.collection.mutable.Map[String, String] = getObjectPropertiesForSystem(storageType, dataset)
     val allProps: Map[String, String] = {
       storageSystemProps ++ objProps
       }.map {
