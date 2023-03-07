@@ -215,6 +215,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       httpParams.setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, GimelConstants.CONNECTION_TIMEOUT * 1000)
       httpParams.setParameter(CoreConnectionPNames.SO_TIMEOUT, GimelConstants.CONNECTION_TIMEOUT * 1000)
       val requesting: HttpGet = new HttpGet(url)
+      requesting.setHeader("clientId", "gimel")
       headerMap.foreach(x => requesting.addHeader(x._1, x._2))
       val httpResponse: CloseableHttpResponse = client.execute(requesting)
       val resStream: InputStream = httpResponse.getEntity.getContent
@@ -254,6 +255,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       httpParams.setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, GimelConstants.CONNECTION_TIMEOUT * 1000)
       httpParams.setParameter(CoreConnectionPNames.SO_TIMEOUT, GimelConstants.CONNECTION_TIMEOUT * 1000)
       val requesting: HttpGet = new HttpGet(url)
+      requesting.setHeader("clientId", "gimel")
       headerMap.foreach(x => requesting.addHeader(x._1, x._2))
       val httpResponse: CloseableHttpResponse = client.execute(requesting)
       val resStream: InputStream = httpResponse.getEntity.getContent
@@ -285,6 +287,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
       httpParams.setParameter(CoreConnectionPNames.CONNECTION_TIMEOUT, GimelConstants.CONNECTION_TIMEOUT * 1000)
       httpParams.setParameter(CoreConnectionPNames.SO_TIMEOUT, GimelConstants.CONNECTION_TIMEOUT * 1000)
       val requesting: HttpGet = new HttpGet(url)
+      requesting.setHeader("clientId", "gimel")
       headerMap.foreach(x => requesting.addHeader(x._1, x._2))
       val httpResponse: CloseableHttpResponse = client.execute(requesting)
       status = httpResponse.getStatusLine.getStatusCode
@@ -1066,6 +1069,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     try {
       val post = new HttpPost(url)
       post.addHeader("Content-type", "application/json")
+      post.setHeader("clientId", "gimel")
       headerMap.foreach(x => post.addHeader(x._1, x._2))
       post.setEntity(new StringEntity(payload))
       val httpResponse = client.execute(post)
@@ -1119,6 +1123,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     try {
       val post = new HttpPost(url)
       post.addHeader("Content-type", "application/json")
+      post.setHeader("clientId", "gimel")
       headerMap.foreach(x => post.addHeader(x._1, x._2))
       post.setEntity(new StringEntity(payload))
       val httpResponse = client.execute(post)
@@ -1164,6 +1169,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     try {
       val put = new HttpPut(url)
       put.addHeader("Content-type", "application/json")
+      put.setHeader("clientId", "gimel")
       headerMap.foreach(x => put.addHeader(x._1, x._2))
       put.setEntity(new StringEntity(payload))
       val httpResponse = client.execute(put)
@@ -1215,6 +1221,7 @@ class GimelServiceUtilities(userProps: Map[String, String] = Map[String, String]
     try {
       val put = new HttpPut(url)
       put.addHeader("Content-type", "application/json")
+      put.setHeader("clientId", "gimel")
       headerMap.foreach(x => put.addHeader(x._1, x._2))
       put.setEntity(new StringEntity(payload))
       val httpResponse = client.execute(put)
