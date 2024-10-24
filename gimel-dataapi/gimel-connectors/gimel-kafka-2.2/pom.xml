@@ -165,7 +165,7 @@ under the License.
         <dependency>
             <groupId>org.apache.avro</groupId>
             <artifactId>avro</artifactId>
-            <version>1.7.7</version>
+            <version>1.11.3</version>
             <scope>test</scope>
         </dependency>
         <!-- Kafka local testing utility needs Netty 3.x at test scope for the minicluster -->
