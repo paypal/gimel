@@ -14,10 +14,10 @@ export final_jar=${udc_repo_home}/target/$udc_jar_name
 
 # ENVIRONMENT VARIABLES FOR UDC_META_STORE
 export mysql_exposed_port=3306
-export mysql_root_password=password
-export mysql_database=udc
-export mysql_user=udcadmin
-export mysql_password=Udc@123
+export mysql_root_password=
+export mysql_database=
+export mysql_user=
+export mysql_password=
 export mysql_image_name=mysql
 export mysql_container_name=mysql-standalone
 export mysql_image_tag_name=latest
