@@ -41,8 +41,8 @@
   ```shell
   docker pull mysql
   docker rm mysql-standalone
-  docker run --name mysql-standalone -p 3306:3306 -e MYSQL_ROOT_PASSWORD=password -e MYSQL_DATABASE=udc -e MYSQL_USER=udcadmin -e MYSQL_PASSWORD=Udc@123 -d mysql:latest
-  docker exec -i mysql-standalone mysql -uudcadmin -pUdc@123 udc < build/sql/udc_ddl.sql
+  docker run --name mysql-standalone -p 3306:3306 -e MYSQL_ROOT_PASSWORD= -e MYSQL_DATABASE= -e MYSQL_USER= -e MYSQL_PASSWORD= -d mysql:latest
+  docker exec -i mysql-standalone mysql -u -p udc < build/sql/udc_ddl.sql
   ```
 
 * Invoke the following command to start the udc-services
