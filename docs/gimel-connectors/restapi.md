@@ -162,7 +162,7 @@ urlData.collect.foreach(println)
 
 // Override all properties and just set the complete-URL directly
 
-spark.conf.set("gimel.restapi.url","https://www.googleapis.com/youtube/v3/activities/?maxResults=10&channelId=UC_x5XG1OV2P6uZZ5FSM9Ttw&part=snippet%2CcontentDetails&key=AIzaSyBeYqw8TdtDjwnoXQBfxyokhUmyyxGExY0")
+spark.conf.set("gimel.restapi.url","https://www.googleapis.com/youtube/v3/activities/?maxResults=10&channelId=UC_x5XG1OV2P6uZZ5FSM9Ttw&part=snippet%2CcontentDetails&key=YOUR_KEY")
 val urlData = dataset.read("youtube",  props)
 urlData.collect.foreach(println)
 ```
