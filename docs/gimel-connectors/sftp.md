@@ -29,7 +29,6 @@
 
 ### Spark SFTP connector 
 
-* https://github.com/springml/spark-sftp
 * SFTP spark is a library for constructing dataframes by downloading files from SFTP and writing dataframe to a SFTP server
 * Gimel connector is using this library as dependency
 
